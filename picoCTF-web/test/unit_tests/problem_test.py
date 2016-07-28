@@ -2,15 +2,19 @@
 Problem Testing Module
 """
 
-import pytest
 import re
 
 import api
-
+import pytest
 from api.common import APIException
-from common import clear_collections, ensure_empty_collections, clear_cache
-from common import new_team_user
+from common import (
+    clear_cache,
+    clear_collections,
+    ensure_empty_collections,
+    new_team_user
+)
 from conftest import setup_db, teardown_db
+
 
 class TestProblems(object):
     """

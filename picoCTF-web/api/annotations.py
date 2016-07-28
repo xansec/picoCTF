@@ -1,12 +1,20 @@
 """ API annotations and assorted wrappers. """
 
-import json, traceback, bson
-import api
-
-from api.common import WebSuccess, WebError, WebException, InternalException, SevereInternalException
+import json
+import traceback
 from datetime import datetime
 from functools import wraps
-from flask import session, request, abort
+
+import api
+import bson
+from api.common import (
+    InternalException,
+    SevereInternalException,
+    WebError,
+    WebException,
+    WebSuccess
+)
+from flask import abort, request, session
 
 write_logs_to_db = False # Default value, can be overwritten by api.py
 

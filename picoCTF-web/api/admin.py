@@ -2,12 +2,17 @@
 API functions relating to admin users.
 """
 
-import pymongo
 import api
-
-from api.common import check, validate, safe_fail
-from api.common import WebException, InternalException
+import pymongo
 from api.annotations import log_action
+from api.common import (
+    check,
+    InternalException,
+    safe_fail,
+    validate,
+    WebException
+)
+
 
 def give_admin_role(name=None, uid=None):
     """

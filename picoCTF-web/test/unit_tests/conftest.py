@@ -4,10 +4,11 @@ Fixtures defined within this file are available to all
 other testing modules.
 """
 
-import pytest
 import api.common
 import api.config
+import pytest
 from pymongo import MongoClient
+
 
 def setup_db():
     """ Creates a mongodb instance and shuts it down after testing has concluded. """

@@ -1,11 +1,21 @@
-from flask import Flask, request, session, send_from_directory, render_template
-from flask import Blueprint
 import api
 import bson
-
-from api.common import WebSuccess, WebError
-from api.annotations import api_wrapper, require_login, require_teacher, require_admin
-from api.annotations import log_action
+from api.annotations import (
+    api_wrapper,
+    log_action,
+    require_admin,
+    require_login,
+    require_teacher
+)
+from api.common import WebError, WebSuccess
+from flask import (
+    Blueprint,
+    Flask,
+    render_template,
+    request,
+    send_from_directory,
+    session
+)
 
 blueprint = Blueprint("admin_api", __name__)
 

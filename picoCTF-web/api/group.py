@@ -1,11 +1,9 @@
 """ Module for handling groups of teams """
 
 import api
-
 from api.annotations import log_action
-from api.common import check, validate, safe_fail, InternalException
-
-from voluptuous import Required, Length, Schema
+from api.common import check, InternalException, safe_fail, validate
+from voluptuous import Length, Required, Schema
 
 group_settings_schema = Schema({
     Required("email_filter"): check(

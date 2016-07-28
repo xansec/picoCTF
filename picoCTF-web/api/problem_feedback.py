@@ -1,14 +1,19 @@
 """ Module for handling problem feedback """
 
-import pymongo
-import api
-
 from datetime import datetime
 
-from voluptuous import Schema, Required, Length
-from api.common import validate, check, safe_fail, InternalException, SevereInternalException, WebException
-
+import api
+import pymongo
 from api.annotations import log_action
+from api.common import (
+    check,
+    InternalException,
+    safe_fail,
+    SevereInternalException,
+    validate,
+    WebException
+)
+from voluptuous import Length, Required, Schema
 
 feedback_schema = Schema({
     Required("liked"): check(

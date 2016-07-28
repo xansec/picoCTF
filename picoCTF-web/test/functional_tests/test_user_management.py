@@ -2,16 +2,16 @@
 Functional tests regarding user management.
 """
 
-import pytest
 import time
+
 import api
-
+import pytest
+from api.common import InternalException, safe_fail, WebException
 from common import *
-
-from api.common import safe_fail, WebException, InternalException
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+
 
 class TestFunctionalUserManagement(object):
     """

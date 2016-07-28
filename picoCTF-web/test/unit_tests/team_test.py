@@ -2,15 +2,18 @@
 Team Testing Module
 """
 
-import pytest
-import api.user
-import api.team
 import api.common
+import api.team
+import api.user
 import bcrypt
-
-from api.common import WebException, InternalException
-from common import clear_collections, ensure_empty_collections
-from common import base_team, base_user
+import pytest
+from api.common import InternalException, WebException
+from common import (
+    base_team,
+    base_user,
+    clear_collections,
+    ensure_empty_collections
+)
 from conftest import setup_db, teardown_db
 
 dict_filter = lambda dict, items: {k:v for k,v in dict.items() if k in items}

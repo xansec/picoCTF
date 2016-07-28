@@ -2,13 +2,17 @@
 User Testing Module
 """
 
-import pytest
-import bcrypt
 import api
-
-from api.common import safe_fail, WebException, InternalException
-from common import clear_collections, ensure_empty_collections
-from common import base_team, base_user, new_team_user
+import bcrypt
+import pytest
+from api.common import InternalException, safe_fail, WebException
+from common import (
+    base_team,
+    base_user,
+    clear_collections,
+    ensure_empty_collections,
+    new_team_user
+)
 from conftest import setup_db, teardown_db
 
 dict_filter = lambda dict, items: {k:v for k,v in dict.items() if k in items}

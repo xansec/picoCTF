@@ -4,13 +4,13 @@ CTF API Configuration File
 Note this is just a python script. It does config things.
 """
 
-from api.common import WebException
-
-import api
 import datetime
 import json
 
+import api
 import api.app
+from api.common import WebException
+
 
 # Helper class for timezones
 class EST(datetime.tzinfo):

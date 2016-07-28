@@ -4,14 +4,15 @@ Problem management script.
 """
 
 import argparse
-import sys
+import glob
 import logging
+import shutil
+import sys
+from os import makedirs, path, walk
+
 import api
 from api.common import APIException, InternalException
-from os import path, walk, makedirs
 from bson import json_util
-import shutil
-import glob
 
 
 def check_files_exist(files):

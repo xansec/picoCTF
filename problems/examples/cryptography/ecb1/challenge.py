@@ -1,5 +1,7 @@
-from hacksport.problem import Remote, ProtectedFile
 import string
+
+from hacksport.problem import ProtectedFile, Remote
+
 
 class Problem(Remote):
     program_name = "ecb.py"

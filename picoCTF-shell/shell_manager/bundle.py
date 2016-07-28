@@ -2,19 +2,25 @@
 Bundling operation for the shell manager. A special case of packaging.
 """
 
-import json, spur, logging
 import copy as object_copy
-
+import json
+import logging
 import os
-from os import getcwd, makedirs, chmod
-from os.path import join, isdir, basename, dirname
+from os import chmod, getcwd, makedirs
+from os.path import basename, dirname, isdir, join
+from shutil import copyfile, rmtree
 
-from shutil import rmtree, copyfile
-
+import spur
 from shell_manager.package import DEB_DEFAULTS
-from shell_manager.util import BUNDLE_ROOT, sanitize_name, get_problem, get_problem_root, get_bundle, get_bundle_root
-
-from shell_manager.util import FatalException
+from shell_manager.util import (
+    BUNDLE_ROOT,
+    FatalException,
+    get_bundle,
+    get_bundle_root,
+    get_problem,
+    get_problem_root,
+    sanitize_name
+)
 
 logger = logging.getLogger(__name__)
 

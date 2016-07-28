@@ -1,12 +1,12 @@
+import grp
+import json
 import os
 import pwd
-import grp
-import requests
-import json
 import subprocess
 import time
-
 from os.path import join
+
+import requests
 
 DEFAULT_USER    = "nobody"
 HACKSPORTS_ROOT = "/opt/hacksports/"

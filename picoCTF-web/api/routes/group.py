@@ -1,14 +1,33 @@
-from flask import Flask, request, session, send_from_directory, render_template
-from flask import Blueprint
-import api, json
+import json
 
-from api.common import WebSuccess, WebError
-from api.annotations import api_wrapper, require_login, require_teacher, require_admin, check_csrf
-from api.annotations import block_before_competition, block_after_competition
-from api.annotations import log_action
-
-from voluptuous import Required, Length, Schema
-from api.common import check, validate, safe_fail, WebException
+import api
+from api.annotations import (
+    api_wrapper,
+    block_after_competition,
+    block_before_competition,
+    check_csrf,
+    log_action,
+    require_admin,
+    require_login,
+    require_teacher
+)
+from api.common import (
+    check,
+    safe_fail,
+    validate,
+    WebError,
+    WebException,
+    WebSuccess
+)
+from flask import (
+    Blueprint,
+    Flask,
+    render_template,
+    request,
+    send_from_directory,
+    session
+)
+from voluptuous import Length, Required, Schema
 
 register_group_schema = Schema({
     Required("group-name"): check(

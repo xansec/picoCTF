@@ -2,12 +2,13 @@
 Problem repository management for the shell manager.
 """
 
-import spur, gzip, logging
-
-from shutil import copy2
+import gzip
+import logging
 from os import makedirs
-from os.path import join, exists, isdir
+from os.path import exists, isdir, join
+from shutil import copy2
 
+import spur
 from shell_manager.util import FatalException
 
 logger = logging.getLogger(__name__)

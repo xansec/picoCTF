@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 
+import sys
+import time
+
 import api
-import time, sys
+
 
 def cache(f, *args, **kwargs):
     result = f(cache=False, *args, **kwargs)

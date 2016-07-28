@@ -2,19 +2,25 @@
 Packaging operations for the shell manager.
 """
 
-import json, re, gzip, logging
-import spur, os
-
-from os import makedirs, listdir, getcwd, chmod
-from os.path import join, isdir, isfile, dirname
-
+import gzip
+import json
+import logging
+import os
+import re
+from copy import deepcopy
+from os import chmod, getcwd, listdir, makedirs
+from os.path import dirname, isdir, isfile, join
 from shutil import copy, rmtree
 
-from copy import deepcopy
-
-from shell_manager.util import full_copy, move, sanitize_name
-from shell_manager.util import get_problem, get_problem_root
-from shell_manager.util import FatalException
+import spur
+from shell_manager.util import (
+    FatalException,
+    full_copy,
+    get_problem,
+    get_problem_root,
+    move,
+    sanitize_name
+)
 
 logger = logging.getLogger(__name__)
 

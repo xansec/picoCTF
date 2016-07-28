@@ -4,18 +4,27 @@
 Shell Manager -- Tools for deploying and packaging problems.
 """
 
-import logging, coloredlogs
-import shell_manager
 import json
-
+import logging
 from argparse import ArgumentParser
-from shell_manager.package import problem_builder
-from shell_manager.bundle import bundle_problems
-from shell_manager.problem_repo import update_repo
-from shell_manager.util import get_hacksports_config, place_default_config, FatalException
-from shell_manager.config import print_configuration, set_configuration_option, new_configuration_file
+
+import coloredlogs
+import shell_manager
 from hacksport.deploy import deploy_problems, undeploy_problems
-from hacksport.status import clean, status, publish
+from hacksport.status import clean, publish, status
+from shell_manager.bundle import bundle_problems
+from shell_manager.config import (
+    new_configuration_file,
+    print_configuration,
+    set_configuration_option
+)
+from shell_manager.package import problem_builder
+from shell_manager.problem_repo import update_repo
+from shell_manager.util import (
+    FatalException,
+    get_hacksports_config,
+    place_default_config
+)
 
 coloredlogs.DEFAULT_LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s: %(message)s"
 coloredlogs.DEFAULT_DATE_FORMAT = "%H:%M:%S"

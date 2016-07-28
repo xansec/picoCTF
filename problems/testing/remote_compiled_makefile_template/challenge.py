@@ -1,4 +1,11 @@
-from hacksport.problem import Remote, Compiled, File, ExecutableFile, ProtectedFile
+from hacksport.problem import (
+    Compiled,
+    ExecutableFile,
+    File,
+    ProtectedFile,
+    Remote
+)
+
 
 class Problem(Remote, Compiled):
     program_name = "mybinary"

@@ -2,16 +2,15 @@
 Group Testing Module
 """
 
-import pytest
-import api.user
-import api.team
 import api.common
+import api.team
+import api.user
 import bcrypt
-
-from api.common import WebException, InternalException
-from common import clear_collections, ensure_empty_collections
-from common import new_team_user
+import pytest
+from api.common import InternalException, WebException
+from common import clear_collections, ensure_empty_collections, new_team_user
 from conftest import setup_db, teardown_db
+
 
 class TestGroups(object):
     """

@@ -4,9 +4,9 @@
 Common Testing Functionality.
 """
 
-import api
-
 from functools import wraps
+
+import api
 
 base_team = {
     "team_name": "team¢",

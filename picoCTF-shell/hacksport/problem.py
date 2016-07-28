@@ -2,16 +2,16 @@
 Challenge deployment and problem types.
 """
 
+import os
 from abc import ABCMeta, abstractmethod, abstractproperty
 from hashlib import md5
-from hacksport.operations import execute
-from hacksport.deploy import give_port
-
-from shell_manager.util import EXTRA_ROOT
+from os.path import join
 from shutil import copy2
 
-import os
-from os.path import join
+from hacksport.deploy import give_port
+from hacksport.operations import execute
+from shell_manager.util import EXTRA_ROOT
+
 
 class File(object):
     """
