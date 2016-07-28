@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
+import json
+import random
+import string
+from os.path import join
+
 import api
 import spur
-import json
-import string
-import random
-
-from os.path import join
 
 script = \
 """

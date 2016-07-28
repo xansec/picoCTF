@@ -73,34 +73,51 @@ def give_port():
                 context["port_map"][port] = (context["problem"], context["instance"])
                 return port
 
+import functools
+import json
+import logging
+import os
+import shutil
+import traceback
+from abc import ABCMeta
+from copy import copy, deepcopy
+from grp import getgrnam
+from hashlib import md5, sha1
+from imp import load_source
 # These are below because of a cirucular import issue with problem.py and give_port
 # [TODO] cleanup
-from os.path import join, isdir, isfile, commonprefix
-from random import Random, randint
-from abc import ABCMeta
-from hashlib import md5,sha1
-from imp import load_source
+from os.path import commonprefix, isdir, isfile, join
 from pwd import getpwnam
-from grp import getgrnam
+from random import randint, Random
 from time import sleep
-from copy import copy, deepcopy
-from spur import RunProcessError
-from jinja2 import Environment, Template, FileSystemLoader
 
-from hacksport.problem import Remote, Compiled, Service, FlaskApp, PHPApp
-from hacksport.problem import File, ProtectedFile, ExecutableFile, PreTemplatedFile, Directory
 from hacksport.operations import create_user, execute
-from hacksport.status import get_all_problems, get_all_problem_instances
-
+from hacksport.problem import (
+    Compiled,
+    Directory,
+    ExecutableFile,
+    File,
+    FlaskApp,
+    PHPApp,
+    PreTemplatedFile,
+    ProtectedFile,
+    Remote,
+    Service
+)
+from hacksport.status import get_all_problem_instances, get_all_problems
+from jinja2 import Environment, FileSystemLoader, Template
 from shell_manager.bundle import get_bundle, get_bundle_root
-
-from shell_manager.util import get_problem, get_problem_root
-from shell_manager.util import HACKSPORTS_ROOT, STAGING_ROOT, DEPLOYED_ROOT, sanitize_name, get_attributes
-from shell_manager.util import FatalException
-
-import os, json, shutil, logging
-import functools, traceback
-
+from shell_manager.util import (
+    DEPLOYED_ROOT,
+    FatalException,
+    get_attributes,
+    get_problem,
+    get_problem_root,
+    HACKSPORTS_ROOT,
+    sanitize_name,
+    STAGING_ROOT
+)
+from spur import RunProcessError
 
 logger = logging.getLogger(__name__)
 

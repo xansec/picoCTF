@@ -3,10 +3,11 @@
 CTF API Startup script
 """
 
-import api
-
 from argparse import ArgumentParser
+
+import api
 from api.app import app
+
 
 def main():
     """

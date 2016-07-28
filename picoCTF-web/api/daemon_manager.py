@@ -1,8 +1,12 @@
 #!/usr/bin/python3
+import argparse
+import glob
+import imp
+import time
+from os.path import basename, splitext
+
 import api
 
-import glob, imp, argparse, time
-from os.path import splitext, basename
 
 def load_modules(directory):
     files = glob.glob("{}/*.py".format(directory))

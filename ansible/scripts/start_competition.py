@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 # The picoCTF API
 import api
 
+
 def main():
     settings = api.config.get_settings()
     settings["start_time"] = datetime.now()

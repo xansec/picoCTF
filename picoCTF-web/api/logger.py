@@ -2,16 +2,16 @@
 Manage loggers for the api.
 """
 
-import logging, logging.handlers, time
-import api
-
-from bson import json_util
-
-from flask import request, has_request_context
-from flask import logging as flask_logging
-
-from sys import stdout
+import logging
+import logging.handlers
+import time
 from datetime import datetime
+from sys import stdout
+
+import api
+from bson import json_util
+from flask import logging as flask_logging
+from flask import has_request_context, request
 
 critical_error_timeout = 600
 log = logging.getLogger(__name__)

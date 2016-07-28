@@ -2,19 +2,19 @@
 Functional tests regarding solving problems.
 """
 
-import pytest
 import time
+
 import api
-
+import pytest
+from api.common import InternalException, safe_fail, WebException
 from common import *
-
-from api.common import safe_fail, WebException, InternalException
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
+
 
 class TestFunctionalProblemWorflow(object):
     """

@@ -3,12 +3,16 @@ API functions relating to team management.
 """
 
 import api
-
-from api.common import safe_fail, WebException, InternalException, SevereInternalException
-
 from api.annotations import log_action
-from api.common import check, validate, safe_fail
-from voluptuous import Required, Length, Schema
+from api.common import (
+    check,
+    InternalException,
+    safe_fail,
+    SevereInternalException,
+    validate,
+    WebException
+)
+from voluptuous import Length, Required, Schema
 
 new_team_schema = Schema({
     Required("team_name"): check(

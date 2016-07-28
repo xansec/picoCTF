@@ -1,7 +1,9 @@
 """ Module for utilities such as emailing, password reset, etc """
 
 from datetime import datetime
+
 import api
+
 
 def check_competition_active():
     """

@@ -1,8 +1,8 @@
 """ Module for token functionality. """
 
+import api
 from api.common import InternalException
 
-import api
 
 def get_token_path(token_name):
     """

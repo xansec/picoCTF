@@ -2,7 +2,10 @@
 Fabricate user data and activity for demo and testing purposes.
 """
 
-import api, sys, random
+import random
+import sys
+
+import api
 
 random.seed(0xd3adb333f)
 

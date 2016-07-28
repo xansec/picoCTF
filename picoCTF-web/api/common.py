@@ -1,13 +1,12 @@
 """ The common module contains general-purpose functions potentially used by multiple modules in the system."""
 import uuid
-
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure, InvalidName
-from werkzeug.contrib.cache import SimpleCache
-from voluptuous import Invalid, MultipleInvalid
 from hashlib import md5
 
 import api
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure, InvalidName
+from voluptuous import Invalid, MultipleInvalid
+from werkzeug.contrib.cache import SimpleCache
 
 cache = SimpleCache()
 

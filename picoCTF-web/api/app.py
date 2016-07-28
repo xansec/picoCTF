@@ -2,30 +2,33 @@
 Flask routing
 """
 
-from flask import Flask, request, session, send_from_directory, render_template
-from werkzeug.contrib.fixers import ProxyFix
-from flask_mail import Mail
-
-
-import api
 import json
 import mimetypes
 import os.path
-
 from datetime import datetime
-from api.common import WebSuccess, WebError
-from api.annotations import api_wrapper, require_login, require_teacher, require_admin, check_csrf
-from api.annotations import block_before_competition, block_after_competition
-from api.annotations import log_action
 
-import api.routes.user
-import api.routes.team
-import api.routes.stats
+import api
+import api.routes.achievements
 import api.routes.admin
 import api.routes.group
 import api.routes.problem
-import api.routes.achievements
-
+import api.routes.stats
+import api.routes.team
+import api.routes.user
+from api.annotations import (
+    api_wrapper,
+    block_after_competition,
+    block_before_competition,
+    check_csrf,
+    log_action,
+    require_admin,
+    require_login,
+    require_teacher
+)
+from api.common import WebError, WebSuccess
+from flask import Flask, render_template, request, send_from_directory, session
+from flask_mail import Mail
+from werkzeug.contrib.fixers import ProxyFix
 
 app = Flask(__name__, static_path="/")
 app.wsgi_app = ProxyFix(app.wsgi_app)

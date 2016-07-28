@@ -10,6 +10,7 @@ import sys
 # The picoCTF API
 import api
 
+
 def main(name, host, user, password, port, protocol):
     try:
         # If a server by this name exists no action necessary

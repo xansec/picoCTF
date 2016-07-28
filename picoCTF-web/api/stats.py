@@ -1,12 +1,12 @@
 """ Module for getting competition statistics"""
 
-import api
 import datetime
-import pymongo
 import statistics
 from collections import defaultdict
 from hashlib import sha1
 
+import api
+import pymongo
 from api.common import InternalException
 
 _get_problem_names = lambda problems: [problem['name'] for problem in problems]

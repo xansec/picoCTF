@@ -2,11 +2,13 @@
 Low level deployment operations.
 """
 
+from os import makedirs, path
 from random import randint, Random
-from os import path, makedirs
-from spur import LocalShell
+from signal import SIGKILL
 from time import time
-from signal import SIGKILL 
+
+from spur import LocalShell
+
 
 class TimeoutError(Exception):
     """

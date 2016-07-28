@@ -2,14 +2,24 @@
 API functions relating to user management and registration.
 """
 
-import bcrypt, re, urllib.parse, urllib.request, flask, json, string, re
+import json
+import re
+import string
+import urllib.parse
+import urllib.request
 
 import api
-
-from api.common import check, validate, safe_fail
-from api.common import WebException, InternalException
+import bcrypt
+import flask
 from api.annotations import log_action
-from voluptuous import Required, Length, Schema
+from api.common import (
+    check,
+    InternalException,
+    safe_fail,
+    validate,
+    WebException
+)
+from voluptuous import Length, Required, Schema
 
 _check_email_format = lambda email: re.match(r".+@.+\..{2,}", email) is not None
 

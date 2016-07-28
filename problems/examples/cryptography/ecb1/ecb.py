@@ -1,6 +1,8 @@
 #!/usr/bin/python2
+import os
+import sys
+
 from Crypto.Cipher import AES
-import os, sys
 
 flag = open("flag", "r").read().strip()
 key = open("key", "r").read().strip()

@@ -2,17 +2,16 @@
 Common utilities for the shell manager.
 """
 
-from os import listdir, unlink, sep, chmod
-from os.path import join, isdir, isfile
-
-import shutil, logging
 import json
-import re, string
-from shutil import copytree, copy2
+import logging
+import re
+import shutil
+import string
+from os import chmod, listdir, sep, unlink
+from os.path import isdir, isfile, join
+from shutil import copy2, copytree
 
-from voluptuous import Schema
-from voluptuous import Required, All, Length, Range
-from voluptuous import MultipleInvalid
+from voluptuous import All, Length, MultipleInvalid, Range, Required, Schema
 
 logger = logging.getLogger(__name__)
 

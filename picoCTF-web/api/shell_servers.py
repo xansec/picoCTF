@@ -1,10 +1,16 @@
+import json
+
 import api
 import pymongo
 import spur
-import json
-
-from api.common import validate, check, WebException, InternalException, safe_fail
-from voluptuous import Schema, Required, Length
+from api.common import (
+    check,
+    InternalException,
+    safe_fail,
+    validate,
+    WebException
+)
+from voluptuous import Length, Required, Schema
 
 server_schema = Schema({
     Required("name"): check(

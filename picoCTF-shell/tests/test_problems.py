@@ -1,8 +1,8 @@
+from os.path import dirname, join, realpath
+
 import hacksport.deploy
 from hacksport.deploy import deploy_problem
 from shell_manager.util import default_config
-
-from os.path import join, realpath, dirname
 
 PATH = dirname(realpath(__file__))
 

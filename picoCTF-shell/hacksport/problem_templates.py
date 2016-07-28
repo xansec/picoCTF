@@ -2,9 +2,11 @@
 High Level Problem API.
 """
 
-from hacksport.problem import Compiled, Remote, File, ProtectedFile
-from copy import copy
 import os
+from copy import copy
+
+from hacksport.problem import Compiled, File, ProtectedFile, Remote
+
 
 def CompiledBinary(makefile=None, compiler="gcc", sources=None, binary_name=None,
                         is_32_bit=True, executable_stack=True, no_stack_protector=True,

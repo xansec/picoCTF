@@ -1,19 +1,24 @@
 """ Module for interacting with the problems """
 
 import imp
-import pymongo
-
-import api
-
-from random import randint
 from copy import copy, deepcopy
 from datetime import datetime
-from api.common import validate, check, safe_fail, InternalException, SevereInternalException, WebException
-from voluptuous import Schema, Length, Required, Range
-from bson import json_util
-from os.path import join, isfile
+from os.path import isfile, join
+from random import randint
 
+import api
+import pymongo
 from api.annotations import log_action
+from api.common import (
+    check,
+    InternalException,
+    safe_fail,
+    SevereInternalException,
+    validate,
+    WebException
+)
+from bson import json_util
+from voluptuous import Length, Range, Required, Schema
 
 submission_schema = Schema({
     Required("tid"): check(

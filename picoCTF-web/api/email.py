@@ -1,15 +1,20 @@
 """ Module for email related functionality. """
 
-from flask_mail import Message
+from datetime import datetime
 
 import api
+from api.common import (
+    check,
+    InternalException,
+    safe_fail,
+    validate,
+    WebException
+)
+from flask_mail import Message
+from voluptuous import Length, Required, Schema
 
 mail = None
 
-from api.common import check, validate, safe_fail
-from api.common import WebException, InternalException
-from voluptuous import Required, Length, Schema
-from datetime import datetime
 
 password_reset_request_schema = Schema({
     Required('username'): check(

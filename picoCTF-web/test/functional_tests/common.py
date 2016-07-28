@@ -3,15 +3,15 @@ Common fields used in functional tests
 """
 
 import os
-import time
 import random
-
+import time
 from copy import copy
 from subprocess import Popen
+
 from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 BASE_URI = "http://127.0.0.1/"
 TIMEOUT = 10

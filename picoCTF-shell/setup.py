@@ -5,14 +5,14 @@ https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
 """
 
-# Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+import os
+import sys
 # To use a consistent encoding
 from codecs import open
 from os import path
 
-import os
-import sys
+# Always prefer setuptools over distutils
+from setuptools import find_packages, setup
 
 if 'bdist_wheel' in sys.argv:
     raise RuntimeError("This setup.py does not support wheels")

@@ -1,16 +1,21 @@
 """ Module for interacting with the achievements """
 
 import imp
-import pymongo
+from datetime import datetime
+from os.path import join
 
 import api
-
-from os.path import join
-from datetime import datetime
-from voluptuous import Schema, Required, Range
-from api.common import check, InternalException, SevereInternalException, validate, safe_fail, WebException
-
+import pymongo
 from api.annotations import log_action
+from api.common import (
+    check,
+    InternalException,
+    safe_fail,
+    SevereInternalException,
+    validate,
+    WebException
+)
+from voluptuous import Range, Required, Schema
 
 achievement_schema = Schema({
     Required("name"): check(

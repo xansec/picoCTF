@@ -3,11 +3,16 @@ Utilities for dealing with configuration commands
 """
 
 import json
-import os
 import logging
+import os
 
-from shell_manager.util import get_config, write_configuration_file, write_global_configuration, \
-                               place_default_config, FatalException
+from shell_manager.util import (
+    FatalException,
+    get_config,
+    place_default_config,
+    write_configuration_file,
+    write_global_configuration
+)
 
 logger = logging.getLogger(__name__)
 
