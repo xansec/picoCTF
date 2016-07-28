@@ -13,6 +13,12 @@ with.  Towards that end we welcome any contributions that you find
 improve your competition. This guide captures the simple process to
 submit a contribution.
 
+Note: we keep everything in one repository so that anyone can bring up
+the whole infrastructure at once. We've tried alternate methods, e.g.,
+submodules, but we've found the one-big-repo workflow works best for
+us.
+
+
 ## Getting Setup
 
 The GitHub guide to
@@ -92,8 +98,10 @@ please:
 - Add test cases when you add code.
 - Run [Flake8](https://pypi.python.org/pypi/flake8)
 - Use underscores (e.g., `get_unique`), not camelCase (e.g., not `getUnique`).
-- In docstrings, follow [PEP 257](https://www.python.org/dev/peps/pep-0257)
- - Run `isort` to make sure module names are sorted.
+- In docstrings, follow
+  [PEP 257](https://www.python.org/dev/peps/pep-0257)
 - Use [isort](https://github.com/timothycrosley/isort#readme) for
   imports. We have checked in a `.isort.cfg` to help, so you should just have to
   run `isort -rv .`
+
+We really appreciate your help improving the code quality.
