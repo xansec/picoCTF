@@ -19,6 +19,8 @@
     - python-pip      # used for pam module dependencies
     - python3         # used by shell_manager
     - python3-pip     # used for shell_manager dependencies
+    - libffi-dev
+    - libssl-dev
     - socat
     - php5-cli
     - gcc-multilib

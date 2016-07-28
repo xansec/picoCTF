@@ -16,3 +16,5 @@
     - gunicorn
     - jekyll 
     - nginx
+    - libffi-dev
+    - libssl-dev
