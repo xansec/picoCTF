@@ -37,7 +37,7 @@ the project is consists of the following:
 ### Walkthrough
 Once you bring everything up, the main flow between components is:
 
-![Architecture](file:///architecture.pdf)
+![Architecture](docs/architecture.png)
 
 Here is a walkthrough:
 1. The user connects to the "Web Server". This is an nginx server.
@@ -150,7 +150,6 @@ in problem development. Our internal system is:
      an intellectual leap built-in that's obvious to the creator but to no one else. Play testing makes sure the problem is coherent,
      self-contained, and fun.
 
-
 ## Want your own contest, but are not a developer?
 
 [ForAllSecure](https://forallsecure.com) offers professionally-run
@@ -164,6 +163,8 @@ The picoCTF platform is always under development.
  - We are especially interested any improvements on continuous
   integration and  automated testing.
 
+If you are interested in research in CTFs (e.g., improving
+skill acquisition, decreasing time to mastery, etc.), please feel free to email David Brumley.
 
 NOTE: We have not maintained backward compatibilties with  [picoCTF-Platform-2](https://github.com/picoCTF/picoCTF-platform-2).
 Please read the documentation on the wiki for [forks of picoCTF-Platform-2](https://github.com/picoCTF/picoCTF/wiki/Repository-linage#forks-of-picoctf-platform-2).
@@ -178,13 +179,14 @@ students, and special thanks is due to Peter Chapman
 technical lead) for their immense efforts not only developing code,
 but for organizing art work, problem development, and so on.
 
-In 2015-2016 significant effort was done by ForAllSecure at the
+In 2015-2016 significant effort was done by
+[ForAllSecure](https://forallsecure.com) at the
 companies expense. This includes adding concepts like the shell server,
 and rewriting significant portions of the web server.
 
 Both CMU and ForAllSecure have agreed to release all code under the
-[MIT](./LICENSE).  You can do whatever you like with it.  If you do
-end up running a contest, do feel free to drop David Brumley a line.
+[MIT LICENSE](./LICENSE) . We do encourage attribution as that helps
+us secure funding and interest to run picoctf year after year, but it is not necessary. Also, if you do end up running a contest, do feel free to drop David Brumley a line.
 
 
   - Bug Reports: [GitHub Issues](https://github.com/picoCTF/picoCTF/issues)
