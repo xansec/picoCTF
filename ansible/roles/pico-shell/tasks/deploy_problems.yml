@@ -43,3 +43,11 @@
 - name: Deploy Bundles
   command: "shell_manager deploy -n {{ item.instances }} -b {{item.name}}"
   with_items: "{{ bundles }}"
+
+- name: Change /tmp permission to root and vagrant only
+  file:
+    path: /tmp
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: 1770
