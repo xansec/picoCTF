@@ -16,7 +16,7 @@
     group: root
 
 - name: Add configuration for shell_manager
-  template: 
+  template:
     src: config.json.j2
     dest: "/opt/hacksports/config.json"
     owner: root
@@ -47,3 +47,4 @@
   copy:
     src:  "securebashrc"
     dest: "/opt/hacksports/config/securebashrc"
+

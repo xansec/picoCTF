@@ -43,3 +43,6 @@
 - name: Deploy Bundles
   command: "shell_manager deploy -n {{ item.instances }} -b {{item.name}}"
   with_items: "{{ bundles }}"
+
+- name: Change /tmp permission
+  command: "sudo chmod 1773 /tmp"

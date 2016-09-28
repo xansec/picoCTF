@@ -22,14 +22,14 @@
 - include: deploy_problems.yml
 
 - name: Ensure nginx is running
-  service: 
+  service:
     name: nginx
     state: started
     enabled: yes
-    
-    
+
+
 # Missing
 # journald
 # services
-#   sudo systemctl add-wants default.target shell_manager.target 
+#   sudo systemctl add-wants default.target shell_manager.target
 # hardening
