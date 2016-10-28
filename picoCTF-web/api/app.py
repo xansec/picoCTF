@@ -90,7 +90,7 @@ def after_request(response):
 
     # JB: This is a hack. We need a better solution
     if request.path[0:19] != "/api/autogen/serve/":
-        response.mimetype = 'appication/json'
+        response.mimetype = 'application/json'
     return response
 
 @app.route('/api/time', methods=['GET'])
