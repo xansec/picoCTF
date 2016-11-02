@@ -82,11 +82,11 @@ def after_request(response):
     response.headers.add('Cache-Control', 'no-store')
     if api.auth.is_logged_in():
         if 'token' in session:
-            response.set_cookie('token', session['token'])
+            response.set_cookie('token', session['token'], domain=app.config['SESSION_COOKIE_DOMAIN'], httponly=True)
         else:
             csrf_token = api.common.token()
             session['token'] = csrf_token
-            response.set_cookie('token', csrf_token)
+            response.set_cookie('token', csrf_token, domain=app.config['SESSION_COOKIE_DOMAIN'], httponly=True)
 
     # JB: This is a hack. We need a better solution
     if request.path[0:19] != "/api/autogen/serve/":
