@@ -18,6 +18,7 @@ the code base to two local virtual machines.
 3. `vagrant up`
 4. Navigate to http://192.168.2.2/
 5. Register an account (this user will be the site administrator)
+
 If you want to change CTF Placeholder, edit picoCTF-web/web/_includes/header.html
 If you want to change the IP address and VM names (e.g. to have duplicates running on the same host VM), change the following lines:
 ansible/inventories/devploy:dev_web     ansible_host=192.168.2.4    hostname=pico-local-dev-web-db
