@@ -14,7 +14,17 @@
   with_items:
     - python3-pip
     - gunicorn
-    - jekyll 
+    - jekyll
     - nginx
     - libffi-dev
     - libssl-dev
+
+- name: Install python packaging
+  pip:
+    name: packaging
+    executable: pip3
+
+- name: Install python appdirs
+  pip:
+    name: appdirs
+    executable: pip3
