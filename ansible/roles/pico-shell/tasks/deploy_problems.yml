@@ -45,4 +45,5 @@
   with_items: "{{ bundles }}"
 
 - name: Change /tmp permission
-  command: "sudo chmod 1773 /tmp"
+  command: "chmod 1773 /tmp"
+  become: true
