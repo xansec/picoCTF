@@ -116,7 +116,7 @@ def hash_password(password):
         Secure hash of password.
     """
 
-    return bcrypt.hashpw(password, bcrypt.gensalt(8))
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(8))
 
 def get_team(uid=None):
     """
