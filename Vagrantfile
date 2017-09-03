@@ -9,7 +9,9 @@ Vagrant.configure("2") do |config|
     shell.vm.network "private_network", ip: "192.168.2.3"
 
     shell.vm.synced_folder ".", "/vagrant", disabled: true
-    shell.vm.synced_folder ".", "/picoCTF"
+    shell.vm.synced_folder ".", "/picoCTF",
+                           owner: "vagrant", group: "vagrant",
+                           mount_options: ["dmode=775","fmode=775"]
 
     shell.vm.provision "shell", path: "vagrant/provision_scripts/install_ansible.sh"
 	shell.vm.provision :ansible_local do |ansible|
@@ -31,7 +33,9 @@ Vagrant.configure("2") do |config|
     web.vm.network "private_network", ip: "192.168.2.2"
 
     web.vm.synced_folder ".", "/vagrant", disabled: true
-    web.vm.synced_folder ".", "/picoCTF"
+    web.vm.synced_folder ".", "/picoCTF",
+                         owner: "vagrant", group: "vagrant",
+                         mount_options: ["dmode=775","fmode=775"]
 
     web.vm.provision "shell", path: "vagrant/provision_scripts/install_ansible.sh"
 	web.vm.provision :ansible_local do |ansible|
