@@ -245,7 +245,14 @@ class Remote(Service):
         self.files.append(ExecutableFile(output))
 
         return output
-
+    
+    def service(self):
+        """
+        Unlike the parent class, these are executables and should be restarted each time
+        """
+        return {"Type":"oneshot",
+                "ExecStart":"/bin/bash -c \"{}\"".format(self.start_cmd)
+               }
 
 class FlaskApp(Service):
     """
