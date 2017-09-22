@@ -29,7 +29,7 @@ def confirm_password(attempt, password_hash):
         attempt: the password attempt
         password_hash: the real password pash
     """
-    return bcrypt.hashpw(attempt, password_hash) == password_hash
+    return bcrypt.hashpw(attempt.encode('utf-8'), password_hash) == password_hash
 
 @log_action
 def login(username, password):

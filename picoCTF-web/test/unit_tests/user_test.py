@@ -253,7 +253,7 @@ class TestUsers(object):
 
         new_hash = api.user.get_user(uid=uid)["password_hash"]
 
-        assert bcrypt.hashpw("HACK", new_hash) == new_hash, \
+        assert bcrypt.hashpw(b'HACK', new_hash) == new_hash, \
             "Password does not match hashed plaintext after changing it."
 
         with pytest.raises(WebException):
