@@ -45,4 +45,10 @@
   with_items: "{{ bundles }}"
 
 - name: Change /tmp permission
-  command: "sudo chmod 1773 /tmp"
+  become: true
+  command: "chmod 1773 /tmp"
+
+- name: Change /home/vagrant permission
+  command: "chmod 700 /home/vagrant"
+  become: true
+  ignore_errors: yes

@@ -56,6 +56,40 @@
     name: sshd
     state: restarted
 
+- name: Copy over limits.conf
+  copy:
+    src: limits.conf
+    dest: /etc/security/limits.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy over sysctl.conf
+  copy:
+    src: sysctl.conf
+    dest: /etc/sysctl.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Restart networking service to pickup new configs
+  service:
+    name: networking
+    state: restarted
+
+- name: Copy over journald.conf
+  copy:
+    src: journald.conf
+    dest: /etc/systemd/journald.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Restart systemd-journald service to pickup new configs
+  service:
+    name: systemd-journald
+    state: restarted
+
 - name: Add competitiors group
   group: 
     name: competitors
