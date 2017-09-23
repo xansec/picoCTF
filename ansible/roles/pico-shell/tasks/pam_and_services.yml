@@ -73,9 +73,7 @@
     mode: 0644
 
 - name: Restart networking service to pickup new configs
-  service:
-    name: networking
-    state: restarted
+  command: bash -c "ifdown eth0 && ifup eth0"
 
 - name: Copy over journald.conf
   copy:
