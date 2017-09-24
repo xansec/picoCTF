@@ -5,6 +5,8 @@ Description= ctf daemon runner
 Type=simple
 Environment="APP_SETTINGS_FILE={{ web_config_dir }}/deploy_settings.py"
 ExecStart=/usr/local/bin/daemon_manager -d {{ daemon_src_dir }} cache_stats share_instances
+RestartSec="5min"
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
