@@ -16,6 +16,10 @@ XINETD_SCRIPT = """#!/bin/bash
 cd $(dirname $0)
 exec timeout -sKILL 3m %s
 """
+XINETD_WEB_SCRIPT = """#!/bin/bash
+cd $(dirname $0)
+%s
+"""
 
 class File(object):
     """
@@ -196,11 +200,7 @@ class Service(Challenge):
     def service_setup(self):
         if self.start_cmd is None:
             raise Exception("Must specify start_cmd for services.")
-        is_web = isinstance(problem, FlaskApp) or isinstance(problem, PHPApp)
-        if not is_web:
-           open("xinet_startup.sh",'w').write(XINETD_SCRIPT%self.start_cmd)
-        else:
-           open("xinet_startup.sh",'w').write(self.start_cmd)
+        open("xinet_startup.sh",'w').write(XINETD_SCRIPT%self.start_cmd)
         self.start_cmd=join(self.directory,"xinet_startup.sh")
         self.service_files.append(ExecutableFile("xinet_startup.sh"))
 
@@ -264,8 +264,15 @@ class Remote(Service):
         return {"Type":"oneshot",
                 "ExecStart":self.start_cmd
                }
+class WebService(Service):
+    def service_setup(self):
+        if self.start_cmd is None:
+            raise Exception("Must specify start_cmd for services.")
+        open("xinet_startup.sh",'w').write(XINETD_WEB_SCRIPT%self.start_cmd)
+        self.start_cmd=join(self.directory,"xinet_startup.sh")
+        self.service_files.append(ExecutableFile("xinet_startup.sh"))
 
-class FlaskApp(Service):
+class FlaskApp(WebService):
     """
     Class for python Flask web apps
     """
@@ -273,6 +280,7 @@ class FlaskApp(Service):
     python_version = "3"
     app = "server:app"
     num_workers = 1
+
 
     @property
     def flask_secret(self):
@@ -303,7 +311,7 @@ class FlaskApp(Service):
         self.service_files = [File(self.app_file)]
         self.start_cmd = "uwsgi --protocol=http --plugin python{} -p {} -w {} --logto /dev/null".format(plugin_version, self.num_workers, self.app)
 
-class PHPApp(Service):
+class PHPApp(WebService):
     """
     Class for PHP web apps
     """

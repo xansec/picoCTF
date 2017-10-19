@@ -99,6 +99,7 @@ from hacksport.problem import (
     File,
     FlaskApp,
     PHPApp,
+    WebService,
     PreTemplatedFile,
     ProtectedFile,
     Remote,
@@ -214,7 +215,7 @@ service %s
 
 
     is_service = isinstance(problem, Service)
-    is_web = isinstance(problem, FlaskApp) or isinstance(problem, PHPApp)
+    is_web = isinstance(problem, WebService)
     if not is_service and not is_web:
        return (None, None)
 
