@@ -5,7 +5,7 @@ Problem deployment.
 
 PROBLEM_FILES_DIR = "problem_files"
 STATIC_FILE_ROOT = "static"
-SYSTEMD_SERVICE_PATH = "/etc/systemd/system/"
+XINETD_SERVICE_PATH = "/etc/xinetd.d/"
 
 # will be set to the configuration module during deployment
 deploy_config = None
@@ -177,9 +177,8 @@ def get_username(problem_name, instance_number):
 
 def create_service_files(problem, instance_number, path):
     """
-    Creates systemd service files for the given problem.
-    Creates a service file for a problem, and also a socket
-    file if the problem is a service.
+    Creates xinetd service files for the given problem.
+    Creates a service file for a problem
 
     Args:
         problem: the instantiated problem object
@@ -190,68 +189,47 @@ def create_service_files(problem, instance_number, path):
         socket_file_path will be None if the problem is not a service.
     """
 
-    service_template = """[Unit]
-Description={} instance
-JobTimeoutSec=10
-
-[Service]
-User={}
-WorkingDirectory={}
-Type={}
-Restart={}
-TimeoutSec=10
-RestartSec=30
-ExecStart={}
-StandardInput={}
-StandardOutput={}
-NonBlocking={}
-IgnoreSIGPIPE={}
-
-[Install]
-WantedBy=shell_manager.target
+    # See https://github.com/puppetlabs/puppetlabs-xinetd/blob/master/templates/service.erb
+    # and https://linux.die.net/man/5/xinetd.conf
+    xinetd_template = """
+service %s
+{
+    type = UNLISTED
+    port = %d
+    disable = no
+    socket_type = stream
+    protocol = tcp
+    wait = %s
+    user = %s
+    group = %s
+    log_type = FILE /var/log/xinetd-hacksport-%s.log
+    log_on_success = HOST EXIT DURATION
+    log_on_failure = HOST
+    cps = 50 3
+    rlimit_cpu = %s
+    per_source = 100
+    server = %s
+}
 """
 
-    socket_template = """[Unit]
-Description=Socket for {}
-
-[Socket]
-ListenStream={}
-Accept={}
-
-[Install]
-WantedBy=shell_manager.target
-"""
 
     is_service = isinstance(problem, Service)
     is_web = isinstance(problem, FlaskApp) or isinstance(problem, PHPApp)
+    if not is_service and not is_web:
+       return (None, None)
 
     problem_service_info = problem.service()
-    service_content = service_template.format(problem.name, problem.user, problem.directory,
-                              problem_service_info['Type'], "no" if problem_service_info["Type"] == "oneshot" else "on-failure",
-                              problem_service_info['ExecStart'],
-                              "null" if is_web or not is_service else "socket",
-                              "null" if is_web or not is_service else "socket",
-                              "true" if is_web or not is_service else "false",
-                              "true" if is_web or not is_service else "false")
+    service_content = xinetd_template%(problem.user, problem.port, 
+                              "no" if problem_service_info["Type"] == "oneshot" else "yes",
+                              problem.user, problem.user, 
+                              problem.user, 
+                              "100" if problem_service_info["Type"] == "oneshot" else "UNLIMITED",
+                              problem_service_info['ExecStart'])
 
-    if is_web or not is_service:
-        service_file_path = join(path, "{}.service".format(problem.user))
-    else:
-        service_file_path = join(path, "{}@.service".format(problem.user))
-
-    socket_file_path = join(path, "{}.socket".format(problem.user))
+    service_file_path = join(path, "{}".format(problem.user))
 
     with open(service_file_path, "w") as f:
         f.write(service_content)
-
-    if isinstance(problem, Service):
-        socket_content = socket_template.format(problem.name, problem.port,
-                            "false" if is_web else "true")
-
-        with open(socket_file_path, "w") as f:
-            f.write(socket_content)
-
-        return (service_file_path, socket_file_path)
 
     return (service_file_path, None)
 
@@ -446,7 +424,7 @@ def deploy_files(staging_directory, instance_directory, file_list, username, pro
 
 def install_user_service(service_file, socket_file):
     """
-    Installs the service file and socket file into the systemd
+    Installs the service file and socket file into the xinetd
     service directory, sets the service to start on boot, and
     starts the service now.
 
@@ -455,36 +433,17 @@ def install_user_service(service_file, socket_file):
         socket_file: The path to the systemd socket file to install
     """
 
+    if service_file is None:
+       return
     service_name = os.path.basename(service_file)
 
     logger.debug("...Installing user service '%s'.", service_name)
 
     # copy service file
-    service_path = os.path.join(SYSTEMD_SERVICE_PATH, service_name)
+    service_path = os.path.join(XINETD_SERVICE_PATH, service_name)
     shutil.copy2(service_file, service_path)
 
-    if socket_file != None:
-        socket_name = os.path.basename(socket_file)
-
-        # copy socket file
-        socket_path = os.path.join(SYSTEMD_SERVICE_PATH, socket_name)
-        shutil.copy2(socket_file, socket_path)
-        execute(["systemctl", "enable", socket_name], timeout=60)
-
-        # if this is a redeployment of a web challenge, it is necessary to stop all instances
-        # of the running service before restarting the socket.
-        try:
-            execute(["systemctl", "stop", service_name], timeout=60)
-        except RunProcessError as e:
-            pass
-
-        execute(["systemctl", "restart", socket_name], timeout=60)
-
-    execute(["systemctl", "daemon-reload"], timeout=60)
-    execute(["systemctl", "enable", service_name], timeout=60)
-
-    if socket_file == None:
-      execute(["systemctl", "restart", service_name], timeout=60)
+    execute(["service", "xinetd", "restart"], timeout=60)
 
 def generate_instance(problem_object, problem_directory, instance_number,
                       staging_directory, deployment_directory=None):
@@ -711,7 +670,7 @@ def deploy_problem(problem_directory, instances=[0], test=False, deployment_dire
         deployment_info = {
             "user": problem.user,
             "deployment_directory": deployment_directory,
-            "service": os.path.basename(instance["service_file"]),
+            "service": None if instance["service_file"] is None else os.path.basename(instance["service_file"]),
             "socket": None if instance["socket_file"] is None else os.path.basename(instance["socket_file"]),
             "server": problem.server,
             "description": problem.description,
@@ -836,19 +795,9 @@ def remove_instances(path, instance_list):
             socket = instance["socket"]
             deployment_json_path = join(deployment_json_dir, "{}.json".format(instance_number))
 
-            logger.debug("...Removing systemd service '%s'.", service)
-            if socket != None:
-                execute(["systemctl", "stop", socket], timeout=60)
-                execute(["systemctl", "disable", socket], timeout=60)
-                os.remove(join(SYSTEMD_SERVICE_PATH, socket))
-
-            try:
-                execute(["systemctl", "stop", service], timeout=60)
-            except RunProcessError as e:
-                pass
-
-            execute(["systemctl", "disable", service], timeout=60)
-            os.remove(join(SYSTEMD_SERVICE_PATH, service))
+            logger.debug("...Removing xinetd service '%s'.", service)
+            os.remove(join(XINETD_SERVICE_PATH, service))
+            execute(["service","xinetd","restart"], timeout=60)
 
             logger.debug("...Removing deployment directory '%s'.", directory)
             shutil.rmtree(directory)

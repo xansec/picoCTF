@@ -12,6 +12,10 @@ from hacksport.deploy import give_port
 from hacksport.operations import execute
 from shell_manager.util import EXTRA_ROOT
 
+XINETD_SCRIPT = """#!/bin/bash
+cd $(dirname $0)
+exec timeout -sKILL 3m %s
+"""
 
 class File(object):
     """
@@ -192,6 +196,13 @@ class Service(Challenge):
     def service_setup(self):
         if self.start_cmd is None:
             raise Exception("Must specify start_cmd for services.")
+        is_web = isinstance(problem, FlaskApp) or isinstance(problem, PHPApp)
+        if not is_web:
+           open("xinet_startup.sh",'w').write(XINETD_SCRIPT%self.start_cmd)
+        else:
+           open("xinet_startup.sh",'w').write(self.start_cmd)
+        self.start_cmd=join(self.directory,"xinet_startup.sh")
+        self.service_files.append(ExecutableFile("xinet_startup.sh"))
 
     @property
     def port(self):
@@ -205,7 +216,7 @@ class Service(Challenge):
 
     def service(self):
         return {"Type":"simple",
-                "ExecStart":"/bin/bash -c \"{}\"".format(self.start_cmd)
+                "ExecStart":self.start_cmd
                }
 
 class Remote(Service):
@@ -251,7 +262,7 @@ class Remote(Service):
         Unlike the parent class, these are executables and should be restarted each time
         """
         return {"Type":"oneshot",
-                "ExecStart":"/bin/bash -c \"{}\"".format(self.start_cmd)
+                "ExecStart":self.start_cmd
                }
 
 class FlaskApp(Service):

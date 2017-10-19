@@ -72,6 +72,9 @@
     group: root
     mode: 0644
 
+- name: Reload sysctl
+  command: sysctl --system
+
 - name: Restart networking service to pickup new configs
   command: bash -c "ifdown eth0 && ifup eth0"
 

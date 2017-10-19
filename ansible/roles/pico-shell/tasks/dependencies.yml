@@ -13,6 +13,7 @@
     state: installed
   with_items:
     - software-properties-common
+    - xinetd
     - dpkg
     - dpkg-dev
     - fakeroot

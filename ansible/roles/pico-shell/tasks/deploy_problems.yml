@@ -48,6 +48,10 @@
   become: true
   command: "chmod 1773 /tmp"
 
+- name: Change /etc/xinetd.d permission
+  become: true
+  command: "chmod 750 /etc/xinetd.d"
+  
 - name: Change /home/vagrant permission
   command: "chmod 700 /home/vagrant"
   become: true
