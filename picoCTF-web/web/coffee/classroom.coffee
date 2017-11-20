@@ -56,7 +56,7 @@ loadGroupOverview = (groups, showFirstTab, callback) ->
     .done (teamData) ->
         ga('send', 'event', 'Group', 'LoadTeacherGroupInformation', 'Success')
         for group in groups
-          if group.name == groupName
+          if `group.name == groupName` # coffee script will translate to === which doesn't work for numbers (e.g. 14741)
             $(tabBody).html renderTeamSelection({teams: teamData.data, groupName: groupName, owner: group.owner, gid: group.gid})
         $(".team-visualization-enabler").on "click", (e) ->
           tid = $(e.target).data("tid")
