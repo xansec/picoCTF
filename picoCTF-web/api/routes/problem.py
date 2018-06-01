@@ -22,6 +22,15 @@ def get_visible_problems_hook(category):
             api.user.get_user()['tid'], category=category))
 
 
+@blueprint.route('/count', defaults={'category': None}, methods=['GET'])
+@blueprint.route('/count/<category>', methods=['GET'])
+@api_wrapper
+@require_login
+@block_before_competition(WebError("The competition has not begun yet!"))
+def get_all_problems_count_hook(category):
+    return WebSuccess(data=api.problem.count_all_problems(category=category))
+
+
 @blueprint.route('/unlocked', methods=['GET'])
 @api_wrapper
 @require_login
@@ -141,3 +150,12 @@ def load_problems():
 
     api.problem.load_published(data)
     return WebSuccess("Inserted {} problems.".format(len(data["problems"])))
+
+
+@blueprint.route('/clear_submissions', methods=['GET'])
+@api_wrapper
+@require_login
+@require_admin
+def clear_all_submissions_hook():
+    api.problem.clear_all_submissions()
+    return WebSuccess("All submissions reset.")
