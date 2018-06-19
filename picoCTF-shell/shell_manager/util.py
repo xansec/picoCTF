@@ -172,7 +172,9 @@ def sanitize_name(name):
 # I will never understand why the shutil functions act the way they do...
 
 
-def full_copy(source, destination, ignore=[]):
+def full_copy(source, destination, ignore=None):
+    if ignore is None:
+        ignore = []
     for f in listdir(source):
         if f in ignore:
             continue
