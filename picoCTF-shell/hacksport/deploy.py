@@ -469,8 +469,6 @@ def install_user_service(service_file, socket_file):
     service_path = os.path.join(XINETD_SERVICE_PATH, service_name)
     shutil.copy2(service_file, service_path)
 
-    execute(["service", "xinetd", "restart"], timeout=60)
-
 
 def generate_instance(problem_object,
                       problem_directory,
@@ -648,6 +646,8 @@ def deploy_problem(problem_directory,
         test: Whether the instances are test instances or not. Defaults to False.
         deployment_directory: If not None, the challenge will be deployed here instead of their home directory
     """
+    # used to restart xinetd if a problem challenge is deployed that uses a port
+    restart_xinetd = False
 
     if instances is None:
         instances = [0]
@@ -723,6 +723,8 @@ def deploy_problem(problem_directory,
                     os.makedirs(os.path.dirname(destination))
                 shutil.copy2(source, destination)
 
+            # set to true, this will restart xinetd
+            restart_xinetd = True
             install_user_service(instance["service_file"],
                                  instance["socket_file"])
 
@@ -773,6 +775,11 @@ def deploy_problem(problem_directory,
         logger.debug(
             "The instance deployment information can be found at '%s'.",
             instance_info_path)
+    
+    # restart xinetd
+    if restart_xinetd:
+        execute(["service", "xinetd", "restart"], timeout=60)
+
 
     logger.info("Problem instances %s were successfully deployed for '%s'.",
                 instances, problem_object["name"])
