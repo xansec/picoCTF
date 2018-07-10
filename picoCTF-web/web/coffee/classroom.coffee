@@ -24,7 +24,7 @@ createGroupSetup = () ->
       apiNotify resp
     else
       # problems = _.filter resp.data.problems, (problem) -> !problem.disabled
-      problems = resp.data; // non-admin API only returns non-disabled problems as top level data array
+      problems = resp.data; # non-admin API only returns non-disabled problems as top level data array
       data = [["Username", "First Name", "Last Name"].concat(_.map(problems, (problem) -> problem.name), ["Total"])]
       _.each teams, ((team) ->
         member = team.members[0]
