@@ -79,7 +79,7 @@ def give_port():
         raise Exception(
             "All usable ports are taken. Cannot deploy any more instances.")
 
-    # Added used used ports to banned_ports_parsed.
+    # Added used ports to banned_ports_parsed.
     for port in port_map:
         context["config"].banned_ports_parsed.append(port)
 
@@ -91,6 +91,7 @@ def give_port():
             if i not in context["config"].banned_ports_parsed])
         if check_if_port_in_use(port):
             loop_var -= 1
+            context["config"].banned_ports_parsed.append(port)
             continue
         context["port_map"][port] = (context["problem"],
                                      context["instance"])
