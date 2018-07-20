@@ -79,18 +79,23 @@ def give_port():
         raise Exception(
             "All usable ports are taken. Cannot deploy any more instances.")
 
-    # collect list of banned ports
-    banned_ports_list = []
+    # Added used used ports to banned_ports_parsed.
     for port in port_map:
-        banned_ports_list.append(port)
+        context["config"].banned_ports_parsed.append(port)
 
-    # Get a random port that is not in the banned list. 
-    port = port_random.choice([i for i in range(LOWEST_PORT, HIGHEST_PORT)
-        if i not in banned_ports_list and not check_if_port_in_use(i)])
-    context["port_map"][port] = (context["problem"],
-                                 context["instance"])
-    return port
-
+    # in case the port chosen is in use, try again. 
+    loop_var = HIGHEST_PORT - len(context["config"].banned_ports_parsed)
+    while loop_var > 0:
+        # Get a random port that is random, not in the banned list, not in use, and not assigned before.
+        port = port_random.choice([i for i in range(LOWEST_PORT, HIGHEST_PORT)
+            if i not in context["config"].banned_ports_parsed])
+        if check_if_port_in_use(port):
+            loop_var -= 1
+            continue
+        context["port_map"][port] = (context["problem"],
+                                     context["instance"])
+        return port
+    raise Exception("Unable to assigned a port to this problem. All ports are either taken or used by the system.")
 
 import functools
 import json
