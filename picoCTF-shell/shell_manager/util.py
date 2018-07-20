@@ -65,10 +65,10 @@ default_config = ConfigDict({
     False,
 
     # list of port ranges that should not be assigned to any instances
-    # this bans the first ports 0-999 and 4242 for shellinaboxd
+    # this bans the first ports 0-1024 and 4242 for shellinaboxd
     "banned_ports": [{
         "start": 0,
-        "end": 1000
+        "end": 1024
     }, {
         "start": 4242,
         "end": 4242

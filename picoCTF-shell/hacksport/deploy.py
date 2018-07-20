@@ -2,18 +2,20 @@
 Problem deployment.
 """
 
+HIGHEST_PORT = 65535
+LOWEST_PORT = 1025
+LOCALHOST = "127.0.0.1"
+
 PROBLEM_FILES_DIR = "problem_files"
 STATIC_FILE_ROOT = "static"
 XINETD_SERVICE_PATH = "/etc/xinetd.d/"
 
 # will be set to the configuration module during deployment
 deploy_config = None
-
 port_map = {}
 inv_port_map = {}
 current_problem = None
 current_instance = None
-
 
 def get_deploy_context():
     """
@@ -31,22 +33,30 @@ def get_deploy_context():
         "instance": current_instance
     }
 
-
 port_random = None
 
+# checks if the port is being used by a system process
+def check_if_port_in_use(port):
+    import socket, errno
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        s.bind((LOCALHOST, port))
+    except socket.error as e:
+        return True;
+    s.close()
+    return False;
 
 def give_port():
     """
     Returns a random port and registers it.
     """
-
     global port_random
 
     context = get_deploy_context()
-
     # default behavior
     if context["config"] is None:
-        return randint(1000, 65000)
+        return randint(LOWEST_PORT, HIGHEST_PORT)
 
     if "banned_ports_parsed" not in context["config"]:
         banned_ports_result = []
@@ -65,20 +75,28 @@ def give_port():
         return inv_port_map[(context["problem"], context["instance"])]
 
     if len(context["port_map"].items()) + len(
-            context["config"].banned_ports_parsed) == 65536:
+            context["config"].banned_ports_parsed) == HIGHEST_PORT + 1:
         raise Exception(
             "All usable ports are taken. Cannot deploy any more instances.")
 
-    while True:
-        port = port_random.randint(0, 65535)
-        if port not in context["config"].banned_ports_parsed:
-            owner, instance = context["port_map"].get(port, (None, None))
-            if owner is None or (owner == context["problem"] and
-                                 instance == context["instance"]):
-                context["port_map"][port] = (context["problem"],
-                                             context["instance"])
-                return port
+    # Added used ports to banned_ports_parsed.
+    for port in port_map:
+        context["config"].banned_ports_parsed.append(port)
 
+    # in case the port chosen is in use, try again. 
+    loop_var = HIGHEST_PORT - len(context["config"].banned_ports_parsed) + 1
+    while loop_var > 0:
+        # Get a random port that is random, not in the banned list, not in use, and not assigned before.
+        port = port_random.choice([i for i in range(LOWEST_PORT, HIGHEST_PORT)
+            if i not in context["config"].banned_ports_parsed])
+        if check_if_port_in_use(port):
+            loop_var -= 1
+            context["config"].banned_ports_parsed.append(port)
+            continue
+        context["port_map"][port] = (context["problem"],
+                                     context["instance"])
+        return port
+    raise Exception("Unable to assigned a port to this problem. All ports are either taken or used by the system.")
 
 import functools
 import json
@@ -775,11 +793,10 @@ def deploy_problem(problem_directory,
         logger.debug(
             "The instance deployment information can be found at '%s'.",
             instance_info_path)
-    
+
     # restart xinetd
     if restart_xinetd:
         execute(["service", "xinetd", "restart"], timeout=60)
-
 
     logger.info("Problem instances %s were successfully deployed for '%s'.",
                 instances, problem_object["name"])
