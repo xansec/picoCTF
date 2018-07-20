@@ -84,7 +84,7 @@ def give_port():
         context["config"].banned_ports_parsed.append(port)
 
     # in case the port chosen is in use, try again. 
-    loop_var = HIGHEST_PORT - len(context["config"].banned_ports_parsed)
+    loop_var = HIGHEST_PORT - len(context["config"].banned_ports_parsed) + 1
     while loop_var > 0:
         # Get a random port that is random, not in the banned list, not in use, and not assigned before.
         port = port_random.choice([i for i in range(LOWEST_PORT, HIGHEST_PORT)
