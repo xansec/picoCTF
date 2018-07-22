@@ -17,6 +17,7 @@ inv_port_map = {}
 current_problem = None
 current_instance = None
 
+
 def get_deploy_context():
     """
     Returns the deployment context, a dictionary containing the current
@@ -33,7 +34,9 @@ def get_deploy_context():
         "instance": current_instance
     }
 
+
 port_random = None
+
 
 # checks if the port is being used by a system process
 def check_if_port_in_use(port):
@@ -43,9 +46,10 @@ def check_if_port_in_use(port):
     try:
         s.bind((LOCALHOST, port))
     except socket.error as e:
-        return True;
+        return True
     s.close()
-    return False;
+    return False
+
 
 def give_port():
     """
@@ -83,20 +87,24 @@ def give_port():
     for port in port_map:
         context["config"].banned_ports_parsed.append(port)
 
-    # in case the port chosen is in use, try again. 
+    # in case the port chosen is in use, try again.
     loop_var = HIGHEST_PORT - len(context["config"].banned_ports_parsed) + 1
     while loop_var > 0:
         # Get a random port that is random, not in the banned list, not in use, and not assigned before.
-        port = port_random.choice([i for i in range(LOWEST_PORT, HIGHEST_PORT)
-            if i not in context["config"].banned_ports_parsed])
+        port = port_random.choice([
+            i for i in range(LOWEST_PORT, HIGHEST_PORT)
+            if i not in context["config"].banned_ports_parsed
+        ])
         if check_if_port_in_use(port):
             loop_var -= 1
             context["config"].banned_ports_parsed.append(port)
             continue
-        context["port_map"][port] = (context["problem"],
-                                     context["instance"])
+        context["port_map"][port] = (context["problem"], context["instance"])
         return port
-    raise Exception("Unable to assigned a port to this problem. All ports are either taken or used by the system.")
+    raise Exception(
+        "Unable to assigned a port to this problem. All ports are either taken or used by the system."
+    )
+
 
 import functools
 import json
