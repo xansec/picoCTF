@@ -662,7 +662,8 @@ def deploy_problem(problem_directory,
                    instances=None,
                    test=False,
                    deployment_directory=None,
-                   debug=False):
+                   debug=False,
+                   restart_xinetd=True):
     """
     Deploys the problem specified in problem_directory.
 
@@ -672,8 +673,6 @@ def deploy_problem(problem_directory,
         test: Whether the instances are test instances or not. Defaults to False.
         deployment_directory: If not None, the challenge will be deployed here instead of their home directory
     """
-    # used to restart xinetd if a problem challenge is deployed that uses a port
-    restart_xinetd = False
 
     if instances is None:
         instances = [0]
@@ -750,7 +749,6 @@ def deploy_problem(problem_directory,
                 shutil.copy2(source, destination)
 
             # set to true, this will restart xinetd
-            restart_xinetd = True
             install_user_service(instance["service_file"],
                                  instance["socket_file"])
 
@@ -899,19 +897,24 @@ def deploy_problems(args, config):
                     instances=todo_instance_list,
                     test=args.dry,
                     deployment_directory=args.deployment_directory,
-                    debug=args.debug)
+                    debug=args.debug,
+                    restart_xinetd=False)
             elif isdir(join(get_problem_root(problem_name, absolute=True))):
                 deploy_problem(
                     join(get_problem_root(problem_name, absolute=True)),
                     instances=todo_instance_list,
                     test=args.dry,
                     deployment_directory=args.deployment_directory,
-                    debug=args.debug)
+                    debug=args.debug,
+                    restart_xinetd=False)
             else:
                 logger.error("Problem '%s' doesn't appear to be installed.",
                              problem_name)
                 raise FatalException
     finally:
+        # All problems try'd deploy, restart xinetd
+        execute(["service", "xinetd", "restart"], timeout=60)
+
         logger.debug("Releasing lock file %s", lock_file)
         if not args.dry:
             os.remove(lock_file)
