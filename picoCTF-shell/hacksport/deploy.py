@@ -670,8 +670,14 @@ def deploy_problem(problem_directory,
     Args:
         problem_directory: The directory storing the problem
         instances: The list of instances to deploy. Defaults to [0]
-        test: Whether the instances are test instances or not. Defaults to False.
-        deployment_directory: If not None, the challenge will be deployed here instead of their home directory
+        test: Whether the instances are test instances. Defaults to False.
+        deployment_directory: If not None, the challenge will be deployed here
+                              instead of their home directory
+        debug: Output debug info
+        restart_xinetd: Whether to restart xinetd upon deployment of this set
+                        of instances for a problem. Defaults True as used by
+                        tests, but typically is used with False from
+                        deploy_problems, which takes in multiple problems.
     """
 
     if instances is None:
@@ -912,8 +918,9 @@ def deploy_problems(args, config):
                              problem_name)
                 raise FatalException
     finally:
-        # All problems try'd deploy, restart xinetd
-        execute(["service", "xinetd", "restart"], timeout=60)
+        # Restart xinetd unless specified. Service must be manually restarted
+        if not args.no_restart:
+            execute(["service", "xinetd", "restart"], timeout=60)
 
         logger.debug("Releasing lock file %s", lock_file)
         if not args.dry:

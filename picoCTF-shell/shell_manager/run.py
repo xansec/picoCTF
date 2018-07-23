@@ -127,6 +127,11 @@ def main():
         action="store_true",
         help="specify a bundle of problems to deploy.")
     deploy_parser.add_argument(
+        "-nr",
+        "--no-restart",
+        action="store_true",
+        help="do not restart xinetd after deployment.")
+    deploy_parser.add_argument(
         "problem_paths", nargs="*", type=str, help="paths to problems.")
     deploy_parser.set_defaults(func=deploy_problems)
 
