@@ -44,7 +44,7 @@ def problem_to_control(problem, debian_path):
             "Architecture": problem.get("architecture", "all"),
             "Maintainer": problem["author"],
             "Description": problem.get("pkg_description", problem[
-                "description"])
+                "description"].replace('\n', '')) # replace the new lines to prevent a crash
         })
 
     if "pkg_dependencies" in problem:
