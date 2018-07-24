@@ -939,7 +939,7 @@ def deploy_problems(args, config):
 
 def remove_instances(path, instance_list):
     """ Remove all files under deployment directory and metdata for a given list of instances """
-
+    path = path.lower().replace(" ", "-")
     problem_instances = get_all_problem_instances(path)
     deployment_json_dir = join(DEPLOYED_ROOT, path)
 
@@ -958,7 +958,6 @@ def remove_instances(path, instance_list):
 
             logger.debug("...Removing xinetd service '%s'.", service)
             os.remove(join(XINETD_SERVICE_PATH, service))
-            execute(["service", "xinetd", "restart"], timeout=60)
 
             logger.debug("...Removing deployment directory '%s'.", directory)
             shutil.rmtree(directory)
@@ -967,6 +966,8 @@ def remove_instances(path, instance_list):
             logger.debug("...Removing problem user '%s'.", user)
             execute(["userdel", user])
 
+    if problem_instances:
+        execute(["service", "xinetd", "restart"], timeout=60)
 
 def undeploy_problems(args, config):
     """ Main entrypoint for problem undeployment """
@@ -990,14 +991,13 @@ def undeploy_problems(args, config):
                     raise FatalException
         problem_names = bundle_problems
 
-    # before deploying problems, load in already_deployed instances
+    # before undeploying problems, load in already_deployed instances
     already_deployed = {}
     for path, problem in get_all_problems().items():
         already_deployed[problem["name"]] = []
         for instance in get_all_problem_instances(path):
             already_deployed[problem["name"]].append(
                 instance["instance_number"])
-
     lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
     if os.path.isfile(lock_file):
         logger.error(
