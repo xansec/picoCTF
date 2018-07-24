@@ -678,6 +678,7 @@ def deploy_problem(problem_directory,
                         of instances for a problem. Defaults True as used by
                         tests, but typically is used with False from
                         deploy_problems, which takes in multiple problems.
+
     """
 
     if instances is None:
@@ -689,6 +690,8 @@ def deploy_problem(problem_directory,
     current_problem = problem_object["name"]
 
     instance_list = []
+
+    need_restart_xinetd = False
 
     logger.debug("Beginning to deploy problem '%s'.", problem_object["name"])
 
@@ -754,9 +757,11 @@ def deploy_problem(problem_directory,
                     os.makedirs(os.path.dirname(destination))
                 shutil.copy2(source, destination)
 
-            # set to true, this will restart xinetd
-            install_user_service(instance["service_file"],
-                                 instance["socket_file"])
+            if instance["service_file"] is not None:
+                install_user_service(instance["service_file"],
+                                     instance["socket_file"])
+                # set to true, this will signal restart xinetd
+                need_restart_xinetd = True
 
             # keep the staging directory if run with debug flag
             # this can still be cleaned up by running "shell_manager clean"
@@ -807,11 +812,12 @@ def deploy_problem(problem_directory,
             instance_info_path)
 
     # restart xinetd
-    if restart_xinetd:
+    if restart_xinetd and need_restart_xinetd:
         execute(["service", "xinetd", "restart"], timeout=60)
 
     logger.info("Problem instances %s were successfully deployed for '%s'.",
                 instances, problem_object["name"])
+    return need_restart_xinetd
 
 
 def deploy_problems(args, config):
@@ -819,6 +825,8 @@ def deploy_problems(args, config):
 
     global deploy_config, port_map, inv_port_map
     deploy_config = config
+
+    need_restart_xinetd = False
 
     try:
         user = getpwnam(deploy_config.default_user)
@@ -898,7 +906,7 @@ def deploy_problems(args, config):
                     set(already_deployed.get(problem_name, [])))
 
             if args.dry and isdir(problem_name):
-                deploy_problem(
+                need_restart_xinetd = deploy_problem(
                     problem_name,
                     instances=todo_instance_list,
                     test=args.dry,
@@ -906,7 +914,7 @@ def deploy_problems(args, config):
                     debug=args.debug,
                     restart_xinetd=False)
             elif isdir(join(get_problem_root(problem_name, absolute=True))):
-                deploy_problem(
+                need_restart_xinetd = deploy_problem(
                     join(get_problem_root(problem_name, absolute=True)),
                     instances=todo_instance_list,
                     test=args.dry,
@@ -919,7 +927,7 @@ def deploy_problems(args, config):
                 raise FatalException
     finally:
         # Restart xinetd unless specified. Service must be manually restarted
-        if not args.no_restart:
+        if not args.no_restart and need_restart_xinetd:
             execute(["service", "xinetd", "restart"], timeout=60)
 
         logger.debug("Releasing lock file %s", lock_file)
