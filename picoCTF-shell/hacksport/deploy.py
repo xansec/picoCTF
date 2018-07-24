@@ -938,7 +938,6 @@ def remove_instances(path, instance_list):
 
             logger.debug("...Removing xinetd service '%s'.", service)
             os.remove(join(XINETD_SERVICE_PATH, service))
-            execute(["service", "xinetd", "restart"], timeout=60)
 
             logger.debug("...Removing deployment directory '%s'.", directory)
             shutil.rmtree(directory)
@@ -947,6 +946,8 @@ def remove_instances(path, instance_list):
             logger.debug("...Removing problem user '%s'.", user)
             execute(["userdel", user])
 
+    if problem_instances:
+        execute(["service", "xinetd", "restart"], timeout=60)
 
 def undeploy_problems(args, config):
     """ Main entrypoint for problem undeployment """
