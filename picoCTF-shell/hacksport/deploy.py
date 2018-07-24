@@ -642,9 +642,11 @@ def generate_instance(problem_object,
     logger.debug("...Created service files '%s','%s'.", service_file,
                  socket_file)
 
+
     # template the description
+    # change newline for <br>, otherwise it won't render on the pico website
     problem.description = template_string(problem.description,
-                                          **get_attributes(problem))
+                                          **get_attributes(problem)).replace('\n','<br>')
     logger.debug("...Instance description: %s", problem.description)
 
     return {
