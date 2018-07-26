@@ -38,7 +38,6 @@ import pwd
 import syslog
 import subprocess
 
-
 pamh = None
 
 
@@ -52,7 +51,7 @@ def pam_sm_open_session(_pamh, flags, argv):
     pamh = _pamh
 
     syslog.syslog(syslog.LOG_DEBUG, "pam_session.py: pam_sm_open_session")
-#    display("pam_session.py: pam_sm_open_session")
+    #    display("pam_session.py: pam_sm_open_session")
 
     try:
         user = pamh.get_user(None)
@@ -62,19 +61,21 @@ def pam_sm_open_session(_pamh, flags, argv):
 #    display("pam_auth.py: for user: {user}".format(user=user))
 
     try:
-        entry = pwd.getpwnam(user)    
+        entry = pwd.getpwnam(user)
     except:
         return pamh.PAM_USER_UNKNOWN
 
-
     option_sets = [
-    	['--quiet', '--runtime'], # quiet and don't persist changes since they happen per session anyway
-    	['--quiet'],  # quiet and DO persist changes to make sure to overwrite any existing settings
+        ['--quiet', '--runtime'
+        ],  # quiet and don't persist changes since they happen per session anyway
+        ['--quiet'
+        ],  # quiet and DO persist changes to make sure to overwrite any existing settings
     ]
 
-    minsysmem_mb = 512.0 # minimum memory that should not be assigned to user.slice processes
+    minsysmem_mb = 512.0  # minimum memory that should not be assigned to user.slice processes
 
-    totalmem_mb = (os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')) / 1024.0 / 1024.0
+    totalmem_mb = (os.sysconf('SC_PAGE_SIZE') *
+                   os.sysconf('SC_PHYS_PAGES')) / 1024.0 / 1024.0
     memlimit_mb = totalmem_mb - minsysmem_mb
 
     # This applies to user.slice, so
@@ -99,7 +100,7 @@ def pam_sm_open_session(_pamh, flags, argv):
     # typical case instead of 10% which is not what we want.
     all_properties = [
         "CPUAccounting=yes",
-        "CPUQuota=", # clear this so no interaction with CPUShares
+        "CPUQuota=",  # clear this so no interaction with CPUShares
         "CPUShares=%d" % (shares_from_percentage(90),),
         "MemoryAccounting=yes",
         "MemoryLimit=%dM" % memlimit_mb,
@@ -110,24 +111,27 @@ def pam_sm_open_session(_pamh, flags, argv):
     slice_name = 'user.slice'.format(uid=entry.pw_uid)
     for options in option_sets:
         subprocess.check_call(['systemctl', 'set-property', slice_name] +
-                              options +
-                              all_properties)
+                              options + all_properties)
 
-    syslog.syslog(syslog.LOG_DEBUG,
-                  "pam_session.py: modified %s with %s" % (
-                    slice_name,
-                    ','.join(all_properties)))
+    syslog.syslog(
+        syslog.LOG_DEBUG, "pam_session.py: modified %s with %s" %
+        (slice_name, ','.join(all_properties)))
 
     # manually set the memory.memsw.limit_in_bytes limit for user.slice if possible so we don't run out of swap.
     # this requires swapaccount=1 enabled on the kernel command line at boot (and propertly build/configured kernel)
     try:
-        with open('/sys/fs/cgroup/memory/user.slice/memory.memsw.limit_in_bytes', 'wb') as fobj:
+        with open(
+                '/sys/fs/cgroup/memory/user.slice/memory.memsw.limit_in_bytes',
+                'wb') as fobj:
             fobj.write('%dM' % memlimit_mb)
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "pam_session.py: set memory.memsw.limit_in_bytes to match")
+        syslog.syslog(
+            syslog.LOG_DEBUG,
+            "pam_session.py: set memory.memsw.limit_in_bytes to match")
     except:
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "pam_session.py: failed to modify memory.memsw.limit_in_bytes")
+        syslog.syslog(
+            syslog.LOG_DEBUG,
+            "pam_session.py: failed to modify memory.memsw.limit_in_bytes")
+
 
 ###### doesnt work since cgroup already has tasks (see kernel cgroup docs)
 #    # manually set the memory.kmem.limit_in_bytes limit for user.slice.
@@ -151,7 +155,7 @@ def pam_sm_open_session(_pamh, flags, argv):
 #        syslog.syslog(syslog.LOG_DEBUG,
 #                      "pam_session.py: failed to modify memory.swappiness")
 
-    # dont set specific limits on user 0 and 1000 to make testing easier, but keep fair sharing
+# dont set specific limits on user 0 and 1000 to make testing easier, but keep fair sharing
     if entry.pw_uid in (0, 1000):
         return pamh.PAM_SUCCESS
 
@@ -163,7 +167,7 @@ def pam_sm_open_session(_pamh, flags, argv):
     each_properties = [
         "CPUAccounting=yes",
         "CPUQuota=20%",
-        "CPUShares=", # clear this so no interaction with CPUQuota
+        "CPUShares=",  # clear this so no interaction with CPUQuota
         "MemoryAccounting=yes",
         "MemoryLimit=128M",
         "TasksAccounting=yes",
@@ -174,13 +178,11 @@ def pam_sm_open_session(_pamh, flags, argv):
     slice_name = 'user-{uid}.slice'.format(uid=entry.pw_uid)
     for options in option_sets:
         subprocess.check_call(['systemctl', 'set-property', slice_name] +
-                              options +
-                              each_properties)
+                              options + each_properties)
 
-    syslog.syslog(syslog.LOG_DEBUG,
-                  "pam_session.py: modified %s with %s" % (
-                    slice_name,
-                    ','.join(each_properties)))
+    syslog.syslog(
+        syslog.LOG_DEBUG, "pam_session.py: modified %s with %s" %
+        (slice_name, ','.join(each_properties)))
 
     return pamh.PAM_SUCCESS
 
@@ -199,7 +201,7 @@ def shares_from_percentage(p, other_shares=1024, others=1):
         total shares = S + x
         P == x / (S + x) -> x == (P*S) / (1-P)
     '''
-    
+
     P = 1.0 * p / 100
     S = other_shares * others
     x = (P * S) / (1 - P)
