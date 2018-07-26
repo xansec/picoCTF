@@ -54,6 +54,15 @@
     group: root
     mode: 0644
 
+- name: Disable user crontab with whitelist
+  copy:
+    content: ""
+    dest: /etc/cron.allow
+    force: no
+    owner: root
+    group: root
+    mode: 0644
+
 - name: Copy over sshd configs
   copy:
     src: sshd_config
