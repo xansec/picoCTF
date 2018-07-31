@@ -10,7 +10,7 @@ ansible_ssh_pass: vagrant
 # Web settings (env specific)
 ##
 web_fqdn: "localhost"
-web_address: "http://192.168.2.2"
+web_address: "http://{{ lookup('env','WIP') or '192.168.2.2' }}"
 nginx_server_name: "_"
 flask_app_server_name: "{{ web_fqdn }}"
 web_address_internal: "{{ web_address }}"
@@ -25,7 +25,7 @@ auto_start_competition: True
 ###
 # Shell Settings (env specific)
 ###
-shell_hostname: "192.168.2.3"
+shell_hostname: "{{ lookup('env','SIP') or '192.168.2.3' }}"
 shell_name: Local-Development-Shell   # no spaces
 shell_host: "{{ shell_hostname }}"
 shell_user: "{{ ansible_user }}"
