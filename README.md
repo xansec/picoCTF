@@ -25,34 +25,17 @@ two local virtual machines.
 If you want to change CTF Placeholder, edit
 picoCTF-web/web/_includes/header.html
 
-If you want to change the IP address and VM names (e.g. to have duplicates
-running on the same host VM), change the following lines:
+There are now quick ways to change the memory, number of CPUs and IP addresses and run multiple instances.
 
-ansible/inventories/devploy:dev_web     ansible_host=192.168.2.4    hostname=pico-local-dev-web-db
+After you do the git clone, rename picoCTF to picoCTF_XXX (fill in XXX with something unique for each)
+Start by running a command like the below. 
+J is the number of CPUs
+M is the amount of memory in GB
+SIP is shell IP address (default is 192.168.2.2)
+WIP is web IP address (default is 192.68.2.3)
 
-ansible/inventories/devploy:dev_shell   ansible_host=192.168.2.5    hostname=pico-local-dev-shell
+J=2 M=6 SIP=192.168.2.53 WIP=192.168.2.52 vagrant up shell && SIP=192.168.2.53 WIP=192.168.2.52 vagrant up web
 
-ansible/inventories/devploy:dev_web     ansible_host=192.168.2.4    hostname=pico-local-dev-web-db
-
-ansible/group_vars/local_development/vars.yml:web_address: "http://192.168.2.4"
-
-ansible/group_vars/local_development/vars.yml:shell_hostname: "192.168.2.5"
-
-Vagrantfile:  config.vm.define "shell2", primary: true do |shell|
-
-Vagrantfile:  config.vm.define "web2", primary: true do |web|
-
-Vagrantfile:        vb.name = "picoCTF-shell-dev2"
-
-Vagrantfile:        vb.name = "picoCTF-web-dev2"
-
-Vagrantfile: also update IP addresses to match
-
-If you want to add more memory or CPUs, you can do (directly underneath vb.name):
-
-Vagrantfile:         vb.customize ["modifyvm", :id, "--memory", "4096"]
-
-Vagrantfile:         vb.customize ["modifyvm", :id, "--cpus", "4"]
 
 ## Project Overview
 
