@@ -25,6 +25,12 @@ class EST(datetime.tzinfo):
         return datetime.timedelta(0)
 
 
+# Competition Information Placeholder
+competition_name = ""
+competition_urls = [
+    "",
+]
+
 """ CTF Settings
 These are the default settings that will be loaded
 into the database if no settings are already loaded.
@@ -181,3 +187,6 @@ def change_settings(changes):
     check_keys(settings, changes)
 
     db.settings.update({"_id": settings["_id"]}, {"$set": changes})
+
+    # Update Flask app settings (necessary for email to work)
+    api.app.config_app()
