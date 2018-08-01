@@ -30,6 +30,12 @@ Vagrant.configure("2") do |config|
       ansible.limit = "shell"
       ansible.provisioning_path = "/picoCTF/ansible/"
       ansible.inventory_path = "/picoCTF/ansible/inventories/local_development"
+      ansible.extra_vars = {
+         web_address:"http://"+(ENV['WIP'] || '192.168.2.2'),
+         web_address_internal:"http://"+(ENV['WIP'] || '192.168.2.2'),
+         shell_hostname:(ENV['SIP'] || '192.168.2.3'),
+         shell_host:(ENV['SIP'] || '192.168.2.3')
+      }
     end
 
     shell.vm.provider "virtualbox" do |vb|
@@ -62,6 +68,12 @@ Vagrant.configure("2") do |config|
       ansible.limit = ["db", "web"]
       ansible.provisioning_path = "/picoCTF/ansible/"
       ansible.inventory_path = "/picoCTF/ansible/inventories/local_development"
+      ansible.extra_vars = {
+         web_address:"http://"+(ENV['WIP'] || '192.168.2.2'),
+         web_address_internal:"http://"+(ENV['WIP'] || '192.168.2.2'),
+         shell_hostname:(ENV['SIP'] || '192.168.2.3'),
+         shell_host:(ENV['SIP'] || '192.168.2.3')
+      }
     end
 
     web.vm.provider "virtualbox" do |vb|
