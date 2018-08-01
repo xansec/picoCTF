@@ -28,6 +28,9 @@
     group: root
     mode: 0644
 
+- name: update pam sshd configs
+  command: bash -c "grep \"pam_session.py\" /etc/pam.d/sshd || echo \"session [success=ok default=bad] pam_python.so pam_session.py\" >> /etc/pam.d/sshd"
+
 - name: Ensure /lib/security/ directory exists
   file:
     path: /lib/security/
@@ -39,6 +42,23 @@
   copy:
     src: pam_auth.py
     dest: "/lib/security/pam_auth.py"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy pam_session.py to deployed location
+  copy:
+    src: pam_session.py
+    dest: "/lib/security/pam_session.py"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Disable user crontab with whitelist
+  copy:
+    content: ""
+    dest: /etc/cron.allow
+    force: no
     owner: root
     group: root
     mode: 0644
