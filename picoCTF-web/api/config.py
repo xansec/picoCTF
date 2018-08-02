@@ -187,6 +187,3 @@ def change_settings(changes):
     check_keys(settings, changes)
 
     db.settings.update({"_id": settings["_id"]}, {"$set": changes})
-
-    # Update Flask app settings (necessary for email to work)
-    api.app.config_app()
