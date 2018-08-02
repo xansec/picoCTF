@@ -223,8 +223,9 @@ def load_problems(args):
 
 
 def main():
+    settings = api.config.get_settings()
     parser = argparse.ArgumentParser(
-        description="{} problem manager".format(api.config.competition_name))
+        description="{} problem manager".format(settings["competition_name"]))
     debug_level = parser.add_mutually_exclusive_group()
     debug_level.add_argument(
         '-v',

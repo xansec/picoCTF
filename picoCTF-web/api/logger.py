@@ -157,7 +157,7 @@ class SevereHandler(logging.handlers.SMTPHandler):
             mailhost=settings["email"]["smtp_url"],
             fromaddr=settings["email"]["from_addr"],
             toaddrs=settings["logging"]["admin_emails"],
-            subject="Critical Error in {}".format(api.config.competition_name),
+            subject="Critical Error in {}".format(settings["competition_name"]),
             credentials=(settings["email"]["email_username"],
                          settings["email"]["email_password"]),
             secure=())

@@ -47,6 +47,10 @@ default_settings = {
     "end_time":
     datetime.datetime.utcnow(),
 
+    # COMPETITION INFORMATION
+    "competition_name": "",
+    "competition_url": "",
+
     # EMAIL WHITELIST
     "email_filter": [],
 
