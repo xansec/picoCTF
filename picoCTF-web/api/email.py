@@ -73,11 +73,13 @@ def request_password_reset(username):
 
     token_value = api.token.set_token({"uid": user['uid']}, "password_reset")
 
+    settings = api.config.get_settings()
+
     body = """We recently received a request to reset the password for the following {0} account:\n\n\t{2}\n\nOur records show that this is the email address used to register the above account.  If you did not request to reset the password for the above account then you need not take any further steps.  If you did request the password reset please follow the link below to set your new password. \n\n {1}/reset#{3} \n\n Best of luck! \n The {0} Team""".format(
-        api.config.competition_name, api.config.competition_urls[0], username,
+        settings["competition_name"], settings["competition_url"], username,
         token_value)
 
-    subject = "{} Password Reset".format(api.config.competition_name)
+    subject = "{} Password Reset".format(settings["competition_name"])
 
     message = Message(body=body, recipients=[user['email']], subject=subject)
     mail.send(message)
@@ -123,7 +125,7 @@ def send_user_verification_email(username):
 
     # Is there a better way to do this without dragging url_for + app_context into it?
     verification_link = "{}/api/user/verify?uid={}&token={}".\
-        format(api.config.competition_urls[0], user["uid"], token_value)
+        format(settings["competition_url"], user["uid"], token_value)
 
     body = """
 Welcome to {0}!
@@ -134,9 +136,9 @@ Verification link: {1}
 
 Good luck and have fun!
 The {0} Team.
-    """.format(api.config.competition_name, verification_link)
+    """.format(settings["competition_name"], verification_link)
 
-    subject = "{} Account Verification".format(api.config.competition_name)
+    subject = "{} Account Verification".format(settings["competition_name"])
 
     message = Message(body=body, recipients=[user['email']], subject=subject)
     mail.send(message)
@@ -147,6 +149,7 @@ def send_email_invite(gid, email, teacher=False):
     Sends an email registration link that will automatically join into a group. This link will bypass the email filter.
     """
 
+    settings = api.config.get_settings()
     group = api.group.get_group(gid=gid)
 
     token_value = api.token.set_token({
@@ -156,7 +159,7 @@ def send_email_invite(gid, email, teacher=False):
     }, "registration_token")
 
     registration_link = "{}/#g={}&r={}".\
-        format(api.config.competition_urls[0], group["gid"], token_value)
+        format(settings["competition_url"], group["gid"], token_value)
 
     body = """
 You have been invited by the staff of the {1} organization to compete in {0}.
@@ -168,9 +171,9 @@ Registration link: {2}
 
 Good luck!
   The {0} Team.
-    """.format(api.config.competition_name, group["name"], registration_link)
+    """.format(settings["competition_name"], group["name"], registration_link)
 
-    subject = "{} Registration".format(api.config.competition_name)
+    subject = "{} Registration".format(settings["competition_name"])
 
     message = Message(body=body, recipients=[email], subject=subject)
     mail.send(message)

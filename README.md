@@ -147,7 +147,9 @@ If you are looking to run your own CTF competition, you should:
    ansible.
 2. You can reskin the look and feel of the site by editing the
    [picoCTF-web/web](picoCTF-web/web) javascript and HTML code.
-3. You should start writing your own problems, loading them into the shell
+3. To enable password reset emails, log in using the site administrator 
+   account and configure Email under Management > Configuration. 
+4. You should start writing your own problems, loading them into the shell
    server, and syncing the web server problem set with the shell server via the
    `/admin` URL endpoint.
 

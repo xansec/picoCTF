@@ -22,6 +22,16 @@ GeneralTab = React.createClass
       $set:
         enable_feedback: !@state.enable_feedback
 
+  updateCompetitionName: (e) ->
+    @setState update @state,
+      $set:
+        competition_name: e.target.value
+
+  updateCompetitionURL: (e) ->
+    @setState update @state,
+      $set:
+        competition_url: e.target.value
+
   updateStartTime: (value) ->
     @setState update @state,
       $set:
@@ -45,11 +55,17 @@ GeneralTab = React.createClass
     feedbackDescription = "Users will be able to review problems when this feature is enabled. The ratings will be available to you
       on the Problem tab."
 
+    competitionNameDescription = "The name of the competition."
+    competitionURLDescription = "The base URL for the competition website. This must be set in order for users to reset
+      their passwords."
+
     startTimeDescription = "Before the competition has started, users will be able to register without viewing the problems."
     endTimeDescription = "After the competition has ended, users will no longer be able to submit keys to the challenges."
 
     <Well>
       <BooleanEntry name="Receive Problem Feedback" value={@state.enable_feedback} onChange=@toggleFeedbackEnabled description={feedbackDescription}/>
+      <TextEntry name="Competition Name" value={@state.competition_name} type="text" onChange=@updateCompetitionName description={competitionNameDescription}/>
+      <TextEntry name="Competition URL" value={@state.competition_url} type="text" onChange=@updateCompetitionURL description={competitionURLDescription}/>
       <TimeEntry name="Competition Start Time" value={@state.start_time["$date"]} onChange=@updateStartTime description={startTimeDescription}/>
       <TimeEntry name="Competition End Time" value={@state.end_time["$date"]} onChange=@updateEndTime description={endTimeDescription}/>
 
@@ -215,6 +231,8 @@ SettingsTab = React.createClass
         $date: 0
       end_time:
         $date: 0
+      competition_name: ""
+      competition_url: ""
       enable_feedback: true
       email:
         email_verification: false
@@ -250,6 +268,8 @@ SettingsTab = React.createClass
   render: ->
     generalSettings =
       enable_feedback: @state.settings.enable_feedback
+      competition_name: @state.settings.competition_name
+      competition_url: @state.settings.competition_url
       start_time: @state.settings.start_time
       end_time: @state.settings.end_time
 

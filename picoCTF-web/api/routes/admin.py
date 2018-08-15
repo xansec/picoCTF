@@ -194,4 +194,6 @@ def get_settings():
 def change_settings():
     data = bson.json_util.loads(request.form["json"])
     api.config.change_settings(data)
+    # Update Flask app settings (necessary for email to work)
+    api.app.config_app()
     return WebSuccess("Settings updated")
