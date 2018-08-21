@@ -42,9 +42,15 @@ server {
             proxy_redirect off;
         }
 
-        location ~ ^/(problems|profile|scoreboard|account|shell|reset|faq|news|contact)$ {
+        location ~ ^/(problems|profile|scoreboard|account|shell|faq|news|contact)$ {
             auth_request /api/user/authorize/user;
             expires -1;
+            default_type text/html;
+            alias {{ pico_http_dir }}/$1.html;
+        }
+
+        # Move reset from auth checked list above, user can't login...
+        location ~ ^/(reset)$ {
             default_type text/html;
             alias {{ pico_http_dir }}/$1.html;
         }
