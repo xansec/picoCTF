@@ -139,7 +139,8 @@ def run():
                 print("Couldn't run script to create symlinks")
 
             try:
-                shell.run(["sudo", "rm", "-r", temp_dir])
+                with shell:
+                    shell.run(["sudo", "rm", "-r", temp_dir])
             except api.common.WebException as e:
                 print("Couldn't remove temporary directory on shell server")
             except Exception as e:
