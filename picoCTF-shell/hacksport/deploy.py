@@ -401,7 +401,7 @@ def template_staging_directory(staging_directory, problem):
 
     # prepend the staging directory to all
     dont_template = copy(problem.dont_template) + [
-        "problem.json", "challenge.py", "templates", "__pre_templated"
+        "app/templates", "problem.json", "challenge.py", "templates", "__pre_templated"
     ]
 
     dont_template_files = list(filter(isfile, dont_template))
