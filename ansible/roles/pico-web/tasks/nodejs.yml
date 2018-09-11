@@ -16,7 +16,7 @@
 
 # Since shell commands are not idempotent we manually
 # check above if already have the nodejs repo (implying
-# all nodejs steps where previosuly sucessful)
+# all nodejs steps where previously successful)
 - name: Setup nodejs repositories
   shell: "/tmp/node_setup.sh"
   become: yes

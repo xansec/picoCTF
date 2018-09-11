@@ -367,7 +367,7 @@ def insert_achievement(achievement):
     Args:
         achievement: the achievement object loaded from json.
     Returns:
-        The achievment's aid.
+        The achievement's aid.
     """
 
     db = api.common.get_conn()
@@ -411,7 +411,7 @@ def update_achievement(aid, updated_achievement):
     achievement = get_achievement(aid=aid, show_disabled=True).copy()
     achievement.update(updated_achievement)
 
-    # pass validation by removing/readding aid
+    # pass validation by removing/re-adding aid
     achievement.pop("aid")
     validate(achievement_schema, achievement)
     achievement["aid"] = aid

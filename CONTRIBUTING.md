@@ -60,8 +60,8 @@ GitHub has two good guides that explain this process in greater detail:
     git checkout master
   git merge upstream/master
     ```
-    Now your local copy of the repository has all the latest changes. Be sure to rebase any private feature branches you are working on off of this fresh verison of `master`.
-4. Push your synchronized branch up to your copy of the reposity on GitHub.
+    Now your local copy of the repository has all the latest changes. Be sure to rebase any private feature branches you are working on off of this fresh version of `master`.
+4. Push your synchronized branch up to your copy of the repository on GitHub.
     ```git push origin master```
 
 ## Git Workflow
@@ -69,7 +69,7 @@ GitHub has two good guides that explain this process in greater detail:
 The steps described above are our interpretation of a Forking Workflow
 as excellently described by
 [Atlassian](https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow).
-Additionally please consider reading thier section on the
+Additionally please consider reading their section on the
 [Feature Branch Workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow)
 which this is based.
 
@@ -82,7 +82,7 @@ Other common conventions:
 - Releases are tagged and live in a release branch. Based on the
   nature of the picoCTF team these releases are typically centered
   around a competition. Once a release is made it should only expect
-  to recieve bug fixes.
+  to receive bug fixes.
 
 If you are seeking to run your own competition, and don't require the
 features under active development on `master`, we recommend working

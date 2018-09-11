@@ -29,7 +29,7 @@ provider "aws" {
 ###
 # Environmental Configuration
 # This demonstrates how the defaults for the single_tier_aws module can
-# optionally be customized and overloaded for different environements.
+# optionally be customized and overloaded for different environments.
 ###
 
 # Create single tier infrastructure with environmental configuration

@@ -28,7 +28,7 @@ def confirm_password(attempt, password_hash):
 
     Args:
         attempt: the password attempt
-        password_hash: the real password pash
+        password_hash: the real password hash
     """
     return bcrypt.hashpw(attempt.encode('utf-8'),
                          password_hash) == password_hash

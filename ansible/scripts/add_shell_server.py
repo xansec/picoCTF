@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Simple script to programmaticly add a shell server to a running picoCTF web
+# Simple script to programmatically add a shell server to a running picoCTF web
 # instance.  If using a custom APP_SETTINGS_FILE, ensure the appropriate
 # environment variable is set prior to running this script. This script is best
 # run from the pico-web role (ansible/roles/pico-web/tasks/main.yml)

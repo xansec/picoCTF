@@ -140,7 +140,7 @@ def memoize(timeout=None, fast=False):
     Cache a function based on its arguments.
 
     Args:
-        timout: Time the result stays valid in the cache.
+        timeout: Time the result stays valid in the cache.
     Returns:
         The functions result.
     """

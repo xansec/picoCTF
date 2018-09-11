@@ -251,7 +251,7 @@ def update_problem(pid, updated_problem):
 
     problem.update(updated_problem)
 
-    # pass validation by removing/readding pid
+    # pass validation by removing/re-adding pid
     # TODO: add in-database problem schema
     """
     problem.pop("pid", None)

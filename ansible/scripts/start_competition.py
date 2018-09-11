@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Simple script to programmaticly start a competition useful for development
+# Simple script to programmatically start a competition useful for development
 # and testing purposes. Defaults to 1 year.
 
 # If using a custom APP_SETTINGS_FILE, ensure the appropriate

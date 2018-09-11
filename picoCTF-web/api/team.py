@@ -140,7 +140,7 @@ def create_new_team_request(params, uid=None):
         team_name: The desired name for the team. Must be unique across users and teams.
         team_password: The team's password.
     Returns:
-        True if successful, exception thrown elsewise.
+        True if successful, exception thrown otherwise.
     """
 
     validate(new_team_schema, params)

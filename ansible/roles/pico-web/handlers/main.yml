@@ -1,12 +1,12 @@
 ---
-# Handlers that reload and restart a runnning nginx server 
+# Handlers that reload and restart a running nginx server
 
 - name: nginx reload
-  service: 
+  service:
     name: nginx
     state: reloaded
 
 - name: nginx restart
-  service: 
+  service:
     name: nginx
     state: restarted

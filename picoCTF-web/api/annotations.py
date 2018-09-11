@@ -75,7 +75,7 @@ def api_wrapper(f):
         except Exception as error:
             wrapper_log.error(traceback.format_exc())
             web_result = WebError(
-                "An error occured. Please contact an administrator.")
+                "An error occurred. Please contact an administrator.")
 
         return bson.json_util.dumps(web_result)
 

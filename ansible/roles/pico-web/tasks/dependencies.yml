@@ -1,5 +1,5 @@
 ---
-# Playbook that installs the dependencies for the picoctf-web server
+# Playbook that installs the dependencies for the picoCTF-web server
 
 - name: Update apt
   apt:

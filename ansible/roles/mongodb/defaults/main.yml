@@ -34,7 +34,7 @@ mongodb_conf_logpath: /var/log/mongodb/{{ mongodb_daemon_name }}.log  # Log to f
 mongodb_conf_dbpath: "{{ db_data_path }}"                             # Directory for datafiles (Static)
 
 ###
-# AWS specific mount points (defined in Terrafrom - static)
+# AWS specific mount points (defined in Terraform - static)
 ##
 on_aws: False
 db_data_device: "/dev/xvdf"

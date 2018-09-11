@@ -91,7 +91,7 @@ user_schema = Schema(
         check(("You must specify an affiliation.", [str,
                                                     Length(min=3, max=50)])),
         Required('eligibility'):
-        check(("You must specify whether or not your account is eligibile.",
+        check(("You must specify whether or not your account is eligible.",
                [str, lambda status: status in ["eligible", "ineligible"]])),
     },
     extra=True)
@@ -323,7 +323,7 @@ def create_simple_user_request(params):
         firstname: user's first name
         lastname: user's first name
         email: user's email
-        eligibile: "eligibile" or "ineligibile"
+        eligible: "eligible" or "ineligible"
         affiliation: user's affiliation
         gid: group registration
         rid: registration id
