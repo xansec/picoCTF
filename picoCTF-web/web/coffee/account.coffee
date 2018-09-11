@@ -126,7 +126,7 @@ TeamManagementForm = React.createClass
         <Panel header="Team Management">
           <form onSubmit={@onTeamJoin}>
             <Input type="text" valueLink={@linkState "team_name"} addonBefore={towerGlyph} label="Team Name" required/>
-            <Input type="password" valueLink={@linkState "team_password"} addonBefore={lockGlyph} label="Team Password"/>
+            <Input type="password" valueLink={@linkState "team_password"} addonBefore={lockGlyph} label="Team Password" required/>
             <Col md={6}>
               <span>
                 <Button type="submit">Join Team</Button>
