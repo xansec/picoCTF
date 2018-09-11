@@ -237,7 +237,7 @@ def get_problem_submission_stats(pid=None, name=None):
 
     Args:
         pid: the pid of the problem
-        nmae: the name of the problem
+        name: the name of the problem
     Returns:
         Dict of {valid: #, invalid: #}
     """
@@ -313,7 +313,7 @@ def get_top_teams(gid=None, eligible=None):
 def get_problem_solves(name=None, pid=None):
     """
     Returns the number of solves for a particular problem.
-    Must supply eithe pid or name.
+    Must supply either pid or name.
 
     Args:
         name: name of the problem
@@ -645,7 +645,7 @@ def get_days_active_breakdown(eligible=True, user_breakdown=None):
 def check_invalid_instance_submissions(gid=None):
     db = api.api.common.get_conn()
     badteams = set()
-    shared_key_submisssions = []
+    shared_key_submissions = []
 
     group = None
     if gid is not None:
@@ -667,9 +667,9 @@ def check_invalid_instance_submissions(gid=None):
                         submission['username'] = api.user.get_user(
                             uid=submission['uid'])['username']
                         submission["problem_name"] = problem["name"]
-                        shared_key_submisssions.append(submission)
+                        shared_key_submissions.append(submission)
 
-    return shared_key_submisssions
+    return shared_key_submissions
 
 
 def get_review_stats():

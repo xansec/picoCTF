@@ -7,7 +7,7 @@ db
 shell
 web
 
-# In a development environement, or simple deployment collocate the database
+# In a development environment, or simple deployment collocate the database
 # with the web server
 [db]
 pico_db     ansible_connection=local    hostname=pico-2018-db-1 ansible_host=<CHANGE_TO_FQDN> db_private_ip=<CHANGE_TO_pico_db_IP> on_aws=<if no EBS: False, else remove>

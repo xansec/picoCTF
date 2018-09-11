@@ -163,7 +163,7 @@ def get_teacher_information_hook(gid=None):
 @blueprint.route('/member_information', methods=['GET'])
 @api_wrapper
 @require_teacher
-def get_memeber_information_hook(gid=None):
+def get_member_information_hook(gid=None):
     gid = request.args.get("gid")
 
     user = api.user.get_user()

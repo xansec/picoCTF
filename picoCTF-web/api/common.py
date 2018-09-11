@@ -149,7 +149,7 @@ def check(*callback_tuples):
 
     def v(value):
         """
-        Trys to validate the value with the given callbacks.
+        Tries to validate the value with the given callbacks.
 
         Args:
             value: the item to validate

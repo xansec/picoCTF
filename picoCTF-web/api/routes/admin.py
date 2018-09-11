@@ -56,7 +56,7 @@ def dismiss_exceptions_hook():
     trace = request.form.get("trace", None)
     if trace:
         api.admin.dismiss_api_exceptions(trace)
-        return WebSuccess(data="Successfuly changed exception visibility.")
+        return WebSuccess(data="Successfully changed exception visibility.")
     else:
         return WebError(message="You must supply a trace to hide.")
 

@@ -62,7 +62,7 @@ def set_problem_availability(pid, disabled):
         api.cache.clear_all()
     else:
         raise WebException(
-            "You cannnot change the availability of \"{}\".".format(
+            "You cannot change the availability of \"{}\".".format(
                 problem["name"]))
     return result
 

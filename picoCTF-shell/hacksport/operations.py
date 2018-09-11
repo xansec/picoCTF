@@ -23,7 +23,7 @@ def execute(cmd, timeout=60, **kwargs):
 
     Args:
         cmd: List of command arguments
-        timeout: maximum alloted time for the command
+        timeout: maximum allotted time for the command
         **kwargs: passes to LocalShell.spawn
     Returns:
         An execution result.

@@ -190,8 +190,8 @@ picoCTF was started by David Brumley with his CMU professor hat in 2013. The
 intention has always been to give back to the CTF community.
 
 The original heavy lifting was done by his graduate students, and special thanks
-is due to Peter Chapman (picoctf 2013 technical lead) and Jonathan Burket
-(picoctf 2014 technical lead) for their immense efforts not only developing
+is due to Peter Chapman (picoCTF 2013 technical lead) and Jonathan Burket
+(picoCTF 2014 technical lead) for their immense efforts not only developing
 code, but for organizing art work, problem development, and so on.
 
 In 2015-2016 significant effort was done by

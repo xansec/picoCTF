@@ -17,7 +17,7 @@ blueprint = Blueprint("user_api", __name__)
 @blueprint.route("/authorize/<role>")
 def authorize_role(role=None):
     """
-    This route is used to ensure sensitive static content is witheld from withheld from clients.
+    This route is used to ensure sensitive static content is withheld from clients.
     """
 
     if role == "user" and safe_fail(api.user.get_user):

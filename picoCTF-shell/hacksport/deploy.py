@@ -117,7 +117,7 @@ from copy import copy, deepcopy
 from grp import getgrnam
 from hashlib import md5, sha1
 from importlib.machinery import SourceFileLoader
-# These are below because of a cirucular import issue with problem.py and give_port
+# These are below because of a circular import issue with problem.py and give_port
 # [TODO] cleanup
 from os.path import commonprefix, isdir, isfile, join
 from pwd import getpwnam
