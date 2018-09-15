@@ -297,4 +297,5 @@ AuthPanel = React.createClass
       </div>
 
 $ ->
+  redirectIfLoggedIn()
   React.render <AuthPanel/>, document.getElementById("auth-box")
