@@ -121,6 +121,8 @@ def pam_sm_authenticate(pam_handle, flags, argv):
                 # this causes the connection to close
                 return pamh.PAM_SUCCESS
             else:
+                # sleep before displaying error message to slow down scanners
+                time.sleep(3)
                 display("Please make an account on the web site first.")
                 return pamh.PAM_USER_UNKNOWN
 
