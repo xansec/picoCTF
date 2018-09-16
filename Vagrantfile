@@ -36,6 +36,7 @@ Vagrant.configure("2") do |config|
          shell_hostname:(ENV['SIP'] || '192.168.2.3'),
          shell_host:(ENV['SIP'] || '192.168.2.3')
       }
+      ansible.verbose = (ENV['V'] || false)
     end
 
     shell.vm.provider "virtualbox" do |vb|
@@ -74,6 +75,7 @@ Vagrant.configure("2") do |config|
          shell_hostname:(ENV['SIP'] || '192.168.2.3'),
          shell_host:(ENV['SIP'] || '192.168.2.3')
       }
+      ansible.verbose = (ENV['V'] || false)
     end
 
     web.vm.provider "virtualbox" do |vb|
