@@ -248,7 +248,7 @@ AuthPanel = React.createClass
         when 0
             apiNotify resp
         when 1
-          if document.location.hash == "#team-builder"
+          if document.location.hash == "#team-builder" and not resp.data.teacher
             @setPage "Team Management"
           else
             if resp.data.teacher
