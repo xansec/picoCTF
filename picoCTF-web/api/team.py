@@ -481,7 +481,6 @@ def update_password(tid, password):
     }, {'$set': {
         'password': api.common.hash_password(password)
     }})
-    db.teams.update({'tid': tid}, {'$set': {'password': password}})
 
 
 def is_teacher_team(tid):
