@@ -129,4 +129,6 @@ def pam_sm_authenticate(pam_handle, flags, argv):
         except Exception as e:
             pass
 
+    # sleep before failing to slow down scanners
+    time.sleep(3)
     return pamh.PAM_AUTH_ERR
