@@ -141,6 +141,7 @@
     - tmux
   # z: misc
     - expect
+    - pandoc # for `pip install pwntools`
 
 - name: Install common pip2 packages for CTF shell servers
   pip:
@@ -158,3 +159,4 @@
     - ipython
     - ptpython
     - pwntools
+  when: False # pwntools is not ready for python3; skipping to avoid confusion
