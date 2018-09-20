@@ -9,11 +9,10 @@ shell
 web
 
 [db]
-remote_testing_db      ansible_connection=local   hostname=pico-aws-testing-db
+remote_testing_db     ansible_connection=local hostname=pico-aws-testing-db     ansible_host=<CHANGE_TO_FQDN> db_private_ip=<CHANGE_TO_pico_db_IP> on_aws=<if no EBS: False, else remove>
 
 [shell]
-remote_testing_shell   ansible_connection=local   hostname=pico-aws-testing-shell
+remote_testing_shell1 ansible_connection=local hostname=pico-aws-testing-shell1 ansible_host=<CHANGE_TO_FQDN> db_private_ip=<CHANGE_TO_pico_db_IP> shell_ip=<CHANGE_TO_pico_shell1_public_ip>
 
 [web]
-remote_testing_web     ansible_connection=local   hostname=pico-aws-testing-web
-
+remote_testing_web    ansible_connection=local hostname=pico-aws-testing-web    ansible_host=<CHANGE_TO_FQDN> db_private_ip=<CHANGE_TO_pico_db_IP> shell_ip=<CHANGE_TO_pico_shell1_public_ip> web_fqdn=<CHANGE_TO_web_fqdn>
