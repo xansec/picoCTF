@@ -716,3 +716,23 @@ def print_review_comments():
             print("----------")
             for comment in comments:
                 print("'%s'" % comment)
+
+
+@api.cache.memoize()
+def get_registration_count():
+    db = api.common.get_conn()
+    users = db.users.count();
+    stats = {
+        "users": users,
+        "teams": db.teams.count() - users,
+        "groups": db.groups.count()
+    }
+    all_users = api.user.get_all_users()
+    teamed_users = 0
+    for user in all_users:
+        real_team = db.teams.count({"tid": user["tid"], "team_name": {"$ne": user["username"]}})
+        if real_team:
+            teamed_users += 1
+    stats["teamed_users"] = teamed_users
+
+    return stats

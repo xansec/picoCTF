@@ -167,6 +167,7 @@ AuthPanel = React.createClass
     status: params.status
     groupName: ""
     eligibility: "eligible"
+    regStats: {}
 
   componentWillMount: ->
     if @state.status == "verified"
@@ -196,6 +197,13 @@ AuthPanel = React.createClass
       @setState update @state,
         settings: $merge: resp.data
      ).bind this
+
+    apiCall "GET", "/api/stats/registration"
+    .done ((resp) ->
+      if resp.status
+        @setState update @state,
+          regStats: $set: resp.data
+    ).bind this
 
   onRegistration: (e) ->
     e.preventDefault()
@@ -278,6 +286,18 @@ AuthPanel = React.createClass
     affiliation: @linkState "affiliation"
     eligibility: @linkState "eligibility"
 
+    showRegStats = (()->
+      if @state.regStats
+        <Panel>
+          <h4><strong>Registration Statistics</strong></h4>
+          <p>
+            <strong>{@state.regStats.users}</strong> users have registered, <strong>{@state.regStats.teamed_users}</strong> of
+            which have formed <strong>{@state.regStats.teams}</strong> teams.<br />
+            <strong>{@state.regStats.groups}</strong> classrooms have been created by teachers.
+          </p>
+        </Panel>
+    ).bind this
+
     if @state.page == "Team Management"
       <div>
         <Row>
@@ -293,6 +313,7 @@ AuthPanel = React.createClass
               <LoginForm setPage={@setPage} status={@state.page} onRegistration={@onRegistration}
                 onLogin={@onLogin} onPasswordReset={@onPasswordReset} emailFilter={@state.settings.email_filter}
                 groupName={@state.groupName} rid={@state.rid} gid={@state.gid} {...links}/>
+              {showRegStats()}
             </Col>
         </Row>
       </div>
