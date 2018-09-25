@@ -21,26 +21,7 @@
 
 <script type="text/template" id="navbar-links-template">
     <div class="collapse navbar-collapse navbar-ex1-collapse row">
-        <div class="col-md-9 pull-right">
-            <ul class="nav navbar-nav navbar-right" id="navbar-links">
-                <% if(status.logged_in) { %>
-                <li>
-                    <a href="/account" id="navbar-item-account">
-                        <span class="glyphicon glyphicon-user" aria-hidden="true"></span> <%- status.username %>
-                    </a>
-                </li>
-                <li>
-                    <a href="/profile" id="navbar-item-profile">
-                        <span class="glyphicon glyphicon-flash" aria-hidden="true"></span> <%- status.score %>
-                    </a>
-                </li>
-                <li>
-                    <a hrefA="#" id="navbar-item-logout"">Logout</a>
-                </li>
-                <% } %>
-            </ul>
-        </div>
-        <div class="col-md-12">
+        <div class="col-sm-12">
             <ul class="nav navbar-nav navbar-right" id="navbar-links">
             <% _.each(links, function(link, name) { %>
                 <% if(typeof link == "object") {  %>
@@ -54,6 +35,25 @@
                     <li><a href="<%= link %>" id="navbar-item-<%= name.split(' ').join('_').toLowerCase() %>"><%- name %></a></li>
                 <% }; %>
             <% }); %>
+            </ul>
+        </div>
+        <div class="col-sm-9" id="nav-profile-container">
+            <ul class="nav navbar-nav navbar-right" id="navbar-links">
+                <% if(status.logged_in) { %>
+                <li>
+                    <a href="/account" id="navbar-item-account">
+                        <span class="glyphicon glyphicon-user" aria-hidden="true"></span> <%- status.username %>
+                    </a>
+                </li>
+                <li>
+                    <a href="/profile" id="navbar-item-profile">
+                        <span class="glyphicon glyphicon-flash" aria-hidden="true"></span> <%- status.score %>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="navbar-item-logout"">Logout</a>
+                </li>
+                <% } %>
             </ul>
         </div>
     </div>
