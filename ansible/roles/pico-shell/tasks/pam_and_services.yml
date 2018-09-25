@@ -123,3 +123,9 @@
     owner: root
     group: root
     mode: 0644
+
+- name: Disable systemd.logind permenantly by masking
+  systemd:
+    name: systemd-logind.service
+    state: stopped
+    masked: yes
