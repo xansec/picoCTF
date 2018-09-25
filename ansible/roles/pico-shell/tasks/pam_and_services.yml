@@ -115,3 +115,11 @@
   group:
     name: competitors
     state: present
+
+- name: Copy over login.defs
+  copy:
+    src: login.defs
+    dest: /etc/login.defs
+    owner: root
+    group: root
+    mode: 0644
