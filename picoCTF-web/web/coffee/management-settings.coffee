@@ -224,6 +224,95 @@ EmailTab = React.createClass
       </Row>
     </Well>
 
+ShardingTab = React.createClass
+  propTypes:
+    refresh: React.PropTypes.func.isRequired
+    shardingSettings: React.PropTypes.object.isRequired
+
+  getInitialState: ->
+    settings = @props.shardingSettings
+
+  updateSteps: (e) ->
+    @setState update @state,
+      $set:
+        steps: e.target.value.replace(/, +/g, ",").split(',').map(Number)
+
+  updateDefaultStepping: (e) ->
+    @setState update @state,
+      $set:
+        default_stepping: parseInt(e.target.value)
+
+  toggleSharding: ->
+    @setState update @state,
+      $set:
+        enable_sharding: !@state.enable_sharding
+
+  toggleLimitRange: ->
+    @setState update @state,
+      $set:
+        limit_added_range: !@state.limit_added_range
+
+  pushUpdates: (makeChange) ->
+    pushData =
+      shell_servers:
+        enable_sharding: @state.enable_sharding
+        default_stepping: @state.default_stepping
+        steps: @state.steps
+        limit_added_range: @state.limit_added_range
+
+    if typeof(makeChange) == "function"
+      pushData = makeChange pushData
+
+    apiCall "POST", "/api/admin/settings/change", {json: JSON.stringify(pushData)}
+    .done ((data) ->
+      apiNotify data
+      @props.refresh()
+    ).bind(this)
+
+  assignServerNumbers: ->
+    confirmDialog("This will assign server_numbers to all unassigned teams. This may include teams previously defaulted to server_number 1 and already given problem instances!", "Assign Server Numbers Confirmation", "Assign Server Numbers", "Cancel",
+    () ->
+      apiCall "POST", "/api/admin/shell_servers/reassign_teams", {}
+      .done (data) ->
+        apiNotify data
+    , () ->
+    )
+
+  reassignServerNumbers: ->
+    confirmDialog("This will reassign all teams. Problem instances will be randomized for any teams that change servers!", "Reassign Server Numbers Confirmation", "Reassign Server Numbers", "Cancel",
+    () ->
+      apiCall "POST", "/api/admin/shell_servers/reassign_teams", {"include_assigned": "True"}
+      .done (data) ->
+        apiNotify data
+    , () ->
+    )
+
+  render: ->
+    shardingDescription = "Sharding splits teams to different shell_servers based on stepping"
+    defaultSteppingDescription = "Default stepping, applied after defined steps"
+    stepsDescription = "Comma delimited list of stepping (e.g. '1000,1500,2000')"
+    limitRangeDescription = "Limit assignments to the highest added server_number"
+
+    <Well>
+      <Row>
+        <Col sm={8}>
+          <BooleanEntry name="Enable Sharding" value={@state.enable_sharding} onChange=@toggleSharding description={shardingDescription}/>
+          <TextEntry name="Defined Steps" value={@state.steps} type="text" onChange=@updateSteps description={stepsDescription}/>
+          <TextEntry name="Default Stepping" value={@state.default_stepping} type="text" onChange=@updateDefaultStepping description={defaultSteppingDescription}/>
+          <BooleanEntry name="Limit to Added Range" value={@state.limit_added_range} onChange=@toggleLimitRange description={limitRangeDescription}/>
+          <br/><Button onClick={@assignServerNumbers}>Assign Server Numbers</Button> &nbsp; <Button onClick={@reassignServerNumbers}>Reassign All Server Numbers</Button><br/><br/>
+          <Row>
+            <div className="text-center">
+              <ButtonToolbar>
+                <Button onClick={@pushUpdates}>Update</Button>
+              </ButtonToolbar>
+            </div>
+          </Row>
+        </Col>
+      </Row>
+    </Well>
+
+
 SettingsTab = React.createClass
   getInitialState: ->
     settings:
@@ -246,6 +335,11 @@ SettingsTab = React.createClass
       logging:
         admin_emails: []
       email_filter: []
+      shell_servers:
+        enable_sharding: false
+        default_stepping: 1
+        steps: ""
+        limit_added_range: false
 
     tabKey: "general"
 
@@ -282,6 +376,11 @@ SettingsTab = React.createClass
           <TabPane eventKey='general' tab='General'>
             <GeneralTab refresh=@refresh settings={generalSettings} key={Math.random()}/>
           </TabPane>
+
+          <TabPane eventKey='sharding' tab='Sharding'>
+            <ShardingTab refresh={@refresh} shardingSettings={@state.settings.shell_servers} key={Math.random()}/>
+          </TabPane>
+
           <TabPane eventKey='email' tab='Email'>
             <EmailTab refresh={@refresh} emailSettings={@state.settings.email} emailFilterSettings={@state.settings.email_filter}
               loggingSettings={@state.settings.logging} key={Math.random()}/>

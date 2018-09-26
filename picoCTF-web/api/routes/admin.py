@@ -90,7 +90,7 @@ def change_problem_availability_hook():
 @api_wrapper
 @require_admin
 def get_shell_servers():
-    return WebSuccess(data=api.shell_servers.get_servers())
+    return WebSuccess(data=api.shell_servers.get_servers(get_all=True))
 
 
 @blueprint.route("/shell_servers/add", methods=["POST"])
@@ -158,6 +158,24 @@ def check_status_of_shell_server():
         return WebError(
             "One or more problems are offline. Please connect and fix the errors.",
             data=data)
+
+
+@blueprint.route("/shell_servers/reassign_teams", methods=['POST'])
+@api_wrapper
+@require_admin
+def reassign_teams_hook():
+    if not api.config.get_settings()["shell_servers"]["enable_sharding"]:
+        return WebError(
+            "Enable sharding first before assigning server numbers.")
+    else:
+        include_assigned = request.form.get("include_assigned", False)
+        count = api.shell_servers.reassign_teams(
+            include_assigned=include_assigned)
+        if include_assigned:
+            action = "reassigned."
+        else:
+            action = "assigned."
+        return WebSuccess(str(count) + " teams " + action)
 
 
 @blueprint.route("/bundle/dependencies_active", methods=["POST"])

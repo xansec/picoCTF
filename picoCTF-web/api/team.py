@@ -190,6 +190,11 @@ def create_team(params):
     params['size'] = 0
     params['instances'] = {}
 
+    settings = api.config.get_settings()
+    if settings["shell_servers"]["enable_sharding"]:
+        params['server_number'] = api.shell_servers.get_assigned_server_number(
+            new_team=True)
+
     db.teams.insert(params)
 
     return params['tid']
