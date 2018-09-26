@@ -143,6 +143,11 @@
     - expect
     - pandoc # for `pip install pwntools`
 
+- name: Ensure nano is the default editor
+  alternatives:
+    name: editor
+    path: /bin/nano
+
 - name: Install common pip2 packages for CTF shell servers
   pip:
     name: "{{ item }}"
