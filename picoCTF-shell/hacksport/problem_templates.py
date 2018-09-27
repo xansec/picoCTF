@@ -58,6 +58,8 @@ def CompiledBinary(makefile=None,
         compiler_flags.append("-zexecstack")
     if no_stack_protector and "-fno-stack-protector" not in compiler_flags:
         compiler_flags.append("-fno-stack-protector")
+    if no_stack_protector and "-D_FORTIFY_SOURCE=0" not in compiler_flags:
+        compiler_flags.append("-D_FORTIFY_SOURCE=0")
 
     if makefile is None and sources is None:
         assert False, "You must provide either a makefile or a sources list"
