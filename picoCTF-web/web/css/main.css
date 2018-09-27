@@ -64,7 +64,7 @@
 
 @media (min-width: 768px) {
   #nav-profile-container {
-    position: fixed;
+    position: absolute;
     top: 0;
     right: 10%;
   }
