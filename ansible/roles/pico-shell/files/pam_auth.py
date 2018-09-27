@@ -20,6 +20,11 @@ TIMEOUT = 5
 pamh = None
 
 
+def competition_active():
+    r = requests.get(SERVER + "/api/user/status")
+    return json.loads(r.text)["data"]["competition_active"]
+
+
 def run_login(user, password):
     r = requests.post(
         SERVER + "/api/user/login",
@@ -42,6 +47,8 @@ def prompt(string):
 
 
 def server_user_exists(user):
+    if not competition_active():
+        return False
     result = run_login(user, "`&/")
     return result == "Incorrect password"
 
@@ -96,7 +103,7 @@ def pam_sm_authenticate(pam_handle, flags, argv):
         group = grp.getgrnam(COMPETITORS_GROUP)
         # local account exists and server account exists
         if server_user_exists(user) and user in group.gr_mem:
-            response = prompt("Enter your password: ")
+            response = prompt("Enter your platform password: ")
             result = run_login(user, response.resp)
 
             if "Successfully logged in" in result:
@@ -123,7 +130,7 @@ def pam_sm_authenticate(pam_handle, flags, argv):
             else:
                 # sleep before displaying error message to slow down scanners
                 time.sleep(3)
-                display("Please make an account on the web site first.")
+                display("Competition has not started or username does not exist on the platform website.")
                 return pamh.PAM_USER_UNKNOWN
 
         except Exception as e:
