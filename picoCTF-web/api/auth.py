@@ -96,9 +96,11 @@ def is_logged_in():
     """
 
     logged_in = "uid" in session
-    if logged_in and not safe_fail(api.user.get_user, uid=session["uid"]):
-        logout()
-        return False
+    if logged_in:
+        user = safe_fail(api.user.get_user, uid=session["uid"])
+        if not user or user["disabled"]:
+            logout()
+            return False
     return logged_in
 
 
