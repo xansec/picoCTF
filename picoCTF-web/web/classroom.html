@@ -59,10 +59,8 @@ post_scripts:
                             </p>
                         </div>
                         <% var registrationLink = document.location.origin + "/#g=" + gid; %>
-                        <!--
                         <p>Or register with this link to automatically join:</p>
                         <a href="<%= registrationLink %>"><%= registrationLink %></a>
-                        -->
                     </div>
                 </div>
               </div>
@@ -181,7 +179,7 @@ post_scripts:
             </div>
           </div>
           <% _.each(_.sortBy(teams, "team_name"), function(team) {
-            members = team.members.map(function(member){ return member.username }).join(", ") %>
+            members = team.members.map(function(member){ return member.firstname + " " + member.lastname }).join(", ") %>
             <div class="row">
               <div class="col-md-12">
                   <div class="problem panel panel-default">

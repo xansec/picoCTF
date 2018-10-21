@@ -25,9 +25,9 @@ createGroupSetup = () ->
     else
       # problems = _.filter resp.data.problems, (problem) -> !problem.disabled
       problems = resp.data; # non-admin API only returns non-disabled problems as top level data array
-      data = [["Teamname", "Usernames"].concat(_.map(problems, (problem) -> problem.name), ["Total"])]
+      data = [["Teamname", "Member Name(s)"].concat(_.map(problems, (problem) -> problem.name), ["Total"])]
       _.each teams, ((team) ->
-        members = '"' + team.members.map((member) -> return member.username).join(", ") + '"'
+        members = '"' + team.members.map((member) -> return member.firstname + ' ' + member.lastname).join(", ") + '"'
         teamData = [team.team_name, members]
         teamData = teamData.concat _.map problems, ((problem) ->
           solved = _.find team.solved_problems, (solvedProblem) -> solvedProblem.name == problem.name
