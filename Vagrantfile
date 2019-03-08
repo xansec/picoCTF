@@ -15,7 +15,7 @@ end
 
 Vagrant.configure("2") do |config|
   config.vm.define "shell", primary: true do |shell|
-    shell.vm.box = "ubuntu/xenial64"
+    shell.vm.box = "ubuntu/bionic64"
     shell.vm.network "private_network", ip: (ENV['SIP'] || '192.168.2.3')
 
     shell.vm.synced_folder ".", "/vagrant", disabled: true
@@ -54,7 +54,7 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define "web", primary: true do |web|
-    web.vm.box = "ubuntu/xenial64"
+    web.vm.box = "ubuntu/bionic64"
     web.vm.network "private_network", ip: (ENV['WIP'] || '192.168.2.2')
 
     web.vm.synced_folder ".", "/vagrant", disabled: true
@@ -83,7 +83,7 @@ Vagrant.configure("2") do |config|
       # Overridable settings
       vb.cpus = [(ENV['J'] || '1').to_i, Etc.nprocessors].min
       vb.gui = ENV['G']
-      vb.memory = (ENV['M'] || '1').to_i * 1024
+      vb.memory = (ENV['M'] || '2').to_i * 1024
       # Others
       vb.customize [
         "modifyvm", :id,

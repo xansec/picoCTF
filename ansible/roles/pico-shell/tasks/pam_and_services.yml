@@ -96,7 +96,7 @@
   command: sysctl --system
 
 - name: Restart networking service to pickup new configs
-  command: systemctl restart networking
+  command: systemctl restart systemd-networkd
 
 - name: Copy over journald.conf
   copy:

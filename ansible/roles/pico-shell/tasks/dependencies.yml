@@ -20,14 +20,14 @@
       'python-pip',       # used for pam module dependencies
       'python3',          # used by shell_manager
       'python3-pip',      # used for shell_manager dependencies
-      'python3.6',        # from PPA, to cover all likely interpreter directives
-      'python3.6-dev',
-      'python3.6-venv',
+      'python3.7',        # from PPA, to cover all likely interpreter directives
+      'python3.7-dev',
+      'python3.7-venv',
       'libffi-dev',
       'libssl-dev',
       'socat',
-      'php7.0-cli',       # php5 package deprecated
-      'php7.0-sqlite3',   # used to serve shellinabox and challenge binaries
+      'php7.2-cli',       # php5 package deprecated
+      'php7.2-sqlite3',   # used to serve shellinabox and challenge binaries
       'gcc-multilib',
       'nginx',
       'shellinabox']
@@ -63,7 +63,7 @@
   pip:
     name: packaging
     virtualenv: "{{ virtualenv_dir }}"
-    virtualenv_python: python3.6
+    virtualenv_python: python3.7
 
 - name: Install python appdirs
   pip:
@@ -104,7 +104,6 @@
       'gawk',
       'grep',
       'jq',
-      'realpath',
       'sed',
       'silversearcher-ag',
       # editors
