@@ -84,6 +84,8 @@ def get_scoreboard_hook(board, page):
             }
 
             for group in api.team.get_groups(uid=user["uid"]):
+                # this is called on every scoreboard pageload and should be cached
+                # to support large groups
                 group_board = api.stats.get_group_scores(gid=group['gid'])
                 group_pos = get_user_pos(group_board, user["tid"])
                 start_slice = math.floor(group_pos / 50) * 50
@@ -109,13 +111,14 @@ def get_scoreboard_hook(board, page):
                 user = api.user.get_user()
             if board == "groups":
                 for group in api.team.get_groups(uid=user.get("uid")):
+                    group_board = api.stats.get_group_scores(gid=group['gid'])
                     result.append({
                         'gid':
                             group['gid'],
                         'name':
                             group['name'],
                         'scoreboard':
-                            api.stats.get_group_scores(gid=group['gid'])[start:end]
+                            group_board[start:end]
                     })
             elif board == "global":
                 result = api.stats.get_all_team_scores(eligible=True, country=None, show_ineligible=True)[start:end]

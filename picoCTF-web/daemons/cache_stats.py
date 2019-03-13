@@ -29,6 +29,7 @@ def run():
             api.stats.get_top_teams_score_progressions,
             gid=group['gid'],
             show_ineligible=True)
+        cache(api.stats.get_group_scores, gid=group['gid'])
 
     print("Caching number of solves for each problem.")
     for problem in api.problem.get_all_problems():
