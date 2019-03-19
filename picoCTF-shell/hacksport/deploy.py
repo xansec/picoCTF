@@ -9,6 +9,7 @@ LOCALHOST = "127.0.0.1"
 PROBLEM_FILES_DIR = "problem_files"
 STATIC_FILE_ROOT = "static"
 XINETD_SERVICE_PATH = "/etc/xinetd.d/"
+TEMP_DEB_DIR = "/tmp/picoctf_debs/"
 
 # will be set to the configuration module during deployment
 deploy_config = None
@@ -110,9 +111,12 @@ import functools
 import json
 import logging
 import os
+import re
 import shutil
+import subprocess
 import traceback
 from abc import ABCMeta
+from argparse import Namespace
 from copy import copy, deepcopy
 from grp import getgrnam
 from hashlib import md5, sha1
@@ -131,6 +135,7 @@ from hacksport.problem import (Compiled, Directory, ExecutableFile, File,
 from hacksport.status import get_all_problem_instances, get_all_problems
 from jinja2 import Environment, FileSystemLoader, Template
 from shell_manager.bundle import get_bundle, get_bundle_root
+from shell_manager.package import problem_builder
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_problem, get_problem_root, HACKSPORTS_ROOT,
                                 sanitize_name, STAGING_ROOT)
@@ -907,26 +912,51 @@ def deploy_problems(args, config):
                     set(instance_list) -
                     set(already_deployed.get(problem_name, [])))
 
-            if args.dry and isdir(problem_name):
-                need_restart_xinetd = deploy_problem(
-                    problem_name,
-                    instances=todo_instance_list,
-                    test=args.dry,
-                    deployment_directory=args.deployment_directory,
-                    debug=args.debug,
-                    restart_xinetd=False)
+            # @todo: What about bundles?
+            if args.dry:
+                deploy_location = problem_name
+            elif isdir(problem_name):
+                # problem_name is a source dir - convert to .deb and install
+                try:
+                    # Ensure the temp .deb directory is empty
+                    shutil.rmtree(TEMP_DEB_DIR, ignore_errors=True)
+                    os.mkdir(TEMP_DEB_DIR)
+
+                    # @todo: split functional part of problem_builder
+                    # from input handling and call directly, get a
+                    # meaningful return value
+                    problem_builder(Namespace(out=TEMP_DEB_DIR, problem_paths=[problem_name], staging_dir="", ignore=[]), Namespace())
+                except FatalException:
+                    logger.error("An error occurred while packaging %s.", problem_name)
+                    raise FatalException # @todo can this take a message directly?
+                try:
+                    #@todo get the actual path of the generated deb to install
+                    # so we don't have to wipe the dir after each package
+                    generated_deb_path = TEMP_DEB_DIR + '*.deb'
+                    # reinstall flag ensures package will be overwritten if version is the same,
+                    # maintaining previous 'dpkg -i' behavior
+                    ret = subprocess.run('apt install --reinstall ' + generated_deb_path, shell=True, stdout=subprocess.PIPE) #@todo remove shell=True, change to list
+                    # @todo get the package name directly from problem_builder
+                    package_name = re.search('Unpacking (.+?) \(', str(ret.stdout)).group(1)
+                except Exception:
+                    logger.error("An error occurred while installing problem packages.")
+                    raise FatalException
+                deploy_location = join(get_problem_root(package_name, absolute=True))
             elif isdir(join(get_problem_root(problem_name, absolute=True))):
-                need_restart_xinetd = deploy_problem(
-                    join(get_problem_root(problem_name, absolute=True)),
-                    instances=todo_instance_list,
-                    test=args.dry,
-                    deployment_directory=args.deployment_directory,
-                    debug=args.debug,
-                    restart_xinetd=False)
+                # problem_name is already an installed package
+                deploy_location = join(get_problem_root(problem_name, absolute=True))
             else:
-                logger.error("Problem '%s' doesn't appear to be installed.",
+                logger.error("'%s' is neither an installed package, nor a valid problem directory",
                              problem_name)
                 raise FatalException
+
+            need_restart_xinetd = deploy_problem(
+                deploy_location,
+                instances=todo_instance_list,
+                test=args.dry,
+                deployment_directory=args.deployment_directory,
+                debug=args.debug,
+                restart_xinetd=False)
     finally:
         # Restart xinetd unless specified. Service must be manually restarted
         if not args.no_restart and need_restart_xinetd:
