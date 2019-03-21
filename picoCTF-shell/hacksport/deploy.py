@@ -111,12 +111,10 @@ import functools
 import json
 import logging
 import os
-import re
 import shutil
 import subprocess
 import traceback
 from abc import ABCMeta
-from argparse import Namespace
 from copy import copy, deepcopy
 from grp import getgrnam
 from hashlib import md5, sha1
