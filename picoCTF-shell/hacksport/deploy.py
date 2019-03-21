@@ -927,7 +927,7 @@ def deploy_problems(args, config):
                 try:
                     # reinstall flag ensures package will be overwritten if version is the same,
                     # maintaining previous 'dpkg -i' behavior
-                    subprocess.run('apt install --reinstall {}'.format(generated_deb_path), shell=True, check=True, stdout=subprocess.PIPE)
+                    subprocess.run('apt-get install --reinstall {}'.format(generated_deb_path), shell=True, check=True, stdout=subprocess.PIPE)
                 except subprocess.CalledProcessError:
                     logger.error("An error occurred while installing problem packages.")
                     raise FatalException
