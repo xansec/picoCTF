@@ -904,15 +904,6 @@ def deploy_problems(args, config):
 
     try:
         for problem_name in problem_names:
-            if args.redeploy:
-                todo_instance_list = instance_list
-            else:
-                # remove already deployed instances
-                todo_instance_list = list(
-                    set(instance_list) -
-                    set(already_deployed.get(problem_name, [])))
-
-            # @todo: What about bundles?
             if args.dry:
                 deploy_location = problem_name
             elif isdir(problem_name):
@@ -920,7 +911,7 @@ def deploy_problems(args, config):
                 try:
                     if not os.path.isdir(TEMP_DEB_DIR):
                         os.mkdir(TEMP_DEB_DIR)
-                    package_name, generated_deb_path = package_problem(problem_name, out_path=TEMP_DEB_DIR)
+                    problem_name, generated_deb_path = package_problem(problem_name, out_path=TEMP_DEB_DIR)
                 except FatalException:
                     logger.error("An error occurred while packaging %s.", problem_name)
                     raise
@@ -931,7 +922,7 @@ def deploy_problems(args, config):
                 except subprocess.CalledProcessError:
                     logger.error("An error occurred while installing problem packages.")
                     raise FatalException
-                deploy_location = join(get_problem_root(package_name, absolute=True))
+                deploy_location = join(get_problem_root(problem_name, absolute=True))
             elif isdir(join(get_problem_root(problem_name, absolute=True))):
                 # problem_name is already an installed package
                 deploy_location = join(get_problem_root(problem_name, absolute=True))
@@ -939,6 +930,14 @@ def deploy_problems(args, config):
                 logger.error("'%s' is neither an installed package, nor a valid problem directory",
                              problem_name)
                 raise FatalException
+
+            # Avoid redeploying already-deployed instances
+            if args.redeploy:
+                todo_instance_list = instance_list
+            else:
+                todo_instance_list = list(
+                    set(instance_list) -
+                    set(already_deployed.get(problem_name, [])))
 
             need_restart_xinetd = deploy_problem(
                 deploy_location,

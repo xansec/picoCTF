@@ -236,7 +236,7 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
                     problem["name"], paths["staging"])
     rmtree(paths["staging"])
 
-    return (problem['name'], os.path.abspath(deb_path))
+    return (sanitize_name(problem.get("pkg_name", problem["name"])), os.path.abspath(deb_path))
 
 
 def problem_builder(args, config):
