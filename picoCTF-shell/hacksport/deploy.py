@@ -904,7 +904,11 @@ def deploy_problems(args, config):
 
     try:
         for problem_name in problem_names:
-            if args.dry:
+            if isdir(join(get_problem_root(problem_name, absolute=True))):
+                # problem_name is already an installed package
+                deploy_location = join(get_problem_root(problem_name, absolute=True))
+            elif isdir(problem_name) and args.dry:
+                # dry run - avoid installing package
                 deploy_location = problem_name
             elif isdir(problem_name):
                 # problem_name is a source dir - convert to .deb and install
@@ -922,9 +926,6 @@ def deploy_problems(args, config):
                 except subprocess.CalledProcessError:
                     logger.error("An error occurred while installing problem packages.")
                     raise FatalException
-                deploy_location = join(get_problem_root(problem_name, absolute=True))
-            elif isdir(join(get_problem_root(problem_name, absolute=True))):
-                # problem_name is already an installed package
                 deploy_location = join(get_problem_root(problem_name, absolute=True))
             else:
                 logger.error("'%s' is neither an installed package, nor a valid problem directory",
