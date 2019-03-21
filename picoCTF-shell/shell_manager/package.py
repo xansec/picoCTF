@@ -169,7 +169,8 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
         ignore_files (list of str, optional): filenames to exclude
             when packaging this problem.
     Returns:
-        str: the absolute path to the packaged problem
+        tuple (str, str): the name of the package,
+            the absolute path to the packaged problem
     """
     problem = get_problem(problem_path)
     logger.debug("Starting to package: '%s'.", problem["name"])
@@ -226,6 +227,7 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
         logger.error("Error building problem deb for '%s'.",
                         problem["name"])
         logger.error(result.output)
+        raise FatalException
     else:
         logger.info("Problem '%s' packaged successfully.", problem["name"])
 
@@ -234,7 +236,7 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
                     problem["name"], paths["staging"])
     rmtree(paths["staging"])
 
-    return os.path.abspath(deb_path)
+    return (problem['name'], os.path.abspath(deb_path))
 
 
 def problem_builder(args, config):
@@ -257,4 +259,4 @@ def problem_builder(args, config):
         problem_paths.extend(problems_in_base)
 
     for problem_path in problem_paths:
-        package_problem(problem_path, args.staging_dir, args.out_dir, args.ignore)
+        package_problem(problem_path, args.staging_dir, args.out, args.ignore)

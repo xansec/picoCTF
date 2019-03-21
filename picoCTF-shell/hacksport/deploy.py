@@ -135,7 +135,7 @@ from hacksport.problem import (Compiled, Directory, ExecutableFile, File,
 from hacksport.status import get_all_problem_instances, get_all_problems
 from jinja2 import Environment, FileSystemLoader, Template
 from shell_manager.bundle import get_bundle, get_bundle_root
-from shell_manager.package import problem_builder
+from shell_manager.package import package_problem
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_problem, get_problem_root, HACKSPORTS_ROOT,
                                 sanitize_name, STAGING_ROOT)
@@ -918,27 +918,17 @@ def deploy_problems(args, config):
             elif isdir(problem_name):
                 # problem_name is a source dir - convert to .deb and install
                 try:
-                    # Ensure the temp .deb directory is empty
-                    shutil.rmtree(TEMP_DEB_DIR, ignore_errors=True)
-                    os.mkdir(TEMP_DEB_DIR)
-
-                    # @todo: split functional part of problem_builder
-                    # from input handling and call directly, get a
-                    # meaningful return value
-                    problem_builder(Namespace(out=TEMP_DEB_DIR, problem_paths=[problem_name], staging_dir="", ignore=[]), Namespace())
+                    if not os.path.isdir(TEMP_DEB_DIR):
+                        os.mkdir(TEMP_DEB_DIR)
+                    package_name, generated_deb_path = package_problem(problem_name, out_path=TEMP_DEB_DIR)
                 except FatalException:
                     logger.error("An error occurred while packaging %s.", problem_name)
-                    raise FatalException # @todo can this take a message directly?
+                    raise
                 try:
-                    #@todo get the actual path of the generated deb to install
-                    # so we don't have to wipe the dir after each package
-                    generated_deb_path = TEMP_DEB_DIR + '*.deb'
                     # reinstall flag ensures package will be overwritten if version is the same,
                     # maintaining previous 'dpkg -i' behavior
-                    ret = subprocess.run('apt install --reinstall ' + generated_deb_path, shell=True, stdout=subprocess.PIPE) #@todo remove shell=True, change to list
-                    # @todo get the package name directly from problem_builder
-                    package_name = re.search('Unpacking (.+?) \(', str(ret.stdout)).group(1)
-                except Exception:
+                    subprocess.run('apt install --reinstall {}'.format(generated_deb_path), shell=True, check=True, stdout=subprocess.PIPE)
+                except subprocess.CalledProcessError:
                     logger.error("An error occurred while installing problem packages.")
                     raise FatalException
                 deploy_location = join(get_problem_root(package_name, absolute=True))
