@@ -144,7 +144,7 @@ def find_problems(problem_path):
     Args:
         problem_path: the problem directory
     Returns:
-        A list of problem paths returned from get_problem.
+        A list of problem paths.
     """
 
     problem_paths = []
@@ -156,98 +156,105 @@ def find_problems(problem_path):
     return problem_paths
 
 
+def package_problem(problem_path, staging_path=None, out_path=None, ignore_files=[]):
+    """
+    Does the work of packaging a single problem.
+
+    Args:
+        problem_path (str): path to the problem directory
+        staging_path (str, optional): path to a temporary.
+            staging directory for packaging this problem.
+        out_path (str, optional): path to an output directory
+            for the resultant .deb package.
+        ignore_files (list of str, optional): filenames to exclude
+            when packaging this problem.
+    Returns:
+        str: the absolute path to the packaged problem
+    """
+    problem = get_problem(problem_path)
+    logger.debug("Starting to package: '%s'.", problem["name"])
+
+    # Create staging directories needed for packaging
+    paths = {}
+    if staging_path is None:
+        paths["staging"] = join(problem_path, "__staging")
+    else:
+        paths["staging"] = join(staging_path, "__staging")
+    paths["debian"] = join(paths["staging"], "DEBIAN")
+    paths["data"] = join(paths["staging"],
+                         get_problem_root(problem["name"]))
+    paths["install_data"] = join(paths["data"], "__files")
+    for path in paths.values():
+        if not isdir(path):
+            makedirs(path)
+
+    # Copy the problem files to the staging directory
+    ignore_files.append("__staging")
+    full_copy(problem_path, paths["data"], ignore=ignore_files)
+    # note that this chmod does not work correct if on a vagrant shared folder,
+    # so we need to package the problems elsewhere
+    chmod(paths["data"], 0o750)
+    problem_to_control(problem, paths["debian"])
+    postinst_dependencies(problem, problem_path, paths["debian"],
+                            paths["install_data"])
+
+    # Package the staging directory as a .deb
+    def format_deb_file_name(problem):
+        """
+        Prepare the file name of the deb package according to deb policy.
+
+        Args:
+            problem: the problem object
+
+        Returns:
+        An acceptable file name for the problem.
+        """
+
+        raw_package_name = "{}-{}-{}.deb".format(
+            sanitize_name(problem.get("organization", "ctf")),
+            sanitize_name(problem.get("pkg_name", problem["name"])),
+            sanitize_name(problem.get("version", "1.0-0")))
+
+        return raw_package_name
+
+    deb_directory = out_path if out_path is not None else getcwd()
+    deb_path = join(deb_directory, format_deb_file_name(problem))
+    shell = spur.LocalShell()
+    result = shell.run(
+        ["fakeroot", "dpkg-deb", "--build", paths["staging"], deb_path])
+    if result.return_code != 0:
+        logger.error("Error building problem deb for '%s'.",
+                        problem["name"])
+        logger.error(result.output)
+    else:
+        logger.info("Problem '%s' packaged successfully.", problem["name"])
+
+    # Remove the staging directory
+    logger.debug("Cleaning up '%s' staging directory '%s'.",
+                    problem["name"], paths["staging"])
+    rmtree(paths["staging"])
+
+    return os.path.abspath(deb_path)
+
+
 def problem_builder(args, config):
     """
     Main entrypoint for package building operations.
+    Handles nested problems and multiple problem roots.
     """
 
     if not args.problem_paths:
-        print("usage: shell_manager package [-h] [-s STAGING_DIR] [-o OUT] [-i IGNORE] problem_path")
+        print("usage: shell_manager package [-h] [-s STAGING_DIR] [-o OUT] [-i IGNORE] problem_path [problem_paths...]")
         print("shell_manager bundle: error: the following arguments are required: problem_path")
         raise FatalException
 
-    # Grab a problem_path
-    problem_base_path = args.problem_paths.pop()
-
-    problem_paths = find_problems(problem_base_path)
-
-    if len(problem_paths) == 0:
-        logging.critical("No problems found under '%s'!", problem_base_path)
-        raise FatalException
+    problem_paths = []
+    for base_path in args.problem_paths:
+        problems_in_base = find_problems(base_path)
+        if len(problems_in_base) == 0:
+            logging.critical("No problems found under '%s'!", base_path)
+            raise FatalException
+        problem_paths.extend(problems_in_base)
 
     for problem_path in problem_paths:
-        problem = get_problem(problem_path)
-
-        logger.debug("Starting to package: '%s'.", problem["name"])
-
-        paths = {}
-        if args.staging_dir is None:
-            paths["staging"] = join(problem_path, "__staging")
-        else:
-            paths["staging"] = join(args.staging_dir, "__staging")
-
-        paths["debian"] = join(paths["staging"], "DEBIAN")
-        paths["data"] = join(paths["staging"],
-                             get_problem_root(problem["name"]))
-        paths["install_data"] = join(paths["data"], "__files")
-
-        # Make all of the directories, order does not matter with makedirs
-        [
-            makedirs(staging_path)
-            for _, staging_path in paths.items()
-            if not isdir(staging_path)
-        ]
-
-        args.ignore.append("__staging")
-
-        full_copy(problem_path, paths["data"], ignore=args.ignore)
-
-        # note that this chmod does not work correct if on a vagrant shared folder,
-        # so we need to package the problems elsewhere
-        chmod(paths["data"], 0o750)
-
-        problem_to_control(problem, paths["debian"])
-
-        postinst_dependencies(problem, problem_path, paths["debian"],
-                              paths["install_data"])
-
-        deb_directory = args.out if args.out is not None else getcwd()
-
-        def format_deb_file_name(problem):
-            """
-            Prepare the file name of the deb package according to deb policy.
-
-            Args:
-                problem: the problem object
-
-            Returns:
-            An acceptable file name for the problem.
-            """
-
-            raw_package_name = "{}-{}-{}.deb".format(
-                sanitize_name(problem.get("organization", "ctf")),
-                sanitize_name(problem.get("pkg_name", problem["name"])),
-                sanitize_name(problem.get("version", "1.0-0")))
-
-            return raw_package_name
-
-        deb_path = join(deb_directory, format_deb_file_name(problem))
-
-        shell = spur.LocalShell()
-        result = shell.run(
-            ["fakeroot", "dpkg-deb", "--build", paths["staging"], deb_path])
-
-        if result.return_code != 0:
-            logger.error("Error building problem deb for '%s'.",
-                         problem["name"])
-            logger.error(result.output)
-        else:
-            logger.info("Problem '%s' packaged successfully.", problem["name"])
-
-        logger.debug("Clearning up '%s' staging directory '%s'.",
-                     problem["name"], paths["staging"])
-
-        rmtree(paths["staging"])
-
-    if len(args.problem_paths) >= 1:
-        return problem_builder(args, config)
+        package_problem(problem_path, args.staging_dir, args.out_dir, args.ignore)
