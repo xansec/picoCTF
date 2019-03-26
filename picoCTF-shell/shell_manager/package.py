@@ -88,7 +88,7 @@ def postinst_dependencies(problem, problem_path, debian_path, install_path):
     listed_requirements = problem.get("pip_requirements", [])
 
     pip_python_version = problem.get("pip_python_version")
-    valid_pip_python_versions = ["2", "3", "3.6"]
+    valid_pip_python_versions = ["2", "3", "3.7"]
     if pip_python_version not in valid_pip_python_versions:
         pip_python_version = "3"
 

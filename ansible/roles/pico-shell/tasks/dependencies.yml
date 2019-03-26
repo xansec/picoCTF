@@ -6,6 +6,15 @@
     update_cache: yes
     cache_valid_time: 3600
 
+# Add repositories for NodeJS and yarn
+- name: Add nodeJS and yarn repository/keys
+  shell: |
+    curl -sL https://deb.nodesource.com/setup_11.x | sudo -E bash -
+    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+    echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+  args:
+    warn: False
+
 # Extracted from picoCTF-platform/scripts/shell_setup.sh
 - name: Install picoCTF-shell system dependencies
   apt:
@@ -20,17 +29,18 @@
       'python-pip',       # used for pam module dependencies
       'python3',          # used by shell_manager
       'python3-pip',      # used for shell_manager dependencies
-      'python3.6',        # from PPA, to cover all likely interpreter directives
-      'python3.6-dev',
-      'python3.6-venv',
+      'python3.7',        # from PPA, to cover all likely interpreter directives
+      'python3.7-dev',
+      'python3.7-venv',
       'libffi-dev',
       'libssl-dev',
       'socat',
-      'php7.0-cli',       # php5 package deprecated
-      'php7.0-sqlite3',   # used to serve shellinabox and challenge binaries
+      'php7.2-cli',       # php5 package deprecated
+      'php7.2-sqlite3',   # used to serve shellinabox and challenge binaries
       'gcc-multilib',
       'nginx',
-      'shellinabox']
+      'shellinabox',
+      'nodejs']
 
 # Needed by templated challenge types
 - name: Install uwsgi and plugins for shell server
@@ -63,7 +73,7 @@
   pip:
     name: packaging
     virtualenv: "{{ virtualenv_dir }}"
-    virtualenv_python: python3.6
+    virtualenv_python: python3.7
 
 - name: Install python appdirs
   pip:
@@ -104,7 +114,6 @@
       'gawk',
       'grep',
       'jq',
-      'realpath',
       'sed',
       'silversearcher-ag',
       # editors
