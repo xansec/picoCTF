@@ -8,12 +8,26 @@ import string
 import urllib.parse
 import urllib.request
 
-import api
 import flask
-from api.annotations import log_action
-from api.common import (check, InternalException, safe_fail, validate,
-                        WebException)
 from voluptuous import Length, Required, Schema
+
+import api.auth
+import api.common
+import api.config
+import api.db
+import api.email
+import api.group
+import api.team
+import api.token
+import api.user
+from api.annotations import log_action
+from api.common import (
+  check,
+  InternalException,
+  safe_fail,
+  validate,
+  WebException
+)
 
 _check_email_format = lambda email: re.match(r".+@.+\..{2,}", email) is not None
 
@@ -162,7 +176,7 @@ def get_user(name=None, uid=None):
         Returns the corresponding user object or None if it could not be found
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
 
@@ -215,7 +229,7 @@ def create_user(username,
         Returns the uid of the newly created user
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     settings = api.config.get_settings()
     uid = api.common.token()
 
@@ -281,7 +295,7 @@ def get_all_users(show_teachers=False):
         Returns the uid, username, and email of all users.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
     projection = {"uid": 1, "username": 1, "email": 1, "tid": 1}
@@ -467,7 +481,7 @@ def verify_user(uid, token_value):
         True if successful verification based on the (uid, token_value)
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     if uid is None:
         raise InternalException("You must specify a uid.")
@@ -521,7 +535,7 @@ def update_password(uid, password):
         password: the new user unhashed password.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     db.users.update({
         'uid': uid
     }, {'$set': {
@@ -538,7 +552,7 @@ def disable_account(uid):
         uid: user's uid
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     result = db.users.update({
         "uid": uid,
         "disabled": False
@@ -597,6 +611,6 @@ def update_extdata(params):
             (any)
     """
     user = get_user(uid=None)
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     params.pop('token', None)
     db.users.update_one({'uid': user['uid']}, {'$set': {'extdata': params}})

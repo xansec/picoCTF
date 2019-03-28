@@ -1,6 +1,7 @@
 """ Module for token functionality. """
 
-import api
+import api.common
+import api.db
 from api.common import InternalException
 
 
@@ -27,7 +28,7 @@ def set_token(key, token_name, token_value=None):
         The token value
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     # Should never realistically collide.
     if token_value is None:
@@ -50,7 +51,7 @@ def delete_token(key, token_name):
         token_name: the name of the token
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     db.tokens.update(key, {'$unset': {get_token_path(token_name): ''}})
 
@@ -64,7 +65,7 @@ def find_key(query, multi=False):
         multi: defaults to False, return at most one result
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     find_func = db.tokens.find_one
     if multi:
@@ -82,7 +83,7 @@ def find_key_by_token(token_name, token_value):
         token_value: the value of the token
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     key = db.tokens.find_one({
         get_token_path(token_name): token_value

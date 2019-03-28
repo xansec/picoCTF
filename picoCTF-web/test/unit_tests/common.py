@@ -75,7 +75,7 @@ def ensure_empty_collections(*collections):
 
         @wraps(f)
         def wrapper(*args, **kwargs):
-            db = api.common.get_conn()
+            db = api.db.get_conn()
             collection_size = lambda name: len(list(db[name].find()))
             for collection in collections:
                 assert collection_size(
@@ -98,7 +98,7 @@ def clear_collections(*collections):
 
         @wraps(f)
         def wrapper(*args, **kwargs):
-            db = api.common.get_conn()
+            db = api.db.get_conn()
             try:
                 result = f(*args, **kwargs)
             finally:

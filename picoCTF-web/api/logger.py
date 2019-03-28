@@ -6,12 +6,15 @@ import logging
 import logging.handlers
 import time
 from datetime import datetime
-from sys import stdout
 
-import api
-from bson import json_util
+from flask import has_request_context
 from flask import logging as flask_logging
-from flask import has_request_context, request
+from flask import request
+
+import api.auth
+import api.config
+import api.team
+import api.user
 
 critical_error_timeout = 600
 log = logging.getLogger(__name__)
@@ -120,7 +123,7 @@ class StatsHandler(logging.StreamHandler):
 
                 information["action"].update(action_result)
 
-            api.common.get_conn().statistics.insert(information)
+            api.db.get_conn().statistics.insert(information)
 
 
 class ExceptionHandler(logging.StreamHandler):
@@ -146,7 +149,7 @@ class ExceptionHandler(logging.StreamHandler):
             "visible": True
         })
 
-        api.common.get_conn().exceptions.insert(information)
+        api.db.get_conn().exceptions.insert(information)
 
 
 class SevereHandler(logging.handlers.SMTPHandler):

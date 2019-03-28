@@ -2,52 +2,15 @@
 import uuid
 from hashlib import md5
 
-import api
 import bcrypt
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure, InvalidName
 from voluptuous import Invalid, MultipleInvalid
 from werkzeug.contrib.cache import SimpleCache
 
+import api.config
+
+from
+
 cache = SimpleCache()
-
-__connection = None
-__client = None
-
-
-def get_conn():
-    """
-    Get a database connection
-
-    Ensures that only one global database connection exists per thread.
-    If the connection does not exist a new one is created and returned.
-    """
-
-    global __client, __connection
-    if not __connection:
-        try:
-            # Allow more complex mongodb connections
-            conf = api.app.app.config
-            if conf["MONGO_USER"] and conf["MONGO_PW"]:
-                uri = "mongodb://{}:{}@{}:{}/{}?authMechanism=SCRAM-SHA-1".format(
-                    conf["MONGO_USER"], conf["MONGO_PW"], conf["MONGO_ADDR"],
-                    conf["MONGO_PORT"], conf["MONGO_DB_NAME"])
-            else:
-                uri = "mongodb://{}:{}/{}".format(conf["MONGO_ADDR"],
-                                                  conf["MONGO_PORT"],
-                                                  conf["MONGO_DB_NAME"])
-
-            __client = MongoClient(uri)
-            __connection = __client[conf["MONGO_DB_NAME"]]
-        except ConnectionFailure:
-            raise SevereInternalException(
-                "Could not connect to mongo database {} at {}:{}".format(
-                    mongo_db_name, mongo_addr, mongo_port))
-        except InvalidName as error:
-            raise SevereInternalException("Database {} is invalid! - {}".format(
-                mongo_db_name, error))
-
-    return __connection
 
 
 def token():
@@ -261,3 +224,14 @@ def hash_password(password):
     """
 
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(8))
+
+
+def check_competition_active():
+    """
+    Is the competition currently running
+    """
+
+    settings = api.config.get_settings()
+
+    return settings["start_time"].timestamp() < datetime.utcnow().timestamp(
+    ) < settings["end_time"].timestamp()

@@ -5,7 +5,6 @@ https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
 """
 
-import os
 import sys
 # To use a consistent encoding
 from codecs import open
@@ -89,8 +88,8 @@ setup(
     tests_require=["selenium"],
     entry_points={
         'console_scripts': [
-            'api_manager=api.api_manager:main',
-            'daemon_manager=api.daemon_manager:main',
+            'api_manager=api_manager:main',
+            'daemon_manager=daemon_manager:main',
         ],
     },
 )

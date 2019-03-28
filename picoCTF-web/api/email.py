@@ -1,12 +1,20 @@
 """ Module for email related functionality. """
 
-from datetime import datetime
-
-import api
-from api.common import (check, InternalException, safe_fail, validate,
-                        WebException)
 from flask_mail import Message
 from voluptuous import Length, Required, Schema
+
+import api.config
+import api.db
+import api.group
+import api.token
+import api.user
+from api.common import (
+  check,
+  InternalException,
+  safe_fail,
+  validate,
+  WebException
+)
 
 mail = None
 
@@ -92,7 +100,7 @@ def send_user_verification_email(username):
     """
 
     settings = api.config.get_settings()
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     user = api.user.get_user(name=username)
 
@@ -130,10 +138,10 @@ def send_user_verification_email(username):
     body = """
 Welcome to {0}!
 
-You will need to visit the verification link below and then login to finalize 
+You will need to visit the verification link below and then login to finalize
 your account's creation.
 
-If you believe this to be a mistake, and you haven't recently created an account 
+If you believe this to be a mistake, and you haven't recently created an account
 for {0} then you can safely ignore this email.
 
 Verification link: {1}
@@ -159,7 +167,7 @@ Thank you for authorizing the participation of your child age 13-17 in
 {0} and providing your email address as part of the account registration process
 for your child. As a reminder, the Terms of Service, Privacy Statement and
 Competition Rules for {0} can be found at {1}.
-    
+
 If you received this email in error because you did not authorize your child's
 registration for {0}, you are not the child's parent or legal guardian,
 or your child is under age 13, please email us immediately at {2}.

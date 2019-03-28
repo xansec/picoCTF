@@ -119,7 +119,7 @@ def list_problems(args):
 
 
 def clear_collections(args):
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     for collection in args.collections:
         db[collection].remove()
 

@@ -5,10 +5,9 @@ Note this is just a python script. It does config things.
 """
 
 import datetime
-import json
 
-import api
-import api.app
+import api.db
+import api.setup
 from api.common import WebException
 
 
@@ -169,20 +168,20 @@ default_settings = {
 
 
 def get_settings():
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     settings = db.settings.find_one({}, {"_id": 0})
 
     if settings is None:
         db.settings.insert(default_settings)
         # Initialize indexes, runonce
-        api.setup.index_mongo()
+        api.db.index_mongo()
         return default_settings
 
     return settings
 
 
 def change_settings(changes):
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     settings = db.settings.find_one({})
 
     def check_keys(real, changed):

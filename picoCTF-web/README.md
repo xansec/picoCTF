@@ -41,7 +41,7 @@ You can easily bring up an instance of the picoCTF-web API in Flask's developmen
 3. Point Flask to the app entrypoint, and enable development mode if desired:
 
     ```shell
-    $ export FLASK_APP=api.app
+    $ export FLASK_APP=api
     $ export FLASK_ENV=development
     $ flask run
     ```

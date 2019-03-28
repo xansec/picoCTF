@@ -1,15 +1,22 @@
 """ API annotations and assorted wrappers. """
 
-import json
 import traceback
 from datetime import datetime
 from functools import wraps
 
-import api
 import bson
-from api.common import (InternalException, SevereInternalException, WebError,
-                        WebException, WebSuccess)
-from flask import abort, request, session
+from flask import request, session
+
+import api.auth
+import api.config
+import api.logger
+import api.user
+from api.common import (
+  InternalException,
+  SevereInternalException,
+  WebError,
+  WebException
+)
 
 write_logs_to_db = False  # Default value, can be overwritten by api.py
 
@@ -94,7 +101,6 @@ def require_login(f):
         return f(*args, **kwds)
 
     return wrapper
-
 
 def require_teacher(f):
     """

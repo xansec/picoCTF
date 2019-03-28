@@ -1,18 +1,28 @@
 """ Module for interacting with the problems """
 
-import imp
 from copy import copy, deepcopy
 from datetime import datetime
-from os.path import isfile, join
 from random import randint
 
-import api
 import pymongo
+from voluptuous import ALLOW_EXTRA, Length, Range, Required, Schema
+
+import api.achievement
+import api.cache
+import api.common
+import api.db
+import api.shell_servers
+import api.stats
+import api.team
 from api.annotations import log_action
-from api.common import (check, InternalException, safe_fail,
-                        SevereInternalException, validate, WebException)
-from bson import json_util
-from voluptuous import Length, Range, Required, Schema, ALLOW_EXTRA
+from api.common import (
+  check,
+  InternalException,
+  safe_fail,
+  SevereInternalException,
+  validate,
+  WebException
+)
 
 submission_schema = Schema({
     Required("tid"):
@@ -128,7 +138,7 @@ def get_all_categories(show_disabled=False):
         The set of distinct problem categories.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
     if not show_disabled:
@@ -175,7 +185,7 @@ def insert_problem(problem, sid=None):
     if sid is None:
         raise InternalException("Must provide an sid to insert problem.")
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     validate(problem_schema, problem)
 
     # initially disable problems
@@ -229,7 +239,7 @@ def remove_problem(pid):
         The removed problem object.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     problem = get_problem(pid=pid)
 
     db.problems.remove({"pid": pid})
@@ -249,7 +259,7 @@ def update_problem(pid, updated_problem):
         The updated problem object.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     problem = get_problem(pid=pid).copy()
 
@@ -279,7 +289,7 @@ def search_problems(*conditions):
         The list of matching problems.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     return list(db.problems.find({"$or": list(conditions)}, {"_id": 0}))
 
@@ -327,7 +337,7 @@ def assign_instance_to_team(pid, tid=None, reassign=False):
 
     team["instances"][pid] = iid
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     db.teams.update({"tid": tid}, {"$set": team})
 
     return instance_number
@@ -435,7 +445,7 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
         message: message indicating the correctness of the key.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     validate(submission_schema, {"tid": tid, "pid": pid, "key": key})
 
     if pid not in get_unlocked_pids(tid, category=None):
@@ -508,7 +518,7 @@ def count_submissions(pid=None,
                       category=None,
                       correctness=None,
                       eligibility=None):
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     match = {}
     if uid is not None:
         match.update({"uid": uid})
@@ -551,7 +561,7 @@ def get_submissions(pid=None,
         A list of submissions from the given entity.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
 
@@ -581,7 +591,7 @@ def clear_all_submissions():
     """
 
     if DEBUG_KEY is not None:
-        db = api.common.get_conn()
+        db = api.db.get_conn()
         db.submissions.remove()
         api.cache.clear_all()
     else:
@@ -598,7 +608,7 @@ def clear_submissions(uid=None, tid=None, pid=None):
         pid: the pid to clear from.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
 
@@ -625,7 +635,7 @@ def invalidate_submissions(pid=None, uid=None, tid=None):
         tid: the team's tid that will have their submissions invalidated.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
 
@@ -648,7 +658,7 @@ def reevaluate_submissions_for_problem(pid):
         pid: the pid of the problem to be reevaluated.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     get_problem(pid=pid)
 
@@ -695,7 +705,7 @@ def get_problem(pid=None, name=None, tid=None, show_disabled=True):
         The problem dictionary from the database
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
 
@@ -712,7 +722,7 @@ def get_problem(pid=None, name=None, tid=None, show_disabled=True):
     if not show_disabled:
         match.update({"disabled": False})
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     problem = db.problems.find_one(match, {"_id": 0})
 
     if problem is None:
@@ -734,7 +744,7 @@ def get_all_problems(category=None, show_disabled=False, basic_only=False):
         List of problems from the database
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
     if category is not None:
@@ -1004,7 +1014,7 @@ def insert_bundle(bundle):
     validating it with the bundle_schema
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     validate(bundle_schema, bundle)
 
     bid = api.common.hash("{}-{}".format(bundle["name"], bundle["author"]))
@@ -1035,7 +1045,7 @@ def load_published(data):
         insert_problem(problem, sid=data["sid"])
 
     if "bundles" in data:
-        db = api.common.get_conn()
+        db = api.db.get_conn()
         for bundle in data["bundles"]:
             insert_bundle(bundle)
 
@@ -1047,7 +1057,7 @@ def get_bundle(bid):
     Returns the bundle object corresponding to the given bid
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     bundle = db.bundles.find_one({"bid": bid})
 
@@ -1062,7 +1072,7 @@ def update_bundle(bid, updates):
     Updates the bundle object in the database with the given updates.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     bundle = db.bundles.find_one({"bid": bid}, {"_id": 0})
     if bundle is None:
@@ -1082,7 +1092,7 @@ def get_all_bundles():
     Returns all bundles from the database
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     return list(db.bundles.find({}, {"_id": 0}))
 

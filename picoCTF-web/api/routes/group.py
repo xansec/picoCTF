@@ -1,14 +1,28 @@
 import json
 
-import api
-from api.annotations import (api_wrapper, block_after_competition,
-                             block_before_competition, check_csrf, log_action,
-                             require_admin, require_login, require_teacher)
-from api.common import (check, safe_fail, validate, WebError, WebException,
-                        WebSuccess)
-from flask import (Blueprint, Flask, render_template, request,
-                   send_from_directory, session)
+from flask import Blueprint, request
 from voluptuous import Length, Required, Schema
+
+import api.common
+import api.email
+import api.group
+import api.stats
+import api.team
+import api.user
+from api.annotations import (
+  api_wrapper,
+  check_csrf,
+  require_login,
+  require_teacher
+)
+from api.common import (
+  check,
+  safe_fail,
+  validate,
+  WebError,
+  WebException,
+  WebSuccess
+)
 
 register_group_schema = Schema(
     {

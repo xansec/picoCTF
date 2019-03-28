@@ -1,10 +1,16 @@
-import api
 import bson
-from api.annotations import (api_wrapper, log_action, require_admin,
-                             require_login, require_teacher)
+from flask import Blueprint, request
+
+import api.admin
+import api.common
+import api.config
+import api.problem
+import api.problem_feedback
+import api.shell_servers
+import api.stats
+import api.user
+from api.annotations import api_wrapper, require_admin
 from api.common import WebError, WebSuccess
-from flask import (Blueprint, Flask, render_template, request,
-                   send_from_directory, session)
 
 blueprint = Blueprint("admin_api", __name__)
 
@@ -212,6 +218,8 @@ def get_settings():
 def change_settings():
     data = bson.json_util.loads(request.form["json"])
     api.config.change_settings(data)
+    # @todo this is broken rn, will need to refactor settings loading
     # Update Flask app settings (necessary for email to work)
-    api.app.config_app()
-    return WebSuccess("Settings updated")
+    # api.app.config_app()
+    # return WebSuccess("Settings updated")
+    return WebSuccess("This API is currently disabled")

@@ -1,9 +1,9 @@
-import api
-from api.annotations import (api_wrapper, block_after_competition,
-                             block_before_competition, log_action,
-                             require_login)
-from api.common import WebError, WebSuccess
 from flask import Blueprint
+
+import api.achievement
+import api.user
+from api.annotations import api_wrapper, require_login
+from api.common import WebSuccess
 
 blueprint = Blueprint("achievements_api", __name__)
 

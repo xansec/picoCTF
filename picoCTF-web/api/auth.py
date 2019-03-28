@@ -1,12 +1,14 @@
 """ Module dealing with authentication to the api """
 
-import api
 import bcrypt
+from flask import session
+from voluptuous import Length, Required, Schema
+
+import api.email
+import api.user
 from api.annotations import log_action
 from api.common import InternalException, safe_fail, validate, WebException
 from api.user import check
-from flask import session
-from voluptuous import Length, Required, Schema
 
 log = api.logger.use(__name__)
 

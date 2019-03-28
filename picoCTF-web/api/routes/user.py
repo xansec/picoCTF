@@ -1,15 +1,14 @@
-import json
-import mimetypes
-import os.path
-from datetime import datetime
+from flask import Blueprint, redirect, request, session
 
-import api
-from api.annotations import (api_wrapper, block_after_competition,
-                             block_before_competition, check_csrf, log_action,
-                             require_admin, require_login, require_teacher)
-from api.common import safe_fail, WebError, WebSuccess
-from flask import (abort, Blueprint, Flask, redirect, render_template, request,
-                   send_from_directory, session)
+import api.auth
+import api.common
+import api.config
+import api.email
+import api.shell_servers
+import api.stats
+import api.user
+from api.annotations import api_wrapper, check_csrf, require_login
+from api.common import WebError, WebSuccess, safe_fail
 
 blueprint = Blueprint("user_api", __name__)
 

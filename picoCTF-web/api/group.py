@@ -1,9 +1,14 @@
 """ Module for handling groups of teams """
 
-import api
+from voluptuous import Required, Schema
+
+import api.admin
+import api.common
+import api.db
+import api.team
+import api.user
 from api.annotations import log_action
-from api.common import check, InternalException, safe_fail, validate
-from voluptuous import Length, Required, Schema
+from api.common import check, InternalException, validate
 
 group_settings_schema = Schema({
     Required("email_filter"):
@@ -66,7 +71,7 @@ def get_group(gid=None, name=None, owner_tid=None):
         The group object.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
     if name is not None and owner_tid is not None:
@@ -140,7 +145,7 @@ def create_group(tid, group_name):
         The new group's gid.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     gid = api.common.token()
 
@@ -164,7 +169,7 @@ def get_group_settings(gid):
     Get various group settings.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     # Ensure it exists.
     group = api.group.get_group(gid=gid)
@@ -183,7 +188,7 @@ def change_group_settings(gid, settings):
     Replace the current settings with the supplied ones.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     validate(group_settings_schema, settings)
 
@@ -206,7 +211,7 @@ def join_group(gid, tid, teacher=False):
         teacher: whether or not the user is a teacher
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     role_group = "teachers" if teacher else "members"
 
@@ -223,7 +228,7 @@ def sync_teacher_status(tid, uid):
     Determine if the given user is still a teacher and update his status.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     active_teacher_roles = db.groups.find({
         "$or": [{
@@ -249,7 +254,7 @@ def leave_group(gid, tid):
         gid: the group id to leave
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     group = get_group(gid=gid)
     team = api.team.get_team(tid=tid)
@@ -272,7 +277,7 @@ def switch_role(gid, tid, role):
     Cannot switch to/from owner.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     team = api.team.get_team(tid=tid)
 
     roles = get_roles_in_group(gid, tid=team["tid"])
@@ -326,7 +331,7 @@ def delete_group(gid):
         gid: the group id to delete
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     db.groups.remove({'gid': gid})
 
@@ -336,6 +341,6 @@ def get_all_groups():
     Returns a list of all groups in the database.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     return list(db.groups.find({}, {"_id": 0}))

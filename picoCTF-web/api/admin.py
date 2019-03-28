@@ -2,11 +2,20 @@
 API functions relating to admin users.
 """
 
-import api
 import pymongo
+
+import api.cache
+import api.db
+import api.problem
+import api.user
 from api.annotations import log_action
-from api.common import (check, InternalException, safe_fail, validate,
-                        WebException)
+from api.common import (
+  check,
+  InternalException,
+  safe_fail,
+  validate,
+  WebException
+)
 
 
 def give_admin_role(name=None, uid=None):
@@ -19,7 +28,7 @@ def give_admin_role(name=None, uid=None):
         uid: the user's id
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     user = api.user.get_user(name=name, uid=uid)
     db.users.update({
@@ -39,7 +48,7 @@ def give_teacher_role(name=None, uid=None):
         uid: the user's id
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     user = api.user.get_user(name=name, uid=uid)
     db.users.update({"uid": user["uid"]}, {"$set": {"teacher": True}})
@@ -76,7 +85,7 @@ def get_api_exceptions(result_limit=50, sort_direction=pymongo.DESCENDING):
         sort_direction: pymongo.ASCENDING or pymongo.DESCENDING
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     results = db.exceptions.find({
         "visible": True
@@ -92,5 +101,5 @@ def dismiss_api_exceptions(trace):
         trace: the exception trace
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     db.exceptions.remove({"trace": trace})

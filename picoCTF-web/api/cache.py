@@ -5,8 +5,9 @@ Caching Library
 import time
 from functools import wraps
 
-import api
 from bson import datetime, json_util
+
+import api.db
 
 log = api.logger.use(__name__)
 
@@ -20,7 +21,7 @@ def clear_all():
     Clears the cache.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     db.cache.remove()
     fast_cache.clear()
 
@@ -85,7 +86,7 @@ def get(key, fast=False):
     if fast:
         return fast_cache.get(key, None)
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     # We aren't interested in matching the unordered kwargs.
     partial_key = key.copy()
@@ -115,7 +116,7 @@ def set(key, value, timeout=None, fast=False):
         }
         return
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     update = key.copy()
     update.update({"value": value})
@@ -190,7 +191,7 @@ def invalidate_memoization(f, *keys):
         You must pass all arguments given to the function to accurately invalidate it.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     search = {"function": "{}.{}".format(f.__module__, f.__name__)}
     search.update({"$or": list(keys)})

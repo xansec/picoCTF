@@ -2,12 +2,14 @@
 
 from datetime import datetime
 
-import api
-import pymongo
-from api.annotations import log_action
-from api.common import (check, InternalException, safe_fail,
-                        SevereInternalException, validate, WebException)
 from voluptuous import Length, Required, Schema
+
+import api.achievement
+import api.db
+import api.problem
+import api.user
+from api.annotations import log_action
+from api.common import check, validate
 
 feedback_schema = Schema({
     Required("liked"):
@@ -35,7 +37,7 @@ def get_problem_feedback(pid=None, tid=None, uid=None):
         A list of problem feedback entries.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     match = {}
 
     if pid is not None:
@@ -58,7 +60,7 @@ def get_reviewed_pids(uid=None):
         A list of pids
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     if uid is None:
         uid = api.user.get_user()['uid']
@@ -77,7 +79,7 @@ def add_problem_feedback(pid, uid, feedback):
         feedback: the problem feedback.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     # Make sure the problem actually exists.
     api.problem.get_problem(pid=pid)

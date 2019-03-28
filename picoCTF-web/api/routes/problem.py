@@ -1,12 +1,23 @@
 import json
 
-import api
-from api.annotations import (api_wrapper, block_after_competition,
-                             block_before_competition, check_csrf, log_action,
-                             require_admin, require_login, require_teacher)
+from flask import Blueprint, request
+
+import api.auth
+import api.config
+import api.problem
+import api.problem_feedback
+import api.user
+from api.annotations import (
+  api_wrapper,
+  block_after_competition,
+  block_before_competition,
+  check_csrf,
+  log_action,
+  require_admin,
+  require_login,
+  require_teacher
+)
 from api.common import WebError, WebSuccess
-from flask import (Blueprint, Flask, render_template, request,
-                   send_from_directory, session)
 
 blueprint = Blueprint("problem_api", __name__)
 

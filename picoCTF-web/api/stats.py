@@ -3,10 +3,18 @@
 import datetime
 import statistics
 from collections import defaultdict
-from hashlib import sha1
 
-import api
 import pymongo
+
+import api.achievement
+import api.annotations
+import api.cache
+import api.db
+import api.group
+import api.problem
+import api.problem_feedback
+import api.stats
+import api.team
 from api.common import InternalException
 
 _get_problem_names = lambda problems: [problem['name'] for problem in problems]
@@ -117,7 +125,7 @@ def get_all_team_scores(eligible=None, country=None, show_ineligible=False):
         else:
             teams = api.team.get_all_teams(eligible=False, country=country, ineligible=True)
 
-    db = api.api.common.get_conn()
+    db = api.db.get_conn()
 
     result = []
     all_groups = api.group.get_all_groups()
@@ -334,7 +342,7 @@ def get_problem_solves(name=None, pid=None):
         raise InternalException(
             "You must supply either a pid or name of the problem.")
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     problem = api.problem.get_problem(name=name, pid=pid)
 
@@ -531,7 +539,7 @@ def get_median_problems_solved_per_user(eligible=True,
 
 
 def get_user_backgrounds():
-    db = api.api.common.get_conn()
+    db = api.db.get_conn()
     all_users = db.users.find()
     backgrounds = defaultdict(int)
     for user in all_users:
@@ -543,7 +551,7 @@ def get_user_backgrounds():
 
 
 def get_user_countries():
-    db = api.api.common.get_conn()
+    db = api.db.get_conn()
     all_users = db.users.find()
     countries = defaultdict(int)
     for user in all_users:
@@ -563,7 +571,7 @@ def get_team_size_distribution(eligible=True):
 
 
 def get_team_member_solve_stats(eligible=True):
-    db = api.api.common.get_conn()
+    db = api.db.get_conn()
     teams = api.team.get_all_teams(show_ineligible=(not eligible))
     user_breakdowns = {}
     for t in teams:
@@ -656,7 +664,7 @@ def get_days_active_breakdown(eligible=True, user_breakdown=None):
 
 @api.cache.memoize(timeout=300)
 def check_invalid_instance_submissions(gid=None):
-    db = api.api.common.get_conn()
+    db = api.db.get_conn()
     badteams = set()
     shared_key_submissions = []
 
@@ -732,7 +740,7 @@ def print_review_comments():
 
 @api.cache.memoize()
 def get_registration_count():
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     users = db.users.count()
     stats = {
         "users": users,

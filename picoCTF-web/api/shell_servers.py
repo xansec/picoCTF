@@ -1,11 +1,20 @@
 import json
 
-import api
-import pymongo
 import spur
-from api.common import (check, InternalException, safe_fail, validate,
-                        WebException)
 from voluptuous import Length, Required, Schema
+
+import api.common
+import api.config
+import api.db
+import api.problem
+import api.team
+from api.common import (
+  check,
+  InternalException,
+  safe_fail,
+  validate,
+  WebException
+)
 
 server_schema = Schema(
     {
@@ -49,7 +58,7 @@ def get_server(sid=None, name=None):
         The server object
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     if sid is None:
         if name is None:
@@ -136,7 +145,7 @@ def add_server(params):
        The sid.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     validate(server_schema, params)
 
@@ -173,7 +182,7 @@ def update_server(sid, params):
             server_number
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     validate(server_schema, params)
 
@@ -202,7 +211,7 @@ def remove_server(sid):
         sid: the sid of the server to be removed
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     if db.shell_servers.find_one({"sid": sid}) is None:
         raise WebException(
@@ -217,7 +226,7 @@ def get_servers(get_all=False):
     shard if sharding is enabled. Defaults to server 1 if not assigned
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     settings = api.config.get_settings()
     match = {}
@@ -313,7 +322,7 @@ def get_assigned_server_number(new_team=True, tid=None):
          (int) server_number
     """
     settings = api.config.get_settings()["shell_servers"]
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     if new_team:
         team_count = db.teams.count()
@@ -353,7 +362,7 @@ def get_assigned_server_number(new_team=True, tid=None):
 
 
 def reassign_teams(include_assigned=False):
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     if include_assigned:
         teams = api.team.get_all_teams(show_ineligible=True)

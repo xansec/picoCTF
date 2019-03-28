@@ -2,11 +2,28 @@
 API functions relating to team management.
 """
 
-import api
-from api.annotations import log_action
-from api.common import (check, InternalException, safe_fail,
-                        SevereInternalException, validate, WebException)
 from voluptuous import Length, Required, Schema
+
+import api.achievement
+import api.auth
+import api.cache
+import api.common
+import api.config
+import api.db
+import api.group
+import api.problem
+import api.stats
+import api.team
+import api.user
+from api.annotations import log_action
+from api.common import (
+  check,
+  InternalException,
+  safe_fail,
+  SevereInternalException,
+  validate,
+  WebException
+)
 
 new_team_schema = Schema(
     {
@@ -60,7 +77,7 @@ def get_team(tid=None, name=None):
         Returns the corresponding team object or None if it could not be found
     """
 
-    db = api.api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
     if tid is not None:
@@ -91,7 +108,7 @@ def get_groups(tid=None, uid=None):
         List of group objects the team is a member of.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     groups = []
 
@@ -187,7 +204,7 @@ def create_team(params):
         The newly created team id.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     params['tid'] = api.common.token()
     params['size'] = 0
@@ -214,7 +231,7 @@ def get_team_members(tid=None, name=None, show_disabled=True):
         A list of the team's members.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     tid = get_team(name=name, tid=tid)["tid"]
 
@@ -330,7 +347,7 @@ def get_all_teams(ineligible=False, eligible=True, country=None, show_ineligible
     # Ignore empty teams (remnants of single player self-team ids)
     match.update({"size": {"$gt": 0}})
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     return list(db.teams.find(match, {"_id": 0}))
 
 
@@ -371,7 +388,7 @@ def join_team(team_name, password, uid=None):
         raise InternalException(
             "You can not switch teams once you have joined one.")
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     max_team_size = api.config.get_settings()["max_team_size"]
 
     if api.auth.confirm_password(password, desired_team["password"]
@@ -499,7 +516,7 @@ def update_password(tid, password):
         password: the new user password.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     db.teams.update({
         'tid': tid
     }, {'$set': {

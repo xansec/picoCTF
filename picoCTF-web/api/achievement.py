@@ -1,15 +1,24 @@
 """ Module for interacting with the achievements """
 
-from importlib.machinery import SourceFileLoader
 from datetime import datetime
+from importlib.machinery import SourceFileLoader
 from os.path import join
 
-import api
 import pymongo
-from api.annotations import log_action
-from api.common import (check, InternalException, safe_fail,
-                        SevereInternalException, validate, WebException)
 from voluptuous import Range, Required, Schema
+
+import api.config
+import api.db
+import api.user
+from api.annotations import log_action
+from api.common import (
+  check,
+  InternalException,
+  safe_fail,
+  SevereInternalException,
+  validate,
+  WebException
+)
 
 achievement_schema = Schema({
     Required("name"):
@@ -55,7 +64,7 @@ def get_all_events(show_disabled=False):
         The set of distinct achievement events.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
     if not show_disabled:
@@ -74,7 +83,7 @@ def get_achievement(aid=None, name=None, show_disabled=False):
         show_disabled: Boolean indicating whether or not to show disabled achievements.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
 
@@ -88,7 +97,7 @@ def get_achievement(aid=None, name=None, show_disabled=False):
     if not show_disabled:
         match.update({"disabled": False})
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     achievement = db.achievements.find_one(match, {"_id": 0})
 
     if achievement is None:
@@ -109,7 +118,7 @@ def get_all_achievements(event=None, show_disabled=False):
         List of achievements from the database
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
     if event is not None:
@@ -135,7 +144,7 @@ def get_earned_achievement_instances(tid=None, uid=None, aid=None):
         List of solved achievements
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
 
@@ -176,7 +185,7 @@ def set_earned_achievements_seen(tid=None, uid=None):
         uid: the user id
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
 
@@ -307,7 +316,7 @@ def insert_earned_achievement(aid, data):
               must include tid, uid
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     tid, uid = data.pop("tid"), data.pop("uid")
     name, description = data.pop("name"), data.pop("description")
@@ -370,7 +379,7 @@ def insert_achievement(achievement):
         The achievement's aid.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     validate(achievement_schema, achievement)
 
     achievement["disabled"] = achievement.get("disabled", False)
@@ -400,7 +409,7 @@ def update_achievement(aid, updated_achievement):
         The updated achievement object.
     """
 
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     if updated_achievement.get("name", None) is not None:
         if safe_fail(
