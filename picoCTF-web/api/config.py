@@ -7,7 +7,6 @@ Note this is just a python script. It does config things.
 import datetime
 
 import api.db
-import api.setup
 from api.common import WebException
 
 

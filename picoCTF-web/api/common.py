@@ -1,12 +1,12 @@
 """ The common module contains general-purpose functions potentially used by multiple modules in the system."""
 import uuid
+from datetime import datetime
 from hashlib import md5
 
+import api.config
 import bcrypt
 from voluptuous import Invalid, MultipleInvalid
 from werkzeug.contrib.cache import SimpleCache
-
-import api.config
 
 cache = SimpleCache()
 

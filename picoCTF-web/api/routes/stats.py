@@ -1,13 +1,17 @@
 import math
 
-import bson
+from bson import json_util
 from flask import Blueprint, request
 
 import api.auth
 import api.stats
 import api.team
 import api.user
-from api.annotations import api_wrapper, require_login
+from api.annotations import (
+    api_wrapper,
+    block_before_competition,
+    require_login
+)
 from api.common import WebError, WebSuccess
 
 blueprint = Blueprint("stats_api", __name__)
@@ -137,10 +141,10 @@ def get_scoreboard_hook(board, page):
 @api_wrapper
 def get_top_teams_score_progressions_hook():
     eligible = request.args.get("eligible", "true")
-    eligible = bson.json_util.loads(eligible)
+    eligible = json_util.loads(eligible)
 
     show_ineligible = request.args.get("show_ineligible", "false")
-    show_ineligible = bson.json_util.loads(show_ineligible)
+    show_ineligible = json_util.loads(show_ineligible)
 
     country = None
     # if api.auth.is_logged_in():

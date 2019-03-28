@@ -88,7 +88,7 @@ def make_temp_dir(shell):
 def run():
     global connections
 
-    if api.utilities.check_competition_active():
+    if api.common.check_competition_active():
         teams = api.team.get_all_teams(show_ineligible=True)
 
         for server in api.shell_servers.get_servers(get_all=True):

@@ -1,4 +1,4 @@
-import bson
+from bson import json_util
 from flask import Blueprint, request
 
 import api.admin
@@ -86,7 +86,7 @@ def change_problem_availability_hook():
     if desired_state is None:
         return WebError("Problems are either enabled or disabled.")
     else:
-        state = bson.json_util.loads(desired_state)
+        state = json_util.loads(desired_state)
 
     api.admin.set_problem_availability(pid, state)
     return WebSuccess(data="Problem state changed successfully.")
@@ -197,7 +197,7 @@ def bundle_dependencies():
     if state is None:
         return WebError("Must provide a state to set.")
 
-    state = bson.json_util.loads(state)
+    state = json_util.loads(state)
 
     api.problem.set_bundle_dependencies_enabled(bid, state)
 
@@ -216,7 +216,7 @@ def get_settings():
 @api_wrapper
 @require_admin
 def change_settings():
-    data = bson.json_util.loads(request.form["json"])
+    data = json_util.loads(request.form["json"])
     api.config.change_settings(data)
     # @todo this is broken rn, will need to refactor settings loading
     # Update Flask app settings (necessary for email to work)

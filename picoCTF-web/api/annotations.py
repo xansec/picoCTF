@@ -1,22 +1,17 @@
 """ API annotations and assorted wrappers. """
 
+import logging
 import traceback
 from datetime import datetime
 from functools import wraps
-import logging
-
-import bson
-from flask import request, session
 
 import api.auth
 import api.config
 import api.user
-from api.common import (
-  InternalException,
-  SevereInternalException,
-  WebError,
-  WebException
-)
+from api.common import (InternalException, SevereInternalException, WebError,
+                        WebException)
+from bson import json_util
+from flask import request, session
 
 write_logs_to_db = False  # Default value, can be overwritten by api.py
 
@@ -84,7 +79,7 @@ def api_wrapper(f):
             web_result = WebError(
                 "An error occurred. Please contact an administrator.")
 
-        return bson.json_util.dumps(web_result)
+        return json_util.dumps(web_result)
 
     return wrapper
 
