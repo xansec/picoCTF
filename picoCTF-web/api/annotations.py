@@ -3,13 +3,13 @@
 import traceback
 from datetime import datetime
 from functools import wraps
+import logging
 
 import bson
 from flask import request, session
 
 import api.auth
 import api.config
-import api.logger
 import api.user
 from api.common import (
   InternalException,
@@ -20,7 +20,7 @@ from api.common import (
 
 write_logs_to_db = False  # Default value, can be overwritten by api.py
 
-log = api.logger.use(__name__)
+log = logging.getLogger(__name__)
 
 _get_message = lambda exception: exception.args[0]
 
@@ -64,7 +64,7 @@ def api_wrapper(f):
     @wraps(f)
     def wrapper(*args, **kwds):
         web_result = {}
-        wrapper_log = api.logger.use(f.__module__)
+        wrapper_log = logging.getLogger(f.__module__)
         try:
             web_result = f(*args, **kwds)
         except WebException as error:

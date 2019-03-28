@@ -3,11 +3,10 @@
 from flask import current_app, g
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, InvalidName
-
-import api.logger
+import logging
 from api.common import SevereInternalException
 
-log = api.logger.use(__name__)
+log = logging.getLogger(__name__)
 
 
 def get_conn():

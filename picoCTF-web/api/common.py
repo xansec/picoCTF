@@ -8,8 +8,6 @@ from werkzeug.contrib.cache import SimpleCache
 
 import api.config
 
-from
-
 cache = SimpleCache()
 
 

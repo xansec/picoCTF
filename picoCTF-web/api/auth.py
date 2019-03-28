@@ -1,6 +1,7 @@
 """ Module dealing with authentication to the api """
 
 import bcrypt
+import logging
 from flask import session
 from voluptuous import Length, Required, Schema
 
@@ -10,7 +11,7 @@ from api.annotations import log_action
 from api.common import InternalException, safe_fail, validate, WebException
 from api.user import check
 
-log = api.logger.use(__name__)
+log = logging.getLogger(__name__)
 
 debug_disable_general_login = False
 

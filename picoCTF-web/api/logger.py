@@ -189,22 +189,9 @@ def set_level(name, level):
         level: level to set
     """
 
-    logger = use(name)
+    logger = logging.getLogger(name)
     if logger:
         logger.setLevel(level)
-
-
-def use(name):
-    """
-    Alias for logging.getLogger(name)
-
-    Args:
-        name: The name of the logger.
-    Returns:
-        The logging object.
-    """
-
-    return logging.getLogger(name)
 
 
 def get_request_information():
@@ -252,7 +239,7 @@ def setup_logs(args):
         args: dict containing the configuration options.
     """
 
-    flask_logging.create_logger = lambda app: use(app.logger_name)
+    flask_logging.create_logger = lambda app: logging.getLogger(app.logger_name)
 
     if not args.get("debug", True):
         set_level("werkzeug", logging.ERROR)

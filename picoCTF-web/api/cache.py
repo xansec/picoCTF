@@ -3,13 +3,14 @@ Caching Library
 """
 
 import time
+import logging
 from functools import wraps
 
-from bson import datetime, json_util
+from bson import datetime
 
 import api.db
 
-log = api.logger.use(__name__)
+log = logging.getLogger(__name__)
 
 no_cache = False
 fast_cache = {}
