@@ -3,4 +3,5 @@
 /.vagrant
 /terraform.tfstate*
 /dist
-**.egg-info
+**/*.egg-info
+**/.pytest_cache

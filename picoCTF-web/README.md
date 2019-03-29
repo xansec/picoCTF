@@ -20,7 +20,14 @@ Additionally, the picoCTF-web component provides a number of features that are u
 - Classrooms
   - Useful to manage multiple distinct groups of competitors as in a school setting.
 - Shell server integration
-  - Integration with the [picoCTF-shell component](https://github.com/picoCTF/picoCTF/tree/master/picoCTF-shell) allows competitors full access to a Linux machine with the necessary tools from within a web browser
+  - Integration with the [picoCTF-shell component](../picoCTF-shell) allows competitors full access to a Linux machine with the necessary tools from within a web browser
+
+## Components
+
+1. [api](./api): This is the picoCTF-web Flask API.
+2. [tests](./tests): Automated tests for picoCTF-web components.
+3. [daemons](./daemons): Separate scripts that essentially run as cronjobs on the web server.
+4. [web](./ansible). A frontend for interacting with the Flask API.
 
 ## Local Development <!-- markdownlint-disable MD014 -->
 
@@ -29,7 +36,7 @@ You can easily bring up an instance of the picoCTF-web API in Flask's developmen
 1. Ensure all development dependencies are installed (a virtual environment is recommended):
 
     ```shell
-    $ pip install -e .
+    $ pip install -e .[dev]
     ```
 
 2. The picoCTF-web API has a dependency on a MongoDB server, and by default looks for one at `127.0.0.1:27017`. An easy way to bring one up is to use Docker:
@@ -45,3 +52,9 @@ You can easily bring up an instance of the picoCTF-web API in Flask's developmen
     $ export FLASK_ENV=development
     $ flask run
     ```
+
+## Testing
+
+A MongoDB server also needs to be available at `127.0.0.1:27017` when running the tests. They will use the `ctf_test` database, so any data in the main `ctf` database from not be impacted by running the tests.
+
+Once a MongoDB server is running, simply run `pytest` from within the `picoCTF-web` root directory.

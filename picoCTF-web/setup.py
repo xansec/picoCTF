@@ -81,11 +81,14 @@ setup(
         # 'line_profiler==2.1.2',
         'py==1.5.3',
         'pymongo==3.7.0',
-        'pytest==3.6.1',
         'spur==0.3.20',
         'voluptuous==0.11.1',
     ],
-    tests_require=["selenium"],
+    extras_require={
+        'dev': [
+            'pytest',
+        ]
+    },
     entry_points={
         'console_scripts': [
             'api_manager=api_manager:main',

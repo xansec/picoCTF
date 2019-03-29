@@ -78,6 +78,7 @@ def api_wrapper(f):
             wrapper_log.error(traceback.format_exc())
             web_result = WebError(
                 "An error occurred. Please contact an administrator.")
+                #@todo consider not swallowing errors
 
         return json_util.dumps(web_result)
 
