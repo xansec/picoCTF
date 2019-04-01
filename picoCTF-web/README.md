@@ -57,4 +57,4 @@ You can easily bring up an instance of the picoCTF-web API in Flask's developmen
 
 A MongoDB server also needs to be available at `127.0.0.1:27017` when running the tests. They will use the `ctf_test` database, so any data in the main `ctf` database from not be impacted by running the tests.
 
-Once a MongoDB server is running, simply run `pytest` from within the `picoCTF-web` root directory.
+Once a MongoDB server is running, simply run `pytest` from within the `picoCTF-web` root directory. This will also generate a code coverage report at `.coverage` and `coverage_report/`.

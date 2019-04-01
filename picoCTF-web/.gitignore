@@ -1,3 +1,4 @@
+# legacy ignores
 *.pyc
 *.project
 results.xml
@@ -12,3 +13,6 @@ web/_includes/analytics.html
 api/graders/autogentest/instances/*
 api/graders/*
 *~
+# pytest
+coverage_report/
+.coverage

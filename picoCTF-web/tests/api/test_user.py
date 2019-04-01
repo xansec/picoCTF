@@ -10,7 +10,6 @@ from api.auth import confirm_password
 TESTING_DB_NAME = 'ctf_test'
 db = None
 
-
 # Helper functions
 def decode_response(res):
     """Parse a WebSuccess or WebError response."""
@@ -44,6 +43,52 @@ def client():
 
 
 # User route tests
+
+def test_login_authorize_role(client):
+    """
+    Tests the login and authorize role endpoints.
+
+    Tests logging in as various user types, and
+    checks that the authorize_role endpoint
+    works as expected.
+    """
+    clear_db()
+    # Register a regular user
+    res = client.post('/api/user/create_simple',
+                data={
+                    'username': 'sampleuser',
+                    'password': 'samplepw',
+                    'firstname': 'First',
+                    'lastname': 'Last',
+                    'email': 'sample@example.com',
+                    'eligibility': True,
+                    'country': 'US',
+                    'affiliation': 'Sample School',
+                    'usertype': 'teacher',
+                    'demo[parentemail]': 'sample@example.com',
+                    'demo[age]': '18+',
+                    'gid': None,
+                    'rid': None
+                }
+                )
+    status, message, data = decode_response(res)
+    assert status == 1
+    # Log in as them
+    res = client.post('/api/user/login', data={
+                        'username': 'sampleuser',
+                        'password': 'samplepw'
+                      })
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert message == 'Successfully logged in as sampleuser'
+    assert data['teacher'] is True
+    assert data['admin'] is True  # First user created will be admin
+    # Test calling authorize_role
+    res = client.get('/api/user/authorize/admin')
+    assert res.status_code == 200
+    assert res.data.decode('utf8') == 'Client is an administrator.'
+
+
 def test_status(client):
     """
     Check that the /status route returns the expected results.
@@ -70,7 +115,6 @@ def test_create_user(client):
     Test user creation.
 
     Ensures that the specified user is created in the database.
-    @todo separate tests for student, teacher, admin, other user creation
     """
     clear_db()
     db = get_conn()
