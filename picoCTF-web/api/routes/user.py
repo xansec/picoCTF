@@ -65,7 +65,7 @@ def update_password_hook():
 def disable_account_hook():
     api.user.disable_account_request(
         api.common.flat_multi(request.form), check_current=True)
-    return WebSuccess("Your have successfully disabled your account!")
+    return WebSuccess("You have successfully disabled your account!")
 
 
 @blueprint.route('/reset_password', methods=['POST'])

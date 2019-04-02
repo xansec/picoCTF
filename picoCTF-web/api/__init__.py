@@ -44,6 +44,11 @@ def create_app(test_config=None):
             elif (db_settings["email"]["smtp_security"] == "SSL"):
                 app.config["MAIL_USE_SSL"] = True
             api.email.mail = Mail(app)
+        else:
+            # Use a testing configuration
+            app.config['MAIL_SUPPRESS_SEND'] = True
+            app.config['MAIL_DEFAULT_SENDER'] = 'testing@picoctf.com'
+            api.email.mail = Mail(app)
 
     # Register routes
     app.register_blueprint(api.routes.user.blueprint, url_prefix="/api/user")

@@ -1,5 +1,4 @@
 """Tests for the /api/user/ routes."""
-# noqa: E712
 import pytest
 import json
 import pymongo
@@ -7,6 +6,7 @@ import re
 
 from api import api
 from api.auth import confirm_password
+import api.email
 
 # Helper functions and data
 
@@ -258,6 +258,78 @@ def test_update_password(client):
         })
     status, message, data = decode_response(res)
     assert status == 1
+
+
+def test_disable_account(client):
+    """Tests the /disable_account endpoint."""
+    clear_db()
+    register_test_accounts()
+    res = client.post('/api/user/login', data={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password'],
+        })
+    csrf_t = get_csrf_token(res)
+    # Attempt to disable with the wrong current password.
+    res = client.post('/api/user/disable_account', data={
+        'current-password': 'incorrectpw',
+        'token': csrf_t,
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'Your current password is incorrect.'
+    # Disable with the correct current password.
+    res = client.post('/api/user/disable_account', data={
+        'current-password': USER_DEMOGRAPHICS['password'],
+        'token': csrf_t,
+    })
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert message == 'You have successfully disabled your account!'
+    # Try to log in and verify that it fails.
+    res = client.post('/api/user/login', data={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password'],
+        })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'This account has been disabled.'
+    # Verify the disabled account status in the database.
+    db = get_conn()
+    assert db.get_collection('users').find_one(
+        {"username": "sampleuser"})['disabled'] is True
+
+
+def test_reset_password(client):
+    """
+    Tests the /reset_password endpoint.
+
+    - Checks that the password reset token was inserted into the database.
+    - Verifies that the email is in the outbox.
+
+    """
+    clear_db()
+    register_test_accounts()
+    # App init will set api.email.mail to a testing FlaskMail instance
+    with api.email.mail.record_messages() as outbox:
+        # Send the password reset request
+        res = client.post('/api/user/reset_password', data={
+            'username': USER_DEMOGRAPHICS['username'],
+            })
+        status, message, data = decode_response(res)
+        assert status == 1
+        assert message == 'A password reset link has been sent to the ' + \
+                          'email address provided during registration.'
+        # Verify that the token is in the DB
+        # Since we cleared the DB, it's the only token in there, so
+        # we can avoid searching for it...
+        db = get_conn()
+        db_token = db.get_collection('tokens') \
+                     .find_one({})['tokens']['password_reset']
+        assert db_token is not None
+        # Verify that the email is in the outbox
+        assert len(outbox) == 1
+        assert outbox[0].subject == ' Password Reset'
+        assert db_token in outbox[0].body
 
 
 def test_create_user(client):
