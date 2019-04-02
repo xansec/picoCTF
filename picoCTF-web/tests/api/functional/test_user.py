@@ -205,21 +205,6 @@ def test_authorization(client):
     client.get('/api/user/logout')
 
 
-    # status, message, data = decode_response(res)
-    # assert status == 1
-    # assert message == 'Successfully logged in as sampleuser'
-    # assert data['teacher'] is True
-    # assert data['admin'] is True  # First user created will be admin
-    # # Test calling authorize_role
-    # res = client.get('/api/user/authorize/admin')
-    # assert res.status_code == 200
-    # assert res.data.decode('utf8') == 'Client is an administrator.'
-    # # Log out
-    # res = client.get('/api/user/logout')
-    # status, message, data = decode_response(res)
-    # assert status == 1
-    # assert message == 'Successfully logged out.'
-
 def test_update_password(client):
     """Tests the /update_password endpoint."""
     clear_db()
@@ -301,7 +286,7 @@ def test_disable_account(client):
 
 def test_reset_password(client):
     """
-    Tests the /reset_password endpoint.
+    Tests the /reset_password and /confirm_password_reset endpoints.
 
     - Checks that the password reset token was inserted into the database.
     - Verifies that the email is in the outbox.
@@ -330,6 +315,123 @@ def test_reset_password(client):
         assert len(outbox) == 1
         assert outbox[0].subject == ' Password Reset'
         assert db_token in outbox[0].body
+    # Attempt to confirm the reset with the wrong token
+    res = client.post('/api/user/confirm_password_reset', data={
+            'new-password': 'newpassword',
+            'new-password-confirmation': 'newpassword',
+            'reset-token': 'wrongtoken'
+            })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'Could not find password_reset.'  # @todo: better error message # noqa:E501
+    # Perform the password reset with the correct token
+    res = client.post('/api/user/confirm_password_reset', data={
+            'new-password': 'newpassword',
+            'new-password-confirmation': 'newpassword',
+            'reset-token': db_token
+            })
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert message == 'Your password has been reset'
+    # Log in with the new password
+    res = client.post('/api/user/login', data={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': 'newpassword',
+        })
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert message == 'Successfully logged in as sampleuser'
+
+
+def test_verify(client):
+    """@todo."""
+    pass
+
+
+def test_login(client):
+    """Tests the /login and /logout endpoints."""
+    clear_db()
+    register_test_accounts()
+
+    # Test logging out without being logged in
+    res = client.get('/api/user/logout')
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'You do not appear to be logged in.'
+
+    # Test logging in with an invalid username
+    res = client.post('/api/user/login', data={
+        'username': 'invalidusername',
+        'password': USER_DEMOGRAPHICS['password'],
+        })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'Incorrect username.'
+
+    # Test logging in with an invalid password
+    res = client.post('/api/user/login', data={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': 'invalidpassword',
+        })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'Incorrect password'
+
+    # Test logging in with correct credentials
+    res = client.post('/api/user/login', data={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password'],
+        })
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert message == 'Successfully logged in as sampleuser'
+
+    # Test logging out
+    res = client.get('/api/user/logout')
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert message == 'Successfully logged out.'
+
+
+def test_shell_servers(client):
+    """
+    Tests the /shell_servers endpoint.
+
+    Not much of a test at this point, but it should return
+    an empty list with erroring.
+    """
+    res = client.post('/api/user/login', data={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password'],
+        })
+    res = client.get('/api/user/shell_servers')
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert data == []
+
+
+def test_extdata(client):
+    """Tests the /extdata endpoint."""
+    res = client.post('/api/user/login', data={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password'],
+        })
+    csrf_t = get_csrf_token(res)
+    # Set some extdata
+    res = client.put('/api/user/extdata', data={
+        'samplekey': 'samplevalue',
+        'numerickey': 2,
+        'token': csrf_t
+    })
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert message == 'Your Extdata has been successfully updated.'
+    # Retrieve extdata
+    res = client.get('/api/user/extdata')
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert data['samplekey'] == 'samplevalue'
+    assert data['numerickey'] == '2'
 
 
 def test_create_user(client):
