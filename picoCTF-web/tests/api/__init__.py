@@ -1,1 +1,1 @@
-"""Functional tests for all of the exposed API endpoints."""
+"""Tests for the Flask API component."""

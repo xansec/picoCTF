@@ -121,35 +121,6 @@ user_schema = Schema(
     },
     extra=True)
 
-# RETIRE: this concept has been moved to team.py in 56a1fca
-new_team_schema = Schema(
-    {
-        Required('team-name-new'):
-        check(("The team name must be between 3 and 40 characters.",
-               [str, Length(min=3, max=40)]),
-              ("A team with that name already exists.",
-               [lambda name: safe_fail(api.team.get_team, name=name) is None])),
-        Required('team-password-new'):
-        check(("Team passphrase must be between 3 and 20 characters.",
-               [str, Length(min=3, max=20)])),
-    },
-    extra=True)
-
-# RETIRE: this concept has been moved to team.py in 5265701
-existing_team_schema = Schema({
-    Required('team-name-existing'): check(
-        ("Existing team names must be between 3 and 50 characters.", [str, Length(min=3, max=50)]),
-        ("There is no existing team named that.", [
-            lambda name: api.team.get_team(name=name) is not None]),
-        ("There are too many members on that team for you to join.", [
-            lambda name: len(api.team.get_team_uids(name=name, show_disabled=False)) < api.config.get_settings()["max_team_size"]
-        ])
-    ),
-    Required('team-password-existing'):
-        check(("Team passwords must be between 3 and 50 characters.", [str, Length(min=3, max=50)]))
-}, extra=True)
-
-
 def get_team(uid=None):
     """
     Retrieve the the corresponding team to the user's uid.
