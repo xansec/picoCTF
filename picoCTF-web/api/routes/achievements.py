@@ -16,7 +16,7 @@ def get_achievements_hook():
     achievements = api.achievement.get_earned_achievements_display(tid=tid)
 
     for achievement in achievements:
-        achievement[
-            "timestamp"] = None  # JB : Hack to temporarily fix achievements timestamp problem
+        # JB : Hack to temporarily fix achievements timestamp problem
+        achievement["timestamp"] = None
 
     return WebSuccess(data=achievements)

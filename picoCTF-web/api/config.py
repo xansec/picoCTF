@@ -34,8 +34,6 @@ These are the default settings that will be loaded
 into the database if no settings are already loaded.
 """
 default_settings = {
-    "enable_teachers":
-    True,
     "enable_feedback":
     True,
 

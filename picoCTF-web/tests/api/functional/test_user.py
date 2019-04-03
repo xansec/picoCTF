@@ -387,7 +387,6 @@ def test_status(client):
     assert data['logged_in'] is False
     assert data['admin'] is False
     assert data['teacher'] is False
-    assert data['enable_teachers'] is True
     assert data['enable_feedback'] is True
     assert data['enable_captcha'] is False
     assert data['competition_active'] is False

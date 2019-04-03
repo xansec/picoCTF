@@ -141,8 +141,6 @@ def status_hook():
         api.auth.is_logged_in() and api.user.is_admin(),
         "teacher":
         api.auth.is_logged_in() and api.user.is_teacher(),
-        "enable_teachers":
-        settings["enable_teachers"],
         "enable_feedback":
         settings["enable_feedback"],
         "enable_captcha":
