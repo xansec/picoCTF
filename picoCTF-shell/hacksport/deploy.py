@@ -9,6 +9,7 @@ LOCALHOST = "127.0.0.1"
 PROBLEM_FILES_DIR = "problem_files"
 STATIC_FILE_ROOT = "static"
 XINETD_SERVICE_PATH = "/etc/xinetd.d/"
+TEMP_DEB_DIR = "/tmp/picoctf_debs/"
 
 # will be set to the configuration module during deployment
 deploy_config = None
@@ -111,6 +112,7 @@ import json
 import logging
 import os
 import shutil
+import subprocess
 import traceback
 from abc import ABCMeta
 from copy import copy, deepcopy
@@ -131,6 +133,7 @@ from hacksport.problem import (Compiled, Directory, ExecutableFile, File,
 from hacksport.status import get_all_problem_instances, get_all_problems
 from jinja2 import Environment, FileSystemLoader, Template
 from shell_manager.bundle import get_bundle, get_bundle_root
+from shell_manager.package import package_problem
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_problem, get_problem_root, HACKSPORTS_ROOT,
                                 sanitize_name, STAGING_ROOT)
@@ -899,34 +902,49 @@ def deploy_problems(args, config):
 
     try:
         for problem_name in problem_names:
+            if isdir(join(get_problem_root(problem_name, absolute=True))):
+                # problem_name is already an installed package
+                deploy_location = join(get_problem_root(problem_name, absolute=True))
+            elif isdir(problem_name) and args.dry:
+                # dry run - avoid installing package
+                deploy_location = problem_name
+            elif isdir(problem_name):
+                # problem_name is a source dir - convert to .deb and install
+                try:
+                    if not os.path.isdir(TEMP_DEB_DIR):
+                        os.mkdir(TEMP_DEB_DIR)
+                    problem_name, generated_deb_path = package_problem(problem_name, out_path=TEMP_DEB_DIR)
+                except FatalException:
+                    logger.error("An error occurred while packaging %s.", problem_name)
+                    raise
+                try:
+                    # reinstall flag ensures package will be overwritten if version is the same,
+                    # maintaining previous 'dpkg -i' behavior
+                    subprocess.run('apt-get install --reinstall {}'.format(generated_deb_path), shell=True, check=True, stdout=subprocess.PIPE)
+                except subprocess.CalledProcessError:
+                    logger.error("An error occurred while installing problem packages.")
+                    raise FatalException
+                deploy_location = join(get_problem_root(problem_name, absolute=True))
+            else:
+                logger.error("'%s' is neither an installed package, nor a valid problem directory",
+                             problem_name)
+                raise FatalException
+
+            # Avoid redeploying already-deployed instances
             if args.redeploy:
                 todo_instance_list = instance_list
             else:
-                # remove already deployed instances
                 todo_instance_list = list(
                     set(instance_list) -
                     set(already_deployed.get(problem_name, [])))
 
-            if args.dry and isdir(problem_name):
-                need_restart_xinetd = deploy_problem(
-                    problem_name,
-                    instances=todo_instance_list,
-                    test=args.dry,
-                    deployment_directory=args.deployment_directory,
-                    debug=args.debug,
-                    restart_xinetd=False)
-            elif isdir(join(get_problem_root(problem_name, absolute=True))):
-                need_restart_xinetd = deploy_problem(
-                    join(get_problem_root(problem_name, absolute=True)),
-                    instances=todo_instance_list,
-                    test=args.dry,
-                    deployment_directory=args.deployment_directory,
-                    debug=args.debug,
-                    restart_xinetd=False)
-            else:
-                logger.error("Problem '%s' doesn't appear to be installed.",
-                             problem_name)
-                raise FatalException
+            need_restart_xinetd = deploy_problem(
+                deploy_location,
+                instances=todo_instance_list,
+                test=args.dry,
+                deployment_directory=args.deployment_directory,
+                debug=args.debug,
+                restart_xinetd=False)
     finally:
         # Restart xinetd unless specified. Service must be manually restarted
         if not args.no_restart and need_restart_xinetd:
