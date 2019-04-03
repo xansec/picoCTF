@@ -26,7 +26,7 @@ blueprint = Blueprint("problem_api", __name__)
 @blueprint.route('/category/<category>', methods=['GET'])
 @jsonify
 @require_login
-@block_before_competition(WebError("The competition has not begun yet!"))
+@block_before_competition()
 def get_visible_problems_hook(category):
     visible_problems = api.problem.get_visible_problems(
         api.user.get_user()['tid'], category=category)
@@ -38,7 +38,7 @@ def get_visible_problems_hook(category):
 @jsonify
 @require_login
 @require_teacher
-@block_before_competition(WebError("The competition has not begun yet!"))
+@block_before_competition()
 def get_all_problems_hook(category):
     all_problems = api.problem.get_all_problems(
         category=category, basic_only=True)
@@ -49,7 +49,7 @@ def get_all_problems_hook(category):
 @blueprint.route('/count/<category>', methods=['GET'])
 @jsonify
 @require_login
-@block_before_competition(WebError("The competition has not begun yet!"))
+@block_before_competition()
 def get_all_problems_count_hook(category):
     return WebSuccess(data=api.problem.count_all_problems(category=category))
 
@@ -57,7 +57,7 @@ def get_all_problems_count_hook(category):
 @blueprint.route('/unlocked', methods=['GET'])
 @jsonify
 @require_login
-@block_before_competition(WebError("The competition has not begun yet!"))
+@block_before_competition()
 def get_unlocked_problems_hook():
     unlocked_problems = api.problem.get_unlocked_problems(
         api.user.get_user()['tid'])
@@ -67,7 +67,7 @@ def get_unlocked_problems_hook():
 @blueprint.route('/solved', methods=['GET'])
 @jsonify
 @require_login
-@block_before_competition(WebError("The competition has not begun yet!"))
+@block_before_competition()
 def get_solved_problems_hook():
     solved_problems = api.problem.get_solved_problems(
         tid=api.user.get_user()['tid'])
@@ -79,8 +79,8 @@ def get_solved_problems_hook():
 @jsonify
 @check_csrf
 @require_login
-@block_before_competition(WebError("The competition has not begun yet!"))
-@block_after_competition(WebError("The competition is over!"))
+@block_before_competition()
+@block_after_competition()
 def submit_key_hook():
     user_account = api.user.get_user()
     tid = user_account['tid']
@@ -101,8 +101,8 @@ def submit_key_hook():
 @blueprint.route('/<path:pid>', methods=['GET'])
 @jsonify
 @require_login
-@block_before_competition(WebError("The competition has not begun yet!"))
-@block_after_competition(WebError("The competition is over!"))
+@block_before_competition()
+@block_after_competition()
 def get_single_problem_hook(pid):
     problem_info = api.problem.get_problem(pid, tid=api.user.get_user()['tid'])
     if not api.user.is_admin():
@@ -114,7 +114,7 @@ def get_single_problem_hook(pid):
 @jsonify
 @check_csrf
 @require_login
-@block_before_competition(WebError("The competition has not begun yet!"))
+@block_before_competition()
 def problem_feedback_hook():
     feedback = json.loads(request.form.get("feedback", ""))
     pid = request.form.get("pid", None)
@@ -132,7 +132,7 @@ def problem_feedback_hook():
 @blueprint.route('/feedback/reviewed', methods=['GET'])
 @jsonify
 @require_login
-@block_before_competition(WebError("The competition has not begun yet!"))
+@block_before_competition()
 def problem_reviews_hook():
     uid = api.user.get_user()['uid']
     return WebSuccess(data=api.problem_feedback.get_problem_feedback(uid=uid))
@@ -141,7 +141,7 @@ def problem_reviews_hook():
 @blueprint.route("/hint", methods=['GET'])
 @jsonify
 @require_login
-@block_before_competition(WebError("The competition has not begun yet!"))
+@block_before_competition()
 def request_problem_hint_hook():
 
     @log_action

@@ -10,7 +10,7 @@ from flask import request, session
 import api.auth
 import api.config
 import api.user
-from api.common import InternalException, WebException
+from api.common import InternalException, WebException, WebError
 
 log = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ def check_csrf(f):
     return wrapper
 
 
-def block_before_competition(return_result):
+def block_before_competition():
     """Wrap routing functions that are blocked prior to the competition."""
     def decorator(f):
         """Inner decorator."""
@@ -102,12 +102,12 @@ def block_before_competition(return_result):
             )["start_time"].timestamp():
                 return f(*args, **kwds)
             else:
-                return return_result
+                return WebError("The competition has not begun yet!")
         return wrapper
     return decorator
 
 
-def block_after_competition(return_result):
+def block_after_competition():
     """Wrap routing functions that are blocked after the competition."""
     def decorator(f):
         """Inner decorator."""
@@ -117,6 +117,6 @@ def block_after_competition(return_result):
             )["end_time"].timestamp():
                 return f(*args, **kwds)
             else:
-                return return_result
+                return WebError("The competition is over!")
         return wrapper
     return decorator

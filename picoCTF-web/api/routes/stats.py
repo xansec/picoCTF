@@ -21,7 +21,7 @@ scoreboard_page_len = 50
 @blueprint.route('/team/solved_problems', methods=['GET'])
 @jsonify
 @require_login
-@block_before_competition(WebError("The competition has not begun yet!"))
+@block_before_competition()
 def get_team_solved_problems_hook():
     tid = request.args.get("tid", None)
     stats = {
@@ -35,7 +35,7 @@ def get_team_solved_problems_hook():
 @blueprint.route('/team/score_progression', methods=['GET'])
 @jsonify
 @require_login
-@block_before_competition(WebError("The competition has not begun yet!"))
+@block_before_competition()
 def get_team_score_progression():
     category = request.args.get("category", None)
 
@@ -48,7 +48,7 @@ def get_team_score_progression():
 @blueprint.route('/scoreboard', defaults={'board': None, 'page': 1}, methods=['GET'])
 @blueprint.route('/scoreboard/<board>/<int:page>', methods=['GET'])
 @jsonify
-@block_before_competition(WebError("The competition has not begun yet!"))
+@block_before_competition()
 def get_scoreboard_hook(board, page):
     def get_user_pos(scoreboard, tid):
         for pos, team in enumerate(scoreboard):
