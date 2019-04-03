@@ -9,14 +9,14 @@ import api.problem_feedback
 import api.shell_servers
 import api.stats
 import api.user
-from api.annotations import api_wrapper, require_admin
+from api.annotations import jsonify, require_admin
 from api.common import WebError, WebSuccess
 
 blueprint = Blueprint("admin_api", __name__)
 
 
 @blueprint.route('/problems', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_admin
 def get_problem_data_hook():
     has_instances = lambda p: len(p["instances"]) > 0
@@ -33,7 +33,7 @@ def get_problem_data_hook():
 
 
 @blueprint.route('/users', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_admin
 def get_all_users_hook():
     users = api.user.get_all_users()
@@ -43,7 +43,7 @@ def get_all_users_hook():
 
 
 @blueprint.route('/exceptions', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_admin
 def get_exceptions_hook():
     try:
@@ -56,7 +56,7 @@ def get_exceptions_hook():
 
 
 @blueprint.route('/exceptions/dismiss', methods=['POST'])
-@api_wrapper
+@jsonify
 @require_admin
 def dismiss_exceptions_hook():
     trace = request.form.get("trace", None)
@@ -68,7 +68,7 @@ def dismiss_exceptions_hook():
 
 
 @blueprint.route("/problems/submissions", methods=["GET"])
-@api_wrapper
+@jsonify
 @require_admin
 def get_problem():
     submission_data = {p["name"]:api.stats.get_problem_submission_stats(pid=p["pid"]) \
@@ -77,7 +77,7 @@ def get_problem():
 
 
 @blueprint.route("/problems/availability", methods=["POST"])
-@api_wrapper
+@jsonify
 @require_admin
 def change_problem_availability_hook():
     pid = request.form.get("pid", None)
@@ -93,14 +93,14 @@ def change_problem_availability_hook():
 
 
 @blueprint.route("/shell_servers", methods=["GET"])
-@api_wrapper
+@jsonify
 @require_admin
 def get_shell_servers():
     return WebSuccess(data=api.shell_servers.get_servers(get_all=True))
 
 
 @blueprint.route("/shell_servers/add", methods=["POST"])
-@api_wrapper
+@jsonify
 @require_admin
 def add_shell_server():
     params = api.common.flat_multi(request.form)
@@ -109,7 +109,7 @@ def add_shell_server():
 
 
 @blueprint.route("/shell_servers/update", methods=["POST"])
-@api_wrapper
+@jsonify
 @require_admin
 def update_shell_server():
     params = api.common.flat_multi(request.form)
@@ -123,7 +123,7 @@ def update_shell_server():
 
 
 @blueprint.route("/shell_servers/remove", methods=["POST"])
-@api_wrapper
+@jsonify
 @require_admin
 def remove_shell_server():
     sid = request.form.get("sid", None)
@@ -135,7 +135,7 @@ def remove_shell_server():
 
 
 @blueprint.route("/shell_servers/load_problems", methods=["POST"])
-@api_wrapper
+@jsonify
 @require_admin
 def load_problems_from_shell_server():
     sid = request.form.get("sid", None)
@@ -148,7 +148,7 @@ def load_problems_from_shell_server():
 
 
 @blueprint.route("/shell_servers/check_status", methods=["GET"])
-@api_wrapper
+@jsonify
 @require_admin
 def check_status_of_shell_server():
     sid = request.args.get("sid", None)
@@ -167,7 +167,7 @@ def check_status_of_shell_server():
 
 
 @blueprint.route("/shell_servers/reassign_teams", methods=['POST'])
-@api_wrapper
+@jsonify
 @require_admin
 def reassign_teams_hook():
     if not api.config.get_settings()["shell_servers"]["enable_sharding"]:
@@ -185,7 +185,7 @@ def reassign_teams_hook():
 
 
 @blueprint.route("/bundle/dependencies_active", methods=["POST"])
-@api_wrapper
+@jsonify
 @require_admin
 def bundle_dependencies():
     bid = request.form.get("bid", None)
@@ -206,14 +206,14 @@ def bundle_dependencies():
 
 
 @blueprint.route("/settings", methods=["GET"])
-@api_wrapper
+@jsonify
 @require_admin
 def get_settings():
     return WebSuccess(data=api.config.get_settings())
 
 
 @blueprint.route("/settings/change", methods=["POST"])
-@api_wrapper
+@jsonify
 @require_admin
 def change_settings():
     data = json_util.loads(request.form["json"])

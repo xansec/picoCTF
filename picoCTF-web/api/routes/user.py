@@ -7,7 +7,7 @@ import api.email
 import api.shell_servers
 import api.stats
 import api.user
-from api.annotations import api_wrapper, check_csrf, require_login
+from api.annotations import jsonify, check_csrf, require_login
 from api.common import WebError, WebSuccess, safe_fail
 
 blueprint = Blueprint("user_api", __name__)
@@ -32,7 +32,7 @@ def authorize_role(role=None):
 
 
 @blueprint.route('/create_simple', methods=['POST'])
-@api_wrapper
+@jsonify
 def create_simple_user_hook():
     new_uid = api.user.create_simple_user_request(
         api.common.parse_multi_form(request.form))
@@ -49,7 +49,7 @@ def create_simple_user_hook():
 
 
 @blueprint.route('/update_password', methods=['POST'])
-@api_wrapper
+@jsonify
 @check_csrf
 @require_login
 def update_password_hook():
@@ -59,7 +59,7 @@ def update_password_hook():
 
 
 @blueprint.route('/disable_account', methods=['POST'])
-@api_wrapper
+@jsonify
 @check_csrf
 @require_login
 def disable_account_hook():
@@ -69,7 +69,7 @@ def disable_account_hook():
 
 
 @blueprint.route('/reset_password', methods=['POST'])
-@api_wrapper
+@jsonify
 def reset_password_hook():
     username = request.form.get("username", None)
 
@@ -80,7 +80,7 @@ def reset_password_hook():
 
 
 @blueprint.route('/confirm_password_reset', methods=['POST'])
-@api_wrapper
+@jsonify
 def confirm_password_reset_hook():
     password = request.form.get("new-password")
     confirm = request.form.get("new-password-confirmation")
@@ -91,7 +91,7 @@ def confirm_password_reset_hook():
 
 
 @blueprint.route('/verify', methods=['GET'])
-# @api_wrapper
+# @jsonify
 def verify_user_hook():
     uid = request.args.get("uid")
     token = request.args.get("token")
@@ -107,7 +107,7 @@ def verify_user_hook():
 
 
 @blueprint.route('/login', methods=['POST'])
-@api_wrapper
+@jsonify
 def login_hook():
     username = request.form.get('username')
     password = request.form.get('password')
@@ -121,7 +121,7 @@ def login_hook():
 
 
 @blueprint.route('/logout', methods=['GET'])
-@api_wrapper
+@jsonify
 def logout_hook():
     if api.auth.is_logged_in():
         api.auth.logout()
@@ -131,7 +131,7 @@ def logout_hook():
 
 
 @blueprint.route('/status', methods=['GET'])
-@api_wrapper
+@jsonify
 def status_hook():
     settings = api.config.get_settings()
     status = {
@@ -168,7 +168,7 @@ def status_hook():
 
 
 @blueprint.route('/shell_servers', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_login
 def shell_servers_hook():
     servers = [{
@@ -179,7 +179,7 @@ def shell_servers_hook():
 
 
 @blueprint.route('/extdata', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_login
 def get_extdata_hook():
     """
@@ -190,7 +190,7 @@ def get_extdata_hook():
 
 
 @blueprint.route('/extdata', methods=['PUT'])
-@api_wrapper
+@jsonify
 @check_csrf
 @require_login
 def update_extdata_hook():

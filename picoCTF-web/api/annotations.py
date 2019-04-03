@@ -51,37 +51,11 @@ def log_action(f):
     return wrapper
 
 
-def api_wrapper(f):
-    """
-    Wraps api routing and handles potential exceptions
-    """
-
+def jsonify(f):
+    """Convert response data to JSON."""
     @wraps(f)
     def wrapper(*args, **kwds):
-        web_result = {}
-        wrapper_log = logging.getLogger(f.__module__)
-        try:
-            web_result = f(*args, **kwds)
-        except WebException as error:
-            web_result = WebError(_get_message(error), error.data)
-        except InternalException as error:
-            message = _get_message(error)
-            if type(error) == SevereInternalException:
-                wrapper_log.critical(traceback.format_exc())
-                web_result = WebError(
-                    "There was a critical internal error. Contact an administrator."
-                )
-            else:
-                wrapper_log.error(traceback.format_exc())
-                web_result = WebError(message)
-        except Exception as error:
-            wrapper_log.error(traceback.format_exc())
-            web_result = WebError(
-                "An error occurred. Please contact an administrator.")
-                #@todo consider not swallowing errors
-
-        return json_util.dumps(web_result)
-
+        return json_util.dumps(f(*args, **kwds))
     return wrapper
 
 

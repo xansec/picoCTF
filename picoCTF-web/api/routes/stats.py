@@ -8,7 +8,7 @@ import api.stats
 import api.team
 import api.user
 from api.annotations import (
-    api_wrapper,
+    jsonify,
     block_before_competition,
     require_login
 )
@@ -19,7 +19,7 @@ scoreboard_page_len = 50
 
 
 @blueprint.route('/team/solved_problems', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_login
 @block_before_competition(WebError("The competition has not begun yet!"))
 def get_team_solved_problems_hook():
@@ -33,7 +33,7 @@ def get_team_solved_problems_hook():
 
 
 @blueprint.route('/team/score_progression', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_login
 @block_before_competition(WebError("The competition has not begun yet!"))
 def get_team_score_progression():
@@ -47,7 +47,7 @@ def get_team_score_progression():
 
 @blueprint.route('/scoreboard', defaults={'board': None, 'page': 1}, methods=['GET'])
 @blueprint.route('/scoreboard/<board>/<int:page>', methods=['GET'])
-@api_wrapper
+@jsonify
 @block_before_competition(WebError("The competition has not begun yet!"))
 def get_scoreboard_hook(board, page):
     def get_user_pos(scoreboard, tid):
@@ -138,7 +138,7 @@ def get_scoreboard_hook(board, page):
 
 
 @blueprint.route('/top_teams/score_progression', methods=['GET'])
-@api_wrapper
+@jsonify
 def get_top_teams_score_progressions_hook():
     eligible = request.args.get("eligible", "true")
     eligible = json_util.loads(eligible)
@@ -157,7 +157,7 @@ def get_top_teams_score_progressions_hook():
 
 
 @blueprint.route('/group/score_progression', methods=['GET'])
-@api_wrapper
+@jsonify
 def get_group_top_teams_score_progressions_hook():
     gid = request.args.get("gid", None)
     return WebSuccess(
@@ -165,6 +165,6 @@ def get_group_top_teams_score_progressions_hook():
 
 
 @blueprint.route('/registration', methods=['GET'])
-@api_wrapper
+@jsonify
 def get_registration_count_hook():
     return WebSuccess(data=api.stats.get_registration_count())

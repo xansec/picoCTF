@@ -5,6 +5,10 @@ from datetime import datetime
 from flask import Flask, request, session
 from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
+from bson import json_util
+import traceback
+import inspect
+import logging
 
 import api.auth
 import api.config
@@ -16,8 +20,21 @@ import api.routes.problem
 import api.routes.stats
 import api.routes.team
 import api.routes.user
-from api.annotations import api_wrapper
-from api.common import WebSuccess
+from api.annotations import jsonify
+from api.common import (
+  InternalException,
+  SevereInternalException,
+  WebException,
+  WebSuccess,
+  WebError
+)
+
+
+def get_origin_logger(exception):
+    """Get the logger for the module where an exception was raised."""
+    origin = inspect.getmodule(inspect.trace()[-1]).__name__
+    origin_logger = logging.getLogger(origin)
+    return origin_logger
 
 
 def create_app(test_config=None):
@@ -61,6 +78,28 @@ def create_app(test_config=None):
     app.register_blueprint(api.routes.achievements.blueprint,
                            url_prefix="/api/achievements")
 
+    # Register error handlers
+    @app.errorhandler(WebException)
+    def handle_web_exception(e):
+        return json_util.dumps(WebError(e.args[0], e.data))
+
+    @app.errorhandler(InternalException)
+    def handle_internal_exception(e):
+        get_origin_logger(e).error(traceback.format_exc())
+        return json_util.dumps(WebError(e.args[0]))
+
+    @app.errorhandler(SevereInternalException)
+    def handle_severe_internal_exception(e):
+        get_origin_logger(e).critical(traceback.format_exc())
+        return json_util.dumps(WebError(
+            "There was a critical internal error. Contact an administrator."))
+
+    @app.errorhandler(Exception)
+    def handle_generic_exception(e):
+        get_origin_logger(e).error(traceback.format_exc())
+        return json_util.dumps(WebError(
+            "An error occurred. Please contact an administrator."))
+
     # Configure logging
     with app.app_context():
         api.logger.setup_logs({"verbose": 2})
@@ -94,7 +133,7 @@ def create_app(test_config=None):
 
     # Add a route for getting the time
     @app.route('/api/time', methods=['GET'])
-    @api_wrapper
+    @jsonify
     def get_time():
         return WebSuccess(data=int(datetime.utcnow().timestamp()))
 

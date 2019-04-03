@@ -5,21 +5,21 @@ import api.config
 import api.stats
 import api.team
 import api.user
-from api.annotations import api_wrapper, check_csrf, require_login
+from api.annotations import jsonify, check_csrf, require_login
 from api.common import WebError, WebSuccess
 
 blueprint = Blueprint("team_api", __name__)
 
 
 @blueprint.route('', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_login
 def team_information_hook():
     return WebSuccess(data=api.team.get_team_information())
 
 
 @blueprint.route('/score', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_login
 def get_team_score_hook():
     score = api.stats.get_score(tid=api.user.get_user()['tid'])
@@ -29,7 +29,7 @@ def get_team_score_hook():
 
 
 @blueprint.route('/create', methods=['POST'])
-@api_wrapper
+@jsonify
 @require_login
 def create_new_team_hook():
     api.team.create_new_team_request(api.common.flat_multi(request.form))
@@ -37,7 +37,7 @@ def create_new_team_hook():
 
 
 @blueprint.route('/update_password', methods=['POST'])
-@api_wrapper
+@jsonify
 @check_csrf
 @require_login
 def update_team_password_hook():
@@ -46,7 +46,7 @@ def update_team_password_hook():
 
 
 @blueprint.route('/join', methods=['POST'])
-@api_wrapper
+@jsonify
 @require_login
 def join_team_hook():
     api.team.join_team_request(api.common.flat_multi(request.form))
@@ -54,7 +54,7 @@ def join_team_hook():
 
 
 @blueprint.route("/settings")
-@api_wrapper
+@jsonify
 def get_team_status():
     settings = api.config.get_settings()
 

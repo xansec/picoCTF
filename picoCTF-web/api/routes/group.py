@@ -10,7 +10,7 @@ import api.stats
 import api.team
 import api.user
 from api.annotations import (
-  api_wrapper,
+  jsonify,
   check_csrf,
   require_login,
   require_teacher
@@ -66,7 +66,7 @@ blueprint = Blueprint("group_api", __name__)
 
 
 @blueprint.route('', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_login
 def get_group_hook():
     name = request.form.get("group-name")
@@ -89,7 +89,7 @@ def get_group_hook():
 
 
 @blueprint.route('/settings', methods=['GET'])
-@api_wrapper
+@jsonify
 def get_group_settings_hook():
     gid = request.args.get("gid")
     group = api.group.get_group(gid=gid)
@@ -103,7 +103,7 @@ def get_group_settings_hook():
 
 
 @blueprint.route('/settings', methods=['POST'])
-@api_wrapper
+@jsonify
 @require_teacher
 def change_group_settings_hook():
     gid = request.form.get("gid")
@@ -123,7 +123,7 @@ def change_group_settings_hook():
 
 
 @blueprint.route('/invite', methods=['POST'])
-@api_wrapper
+@jsonify
 @require_teacher
 def invite_email_to_group_hook():
     gid = request.form.get("gid")
@@ -152,7 +152,7 @@ def invite_email_to_group_hook():
 
 
 @blueprint.route('/list')
-@api_wrapper
+@jsonify
 @require_login
 def get_group_list_hook():
     user = api.user.get_user()
@@ -160,7 +160,7 @@ def get_group_list_hook():
 
 
 @blueprint.route('/teacher_information', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_teacher
 def get_teacher_information_hook(gid=None):
     gid = request.args.get("gid")
@@ -175,7 +175,7 @@ def get_teacher_information_hook(gid=None):
 
 
 @blueprint.route('/member_information', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_teacher
 def get_member_information_hook(gid=None):
     gid = request.args.get("gid")
@@ -190,7 +190,7 @@ def get_member_information_hook(gid=None):
 
 
 @blueprint.route('/score', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_teacher
 def get_group_score_hook():
     name = request.args.get("group-name")
@@ -209,7 +209,7 @@ def get_group_score_hook():
 
 
 @blueprint.route('/create', methods=['POST'])
-@api_wrapper
+@jsonify
 @check_csrf
 @require_teacher
 def create_group_hook():
@@ -234,7 +234,7 @@ def create_group_hook():
 
 
 @blueprint.route('/join', methods=['POST'])
-@api_wrapper
+@jsonify
 @check_csrf
 @require_login
 def join_group_hook():
@@ -283,7 +283,7 @@ def join_group_hook():
 
 
 @blueprint.route('/leave', methods=['POST'])
-@api_wrapper
+@jsonify
 @check_csrf
 @require_login
 def leave_group_hook():
@@ -312,7 +312,7 @@ def leave_group_hook():
 
 
 @blueprint.route('/delete', methods=['POST'])
-@api_wrapper
+@jsonify
 @check_csrf
 @require_teacher
 def delete_group_hook():
@@ -345,7 +345,7 @@ def delete_group_hook():
 
 
 @blueprint.route('/flag_sharing', methods=['GET'])
-@api_wrapper
+@jsonify
 @require_teacher
 def get_flag_shares():
     gid = request.args.get("gid", None)
@@ -366,7 +366,7 @@ def get_flag_shares():
 
 
 @blueprint.route('/teacher/leave', methods=['POST'])
-@api_wrapper
+@jsonify
 @check_csrf
 @require_teacher
 def force_leave_group_hook():
@@ -387,7 +387,7 @@ def force_leave_group_hook():
 
 
 @blueprint.route('/teacher/role_switch', methods=['POST'])
-@api_wrapper
+@jsonify
 @require_teacher
 def switch_user_role_group_hook():
     gid = request.form.get("gid")
