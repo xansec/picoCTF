@@ -1,19 +1,17 @@
-""" Module dealing with authentication to the api """
+"""Module dealing with authentication to the API."""
+
+import logging
 
 import bcrypt
-import logging
 from flask import session
 from voluptuous import Length, Required, Schema
 
 import api.email
 import api.user
 from api.annotations import log_action
-from api.common import InternalException, safe_fail, validate, WebException
-from api.user import check
+from api.common import WebException, check, safe_fail, validate
 
 log = logging.getLogger(__name__)
-
-debug_disable_general_login = False
 
 user_login_schema = Schema({
     Required('username'):
@@ -27,7 +25,7 @@ user_login_schema = Schema({
 
 def confirm_password(attempt, password_hash):
     """
-    Verifies the password attempt
+    Verify the password attempt.
 
     Args:
         attempt: the password attempt
@@ -39,10 +37,7 @@ def confirm_password(attempt, password_hash):
 
 @log_action
 def login(username, password):
-    """
-    Authenticates a user.
-    """
-
+    """Authenticate a user."""
     # Read in submitted username and password
     validate(user_login_schema, {"username": username, "password": password})
 
@@ -57,36 +52,15 @@ def login(username, password):
         raise WebException("This account has not been verified yet.")
 
     if confirm_password(password, user['password_hash']):
-        if not user["verified"]:
-            try:
-                api.email.send_user_verification_email(username)
-                raise WebException(
-                    "This account is not verified. An additional email has been sent to {}.".
-                    format(user["email"]))
-            except InternalException as e:
-                raise WebException(
-                    "You have hit the maximum number of verification emails. Please contact support."
-                )
-
-        if debug_disable_general_login:
-            if session.get('debugaccount', False):
-                raise WebException(
-                    "Correct credentials! But the game has not started yet...")
-        if user['uid'] is not None:
-            session['uid'] = user['uid']
-            session.permanent = True
-        else:
-            raise WebException("Login Error")
+        session['uid'] = user['uid']
+        session.permanent = True
     else:
         raise WebException("Incorrect password")
 
 
 @log_action
 def logout():
-    """
-    Clears the session
-    """
-
+    """Clear the session."""
     session.clear()
 
 
@@ -96,8 +70,8 @@ def is_logged_in():
 
     Returns:
         True if the user is logged in, false otherwise.
-    """
 
+    """
     logged_in = "uid" in session
     if logged_in:
         user = safe_fail(api.user.get_user, uid=session["uid"])
@@ -109,12 +83,12 @@ def is_logged_in():
 
 def get_uid():
     """
-    Gets the user id from the session if it is logged in.
+    Get the user id from the session if it is logged in.
 
     Returns:
-        The user id of the logged in user.
-    """
+        The user id of the logged in user, or None
 
+    """
     if is_logged_in():
         return session['uid']
     else:

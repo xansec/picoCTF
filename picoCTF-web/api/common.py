@@ -1,4 +1,4 @@
-""" The common module contains general-purpose functions potentially used by multiple modules in the system."""
+"""Classes and functions used by multiple modules in the system."""
 import uuid
 from datetime import datetime
 from hashlib import md5
@@ -6,107 +6,95 @@ from hashlib import md5
 import api.config
 import bcrypt
 from voluptuous import Invalid, MultipleInvalid
-from werkzeug.contrib.cache import SimpleCache
-
-cache = SimpleCache()
 
 
 def token():
     """
-    Generate a token, should be random but does not have to be secure necessarily. Speed is a priority.
+    Generate a random but insecure token.
 
     Returns:
         The randomly generated token
-    """
 
+    """
     return str(uuid.uuid4().hex)
 
 
 def hash(string):
     """
-    Hashes a string
+    Hash a string.
 
     Args:
         string: string to be hashed.
     Returns:
         The hex digest of the string.
-    """
 
+    """
     return md5(string.encode("utf-8")).hexdigest()
 
 
 class APIException(Exception):
-    """
-    Exception thrown by the API.
-    """
+    """Base class for exceptions thrown by the API."""
+
     data = {}
 
 
-def WebSuccess(message=None, data=None):
-    """
-    Successful web request wrapper.
-    """
-
-    return {"status": 1, "message": message, "data": data}
-
-
-def WebError(message=None, data=None):
-    """
-    Unsuccessful web request wrapper.
-    """
-
-    return {"status": 0, "message": message, "data": data}
-
-
 class WebException(APIException):
-    """
-    Errors that are thrown that need to be displayed to the end user.
-    """
+    """Errors that need to be displayed to the end user."""
 
     pass
 
 
 class InternalException(APIException):
-    """
-    Exceptions thrown by the API constituting mild errors.
-    """
+    """Exceptions thrown by the API constituting mild errors."""
 
     pass
 
 
 class SevereInternalException(InternalException):
-    """
-    Exceptions thrown by the API constituting critical errors.
-    """
+    """Exceptions thrown by the API constituting critical errors."""
 
     pass
 
 
+def WebSuccess(message=None, data=None):
+    """Successful web request wrapper."""
+    return {"status": 1, "message": message, "data": data}
+
+
+def WebError(message=None, data=None):
+    """Unsuccessful web request wrapper."""
+    return {"status": 0, "message": message, "data": data}
+
+
 def flat_multi(multidict):
     """
-    Flattens any single element lists in a multidict.
+    Flatten any single element lists in a multidict.
 
     Args:
         multidict: multidict to be flattened.
     Returns:
         Partially flattened database.
-    """
 
+    """
     flat = {}
     for key, values in multidict.items():
         flat[key] = values[0] if type(values) == list and len(values) == 1 \
                     else values
     return flat
 
+
 def parse_multi_form(form):
     """
-    Parses associative arrays to dicts in x-www-form-urlencoded type form data
-    source: https://stackoverflow.com/questions/24808660/sending-a-form-array-to-flask/24808706#24808706
+    Parse associative arrays to dicts in x-www-form-urlencoded type form data.
+
+    source:
+    https://stackoverflow.com/questions/24808660/sending-a-form-array-to-flask/24808706#24808706
 
     Args:
         form: multidict to be parsed
     Returns:
         Unflattened database
+
     """
     data = {}
     for url_k in form:
@@ -142,17 +130,18 @@ def parse_multi_form(form):
 
 def check(*callback_tuples):
     """
-    Voluptuous wrapper function to raise our APIException
+    Voluptuous wrapper function to raise our APIException.
 
     Args:
-        callback_tuples: a callback_tuple should contain (status, msg, callbacks)
+        callback_tuples: a callback_tuple should contain
+                         (status, msg, callbacks)
     Returns:
         Returns a function callback for the Schema
-    """
 
+    """
     def v(value):
         """
-        Tries to validate the value with the given callbacks.
+        Try to validate the value with the given callbacks.
 
         Args:
             value: the item to validate
@@ -160,8 +149,8 @@ def check(*callback_tuples):
             APIException with the given error code and msg.
         Returns:
             The value if the validation callbacks are satisfied.
-        """
 
+        """
         for msg, callbacks in callback_tuples:
             for callback in callbacks:
                 try:
@@ -177,7 +166,7 @@ def check(*callback_tuples):
 
 def validate(schema, data):
     """
-    A wrapper around the call to voluptuous schema to raise the proper exception.
+    Wrap the call to voluptuous schema to raise the proper exception.
 
     Args:
         schema: The voluptuous Schema object
@@ -185,8 +174,8 @@ def validate(schema, data):
 
     Raises:
         APIException with status 0 and the voluptuous error message
-    """
 
+    """
     try:
         schema(data)
     except MultipleInvalid as error:
@@ -195,7 +184,7 @@ def validate(schema, data):
 
 def safe_fail(f, *args, **kwargs):
     """
-    Safely calls a function that can raise an APIException.
+    Safely call a function that can raise an APIException.
 
     Args:
         f: function to call
@@ -204,7 +193,6 @@ def safe_fail(f, *args, **kwargs):
     Returns:
         The function result or None if an exception was raised.
     """
-
     try:
         return f(*args, **kwargs)
     except APIException:
@@ -219,16 +207,13 @@ def hash_password(password):
         password: plaintext password
     Returns:
         Secure hash of password.
-    """
 
+    """
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(8))
 
 
 def check_competition_active():
-    """
-    Is the competition currently running
-    """
-
+    """Check whether the competition is currently running."""
     settings = api.config.get_settings()
 
     return settings["start_time"].timestamp() < datetime.utcnow().timestamp(
