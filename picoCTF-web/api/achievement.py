@@ -1,4 +1,4 @@
-""" Module for interacting with the achievements """
+"""Module for interacting with the achievements."""
 
 from datetime import datetime
 from importlib.machinery import SourceFileLoader

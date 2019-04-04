@@ -1,5 +1,5 @@
 from bson import json_util
-from flask import Blueprint, request
+from flask import Blueprint, request, current_app
 
 import api.admin
 import api.common
@@ -218,8 +218,6 @@ def get_settings():
 def change_settings():
     data = json_util.loads(request.form["json"])
     api.config.change_settings(data)
-    # @todo this is broken rn, will need to refactor settings loading
-    # Update Flask app settings (necessary for email to work)
-    # api.app.config_app()
-    # return WebSuccess("Settings updated")
-    return WebSuccess("This API is currently disabled")
+    # May need to recreate the Flask-Mail object if mail settings changed
+    api.update_mail_config(current_app)
+    return WebSuccess("Settings updated")

@@ -37,28 +37,19 @@ def get_origin_logger(exception):
     return origin_logger
 
 
-def create_app(test_config=None):
-    """Configure and create the Flask app via factory function."""
-    app = Flask(__name__, static_url_path="/")
-    app.wsgi_app = ProxyFix(app.wsgi_app)
-
-    # Load default settings
-    app.config.from_pyfile('default_settings.py')
-    # Override defaults with settings file passed in environment variable
-    app.config.from_envvar('APP_SETTINGS_FILE', silent=True)
-
-    # Configure email settings based on database values
+def update_mail_config(app):
+    """Update the Flask-Mail config based on the current settings."""
     with app.app_context():
-        db_settings = api.config.get_settings()
-        if db_settings["email"]["enable_email"]:
-            app.config["MAIL_SERVER"] = db_settings["email"]["smtp_url"]
-            app.config["MAIL_PORT"] = db_settings["email"]["smtp_port"]
-            app.config["MAIL_USERNAME"] = db_settings["email"]["email_username"]
-            app.config["MAIL_PASSWORD"] = db_settings["email"]["email_password"]
-            app.config["MAIL_DEFAULT_SENDER"] = db_settings["email"]["from_addr"]
-            if (db_settings["email"]["smtp_security"] == "TLS"):
+        settings = api.config.get_settings()
+        if settings["email"]["enable_email"]:
+            app.config["MAIL_SERVER"] = settings["email"]["smtp_url"]
+            app.config["MAIL_PORT"] = settings["email"]["smtp_port"]
+            app.config["MAIL_USERNAME"] = settings["email"]["email_username"]
+            app.config["MAIL_PASSWORD"] = settings["email"]["email_password"]
+            app.config["MAIL_DEFAULT_SENDER"] = settings["email"]["from_addr"]
+            if (settings["email"]["smtp_security"] == "TLS"):
                 app.config["MAIL_USE_TLS"] = True
-            elif (db_settings["email"]["smtp_security"] == "SSL"):
+            elif (settings["email"]["smtp_security"] == "SSL"):
                 app.config["MAIL_USE_SSL"] = True
             api.email.mail = Mail(app)
         else:
@@ -66,6 +57,20 @@ def create_app(test_config=None):
             app.config['MAIL_SUPPRESS_SEND'] = True
             app.config['MAIL_DEFAULT_SENDER'] = 'testing@picoctf.com'
             api.email.mail = Mail(app)
+
+
+def create_app(test_config=None):
+    """Configure and create the Flask app via factory function."""
+    app = Flask(__name__, static_url_path="/")
+    app.wsgi_app = ProxyFix(app.wsgi_app)
+
+    # Load default Flask settings
+    app.config.from_pyfile('default_settings.py')
+    # Override defaults with settings file passed in environment variable
+    app.config.from_envvar('APP_SETTINGS_FILE', silent=True)
+
+    # Configure Mail object based on runtime settings
+    update_mail_config(app)
 
     # Register routes
     app.register_blueprint(api.routes.user.blueprint, url_prefix="/api/user")

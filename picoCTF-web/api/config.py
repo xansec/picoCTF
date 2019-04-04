@@ -1,8 +1,4 @@
-"""
-CTF API Configuration File
-
-Note this is just a python script. It does config things.
-"""
+"""Stores and retrieves runtime settings from the database."""
 
 import datetime
 
@@ -10,26 +6,9 @@ import api.db
 from api.common import WebException
 
 
-# Helper class for timezones
-class EST(datetime.tzinfo):
+"""
+Default Settings
 
-    def __init__(self, utc_offset):
-        self.utc_offset = utc_offset
-
-    def utcoffset(self, dt):
-        return datetime.timedelta(hours=-self.utc_offset)
-
-    def dst(self, dt):
-        return datetime.timedelta(0)
-
-
-# Competition Information Placeholder
-competition_name = ""
-competition_urls = [
-    "",
-]
-
-""" CTF Settings
 These are the default settings that will be loaded
 into the database if no settings are already loaded.
 """
@@ -165,6 +144,7 @@ default_settings = {
 
 
 def get_settings():
+    """Retrieve settings from the database."""
     db = api.db.get_conn()
     settings = db.settings.find_one({}, {"_id": 0})
 
@@ -178,6 +158,7 @@ def get_settings():
 
 
 def change_settings(changes):
+    """Update settings in the database."""
     db = api.db.get_conn()
     settings = db.settings.find_one({})
 
@@ -185,9 +166,11 @@ def change_settings(changes):
         keys = list(changed.keys())
         for key in keys:
             if key not in real:
-                raise WebException("Cannot update setting for '{}'".format(key))
+                raise WebException("Cannot update setting for '{}'"
+                                   .format(key))
             elif type(real[key]) != type(changed[key]):
-                raise WebException("Cannot update setting for '{}'".format(key))
+                raise WebException("Cannot update setting for '{}'"
+                                   .format(key))
             elif isinstance(real[key], dict):
                 check_keys(real[key], changed[key])
                 # change the key so mongo $set works correctly
@@ -196,5 +179,4 @@ def change_settings(changes):
                 changed.pop(key)
 
     check_keys(settings, changes)
-
     db.settings.update({"_id": settings["_id"]}, {"$set": changes})

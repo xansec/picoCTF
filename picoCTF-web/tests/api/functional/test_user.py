@@ -88,7 +88,6 @@ def test_authorization(client):
     res = client.get('/api/user/authorize/user')
     assert res.status_code == 200
     assert res.data.decode('utf8') == 'Client is logged in.'
-    # @todo admins are always also teachers?
     res = client.get('/api/user/authorize/teacher')
     assert res.status_code == 200
     assert res.data.decode('utf8') == 'Client is a teacher.'
