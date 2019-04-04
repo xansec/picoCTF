@@ -1,6 +1,4 @@
-"""
-Manage loggers for the api.
-"""
+"""Manage loggers for the API."""
 
 import logging
 import logging.handlers
@@ -13,6 +11,7 @@ from flask import request
 
 import api.auth
 import api.config
+import api.db
 import api.team
 import api.user
 

@@ -97,6 +97,7 @@ please:
 - Strive to leave the code base in better shape than when you got it.
 - Add test cases when you add code.
 - Run [Flake8](https://pypi.python.org/pypi/flake8)
+- Run [pydocstyle](https://pypi.org/project/pydocstyle/)
 - Use underscores (e.g., `get_unique`), not camelCase (e.g., not `getUnique`).
 - In docstrings, follow
   [PEP 257](https://www.python.org/dev/peps/pep-0257)

@@ -1,4 +1,4 @@
-""" Module for interacting with the problems """
+"""Module for interacting with the problems."""
 
 from copy import copy, deepcopy
 from datetime import datetime

@@ -43,7 +43,8 @@ achievement_schema = Schema({
            [lambda disabled: type(disabled) == bool])),
     "multiple":
     check((
-        "Whether an achievement can be earned multiple times is either True or False.",
+        "Whether an achievement can be earned multiple times" +
+        "is either True or False.",
         [lambda disabled: type(disabled) == bool])),
     "aid":
     check(("You should not specify a aid for an achievement.",
@@ -56,14 +57,14 @@ achievement_schema = Schema({
 
 def get_all_events(show_disabled=False):
     """
-    Gets the set of distinct achievement events.
+    Get the set of distinct achievement events.
 
     Args:
-        show_disabled: Whether to include events that are only on disabled achievements
+        show_disabled: Whether to include events that are
+                       only on disabled achievements
     Returns:
         The set of distinct achievement events.
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -80,7 +81,8 @@ def get_achievement(aid=None, name=None, show_disabled=False):
     Args:
         aid: the achievement id
         name: the name of the achievement
-        show_disabled: Boolean indicating whether or not to show disabled achievements.
+        show_disabled: Boolean indicating whether or not to
+                       show disabled achievements.
     """
 
     db = api.db.get_conn()
@@ -109,15 +111,16 @@ def get_achievement(aid=None, name=None, show_disabled=False):
 
 def get_all_achievements(event=None, show_disabled=False):
     """
-    Gets all of the achievements in the database.
+    Get all of the achievements in the database.
 
     Args:
         event: Optional parameter to restrict which achievements are returned
-        show_disabled: Boolean indicating whether or not to show disabled achievements.
+        show_disabled: Boolean indicating whether or not to
+                       show disabled achievements.
     Returns:
         List of achievements from the database
-    """
 
+    """
     db = api.db.get_conn()
 
     match = {}
@@ -135,7 +138,7 @@ def get_all_achievements(event=None, show_disabled=False):
 
 def get_earned_achievement_instances(tid=None, uid=None, aid=None):
     """
-    Gets the solved achievements for a given team or user.
+    Get the solved achievements for a given team or user.
 
     Args:
         tid: The team id
@@ -143,7 +146,6 @@ def get_earned_achievement_instances(tid=None, uid=None, aid=None):
     Returns:
         List of solved achievements
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -161,7 +163,7 @@ def get_earned_achievement_instances(tid=None, uid=None, aid=None):
 
 def get_earned_aids(tid=None, uid=None, aid=None):
     """
-    Gets the solved aids for a given team or user.
+    Get the solved aids for a given team or user.
 
     Args:
         tid: The team id
@@ -169,7 +171,6 @@ def get_earned_aids(tid=None, uid=None, aid=None):
     Returns:
         List of solved achievement ids
     """
-
     return set([
         a["aid"]
         for a in get_earned_achievement_instances(tid=tid, uid=uid, aid=aid)
@@ -178,13 +179,12 @@ def get_earned_aids(tid=None, uid=None, aid=None):
 
 def set_earned_achievements_seen(tid=None, uid=None):
     """
-    Sets all earned achievements from a team or user seen.
+    Set all earned achievements from a team or user seen.
 
     Args:
         tid: the team id
         uid: the user id
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -201,7 +201,8 @@ def set_earned_achievements_seen(tid=None, uid=None):
 
 def get_earned_achievements_display(tid=None, uid=None):
     """
-    Gets the achievement display for a given user/team.
+    Get the achievement display for a given user/team.
+
     Includes instance specific information.
 
     Args:
@@ -210,7 +211,6 @@ def get_earned_achievements_display(tid=None, uid=None):
     Returns:
         A list of enabled achievements the team has earned.
     """
-
     instance_achievements = get_earned_achievement_instances(tid=tid, uid=uid)
     set_earned_achievements_seen(tid=tid, uid=uid)
 
@@ -231,7 +231,7 @@ def get_earned_achievements_display(tid=None, uid=None):
 
 def get_earned_achievements(tid=None, uid=None):
     """
-    Gets the solved achievements for a given team or user.
+    Get the solved achievements for a given team or user.
 
     Args:
         tid: The team id
@@ -239,7 +239,6 @@ def get_earned_achievements(tid=None, uid=None):
     Returns:
         List of solved achievement dictionaries
     """
-
     achievements = get_earned_achievement_instances(tid=tid, uid=uid)
     set_earned_achievements_seen(tid=tid, uid=uid)
 
@@ -252,28 +251,28 @@ def get_earned_achievements(tid=None, uid=None):
 
 def set_achievement_disabled(aid, disabled):
     """
-    Updates a achievement's availability.
+    Update a achievement's availability.
 
     Args:
         aid: the achievement's aid
         disabled: whether or not the achievement should be disabled.
     Returns:
         The updated achievement object.
-    """
 
+    """
     return update_achievement(aid, {"disabled": disabled})
 
 
 def get_processor(aid):
     """
-    Returns the processor module for a given achievement.
+    Return the processor module for a given achievement.
 
     Args:
         aid: the achievement id
     Returns:
         The processor module
-    """
 
+    """
     try:
         path = get_achievement(aid=aid, show_disabled=True)["processor"]
         base_path = api.config.get_settings()["achievements"][
@@ -286,14 +285,14 @@ def get_processor(aid):
 @log_action
 def process_achievement(aid, data):
     """
-    Determines whether or not an achievement has been earned.
+    Determine whether or not an achievement has been earned.
+
     Should not be called directly.
 
     Args:
         aid: the achievement id
         data: additional data dictionary
     """
-
     if data.get("uid", None) is None:
         data["uid"] = api.user.get_user()["uid"]
 
@@ -315,7 +314,6 @@ def insert_earned_achievement(aid, data):
         data: the data necessary to assess the achievement
               must include tid, uid
     """
-
     db = api.db.get_conn()
 
     tid, uid = data.pop("tid"), data.pop("uid")
@@ -341,7 +339,6 @@ def process_achievements(event, data):
         event: event type, e.g., submit
         data: dictionary with additional information necessary for assessment
     """
-
     if data.get("uid", None) is None:
         data["uid"] = api.user.get_user()["uid"]
 
@@ -349,9 +346,9 @@ def process_achievements(event, data):
         data["tid"] = api.user.get_user(uid=data["uid"])["tid"]
 
     eligible_achievements = [
-        achievement for achievement in get_all_achievements(event=event) \
-            if achievement["aid"] not in get_earned_aids(tid=data["tid"]) \
-            or achievement.get("multiple", False)]
+        achievement for achievement in get_all_achievements(event=event)
+        if achievement["aid"] not in get_earned_aids(tid=data["tid"]) or
+        achievement.get("multiple", False)]
 
     for achievement in eligible_achievements:
         aid = achievement["aid"]
@@ -371,14 +368,14 @@ def process_achievements(event, data):
 
 def insert_achievement(achievement):
     """
-    Inserts an achievement object into the database.
+    Insert an achievement object into the database.
 
     Args:
         achievement: the achievement object loaded from json.
     Returns:
         The achievement's aid.
-    """
 
+    """
     db = api.db.get_conn()
     validate(achievement_schema, achievement)
 
@@ -400,15 +397,15 @@ def insert_achievement(achievement):
 
 def update_achievement(aid, updated_achievement):
     """
-    Updates a achievement with new properties.
+    Update a achievement with new properties.
 
     Args:
         aid: the aid of the achievement to update.
         updated_achievement: an updated achievement object.
     Returns:
         The updated achievement object.
-    """
 
+    """
     db = api.db.get_conn()
 
     if updated_achievement.get("name", None) is not None:

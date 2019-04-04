@@ -168,7 +168,7 @@ def change_settings(changes):
             if key not in real:
                 raise WebException("Cannot update setting for '{}'"
                                    .format(key))
-            elif type(real[key]) != type(changed[key]):
+            elif type(real[key]) != type(changed[key]):  # noqa:E721
                 raise WebException("Cannot update setting for '{}'"
                                    .format(key))
             elif isinstance(real[key], dict):

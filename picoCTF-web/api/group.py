@@ -1,4 +1,4 @@
-""" Module for handling groups of teams """
+"""Module for handling groups of teams."""
 
 from voluptuous import Required, Schema
 
@@ -29,7 +29,6 @@ def get_roles_in_group(gid, tid=None, uid=None):
         tid: the team id
         uid: optional uid
     """
-
     group = get_group(gid=gid)
 
     if uid is not None:
@@ -49,7 +48,8 @@ def get_roles_in_group(gid, tid=None, uid=None):
         team = api.team.get_team(tid=tid)
     else:
         raise InternalException(
-            "Either tid or uid must be specified to determine role in classroom.")
+            "Either tid or uid must be specified " +
+            "to determine role in classroom.")
 
     roles = {}
     roles["owner"] = team["tid"] == group["owner"]
@@ -70,7 +70,6 @@ def get_group(gid=None, name=None, owner_tid=None):
     Returns:
         The group object.
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -81,7 +80,8 @@ def get_group(gid=None, name=None, owner_tid=None):
         match.update({"gid": gid})
     else:
         raise InternalException(
-            "Classroom name and owner or gid must be specified to look up a classroom.")
+            "Classroom name and owner or gid must be specified" +
+            " to look up a classroom.")
 
     group = db.groups.find_one(match, {"_id": 0})
     if group is None:
@@ -92,14 +92,13 @@ def get_group(gid=None, name=None, owner_tid=None):
 
 def get_teacher_information(gid):
     """
-    Retrieves the team information for all teams in a group.
+    Retrieve the team information for all teams in a group.
 
     Args:
         gid: the group id
     Returns:
         A list of team information
     """
-
     group = get_group(gid=gid)
 
     member_information = []
@@ -113,14 +112,13 @@ def get_teacher_information(gid):
 
 def get_member_information(gid):
     """
-    Retrieves the team information for all teams in a group.
+    Retrieve the team information for all teams in a group.
 
     Args:
         gid: the group id
     Returns:
         A list of team information
     """
-
     group = get_group(gid=gid)
 
     member_information = []
@@ -136,15 +134,15 @@ def get_member_information(gid):
 @log_action
 def create_group(tid, group_name):
     """
-    Inserts group into the db. Assumes everything is validated.
+    Insert group into the db. Assumes everything is validated.
 
     Args:
         tid: The id of the team creating the group.
         group_name: The name of the group.
     Returns:
         The new group's gid.
-    """
 
+    """
     db = api.db.get_conn()
 
     gid = api.common.token()
@@ -165,10 +163,7 @@ def create_group(tid, group_name):
 
 
 def get_group_settings(gid):
-    """
-    Get various group settings.
-    """
-
+    """Get various group settings."""
     db = api.db.get_conn()
 
     # Ensure it exists.
@@ -184,10 +179,7 @@ def get_group_settings(gid):
 
 
 def change_group_settings(gid, settings):
-    """
-    Replace the current settings with the supplied ones.
-    """
-
+    """Replace the current settings with the supplied ones."""
     db = api.db.get_conn()
 
     validate(group_settings_schema, settings)
@@ -195,7 +187,8 @@ def change_group_settings(gid, settings):
     group = api.group.get_group(gid=gid)
     if group["settings"]["hidden"] and not settings["hidden"]:
         raise InternalException(
-            "You can not change a hidden classroom back to a public classroom.")
+            "You can not change a hidden classroom " +
+            "back to a public classroom.")
 
     db.groups.update({"gid": group["gid"]}, {"$set": {"settings": settings}})
 
@@ -203,14 +196,13 @@ def change_group_settings(gid, settings):
 @log_action
 def join_group(gid, tid, teacher=False):
     """
-    Adds a team to a group. Assumes everything is valid.
+    Add a team to a group. Assumes everything is valid.
 
     Args:
         tid: the team id
         gid: the group id to join
         teacher: whether or not the user is a teacher
     """
-
     db = api.db.get_conn()
 
     role_group = "teachers" if teacher else "members"
@@ -224,10 +216,7 @@ def join_group(gid, tid, teacher=False):
 
 
 def sync_teacher_status(tid, uid):
-    """
-    Determine if the given user is still a teacher and update his status.
-    """
-
+    """Determine if the given user is still a teacher and update his status."""
     db = api.db.get_conn()
 
     active_teacher_roles = db.groups.find({
@@ -247,18 +236,14 @@ def sync_teacher_status(tid, uid):
 @log_action
 def leave_group(gid, tid):
     """
-    Removes a team from a group
+    Remove a team from a group.
 
     Args:
         tid: the team id
         gid: the group id to leave
     """
-
     db = api.db.get_conn()
-
-    group = get_group(gid=gid)
     team = api.team.get_team(tid=tid)
-
     roles = get_roles_in_group(gid, tid=team["tid"])
 
     if roles["owner"]:
@@ -276,7 +261,6 @@ def switch_role(gid, tid, role):
 
     Cannot switch to/from owner.
     """
-
     db = api.db.get_conn()
     team = api.team.get_team(tid=tid)
 
@@ -294,7 +278,8 @@ def switch_role(gid, tid, role):
                 }
             })
         else:
-            raise InternalException("Team is already a member of that classroom.")
+            raise InternalException("Team is already a member of " +
+                                    "that classroom.")
 
     elif role == "teacher":
         if api.team.is_teacher_team(tid):
@@ -310,9 +295,11 @@ def switch_role(gid, tid, role):
                     }
                 })
             else:
-                raise InternalException("User is already a teacher of that classroom.")
+                raise InternalException("User is already a teacher of " +
+                                        "that classroom.")
         else:
-            raise InternalException("Only teacher users may become classroom teachers.")
+            raise InternalException("Only teacher users may become " +
+                                    "classroom teachers.")
 
     else:
         raise InternalException("Only supported roles are member and teacher.")
@@ -325,22 +312,16 @@ def switch_role(gid, tid, role):
 @log_action
 def delete_group(gid):
     """
-    Deletes a group
+    Delete a group.
 
     Args:
         gid: the group id to delete
     """
-
     db = api.db.get_conn()
-
     db.groups.remove({'gid': gid})
 
 
 def get_all_groups():
-    """
-    Returns a list of all groups in the database.
-    """
-
+    """Return a list of all groups in the database."""
     db = api.db.get_conn()
-
     return list(db.groups.find({}, {"_id": 0}))

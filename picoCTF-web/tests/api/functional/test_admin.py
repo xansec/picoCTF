@@ -9,7 +9,6 @@ from .common import (
   TEACHER_DEMOGRAPHICS,
   USER_DEMOGRAPHICS
 )
-from api import update_mail_config
 from api.config import default_settings
 import api.email
 from bson import json_util

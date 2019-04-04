@@ -142,7 +142,8 @@ def send_user_verification_email(username):
                 "User has been sent the maximum number of verification emails."
                 )
 
-    # Is there a better way to do this without dragging url_for + app_context into it?
+    # Is there a better way to do this without dragging url_for + app_context
+    # into it?
     verification_link = "{}/api/user/verify?uid={}&token={}".\
         format(settings["competition_url"], user["uid"], token_value)
 
@@ -163,11 +164,14 @@ The {0} Team.
 
     subject = "{} Account Verification".format(settings["competition_name"])
 
-    verification_message = Message(body=body, recipients=[user['email']], subject=subject)
+    verification_message = Message(
+        body=body, recipients=[user['email']], subject=subject)
 
     bulk = [verification_message]
 
-    if settings["email"]["parent_verification_email"] and previous_key is None and user['demo']['age'] == "13-17":
+    if (settings["email"]["parent_verification_email"] and
+            previous_key is None and
+            user['demo']['age'] == "13-17"):
         body = """
 Welcome to {0}!
 
@@ -184,9 +188,11 @@ registration for {0}, you are not the child's parent or legal guardian,
 or your child is under age 13, please email us immediately at {2}.
         """.format(settings["competition_name"], "https://url", "admin@email.com")
 
-        subject = "{} Parent Account Verification".format(settings["competition_name"])
+        subject = "{} Parent Account Verification".format(
+            settings["competition_name"])
         recipients = [user['demo']['parentemail']]
-        parent_email = Message(body=body, recipients=recipients, subject=subject)
+        parent_email = Message(
+            body=body, recipients=recipients, subject=subject)
 
         bulk.append(parent_email)
 
@@ -197,9 +203,10 @@ or your child is under age 13, please email us immediately at {2}.
 
 def send_email_invite(gid, email, teacher=False):
     """
-    Sends an email registration link that will automatically join into a group. This link will bypass the email filter.
-    """
+    Send an email registration link that will automatically join into a group.
 
+    This link will bypass the email filter.
+    """
     settings = api.config.get_settings()
     group = api.group.get_group(gid=gid)
 

@@ -1,4 +1,4 @@
-""" Module for handling problem feedback """
+"""Module for handling problem feedback."""
 
 from datetime import datetime
 
@@ -27,7 +27,7 @@ feedback_schema = Schema({
 
 def get_problem_feedback(pid=None, tid=None, uid=None):
     """
-    Retrieve feedback for a given problem, team, or user
+    Retrieve feedback for a given problem, team, or user.
 
     Args:
         pid: the problem id
@@ -36,7 +36,6 @@ def get_problem_feedback(pid=None, tid=None, uid=None):
     Returns:
         A list of problem feedback entries.
     """
-
     db = api.db.get_conn()
     match = {}
 
@@ -52,16 +51,13 @@ def get_problem_feedback(pid=None, tid=None, uid=None):
 
 def get_reviewed_pids(uid=None):
     """
-    Gets the list of pids reviewed by the user
+    Get the list of pids reviewed by the user.
 
     Args:
         uid: the user id
     Returns:
         A list of pids
     """
-
-    db = api.db.get_conn()
-
     if uid is None:
         uid = api.user.get_user()['uid']
 
@@ -78,7 +74,6 @@ def add_problem_feedback(pid, uid, feedback):
         uid: the user id
         feedback: the problem feedback.
     """
-
     db = api.db.get_conn()
 
     # Make sure the problem actually exists.

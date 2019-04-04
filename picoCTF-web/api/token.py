@@ -1,4 +1,9 @@
-""" Module for token functionality. """
+"""
+Module for token functionality.
+
+Tokens act as a registry for storing arbitrary values associated with a user,
+group, or other set of fields.
+"""
 
 import api.common
 import api.db
@@ -7,18 +12,21 @@ from api.common import InternalException
 
 def get_token_path(token_name):
     """
-    Formats the token name into a token path.
+    Format the token name into a token path.
 
     Returns:
       The token path
-    """
 
+    """
     return "tokens.{}".format(token_name)
 
 
 def set_token(key, token_name, token_value=None):
     """
-    Sets a token for the user.
+    Set a token.
+
+    Overwrites the existing token for a given key, if one exists.
+    If a token value is not specified, a random value is generated.
 
     Args:
         key: the unique identifier object
@@ -27,7 +35,6 @@ def set_token(key, token_name, token_value=None):
     Returns:
         The token value
     """
-
     db = api.db.get_conn()
 
     # Should never realistically collide.
@@ -44,13 +51,12 @@ def set_token(key, token_name, token_value=None):
 
 def delete_token(key, token_name):
     """
-    Removes the password reset token for the user in mongo
+    Remove the specified token for the user.
 
     Args:
         key: the unique identifier object
         token_name: the name of the token
     """
-
     db = api.db.get_conn()
 
     db.tokens.update(key, {'$unset': {get_token_path(token_name): ''}})
@@ -64,7 +70,6 @@ def find_key(query, multi=False):
         query: the mongo query
         multi: defaults to False, return at most one result
     """
-
     db = api.db.get_conn()
 
     find_func = db.tokens.find_one
@@ -76,13 +81,12 @@ def find_key(query, multi=False):
 
 def find_key_by_token(token_name, token_value):
     """
-    Searches the database for a user with a token_name token_value pair.
+    Search the database for a user with a token_name token_value pair.
 
     Args:
         token_name: the name of the token
         token_value: the value of the token
     """
-
     db = api.db.get_conn()
 
     key = db.tokens.find_one({

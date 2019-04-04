@@ -87,7 +87,7 @@ setup(
     extras_require={
         'dev': [
             'pytest',
-            'pytest-cov'
+            'pytest-cov',
         ]
     },
     entry_points={
