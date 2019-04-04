@@ -1,10 +1,9 @@
-""" Module for email related functionality. """
+"""Module for email related functionality."""
 
 from flask_mail import Message
 from voluptuous import Length, Required, Schema
 
 import api.config
-import api.db
 import api.group
 import api.token
 import api.user
@@ -16,6 +15,7 @@ from api.common import (
   WebException
 )
 
+# The Flask-Mail object. Should be initialized during app startup.
 mail = None
 
 password_reset_request_schema = Schema({
@@ -37,15 +37,15 @@ def reset_password(token_value, password, confirm_password):
     """
     Perform the password update operation.
 
-    Gets a token and new password from a submitted form, if the token is found in a team object in the database
-    the new password is hashed and set, the token is then removed and an appropriate response is returned.
+    Gets a token and new password from a submitted form, if the token is found
+    in a team object in the database the new password is hashed and set,
+    the token is then removed and an appropriate response is returned.
 
     Args:
         token_value: the password reset token
         password: the password to set
         confirm_password: the same password again
     """
-
     validate(password_reset_schema, {
         "token": token_value,
         "password": password
@@ -65,11 +65,16 @@ def request_password_reset(username):
     """
     Emails a user a link to reset their password.
 
-    Checks that a username was submitted to the function and grabs the relevant team info from the db.
-    Generates a secure token and inserts it into the team's document as 'password_reset_token'.
-    A link is emailed to the registered email address with the random token in the url.  The user can go to this
-    link to submit a new password, if the token submitted with the new password matches the db token the password
-    is hashed and updated in the db.
+    Checks that a username was submitted to the function and grabs the
+    relevant team info from the db.
+
+    Generates a secure token and inserts it into the team's document
+    as 'password_reset_token'.
+
+    A link is emailed to the registered email address with
+    the random token in the url.  The user can go to this link to submit
+    a new password, if the token submitted with the new password matches
+    the db token the password is hashed and updated in the db.
 
     Args:
         username: the username of the account
@@ -83,7 +88,7 @@ def request_password_reset(username):
 
     settings = api.config.get_settings()
 
-    body = """We recently received a request to reset the password for the following {0} account:\n\n\t{2}\n\nOur records show that this is the email address used to register the above account.  If you did not request to reset the password for the above account then you need not take any further steps.  If you did request the password reset please follow the link below to set your new password. \n\n {1}/reset#{3} \n\n Best of luck! \n The {0} Team""".format(
+    body = """We recently received a request to reset the password for the following {0} account:\n\n\t{2}\n\nOur records show that this is the email address used to register the above account.  If you did not request to reset the password for the above account then you need not take any further steps.  If you did request the password reset please follow the link below to set your new password. \n\n {1}/reset#{3} \n\n Best of luck! \n The {0} Team""".format(  # noqa:E501
         settings["competition_name"], settings["competition_url"], username,
         token_value)
 
@@ -95,14 +100,17 @@ def request_password_reset(username):
 
 def send_user_verification_email(username):
     """
-    Emails the user a link to verify his account. If email_verification is
-    enabled in the config then the user won't be able to login until this step is completed.
-    """
+    Email the user a link to verify their account.
 
+    If email_verification is enabled in the config then the user
+    won't be able to login until this step is completed.
+    """
     settings = api.config.get_settings()
-    db = api.db.get_conn()
 
     user = api.user.get_user(name=username)
+
+    # The number of verification attempts is stored in the key
+    # along with the uid.
 
     key_query = {
         "$and": [{
@@ -121,15 +129,18 @@ def send_user_verification_email(username):
             "email_verification_count": 1
         }, "email_verification")
     else:
-        if previous_key["email_verification_count"] < settings["email"]["max_verification_emails"]:
+        previous_count = previous_key['email_verification_count']
+        if (previous_count < settings["email"]["max_verification_emails"]):
             token_value = previous_key["tokens"]["email_verification"]
-            db.tokens.find_and_modify(key_query,
-                                      {"$inc": {
-                                          "email_verification_count": 1
-                                      }})
+            api.token.delete_token(key_query, 'email_verification')
+            api.token.set_token({
+                            'uid': user['uid'],
+                            'email_verification_count': previous_count + 1
+                            }, 'email_verification')
         else:
             raise InternalException(
-                "User has been sent the maximum number of verification emails.")
+                "User has been sent the maximum number of verification emails."
+                )
 
     # Is there a better way to do this without dragging url_for + app_context into it?
     verification_link = "{}/api/user/verify?uid={}&token={}".\
