@@ -1,9 +1,10 @@
 from bson import json_util
-from flask import Blueprint, request, current_app
+from flask import Blueprint, current_app, request
 
 import api.admin
 import api.common
 import api.config
+import api.logger
 import api.problem
 import api.problem_feedback
 import api.shell_servers
@@ -220,4 +221,5 @@ def change_settings():
     api.config.change_settings(data)
     # May need to recreate the Flask-Mail object if mail settings changed
     api.update_mail_config(current_app)
+    api.logger.setup_logs({"verbose": 2})
     return WebSuccess("Settings updated")

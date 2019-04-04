@@ -16,6 +16,36 @@ from bson import json_util
 # /admin blueprint route tests
 
 
+def test_problems(client):
+    """Test the /problems endpoint."""
+    clear_db()
+    register_test_accounts()
+    client.post('/api/user/login', data={
+                    'username': ADMIN_DEMOGRAPHICS['username'],
+                    'password': ADMIN_DEMOGRAPHICS['password']
+                    })
+    res = client.get('/api/admin/problems')
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert data['problems'] == []
+    assert data['bundles'] == []
+
+
+def test_users(client):
+    """Test the /users endpoint."""
+    clear_db()
+    register_test_accounts()
+    client.post('/api/user/login', data={
+                    'username': ADMIN_DEMOGRAPHICS['username'],
+                    'password': ADMIN_DEMOGRAPHICS['password']
+                    })
+    res = client.get('/api/admin/users')
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert len(data) == 1
+    assert data[0]['username'] == 'sampleuser'
+
+
 def test_settings(client):
     """Test the /settings endpoint."""
     clear_db()
