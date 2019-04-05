@@ -3,7 +3,6 @@
 import datetime
 import statistics
 from collections import defaultdict
-from hashlib import sha1
 
 import api
 import pymongo
@@ -68,7 +67,6 @@ def get_group_scores(gid=None, name=None):
                 "name": team['team_name'],
                 "tid": team['tid'],
                 "affiliation": team["affiliation"],
-                "eligible": team["eligible"],
                 "score": get_score(tid=team['tid'])
             })
 
@@ -93,30 +91,20 @@ def get_group_average_score(gid=None, name=None):
 
 # Stored by the cache_stats daemon
 @api.cache.memoize()
-def get_all_team_scores(eligible=None, country=None, show_ineligible=False):
+def get_all_team_scores(country=None, include_ineligible=False):
     """
-    Gets the score for every team in the database.
+    Get the score for every team in the database.
 
     Args:
-        eligible: required boolean field
-        show_ineligible: ignore eligibility, show all
         country: optional restriction by country
+        include_ineligible: include ineligible teams
 
     Returns:
         A list of dictionaries with name and score
+
     """
-
-    if show_ineligible:
-        teams = api.team.get_all_teams(show_ineligible=True)
-    else:
-        if eligible is None:
-            raise InternalException("Eligible must be set to either true or false")
-
-        if eligible:
-            teams = api.team.get_all_teams(eligible=True, country=country, ineligible=False)
-        else:
-            teams = api.team.get_all_teams(eligible=False, country=country, ineligible=True)
-
+    teams = api.team.get_all_teams(include_ineligible=include_ineligible,
+                                   country=country)
     db = api.api.common.get_conn()
 
     result = []
@@ -134,7 +122,6 @@ def get_all_team_scores(eligible=None, country=None, show_ineligible=False):
             [not (group["settings"]["hidden"]) for group in groups]):
             team_query = db.submissions.find({
                 'tid': team['tid'],
-                #'eligible': eligible,
                 'correct': True
             })
             if team_query.count() > 0:
@@ -149,13 +136,11 @@ def get_all_team_scores(eligible=None, country=None, show_ineligible=False):
                     "tid": team['tid'],
                     "score": score,
                     "affiliation": team["affiliation"],
-                    #"eligible": team["eligible"],
                     "lastsubmit": lastsubmit
                 })
     time_ordered = sorted(result, key=lambda entry: entry['lastsubmit'])
     time_ordered_time_removed = [{
         'name': x['name'],
-        #'eligible': x['eligible'],
         'tid': x['tid'],
         'score': x['score'],
         'affiliation': x['affiliation']
@@ -296,23 +281,25 @@ def get_score_progression(tid=None, uid=None, category=None):
     return result
 
 
-def get_top_teams(gid=None, eligible=None, country=None, show_ineligible=False):
+def get_top_teams(gid=None, country=None, include_ineligible=False):
     """
     Finds the top teams
 
     Args:
-        gid: if specified, return the top teams from this group only
-        eligible: required boolean field
+        gid: if specified, return the top teams from this group only.
+             overrides country and include_ineligible.
+
+        country: if specified, return the top teams from the country only
+        include_ineligible: include ineligible teams in result
 
     Returns:
         The top teams and their scores
     """
 
     if gid is None:
-        if eligible is None:
-            raise InternalException(
-                "Eligible must be set to either true or false")
-        all_teams = api.stats.get_all_team_scores(eligible=eligible, country=country, show_ineligible=show_ineligible)
+        all_teams = api.stats.get_all_team_scores(
+            country=country,
+            include_ineligible=include_ineligible)
     else:
         all_teams = api.stats.get_group_scores(gid=gid)
     return all_teams if len(all_teams) < top_teams else all_teams[:top_teams]
@@ -342,26 +329,31 @@ def get_problem_solves(name=None, pid=None):
 
 
 @api.cache.memoize()
-def get_top_teams_score_progressions(gid=None, eligible=True, country=None, show_ineligible=False):
+def get_top_teams_score_progressions(gid=None, country=None,
+                                     include_ineligible=False):
     """
-    Gets the score_progressions for the top teams
+    Get the score progressions for the top teams.
 
     Args:
-        gid: If specified, compute the progressions for the top teams from this group only
+        gid: If specified, compute the progressions for the top teams
+             from this group only. Overrides country and include_ineligible.
+
         country: If specified, limit teams by country
-        eligible: If specified, limit teams to eligible ones
-        show_ineligible: if specified, show all teams, eligible and eligible
+        include_ineligible: if specified, include ineligible teams in result
 
     Returns:
         The top teams and their score progressions.
         A dict of {name: name, score_progression: score_progression}
-    """
 
+    """
     return [{
         "name": team["name"],
         "affiliation": team["affiliation"],
         "score_progression": get_score_progression(tid=team["tid"]),
-    } for team in get_top_teams(gid=gid, eligible=eligible, country=country, show_ineligible=show_ineligible)]
+    } for team in get_top_teams(
+        gid=gid,
+        country=country,
+        include_ineligible=include_ineligible)]
 
 
 # Custom statistics not necessarily to be served publicly
@@ -471,8 +463,8 @@ def get_median_eligible_score():
     return statistics.median([x['score'] for x in get_all_team_scores()])
 
 
-def get_average_problems_solved(eligible=True, scoring=True):
-    teams = api.team.get_all_teams(show_ineligible=(not eligible))
+def get_average_problems_solved(scoring=True):
+    teams = api.team.get_all_teams()
     values = [
         len(api.problem.get_solved_pids(tid=t['tid']))
         for t in teams
@@ -481,20 +473,19 @@ def get_average_problems_solved(eligible=True, scoring=True):
     return statistics.mean(values), statistics.stdev(values)
 
 
-def get_median_problems_solved(eligible=True, scoring=True):
-    teams = api.team.get_all_teams(show_ineligible=(not eligible))
+def get_median_problems_solved():
+    teams = api.team.get_all_teams()
     return statistics.median([
         len(api.problem.get_solved_pids(tid=t['tid']))
         for t in teams
-        if not scoring or len(api.problem.get_solved_pids(tid=t['tid'])) > 0
+        if len(api.problem.get_solved_pids(tid=t['tid'])) > 0
     ])
 
 
-def get_average_problems_solved_per_user(eligible=True,
-                                         scoring=True,
+def get_average_problems_solved_per_user(scoring=True,
                                          user_breakdown=None):
     if user_breakdown is None:
-        user_breakdown = get_team_member_solve_stats(eligible)
+        user_breakdown = get_team_member_solve_stats()
     solves = []
     for tid, breakdown in user_breakdown.items():
         for uid, ubreakdown in breakdown.items():
@@ -510,11 +501,10 @@ def get_average_problems_solved_per_user(eligible=True,
     return (statistics.mean(solves), statistics.stdev(solves))
 
 
-def get_median_problems_solved_per_user(eligible=True,
-                                        scoring=True,
+def get_median_problems_solved_per_user(scoring=True,
                                         user_breakdown=None):
     if user_breakdown is None:
-        user_breakdown = get_team_member_solve_stats(eligible)
+        user_breakdown = get_team_member_solve_stats()
     solves = []
     for tid, breakdown in user_breakdown.items():
         for uid, ubreakdown in breakdown.items():
@@ -551,20 +541,9 @@ def get_user_countries():
     return countries
 
 
-def get_team_size_distribution(eligible=True):
-    teams = api.team.get_all_teams(show_ineligible=(not eligible))
-    size_dist = defaultdict(int)
-    for t in teams:
-        members = api.team.get_team_members(tid=t['tid'], show_disabled=False)
-        if len(members) > api.team.max_team_users:
-            print("WARNING: Team %s has too many members" % t['team_name'])
-        size_dist[len(members)] += 1
-    return size_dist
-
-
-def get_team_member_solve_stats(eligible=True):
+def get_team_member_solve_stats():
     db = api.api.common.get_conn()
-    teams = api.team.get_all_teams(show_ineligible=(not eligible))
+    teams = api.team.get_all_teams()
     user_breakdowns = {}
     for t in teams:
         uid_map = defaultdict(lambda: defaultdict(int))
@@ -588,9 +567,9 @@ def get_team_member_solve_stats(eligible=True):
     return user_breakdowns
 
 
-def get_team_participation_percentage(eligible=True, user_breakdown=None):
+def get_team_participation_percentage(user_breakdown=None):
     if user_breakdown is None:
-        user_breakdown = get_team_member_solve_stats(eligible)
+        user_breakdown = get_team_member_solve_stats()
     team_size_any = defaultdict(list)
     team_size_correct = defaultdict(list)
     for tid, breakdown in user_breakdown.items():
@@ -620,7 +599,7 @@ def get_average_achievement_number():
     frequency = defaultdict(int)
     for achievement in earned_achievements:
         frequency[achievement['uid']] += 1
-    extra = len(api.team.get_all_teams(show_ineligible=False)) - len(
+    extra = len(api.team.get_all_teams()) - len(
         frequency.keys())
     values = [0] * extra
     for val in frequency.values():
@@ -628,20 +607,20 @@ def get_average_achievement_number():
     return statistics.mean(values), statistics.stdev(values)
 
 
-def get_category_solves(eligible=True):
-    teams = api.team.get_all_teams(show_ineligible=(not eligible))
+def get_category_solves():
+    teams = api.team.get_all_teams()
     category_breakdown = defaultdict(int)
     for team in teams:
         problems = api.problem.get_solved_problems(tid=team['tid'])
         for problem in problems:
             category_breakdown[problem['category']] += 1
-    team_count = len(api.team.get_all_teams(show_ineligible=False))
+    team_count = len(api.team.get_all_teams())
     return {x: y / team_count for x, y in category_breakdown.items()}
 
 
-def get_days_active_breakdown(eligible=True, user_breakdown=None):
+def get_days_active_breakdown(user_breakdown=None):
     if user_breakdown is None:
-        user_breakdown = get_team_member_solve_stats(eligible)
+        user_breakdown = get_team_member_solve_stats()
     day_breakdown = defaultdict(int)
     for tid, breakdown in user_breakdown.items():
         days_active = set()

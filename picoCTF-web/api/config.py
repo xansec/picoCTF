@@ -163,6 +163,13 @@ default_settings = {
         "default_stepping": 5000,
         "steps": [7500, 12500, 17500],
         "limit_added_range": False,
+    },
+
+    # ELIGIBILITY CONDITIONS
+    # (user properties)
+    "eligibility": {
+        "usertype": "student",
+        "country": "US"
     }
 }
 """ Helper functions to get settings. Do not change these """

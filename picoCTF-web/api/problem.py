@@ -458,8 +458,6 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
 
     problem = get_problem(pid=pid)
 
-    eligibility = api.team.get_team(tid=tid)['eligible']
-
     submission = {
         'uid': uid,
         'tid': tid,
@@ -468,7 +466,6 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
         'ip': ip,
         'key': key,
         'method': method,
-        'eligible': eligibility,
         'category': problem['category'],
         'correct': result['correct'],
     }
@@ -507,7 +504,7 @@ def count_submissions(pid=None,
                       tid=None,
                       category=None,
                       correctness=None,
-                      eligibility=None):
+                      ):
     db = api.common.get_conn()
     match = {}
     if uid is not None:
@@ -524,9 +521,6 @@ def count_submissions(pid=None,
     if correctness is not None:
         match.update({"correct": correctness})
 
-    if eligibility is not None:
-        match.update({"eligible": eligibility})
-
     return db.submissions.find(match, {"_id": 0}).count()
 
 
@@ -535,7 +529,7 @@ def get_submissions(pid=None,
                     tid=None,
                     category=None,
                     correctness=None,
-                    eligibility=None):
+                    ):
     """
     Gets the submissions from a team or user.
     Optional filters of pid or category.
@@ -568,9 +562,6 @@ def get_submissions(pid=None,
 
     if correctness is not None:
         match.update({"correct": correctness})
-
-    if eligibility is not None:
-        match.update({"eligible": eligibility})
 
     return list(db.submissions.find(match, {"_id": 0}))
 
