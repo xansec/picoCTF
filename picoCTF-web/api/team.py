@@ -225,6 +225,8 @@ def get_team_members(tid=None, name=None, show_disabled=True):
             "_id": 0,
             "uid": 1,
             "username": 1,
+            "firstname": 1,
+            "lastname": 1,
             "disabled": 1,
             "email": 1,
             "teacher": 1,
@@ -268,6 +270,9 @@ def get_team_information(tid=None, gid=None):
     """
 
     team_info = get_team(tid=tid)
+    # Sanitize
+    team_info.pop("password", None)
+    team_info.pop("instances", None)
 
     if tid is None:
         tid = team_info["tid"]
@@ -279,6 +284,8 @@ def get_team_information(tid=None, gid=None):
     team_info["score"] = api.stats.get_score(tid=tid)
     team_info["members"] = [{
         "username": member["username"],
+        "firstname": member["firstname"],
+        "lastname": member["lastname"],
         "email": member["email"],
         "uid": member["uid"],
         "affiliation": member.get("affiliation", "None"),
@@ -301,6 +308,9 @@ def get_team_information(tid=None, gid=None):
     for solved_problem in api.problem.get_solved_problems(tid=tid):
         solved_problem.pop("instances", None)
         solved_problem.pop("pkg_dependencies", None)
+        solved_problem.pop("hints", None)
+        solved_problem.pop("author", None)
+        solved_problem.pop("organization", None)
         team_info["solved_problems"].append(solved_problem)
 
     return team_info

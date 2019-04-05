@@ -113,6 +113,7 @@ MemberManagement = React.createClass
 
     <Panel>
       <h4>User Management</h4>
+      <MemberInvitePanel gid={@props.gid} refresh={@props.refresh}/>
       {memberInformation}
     </Panel>
 
@@ -172,6 +173,7 @@ GroupManagement = React.createClass
       </Col>
       <Col sm={6}>
         <GroupOptions pushUpdates={@pushUpdates} settings={@state.settings} gid={@props.gid}/>
+        <GroupEmailWhitelist emails={@state.settings.email_filter} pushUpdates={@pushUpdates} gid={@props.gid}/>
       </Col>
     </div>
 

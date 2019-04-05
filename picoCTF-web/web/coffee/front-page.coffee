@@ -530,7 +530,6 @@ AuthPanel = React.createClass
     status: params.status
     groupName: ""
     captcha: ""
-    eligibility: "eligible"
     regStats: {}
 
   componentWillMount: ->
