@@ -8,16 +8,9 @@ import api.config
 import api.problem
 import api.problem_feedback
 import api.user
-from api.annotations import (
-  jsonify,
-  block_after_competition,
-  block_before_competition,
-  check_csrf,
-  log_action,
-  require_admin,
-  require_login,
-  require_teacher
-)
+from api.annotations import (block_after_competition, block_before_competition,
+                             check_csrf, jsonify, log_action, require_admin,
+                             require_login, require_teacher)
 from api.common import WebError, WebSuccess
 
 blueprint = Blueprint("problem_api", __name__)
@@ -62,7 +55,8 @@ def get_all_problems_count_hook(category):
 def get_unlocked_problems_hook():
     unlocked_problems = api.problem.get_unlocked_problems(
         api.user.get_user()['tid'])
-    return WebSuccess(data=api.problem.sanitize_problem_data(unlocked_problems))
+    return WebSuccess(
+        data=api.problem.sanitize_problem_data(unlocked_problems))
 
 
 @blueprint.route('/solved', methods=['GET'])
@@ -126,7 +120,8 @@ def problem_feedback_hook():
     if not api.config.get_settings()["enable_feedback"]:
         return WebError("Problem feedback is not currently being accepted.")
 
-    api.problem_feedback.add_problem_feedback(pid, api.auth.get_uid(), feedback)
+    api.problem_feedback.add_problem_feedback(pid, api.auth.get_uid(),
+                                              feedback)
     return WebSuccess("Your feedback has been accepted.")
 
 
@@ -144,7 +139,6 @@ def problem_reviews_hook():
 @require_login
 @block_before_competition()
 def request_problem_hint_hook():
-
     @log_action
     def hint(pid, source):
         return None

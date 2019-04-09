@@ -76,7 +76,7 @@ def get_problem():
     submission_data = {
         p["name"]: api.stats.get_problem_submission_stats(pid=p["pid"])
         for p in api.problem.get_all_problems(show_disabled=True)
-        }
+    }
     return WebSuccess(data=submission_data)
 
 

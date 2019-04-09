@@ -19,13 +19,8 @@ import api.team
 import api.token
 import api.user
 from api.annotations import log_action
-from api.common import (
-  check,
-  InternalException,
-  safe_fail,
-  validate,
-  WebException
-)
+from api.common import (check, InternalException, safe_fail, validate,
+                        WebException)
 
 
 def _check_email_format(email):
@@ -33,9 +28,9 @@ def _check_email_format(email):
 
 
 def _check_username(username):
-    return all(
-        [c in string.digits + string.ascii_lowercase
-            for c in username.lower()])
+    return all([
+        c in string.digits + string.ascii_lowercase for c in username.lower()
+    ])
 
 
 def check_blacklisted_usernames(username):
@@ -73,57 +68,59 @@ def verify_email_in_whitelist(email, whitelist=None):
     return False
 
 
-user_schema = Schema(
-    {
-        Required('email'):
+user_schema = Schema({
+    Required('email'):
+    check(
+        ("Email must be between 5 and 50 characters.",
+         [str, Length(min=5, max=50)]),
+        ("Your email does not look like an email address.",
+         [_check_email_format]),
+    ),
+    Required('firstname'):
+    check(("First Name must be between 1 and 50 characters.",
+           [str, Length(min=1, max=50)])),
+    Required('lastname'):
+    check(("Last Name must be between 1 and 50 characters.",
+           [str, Length(min=1, max=50)])),
+    Required('username'):
+    check(("Usernames must be between 3 and 20 characters.",
+           [str, Length(min=3, max=20)]),
+          ("Usernames must be alphanumeric.", [_check_username]),
+          ("This username already exists.",
+           [lambda name: safe_fail(get_user, name=name) is None]),
+          ("This username conflicts with an existing team.",
+           [lambda name: safe_fail(api.team.get_team, name=name) is None]),
+          ("This username is reserved. Please choose another one.",
+           [check_blacklisted_usernames])),
+    Required('password'):
+    check(("Passwords must be between 3 and 20 characters.",
+           [str, Length(min=3, max=20)])),
+    Required('affiliation'):
+    check(("You must specify a school or organization.",
+           [str, Length(min=3, max=50)])),
+    Required('usertype'):
+    check(("You must specify a status", [
+        str, lambda status: status in
+        ["student", "college", "teacher", "other"]
+    ])),
+    Required('country'):
+    check(("Please select a country", [str, Length(min=2, max=2)])),
+    Required("demo"):
+    Schema({
+        "parentemail":
         check(
-            ("Email must be between 5 and 50 characters.",
+            ("Parent Email must be between 5 and 50 characters.",
              [str, Length(min=5, max=50)]),
-            ("Your email does not look like an email address.",
+            ("Your parent's email does not look like an email address.",
              [_check_email_format]),
         ),
-        Required('firstname'):
-        check(("First Name must be between 1 and 50 characters.",
-               [str, Length(min=1, max=50)])),
-        Required('lastname'):
-        check(("Last Name must be between 1 and 50 characters.",
-               [str, Length(min=1, max=50)])),
-        Required('username'):
-        check(("Usernames must be between 3 and 20 characters.",
-               [str, Length(min=3, max=20)]),
-              ("Usernames must be alphanumeric.", [_check_username]),
-              ("This username already exists.",
-               [lambda name: safe_fail(get_user, name=name) is None]),
-              ("This username conflicts with an existing team.",
-               [lambda name: safe_fail(api.team.get_team, name=name) is None]),
-              ("This username is reserved. Please choose another one.",
-               [check_blacklisted_usernames])),
-        Required('password'):
-        check(("Passwords must be between 3 and 20 characters.",
-               [str, Length(min=3, max=20)])),
-        Required('affiliation'):
-        check(("You must specify a school or organization.",
-              [str, Length(min=3, max=50)])),
-        Required('usertype'):
-        check(("You must specify a status",
-               [str, lambda status: status in ["student", "college", "teacher",
-                                               "other"]])),
-        Required('country'):
-            check(("Please select a country", [str, Length(min=2, max=2)])),
-        Required("demo"): Schema({
-            "parentemail":
-            check(
-                ("Parent Email must be between 5 and 50 characters.",
-                 [str, Length(min=5, max=50)]),
-                ("Your parent's email does not look like an email address.",
-                 [_check_email_format]),
-            ),
-            Required("age"):
-            check(("You must specify your age",
-                   [lambda age: age in ["13-17", "18+"]])),
-        }, extra=True),
+        Required("age"):
+        check(("You must specify your age",
+               [lambda age: age in ["13-17", "18+"]])),
     },
-    extra=True)
+           extra=True),
+},
+                     extra=True)
 
 
 def get_team(uid=None):
@@ -335,10 +332,9 @@ def create_simple_user_request(params):
     validate(user_schema, params)
 
     if (api.config.get_settings()["email"]["parent_verification_email"] and
-        params["demo"]["age"] != "18+" and not
-            params["demo"].get("parentemail", None)):
-        raise WebException(
-            "You must include your parent's email address")
+            params["demo"]["age"] != "18+" and
+            not params["demo"].get("parentemail", None)):
+        raise WebException("You must include your parent's email address")
 
     whitelist = None
 
@@ -373,8 +369,7 @@ def create_simple_user_request(params):
         if not verify_email_in_whitelist(params["email"], whitelist):
             raise WebException(
                 "Your email does not belong to the whitelist. " +
-                "Please see the registration form for details."
-            )
+                "Please see the registration form for details.")
 
     if api.config.get_settings(
     )["captcha"]["enable_captcha"] and not _validate_captcha(params):
@@ -512,11 +507,11 @@ def update_password(uid, password):
         password: the new user unhashed password.
     """
     db = api.db.get_conn()
-    db.users.update({
-        'uid': uid
-    }, {'$set': {
-        'password_hash': api.common.hash_password(password)
-    }})
+    db.users.update(
+        {'uid': uid},
+        {'$set': {
+            'password_hash': api.common.hash_password(password)
+        }})
 
 
 def disable_account(uid):

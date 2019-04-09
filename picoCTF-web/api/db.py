@@ -1,9 +1,11 @@
 """Handles database interaction."""
 
+import logging
+
 from flask import current_app, g
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, InvalidName
-import logging
+
 from api.common import SevereInternalException
 
 log = logging.getLogger(__name__)
@@ -58,8 +60,8 @@ def index_mongo():
     db.teams.ensure_index("team_name", unique=True, name="unique team names")
     db.teams.ensure_index("country")
 
-    db.shell_servers.ensure_index("name", unique=True,
-                                  name="unique shell name")
+    db.shell_servers.ensure_index(
+        "name", unique=True, name="unique shell name")
     db.shell_servers.ensure_index("sid", unique=True, name="unique shell sid")
 
     db.cache.ensure_index("expireAt", expireAfterSeconds=0)

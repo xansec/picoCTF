@@ -10,58 +10,43 @@ import api.group
 import api.stats
 import api.team
 import api.user
-from api.annotations import (
-  jsonify,
-  check_csrf,
-  require_login,
-  require_teacher
-)
-from api.common import (
-  check,
-  safe_fail,
-  validate,
-  WebError,
-  WebException,
-  WebSuccess
-)
+from api.annotations import check_csrf, jsonify, require_login, require_teacher
+from api.common import (WebError, WebException, WebSuccess, check, safe_fail,
+                        validate)
 
-register_group_schema = Schema(
-    {
-        Required("group-name"):
-        check(("Classroom name must be between 3 and 50 characters.",
-               [str, Length(min=3, max=100)]),)
-    },
-    extra=True)
+register_group_schema = Schema({
+    Required("group-name"):
+    check(("Classroom name must be between 3 and 50 characters.",
+           [str, Length(min=3, max=100)]),)
+},
+                               extra=True)
 
-join_group_schema = Schema(
-    {
-        Required("group-name"):
-        check(("Classroom name must be between 3 and 50 characters.",
-               [str, Length(min=3, max=100)]),),
-        Required("group-owner"):
-        check(("The teacher name must be between 3 and 40 characters.",
-               [str, Length(min=3, max=40)]),)
-    },
-    extra=True)
+join_group_schema = Schema({
+    Required("group-name"):
+    check(("Classroom name must be between 3 and 50 characters.",
+           [str, Length(min=3, max=100)]),),
+    Required("group-owner"):
+    check(("The teacher name must be between 3 and 40 characters.",
+           [str, Length(min=3, max=40)]),)
+},
+                           extra=True)
 
-leave_group_schema = Schema(
-    {
-        Required("group-name"):
-        check(("Classroom name must be between 3 and 50 characters.",
-               [str, Length(min=3, max=100)]),),
-        Required("group-owner"):
-        check(("The teacher name must be between 3 and 40 characters.",
-               [str, Length(min=3, max=40)]),)
-    },
-    extra=True)
+leave_group_schema = Schema({
+    Required("group-name"):
+    check(("Classroom name must be between 3 and 50 characters.",
+           [str, Length(min=3, max=100)]),),
+    Required("group-owner"):
+    check(("The teacher name must be between 3 and 40 characters.",
+           [str, Length(min=3, max=40)]),)
+},
+                            extra=True)
 
-delete_group_schema = Schema(
-    {
-        Required("group-name"):
-        check(("Classroom name must be between 3 and 50 characters.",
-               [str, Length(min=3, max=100)]),)
-    },
-    extra=True)
+delete_group_schema = Schema({
+    Required("group-name"):
+    check(("Classroom name must be between 3 and 50 characters.",
+           [str, Length(min=3, max=100)]),)
+},
+                             extra=True)
 
 blueprint = Blueprint("group_api", __name__)
 
@@ -215,10 +200,10 @@ def get_group_score_hook():
 @require_teacher
 def create_group_hook():
     """
-    Creates a new group. Validates forms.
+    Create a new group. Validates forms.
+
     All required arguments are assumed to be keys in params.
     """
-
     params = api.common.flat_multi(request.form)
     validate(register_group_schema, params)
 
@@ -240,10 +225,10 @@ def create_group_hook():
 @require_login
 def join_group_hook():
     """
-    Tries to place a team into a group. Validates forms.
-    All required arguments are assumed to be keys in params.
-    """
+    Try to place a team into a group.
 
+    Validates forms. All required arguments are assumed to be keys in params.
+    """
     params = api.common.flat_multi(request.form)
     validate(join_group_schema, params)
 
@@ -273,8 +258,7 @@ def join_group_hook():
                 raise WebException(
                     "{}'s email does not belong to the whitelist " +
                     "for that classroom. Your team may not join this " +
-                    "classroom at this time.".
-                    format(member["username"]))
+                    "classroom at this time.".format(member["username"]))
 
     roles = api.group.get_roles_in_group(group["gid"], tid=team["tid"])
     if roles["teacher"] or roles["member"]:
@@ -291,10 +275,10 @@ def join_group_hook():
 @require_login
 def leave_group_hook():
     """
-    Tries to remove a team from a group. Validates forms.
-    All required arguments are assumed to be keys in params.
-    """
+    Try to remove a team from a group.
 
+    Validates forms. All required arguments are assumed to be keys in params.
+    """
     params = api.common.flat_multi(request.form)
 
     validate(leave_group_schema, params)
@@ -320,10 +304,10 @@ def leave_group_hook():
 @require_teacher
 def delete_group_hook():
     """
-    Tries to delete a group. Validates forms.
-    All required arguments are assumed to be keys in params.
-    """
+    Try to delete a group.
 
+    Validates forms. All required arguments are assumed to be keys in params.
+    """
     params = api.common.flat_multi(request.form)
 
     validate(delete_group_schema, params)
@@ -360,10 +344,8 @@ def get_flag_shares():
     user = api.user.get_user()
     roles = api.group.get_roles_in_group(gid, uid=user["uid"])
     if not roles["teacher"]:
-        return WebError(
-            "You must be a teacher of a classroom to see its flag " +
-            "sharing statistics."
-        )
+        return WebError("You must be a teacher of a classroom to see its " +
+                        "flag sharing statistics.")
 
     return WebSuccess(
         data=api.stats.check_invalid_instance_submissions(gid=gid))
@@ -419,9 +401,8 @@ def switch_user_role_group_hook():
     affected_team_roles = api.group.get_roles_in_group(
         group["gid"], tid=affected_team["tid"])
     if affected_team_roles["owner"]:
-        return WebError(
-            message="You can not change the role of the owner " +
-                    "of the classroom.")
+        return WebError(message="You can not change the role of the owner " +
+                        "of the classroom.")
 
     api.group.switch_role(group["gid"], affected_team["tid"], role)
     return WebSuccess(message="User's role has been successfully changed.")

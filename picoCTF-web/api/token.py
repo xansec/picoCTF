@@ -89,12 +89,10 @@ def find_key_by_token(token_name, token_value):
     """
     db = api.db.get_conn()
 
-    key = db.tokens.find_one({
-        get_token_path(token_name): token_value
-    }, {
-        "_id": 0,
-        "tokens": 0
-    })
+    key = db.tokens.find_one({get_token_path(token_name): token_value}, {
+                                  "_id": 0,
+                                  "tokens": 0
+                              })
 
     if key is None:
         raise InternalException("Could not find {}.".format(token_name))

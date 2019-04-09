@@ -47,9 +47,8 @@ def get_roles_in_group(gid, tid=None, uid=None):
     elif tid is not None:
         team = api.team.get_team(tid=tid)
     else:
-        raise InternalException(
-            "Either tid or uid must be specified " +
-            "to determine role in classroom.")
+        raise InternalException("Either tid or uid must be specified " +
+                                "to determine role in classroom.")
 
     roles = {}
     roles["owner"] = team["tid"] == group["owner"]
@@ -168,9 +167,7 @@ def get_group_settings(gid):
 
     # Ensure it exists.
     group = api.group.get_group(gid=gid)
-    group_result = db.groups.find_one({
-        "gid": group["gid"]
-    }, {
+    group_result = db.groups.find_one({"gid": group["gid"]}, {
         "_id": 0,
         "settings": 1
     })
@@ -186,9 +183,8 @@ def change_group_settings(gid, settings):
 
     group = api.group.get_group(gid=gid)
     if group["settings"]["hidden"] and not settings["hidden"]:
-        raise InternalException(
-            "You can not change a hidden classroom " +
-            "back to a public classroom.")
+        raise InternalException("You can not change a hidden classroom " +
+                                "back to a public classroom.")
 
     db.groups.update({"gid": group["gid"]}, {"$set": {"settings": settings}})
 
@@ -226,11 +222,10 @@ def sync_teacher_status(tid, uid):
             "owner": uid
         }]
     }).count()
-    db.users.update({
-        "uid": uid
-    }, {"$set": {
-        "teacher": active_teacher_roles > 0
-    }})
+    db.users.update({"uid": uid},
+                    {"$set": {
+                        "teacher": active_teacher_roles > 0
+                    }})
 
 
 @log_action
@@ -267,9 +262,7 @@ def switch_role(gid, tid, role):
     roles = get_roles_in_group(gid, tid=team["tid"])
     if role == "member":
         if roles["teacher"] and not roles["member"]:
-            db.groups.update({
-                "gid": gid
-            }, {
+            db.groups.update({"gid": gid}, {
                 "$pull": {
                     "teachers": tid
                 },
@@ -284,9 +277,7 @@ def switch_role(gid, tid, role):
     elif role == "teacher":
         if api.team.is_teacher_team(tid):
             if roles["member"] and not roles["teacher"]:
-                db.groups.update({
-                    "gid": gid
-                }, {
+                db.groups.update({"gid": gid}, {
                     "$push": {
                         "teachers": tid
                     },

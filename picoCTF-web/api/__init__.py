@@ -1,14 +1,14 @@
 """Configures the Flask app."""
 
+import inspect
+import logging
+import traceback
 from datetime import datetime
 
+from bson import json_util
 from flask import Flask, request, session
 from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
-from bson import json_util
-import traceback
-import inspect
-import logging
 
 import api.auth
 import api.config
@@ -21,13 +21,8 @@ import api.routes.stats
 import api.routes.team
 import api.routes.user
 from api.annotations import jsonify
-from api.common import (
-  InternalException,
-  SevereInternalException,
-  WebException,
-  WebSuccess,
-  WebError
-)
+from api.common import (InternalException, SevereInternalException, WebError,
+                        WebException, WebSuccess)
 
 
 def get_origin_logger(exception):
@@ -78,10 +73,10 @@ def create_app(test_config=None):
     app.register_blueprint(api.routes.stats.blueprint, url_prefix="/api/stats")
     app.register_blueprint(api.routes.admin.blueprint, url_prefix="/api/admin")
     app.register_blueprint(api.routes.group.blueprint, url_prefix="/api/group")
-    app.register_blueprint(api.routes.problem.blueprint,
-                           url_prefix="/api/problems")
-    app.register_blueprint(api.routes.achievements.blueprint,
-                           url_prefix="/api/achievements")
+    app.register_blueprint(
+        api.routes.problem.blueprint, url_prefix="/api/problems")
+    app.register_blueprint(
+        api.routes.achievements.blueprint, url_prefix="/api/achievements")
 
     # Register error handlers
     @app.errorhandler(WebException)
@@ -96,14 +91,17 @@ def create_app(test_config=None):
     @app.errorhandler(SevereInternalException)
     def handle_severe_internal_exception(e):
         get_origin_logger(e).critical(traceback.format_exc())
-        return json_util.dumps(WebError(
-            "There was a critical internal error. Contact an administrator."))
+        return json_util.dumps(
+            WebError(
+                "There was a critical internal error. " +
+                "Contact an administrator."
+            ))
 
     @app.errorhandler(Exception)
     def handle_generic_exception(e):
         get_origin_logger(e).error(traceback.format_exc())
-        return json_util.dumps(WebError(
-            "An error occurred. Please contact an administrator."))
+        return json_util.dumps(
+            WebError("An error occurred. Please contact an administrator."))
 
     # Configure logging
     with app.app_context():

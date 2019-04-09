@@ -8,8 +8,8 @@ import api.email
 import api.shell_servers
 import api.stats
 import api.user
-from api.annotations import jsonify, check_csrf, require_login
-from api.common import WebError, WebSuccess, safe_fail
+from api.annotations import check_csrf, jsonify, require_login
+from api.common import safe_fail, WebError, WebSuccess
 
 blueprint = Blueprint("user_api", __name__)
 
@@ -42,8 +42,7 @@ def create_simple_user_hook():
     return WebSuccess(
         message="User '{}' registered successfully!".format(
             request.form["username"]),
-        data={'teacher': api.user.is_teacher(new_uid)}
-    )
+        data={'teacher': api.user.is_teacher(new_uid)})
 
 
 @blueprint.route('/update_password', methods=['POST'])
@@ -74,8 +73,7 @@ def reset_password_hook():
     api.email.request_password_reset(username)
     return WebSuccess(
         "A password reset link has been sent to the email address provided " +
-        "during registration."
-    )
+        "during registration.")
 
 
 @blueprint.route('/confirm_password_reset', methods=['POST'])
@@ -90,7 +88,6 @@ def confirm_password_reset_hook():
 
 
 @blueprint.route('/verify', methods=['GET'])
-# @jsonify
 def verify_user_hook():
     uid = request.args.get("uid")
     token = request.args.get("token")

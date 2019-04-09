@@ -21,7 +21,8 @@ password_reset_request_schema = Schema({
 
 password_reset_schema = Schema({
     Required("token"):
-    check(("This does not look like a valid token.", [str, Length(max=100)])),
+    check(("This does not look like a valid token.", [str,
+                                                      Length(max=100)])),
     Required('password'):
     check(("Passwords must be between 3 and 20 characters.",
            [str, Length(min=3, max=20)]))

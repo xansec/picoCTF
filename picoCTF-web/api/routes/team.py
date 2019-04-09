@@ -6,7 +6,7 @@ import api.config
 import api.stats
 import api.team
 import api.user
-from api.annotations import jsonify, check_csrf, require_login
+from api.annotations import check_csrf, jsonify, require_login
 from api.common import WebError, WebSuccess
 
 blueprint = Blueprint("team_api", __name__)

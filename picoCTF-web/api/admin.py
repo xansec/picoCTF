@@ -22,12 +22,11 @@ def give_admin_role(name=None, uid=None):
     db = api.db.get_conn()
 
     user = api.user.get_user(name=name, uid=uid)
-    db.users.update({
-        "uid": user["uid"]
-    }, {"$set": {
-        "admin": True,
-        "teacher": True
-    }})
+    db.users.update({"uid": user["uid"]},
+                    {"$set": {
+                        "admin": True,
+                        "teacher": True
+                    }})
 
 
 def give_teacher_role(name=None, uid=None):

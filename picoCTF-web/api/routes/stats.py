@@ -8,11 +8,7 @@ import api.auth
 import api.stats
 import api.team
 import api.user
-from api.annotations import (
-    jsonify,
-    block_before_competition,
-    require_login
-)
+from api.annotations import block_before_competition, jsonify, require_login
 from api.common import WebError, WebSuccess
 
 blueprint = Blueprint("stats_api", __name__)
@@ -46,7 +42,11 @@ def get_team_score_progression():
         data=api.stats.get_score_progression(tid=tid, category=category))
 
 
-@blueprint.route('/scoreboard', defaults={'board': None, 'page': 1}, methods=['GET'])
+@blueprint.route(
+    '/scoreboard', defaults={
+        'board': None,
+        'page': 1
+    }, methods=['GET'])
 @blueprint.route('/scoreboard/<board>/<int:page>', methods=['GET'])
 @jsonify
 @block_before_competition()
@@ -64,7 +64,8 @@ def get_scoreboard_hook(board, page):
     # Old board, limit 1-50
     if board is None:
         result = {'tid': 0, 'groups': []}
-        global_board = api.stats.get_all_team_scores(eligible=True, country=None, show_ineligible=True)
+        global_board = api.stats.get_all_team_scores(
+            eligible=True, country=None, show_ineligible=True)
         result['global'] = {
             'name': 'global',
             'pages': math.ceil(len(global_board) / scoreboard_page_len),
@@ -76,11 +77,13 @@ def get_scoreboard_hook(board, page):
             result['tid'] = user['tid']
             global_pos = get_user_pos(global_board, user["tid"])
             start_slice = math.floor(global_pos / 50) * 50
-            result['global']['scoreboard'] = global_board[start_slice:start_slice + 50]
+            result['global']['scoreboard'] = global_board[start_slice:
+                                                          start_slice + 50]
             result['global']['start_page'] = math.ceil((global_pos + 1) / 50)
 
             result['country'] = user["country"]
-            student_board = api.stats.get_all_team_scores(eligible=True, country=None, show_ineligible=False)
+            student_board = api.stats.get_all_team_scores(
+                eligible=True, country=None, show_ineligible=False)
             student_pos = get_user_pos(student_board, user["tid"])
             start_slice = math.floor(student_pos / 50) * 50
             result['student'] = {
@@ -91,8 +94,8 @@ def get_scoreboard_hook(board, page):
             }
 
             for group in api.team.get_groups(uid=user["uid"]):
-                # this is called on every scoreboard pageload and should be cached
-                # to support large groups
+                # this is called on every scoreboard pageload and should be
+                # cached to support large groups
                 group_board = api.stats.get_group_scores(gid=group['gid'])
                 group_pos = get_user_pos(group_board, user["tid"])
                 start_slice = math.floor(group_pos / 50) * 50
@@ -103,8 +106,10 @@ def get_scoreboard_hook(board, page):
                     group['name'],
                     'scoreboard':
                     group_board[start_slice:start_slice + 50],
-                    'pages': math.ceil(len(group_board) / scoreboard_page_len),
-                    'start_page': math.ceil((group_pos + 1) / 50),
+                    'pages':
+                    math.ceil(len(group_board) / scoreboard_page_len),
+                    'start_page':
+                    math.ceil((group_pos + 1) / 50),
                 })
 
         return WebSuccess(data=result)
@@ -120,17 +125,18 @@ def get_scoreboard_hook(board, page):
                 for group in api.team.get_groups(uid=user.get("uid")):
                     group_board = api.stats.get_group_scores(gid=group['gid'])
                     result.append({
-                        'gid':
-                            group['gid'],
-                        'name':
-                            group['name'],
-                        'scoreboard':
-                            group_board[start:end]
+                        'gid': group['gid'],
+                        'name': group['name'],
+                        'scoreboard': group_board[start:end]
                     })
             elif board == "global":
-                result = api.stats.get_all_team_scores(eligible=True, country=None, show_ineligible=True)[start:end]
+                result = api.stats.get_all_team_scores(
+                    eligible=True, country=None,
+                    show_ineligible=True)[start:end]
             elif board == "student":
-                result = api.stats.get_all_team_scores(eligible=True, country=None, show_ineligible=False)[start:end]
+                result = api.stats.get_all_team_scores(
+                    eligible=True, country=None,
+                    show_ineligible=False)[start:end]
             else:
                 result = []
             return WebSuccess(data=result)
@@ -154,7 +160,10 @@ def get_top_teams_score_progressions_hook():
     #        country = user["country"]
 
     return WebSuccess(
-        data=api.stats.get_top_teams_score_progressions(eligible=eligible, country=country, show_ineligible=show_ineligible))
+        data=api.stats.get_top_teams_score_progressions(
+            eligible=eligible,
+            country=country,
+            show_ineligible=show_ineligible))
 
 
 @blueprint.route('/group/score_progression', methods=['GET'])
@@ -162,7 +171,8 @@ def get_top_teams_score_progressions_hook():
 def get_group_top_teams_score_progressions_hook():
     gid = request.args.get("gid", None)
     return WebSuccess(
-        data=api.stats.get_top_teams_score_progressions(gid=gid, show_ineligible=True))
+        data=api.stats.get_top_teams_score_progressions(
+            gid=gid, show_ineligible=True))
 
 
 @blueprint.route('/registration', methods=['GET'])

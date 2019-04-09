@@ -4,8 +4,6 @@ import datetime
 
 import api.db
 from api.common import WebException
-
-
 """
 Default Settings
 
@@ -23,8 +21,10 @@ default_settings = {
     datetime.datetime.utcnow(),
 
     # COMPETITION INFORMATION
-    "competition_name": "",
-    "competition_url": "",
+    "competition_name":
+    "",
+    "competition_url":
+    "",
 
     # EMAIL WHITELIST
     "email_filter": [],
@@ -166,11 +166,11 @@ def change_settings(changes):
         keys = list(changed.keys())
         for key in keys:
             if key not in real:
-                raise WebException("Cannot update setting for '{}'"
-                                   .format(key))
+                raise WebException(
+                    "Cannot update setting for '{}'".format(key))
             elif type(real[key]) != type(changed[key]):  # noqa:E721
-                raise WebException("Cannot update setting for '{}'"
-                                   .format(key))
+                raise WebException(
+                    "Cannot update setting for '{}'".format(key))
             elif isinstance(real[key], dict):
                 check_keys(real[key], changed[key])
                 # change the key so mongo $set works correctly

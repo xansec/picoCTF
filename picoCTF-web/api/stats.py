@@ -130,11 +130,11 @@ def get_all_team_scores(eligible=None, country=None, show_ineligible=False):
             raise InternalException("Eligible must be set to either " +
                                     "true or false")
         if eligible:
-            teams = api.team.get_all_teams(eligible=True, country=country,
-                                           ineligible=False)
+            teams = api.team.get_all_teams(
+                eligible=True, country=country, ineligible=False)
         else:
-            teams = api.team.get_all_teams(eligible=False, country=country,
-                                           ineligible=True)
+            teams = api.team.get_all_teams(
+                eligible=False, country=country, ineligible=True)
 
     db = api.db.get_conn()
 
@@ -223,8 +223,8 @@ def get_problems_by_category():
 def get_pids_by_category():
     """Return a dict of {category: [problems]}."""
     result = {
-        cat: [x['pid'] for x in api.problem.get_all_problems(category=cat)] for
-        cat in api.problem.get_all_categories()
+        cat: [x['pid'] for x in api.problem.get_all_problems(category=cat)
+             ] for cat in api.problem.get_all_categories()
     }
     return result
 
@@ -275,7 +275,8 @@ def get_problem_submission_stats(pid=None, name=None):
         "valid":
         len(api.problem.get_submissions(pid=problem["pid"], correctness=True)),
         "invalid":
-        len(api.problem.get_submissions(pid=problem["pid"], correctness=False))
+        len(
+            api.problem.get_submissions(pid=problem["pid"], correctness=False))
     }
 
 
@@ -332,7 +333,8 @@ def get_top_teams(gid=None, eligible=None, country=None,
             raise InternalException(
                 "Eligible must be set to either true or false")
         all_teams = api.stats.get_all_team_scores(
-            eligible=eligible, country=country,
+            eligible=eligible,
+            country=country,
             show_ineligible=show_ineligible)
     else:
         all_teams = api.stats.get_group_scores(gid=gid)
@@ -359,13 +361,17 @@ def get_problem_solves(name=None, pid=None):
 
     problem = api.problem.get_problem(name=name, pid=pid)
 
-    return db.submissions.find({'pid': problem["pid"],
-                                'correct': True}).count()
+    return db.submissions.find({
+        'pid': problem["pid"],
+        'correct': True
+    }).count()
 
 
 @api.cache.memoize()
-def get_top_teams_score_progressions(gid=None, eligible=True,
-                                     country=None, show_ineligible=False):
+def get_top_teams_score_progressions(gid=None,
+                                     eligible=True,
+                                     country=None,
+                                     show_ineligible=False):
     """
     Get the score progressions for the top teams.
 
@@ -385,10 +391,11 @@ def get_top_teams_score_progressions(gid=None, eligible=True,
         "name": team["name"],
         "affiliation": team["affiliation"],
         "score_progression": get_score_progression(tid=team["tid"]),
-    } for team in get_top_teams(gid=gid,
-                                eligible=eligible,
-                                country=country,
-                                show_ineligible=show_ineligible)]
+    } for team in get_top_teams(
+        gid=gid,
+        eligible=eligible,
+        country=country,
+        show_ineligible=show_ineligible)]
 
 
 @api.cache.memoize(timeout=300)
@@ -411,7 +418,8 @@ def check_invalid_instance_submissions(gid=None):
             if submission['key'] in valid_keys:
                 # make sure that the key is still invalid
                 if not api.problem.grade_problem(
-                        submission['pid'], submission['key'],
+                        submission['pid'],
+                        submission['key'],
                         tid=submission['tid'])['correct']:
                     if group is None or submission['tid'] in group['members']:
                         submission['username'] = api.user.get_user(
@@ -437,8 +445,11 @@ def get_registration_count():
 
     real_team_names = team_names - usernames
     real_team_ids = list(
-        db.teams.find({"team_name": {"$in": list(real_team_names)}})
-        .distinct("tid"))
+        db.teams.find({
+            "team_name": {
+                "$in": list(real_team_names)
+            }
+        }).distinct("tid"))
 
     teamed_users = db.users.count({"tid": {"$in": real_team_ids}})
     stats["teamed_users"] = teamed_users

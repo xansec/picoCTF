@@ -3,9 +3,10 @@ import uuid
 from datetime import datetime
 from hashlib import md5
 
-import api.config
 import bcrypt
 from voluptuous import Invalid, MultipleInvalid
+
+import api.config
 
 
 def token():
@@ -114,7 +115,7 @@ def parse_multi_form(form):
         for i, k in enumerate(ks):
             if k.isdigit():
                 k = int(k)
-            if i+1 < len(ks):
+            if i + 1 < len(ks):
                 if not isinstance(sub_data, dict):
                     break
                 if k in sub_data:

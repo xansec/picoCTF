@@ -63,8 +63,8 @@ def get_key(f, *args, **kwargs):
     arg_key = "&".join(
         ["{}:{}".format(key, kwargs[key]) for key in sorted_keys])
 
-    key = "{}.{}${}".format(
-        f.__module__, f.__name__, arg_key).replace(" ", "~")
+    key = "{}.{}${}".format(f.__module__, f.__name__, arg_key).replace(
+        " ", "~")
 
     return key
 
@@ -117,8 +117,8 @@ def set(key, value, timeout=None, fast=False):
     update.update({"value": value})
 
     if timeout is not None:
-        expireAt = (datetime.datetime.now() +
-                    datetime.timedelta(seconds=timeout))
+        expireAt = (
+            datetime.datetime.now() + datetime.timedelta(seconds=timeout))
         update.update({"expireAt": expireAt})
 
     db.cache.update(key, update, upsert=True)

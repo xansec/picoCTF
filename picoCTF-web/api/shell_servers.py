@@ -9,43 +9,37 @@ import api.config
 import api.db
 import api.problem
 import api.team
-from api.common import (
-  check,
-  InternalException,
-  safe_fail,
-  validate,
-  WebException
-)
+from api.common import (check, InternalException, safe_fail, validate,
+                        WebException)
 
-server_schema = Schema(
-    {
-        Required("name"):
-        check(
-            ("Name must be a reasonable string.", [str,
-                                                   Length(min=1, max=128)])),
-        Required("host"):
-        check(
-            ("Host must be a reasonable string", [str,
+server_schema = Schema({
+    Required("name"):
+    check(("Name must be a reasonable string.", [str,
+                                                 Length(min=1, max=128)])),
+    Required("host"):
+    check(
+        ("Host must be a reasonable string", [str, Length(min=1, max=128)])),
+    Required("port"):
+    check(("You have to supply a valid integer for your port.", [int]),
+          ("Your port number must be in the valid range 1-65535.",
+           [lambda x: 1 <= int(x) and int(x) <= 65535])),
+    Required("username"):
+    check(
+        ("Username must be a reasonable string", [str,
                                                   Length(min=1, max=128)])),
-        Required("port"):
-        check(("You have to supply a valid integer for your port.", [int]),
-              ("Your port number must be in the valid range 1-65535.",
-               [lambda x: 1 <= int(x) and int(x) <= 65535])),
-        Required("username"):
-        check(("Username must be a reasonable string",
-               [str, Length(min=1, max=128)])),
-        Required("password"):
-        check(("Username must be a reasonable string",
-               [str, Length(min=1, max=128)])),
-        Required("protocol"):
-        check(("Protocol must be either HTTP or HTTPS",
-               [lambda x: x in ['HTTP', 'HTTPS']])),
-        "server_number":
-        check(("Server number must be an integer.", [int]),
-              ("Server number must be a positive integer.",
-               [lambda x: 0 < int(x)])),
-    },
-    extra=True)
+    Required("password"):
+    check(
+        ("Username must be a reasonable string", [str,
+                                                  Length(min=1, max=128)])),
+    Required("protocol"):
+    check(("Protocol must be either HTTP or HTTPS",
+           [lambda x: x in ['HTTP', 'HTTPS']])),
+    "server_number":
+    check(
+        ("Server number must be an integer.", [int]),
+        ("Server number must be a positive integer.", [lambda x: 0 < int(x)])),
+},
+                       extra=True)
 
 
 def get_server(sid=None, name=None):
@@ -115,8 +109,8 @@ def ensure_setup(shell):
 
     Leaves connection open.
     """
-    result = shell.run(
-        ["sudo", "/picoCTF-env/bin/shell_manager", "status"], allow_error=True)
+    result = shell.run(["sudo", "/picoCTF-env/bin/shell_manager", "status"],
+                       allow_error=True)
     if (result.return_code == 1 and
             "command not found" in result.stderr_output.decode("utf-8")):
         raise WebException("shell_manager not installed on server.")
@@ -230,10 +224,8 @@ def get_servers(get_all=False):
     servers = list(db.shell_servers.find(match, {"_id": 0}))
 
     if len(servers) == 0 and settings["shell_servers"]["enable_sharding"]:
-        raise InternalException(
-            "Your assigned shell server is currently down." +
-            "Please contact an admin."
-        )
+        raise InternalException("Your assigned shell server is currently down."
+                                + "Please contact an admin.")
 
     return servers
 
@@ -366,11 +358,9 @@ def reassign_teams(include_assigned=False):
         teams = api.team.get_all_teams(show_ineligible=True)
     else:
         teams = list(
-            db.teams.find({
-                "server_number": {
-                    "$exists": False
-                }
-            }, {
+            db.teams.find({"server_number": {
+                "$exists": False
+            }}, {
                 "_id": 0,
                 "tid": 1
             }))
@@ -380,12 +370,12 @@ def reassign_teams(include_assigned=False):
         server_number = get_assigned_server_number(
             new_team=False, tid=team["tid"])
         if old_server_number != server_number:
-            db.teams.update({
-                'tid': team["tid"]
-            }, {'$set': {
-                'server_number': server_number,
-                'instances': {}
-            }})
+            db.teams.update(
+                {'tid': team["tid"]},
+                {'$set': {
+                    'server_number': server_number,
+                    'instances': {}
+                }})
             # Re-assign instances
             safe_fail(api.problem.get_visible_problems, team["tid"])
 

@@ -1,2 +1,4 @@
 [style]
 based_on_style = google
+column_limit = 79
+blank_line_before_nested_class_or_def = false

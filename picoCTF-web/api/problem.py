@@ -15,14 +15,8 @@ import api.shell_servers
 import api.stats
 import api.team
 from api.annotations import log_action
-from api.common import (
-  check,
-  InternalException,
-  safe_fail,
-  SevereInternalException,
-  validate,
-  WebException
-)
+from api.common import (check, InternalException, safe_fail,
+                        SevereInternalException, validate, WebException)
 
 submission_schema = Schema({
     Required("tid"):
@@ -72,20 +66,20 @@ problem_schema = Schema({
     check(("You should not specify a pid for a problem.", [lambda _: False])),
     "_id":
     check(("Your problems should not already have _ids.", [lambda id: False]))
-}, extra=ALLOW_EXTRA)
+},
+                        extra=ALLOW_EXTRA)
 
-instance_schema = Schema(
-    {
-        Required("description"):
-        check(("The description must be a string.", [str])),
-        Required("flag"):
-        check(("The flag must be a string.", [str])),
-        "port":
-        check(("The port must be an int", [int])),
-        "server":
-        check(("The server must be a string.", [str]))
-    },
-    extra=True)
+instance_schema = Schema({
+    Required("description"):
+    check(("The description must be a string.", [str])),
+    Required("flag"):
+    check(("The flag must be a string.", [str])),
+    "port":
+    check(("The port must be an int", [int])),
+    "server":
+    check(("The server must be a string.", [str]))
+},
+                         extra=True)
 
 bundle_schema = Schema({
     Required("name"):
@@ -313,9 +307,9 @@ def assign_instance_to_team(pid, tid=None, reassign=False):
     settings = api.config.get_settings()
     if settings["shell_servers"]["enable_sharding"]:
         available_instances = list(
-            filter(lambda i: i.get("server_number") == team.get(
-                                                        "server_number", 1),
-                   problem["instances"]))
+            filter(
+                lambda i: i.get("server_number") == team.get(
+                    "server_number", 1), problem["instances"]))
 
     if pid in team["instances"] and not reassign:
         raise InternalException(
@@ -326,8 +320,7 @@ def assign_instance_to_team(pid, tid=None, reassign=False):
         if settings["shell_servers"]["enable_sharding"]:
             raise InternalException(
                 "Your assigned shell server is currently down. " +
-                "Please contact an admin."
-            )
+                "Please contact an admin.")
         else:
             raise InternalException(
                 "Problem {} has no instances to assign.".format(pid))
@@ -486,9 +479,8 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
 
     if (key, pid) in [(submission["key"], submission["pid"])
                       for submission in get_submissions(tid=tid)]:
-        exp = WebException(
-            "Flag incorrect: please note that you or your team " +
-            "have already submitted this flag.")
+        exp = WebException("Flag incorrect: please note that you or your team "
+                           + "have already submitted this flag.")
         exp.data = {'code': 'repeat'}
         raise exp
 
@@ -673,12 +665,10 @@ def reevaluate_submissions_for_problem(pid):
 
     for key, change in keys.items():
         if change is not None:
-            db.submissions.update(
-                {
-                    "key": key
-                }, {"$set": {
-                    "correct": change
-                }}, multi=True)
+            db.submissions.update({"key": key}, {"$set": {
+                "correct": change
+            }},
+                                  multi=True)
 
 
 def reevaluate_all_submissions():
@@ -756,8 +746,9 @@ def get_all_problems(category=None, show_disabled=False, basic_only=False):
         projection.update({"name": 1, "category": 1, "score": 1})
 
     return list(
-        db.problems.find(match, projection)
-          .sort([('score', pymongo.ASCENDING), ('name', pymongo.ASCENDING)]))
+        db.problems.find(match, projection).sort([('score', pymongo.ASCENDING),
+                                                  ('name',
+                                                   pymongo.ASCENDING)]))
 
 
 @api.cache.memoize()
@@ -834,8 +825,8 @@ def is_problem_unlocked(problem, solved):
         if problem["sanitized_name"] in bundle["problems"]:
             if "dependencies" in bundle and bundle["dependencies_enabled"]:
                 if problem["sanitized_name"] in bundle["dependencies"]:
-                    dependency = bundle["dependencies"][problem[
-                        "sanitized_name"]]
+                    dependency = bundle["dependencies"][
+                        problem["sanitized_name"]]
                     weightsum = sum(
                         dependency['weightmap'].get(p['sanitized_name'], 0)
                         for p in solved)

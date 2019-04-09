@@ -10,7 +10,7 @@ from flask import request, session
 import api.auth
 import api.config
 import api.user
-from api.common import InternalException, WebException, WebError
+from api.common import InternalException, WebError, WebException
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ def log_action(f):
         finally:
             log.info(log_information)
         return log_information["result"]
+
     return wrapper
 
 
@@ -42,6 +43,7 @@ def jsonify(f):
     @wraps(f)
     def wrapper(*args, **kwds):
         return json_util.dumps(f(*args, **kwds))
+
     return wrapper
 
 
@@ -52,6 +54,7 @@ def require_login(f):
         if not api.auth.is_logged_in():
             raise WebException("You must be logged in")
         return f(*args, **kwds)
+
     return wrapper
 
 
@@ -63,6 +66,7 @@ def require_teacher(f):
         if not api.user.is_teacher():
             raise WebException("You do not have permission to view this page.")
         return f(*args, **kwds)
+
     return wrapper
 
 
@@ -74,6 +78,7 @@ def require_admin(f):
         if not api.user.is_admin():
             raise WebException("You do not have permission to view this page.")
         return f(*args, **kwds)
+
     return wrapper
 
 
@@ -89,6 +94,7 @@ def check_csrf(f):
         if session['token'] != request.form['token']:
             raise WebException("CSRF token is not correct")
         return f(*args, **kwds)
+
     return wrapper
 
 
@@ -103,7 +109,9 @@ def block_before_competition():
                 return f(*args, **kwds)
             else:
                 return WebError("The competition has not begun yet!")
+
         return wrapper
+
     return decorator
 
 
@@ -118,5 +126,7 @@ def block_after_competition():
                 return f(*args, **kwds)
             else:
                 return WebError("The competition is over!")
+
         return wrapper
+
     return decorator

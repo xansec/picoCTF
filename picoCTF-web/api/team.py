@@ -14,53 +14,45 @@ import api.stats
 import api.team
 import api.user
 from api.annotations import log_action
-from api.common import (
-  check,
-  InternalException,
-  safe_fail,
-  validate,
-  WebException
-)
+from api.common import (check, InternalException, safe_fail, validate,
+                        WebException)
 
-new_team_schema = Schema(
-    {
-        Required("team_name"):
-        check(
-            ("The team name must be between 3 and 40 characters.",
-             [str, Length(min=3, max=40)]),
-            ("This team name conflicts with an existing user name.",
-             [lambda name: safe_fail(api.user.get_user, name=name) is None]),
-            ("A team with that name already exists.",
-             [lambda name: safe_fail(api.team.get_team, name=name) is None]),
-        ),
-        Required("team_password"):
-        check(("Passwords must be between 3 and 20 characters.",
-               [str, Length(min=3, max=20)]))
-    },
-    extra=True)
+new_team_schema = Schema({
+    Required("team_name"):
+    check(
+        ("The team name must be between 3 and 40 characters.",
+         [str, Length(min=3, max=40)]),
+        ("This team name conflicts with an existing user name.",
+         [lambda name: safe_fail(api.user.get_user, name=name) is None]),
+        ("A team with that name already exists.",
+         [lambda name: safe_fail(api.team.get_team, name=name) is None]),
+    ),
+    Required("team_password"):
+    check(("Passwords must be between 3 and 20 characters.",
+           [str, Length(min=3, max=20)]))
+},
+                         extra=True)
 
-join_team_schema = Schema(
-    {
-        Required("team_name"):
-        check(
-            ("The team name must be between 3 and 40 characters.",
-             [str, Length(min=3, max=40)]),
-            ("This team name conflicts with an existing user name.",
-             [lambda name: safe_fail(api.user.get_user, name=name) is None]),
-        ),
-        Required("team_password"):
-        check(("Passwords must be between 3 and 20 characters.",
-               [str, Length(min=3, max=20)]))
-    },
-    extra=True)
+join_team_schema = Schema({
+    Required("team_name"):
+    check(
+        ("The team name must be between 3 and 40 characters.",
+         [str, Length(min=3, max=40)]),
+        ("This team name conflicts with an existing user name.",
+         [lambda name: safe_fail(api.user.get_user, name=name) is None]),
+    ),
+    Required("team_password"):
+    check(("Passwords must be between 3 and 20 characters.",
+           [str, Length(min=3, max=20)]))
+},
+                          extra=True)
 
-update_team_schema = Schema(
-    {
-        Required("new-password"):
-        check(("Passwords must be between 3 and 20 characters.",
-               [str, Length(min=3, max=20)]))
-    },
-    extra=True)
+update_team_schema = Schema({
+    Required("new-password"):
+    check(("Passwords must be between 3 and 20 characters.",
+           [str, Length(min=3, max=20)]))
+},
+                            extra=True)
 
 
 def get_team(tid=None, name=None):
@@ -108,12 +100,12 @@ def get_groups(tid=None, uid=None):
     groups = []
 
     group_projection = {
-                        'name': 1,
-                        'gid': 1,
-                        'owner': 1,
-                        'members': 1,
-                        '_id': 0
-                        }
+        'name': 1,
+        'gid': 1,
+        'owner': 1,
+        'members': 1,
+        '_id': 0
+    }
 
     admin = False
 
@@ -229,9 +221,7 @@ def get_team_members(tid=None, name=None, show_disabled=True):
     tid = get_team(name=name, tid=tid)["tid"]
 
     users = list(
-        db.users.find({
-            "tid": tid
-        }, {
+        db.users.find({"tid": tid}, {
             "_id": 0,
             "uid": 1,
             "username": 1,
@@ -310,7 +300,9 @@ def get_team_information(tid=None, gid=None):
     return team_info
 
 
-def get_all_teams(ineligible=False, eligible=True, country=None,
+def get_all_teams(ineligible=False,
+                  eligible=True,
+                  country=None,
                   show_ineligible=False):
     """
     Retrieve all teams.
@@ -422,19 +414,21 @@ def join_team(team_name, password, uid=None):
         # Flag as mixed and ineligible
         if user["country"] != desired_team["country"]:
             db.teams.update({"tid": desired_team["tid"]},
-                            {"$set": {"country": "??",
-                                      "eligible": False}})
+                            {"$set": {
+                                "country": "??",
+                                "eligible": False
+                            }})
 
         # Ineligible user has spoiled team eligibility
         if not user["eligible"] and desired_team["eligible"]:
             db.teams.update({"tid": desired_team["tid"]},
-                            {"$set": {"eligible": False}})
+                            {"$set": {
+                                "eligible": False
+                            }})
 
         if not desired_team_size_update or not current_team_size_update:
-            raise InternalException(
-                "There was an issue switching your team!" +
-                "Please contact an administrator."
-            )
+            raise InternalException("There was an issue switching your team!" +
+                                    "Please contact an administrator.")
 
         # Remove membership of empty self-team.
         previous_groups = get_groups(tid=current_team["tid"])
@@ -442,13 +436,13 @@ def join_team(team_name, password, uid=None):
             api.group.leave_group(gid=group["gid"], tid=current_team["tid"])
             # Rejoin with new tid if not already member, and classroom
             # email filter is not enabled.
-            roles = api.group.get_roles_in_group(group["gid"],
-                                                 tid=desired_team["tid"])
+            roles = api.group.get_roles_in_group(
+                group["gid"], tid=desired_team["tid"])
             if not roles["teacher"] and not roles["member"]:
                 group_settings = api.group.get_group_settings(gid=group["gid"])
                 if not group_settings["email_filter"]:
-                    api.group.join_group(gid=group["gid"],
-                                         tid=desired_team["tid"])
+                    api.group.join_group(
+                        gid=group["gid"], tid=desired_team["tid"])
 
         # Called from within get_solved_problems, clear first
         api.cache.invalidate_memoization(api.problem.get_unlocked_pids,
@@ -509,19 +503,17 @@ def update_password(tid, password):
         password: the new user password.
     """
     db = api.db.get_conn()
-    db.teams.update({
-        'tid': tid
-    }, {'$set': {
-        'password': api.common.hash_password(password)
-    }})
+    db.teams.update({'tid': tid},
+                    {'$set': {
+                        'password': api.common.hash_password(password)
+                    }})
 
 
 def is_teacher_team(tid):
     """Check if team is a teacher's self-team."""
     team = get_team(tid=tid)
     members = get_team_members(tid=tid)
-    if (team["size"] == 1 and
-        members[0]["username"] == team["team_name"] and
+    if (team["size"] == 1 and members[0]["username"] == team["team_name"] and
             members[0]["teacher"]):
         return True
     else:

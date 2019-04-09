@@ -11,14 +11,8 @@ import api.config
 import api.db
 import api.user
 from api.annotations import log_action
-from api.common import (
-  check,
-  InternalException,
-  safe_fail,
-  SevereInternalException,
-  validate,
-  WebException
-)
+from api.common import (check, InternalException, safe_fail,
+                        SevereInternalException, validate, WebException)
 
 achievement_schema = Schema({
     Required("name"):
@@ -42,10 +36,9 @@ achievement_schema = Schema({
     check(("An achievement's disabled state is either True or False.",
            [lambda disabled: type(disabled) == bool])),
     "multiple":
-    check((
-        "Whether an achievement can be earned multiple times" +
-        "is either True or False.",
-        [lambda disabled: type(disabled) == bool])),
+    check(("Whether an achievement can be earned multiple times" +
+           "is either True or False.",
+           [lambda disabled: type(disabled) == bool])),
     "aid":
     check(("You should not specify a aid for an achievement.",
            [lambda _: False])),
@@ -274,8 +267,8 @@ def get_processor(aid):
     """
     try:
         path = get_achievement(aid=aid, show_disabled=True)["processor"]
-        base_path = api.config.get_settings()["achievements"][
-            "processor_base_path"]
+        base_path = api.config.get_settings(
+        )["achievements"]["processor_base_path"]
         return SourceFileLoader(path[:-3], join(base_path, path)).load_module()
     except FileNotFoundError:
         raise InternalException("Achievement processor is offline.")
@@ -346,8 +339,9 @@ def process_achievements(event, data):
 
     eligible_achievements = [
         achievement for achievement in get_all_achievements(event=event)
-        if achievement["aid"] not in get_earned_aids(tid=data["tid"]) or
-        achievement.get("multiple", False)]
+        if achievement["aid"] not in get_earned_aids(
+            tid=data["tid"]) or achievement.get("multiple", False)
+    ]
 
     for achievement in eligible_achievements:
         aid = achievement["aid"]
