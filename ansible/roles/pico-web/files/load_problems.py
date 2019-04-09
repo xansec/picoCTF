@@ -7,32 +7,33 @@
 
 import sys
 
-# The picoCTF API
-import api
+import api.admin
+import api.problem
+import api.shell_servers
 
 
 def main(name):
-
-    try:
-        # If a server by this name exists we can load problems
-        shell_server = api.shell_servers.get_server(name=name)
+    with api.create_app().app_context():
         try:
-            # Load problems and bundles from the shell server
-            api.shell_servers.load_problems_from_server(shell_server["sid"])
+            # If a server by this name exists we can load problems
+            shell_server = api.shell_servers.get_server(name=name)
+            try:
+                # Load problems and bundles from the shell server
+                api.shell_servers.load_problems_from_server(shell_server["sid"])
 
-            # Set problems to disabled
-            for p in api.problem.get_all_problems(show_disabled=True):
-                api.admin.set_problem_availability(p["pid"], False)
+                # Set problems to disabled
+                for p in api.problem.get_all_problems(show_disabled=True):
+                    api.admin.set_problem_availability(p["pid"], False)
 
-            # Set bundles to enabled to set correct unlock behavior
-            for b in api.problem.get_all_bundles():
-                api.problem.set_bundle_dependencies_enabled(b["bid"], True)
+                # Set bundles to enabled to set correct unlock behavior
+                for b in api.problem.get_all_bundles():
+                    api.problem.set_bundle_dependencies_enabled(b["bid"], True)
 
-        except Exception as e:
-            print(e)
-            sys.exit("Failed to load problems.")
-    except:
-        pass
+            except Exception as e:
+                print(e)
+                sys.exit("Failed to load problems.")
+        except:
+            pass
 
 
 if __name__ == "__main__":
