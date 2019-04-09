@@ -1,3 +1,4 @@
+"""Routing functions for /api/team."""
 from flask import Blueprint, request
 
 import api.common

@@ -1,3 +1,4 @@
+"""Routing functions for /api/achievements."""
 from flask import Blueprint
 
 import api.achievement
@@ -12,6 +13,7 @@ blueprint = Blueprint("achievements_api", __name__)
 @require_login
 @jsonify
 def get_achievements_hook():
+    """Get the achievements of the currently logged in user."""
     tid = api.user.get_team()["tid"]
     achievements = api.achievement.get_earned_achievements_display(tid=tid)
 

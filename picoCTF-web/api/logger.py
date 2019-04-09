@@ -20,9 +20,7 @@ log = logging.getLogger(__name__)
 
 
 class StatsHandler(logging.StreamHandler):
-    """
-    Logs statistical information into the mongodb.
-    """
+    """Logs statistical information into the mongodb."""
 
     time_format = "%H:%M:%S %Y-%m-%d"
 
@@ -84,14 +82,11 @@ class StatsHandler(logging.StreamHandler):
     }
 
     def __init__(self):
-
+        """Initialize the logger."""
         logging.StreamHandler.__init__(self)
 
     def emit(self, record):
-        """
-        Store record into the db.
-        """
-
+        """Store record into the db."""
         information = get_request_information()
 
         result = record.msg
@@ -124,19 +119,14 @@ class StatsHandler(logging.StreamHandler):
 
 
 class ExceptionHandler(logging.StreamHandler):
-    """
-    Logs exceptions into mongodb.
-    """
+    """Logs exceptions into mongodb."""
 
     def __init__(self):
-
+        """Initialize the logger."""
         logging.StreamHandler.__init__(self)
 
     def emit(self, record):
-        """
-        Store record into the db.
-        """
-
+        """Store record into the db."""
         information = get_request_information()
 
         information.update({
@@ -150,26 +140,27 @@ class ExceptionHandler(logging.StreamHandler):
 
 
 class SevereHandler(logging.handlers.SMTPHandler):
+    """An email logger for severe exceptions."""
 
     messages = {}
 
     def __init__(self):
+        """Initialize the logger."""
         settings = api.config.get_settings()
         logging.handlers.SMTPHandler.__init__(
             self,
             mailhost=settings["email"]["smtp_url"],
             fromaddr=settings["email"]["from_addr"],
             toaddrs=settings["logging"]["admin_emails"],
-            subject="Critical Error in {}".format(settings["competition_name"]),
+            subject="Critical Error in {}".format(
+                settings["competition_name"]),
             credentials=(settings["email"]["email_username"],
                          settings["email"]["email_password"]),
             secure=())
 
     def emit(self, record):
-        """
-        Don't excessively emit the same message.
-        """
-
+        """Store record into the db."""
+        # Don't excessively emit the same message.
         last_time = self.messages.get(record.msg, None)
         if last_time is None or time.time(
         ) - last_time > api.config.get_settings()["critical_error_timeout"]:
@@ -185,7 +176,6 @@ def set_level(name, level):
         name: name of logger
         level: level to set
     """
-
     logger = logging.getLogger(name)
     if logger:
         logger.setLevel(level)
@@ -193,12 +183,12 @@ def set_level(name, level):
 
 def get_request_information():
     """
-    Returns a dictionary of contextual information about the user at the time of logging.
+    Return a dictionary of information about the user at the time of logging.
 
     Returns:
         The dictionary.
-    """
 
+    """
     information = {}
 
     if has_request_context():
@@ -235,8 +225,8 @@ def setup_logs(args):
     Args:
         args: dict containing the configuration options.
     """
-
-    flask_logging.create_logger = lambda app: logging.getLogger(app.logger_name)
+    flask_logging.create_logger = lambda app: logging.getLogger(
+                                                app.logger_name)
 
     if not args.get("debug", True):
         set_level("werkzeug", logging.ERROR)

@@ -1,3 +1,4 @@
+"""Routing functions for /api/problem."""
 import json
 
 from flask import Blueprint, request

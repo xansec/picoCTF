@@ -1,3 +1,4 @@
+"""Routing functions for /api/admin."""
 from bson import json_util
 from flask import Blueprint, current_app, request
 
@@ -20,9 +21,9 @@ blueprint = Blueprint("admin_api", __name__)
 @jsonify
 @require_admin
 def get_problem_data_hook():
-    has_instances = lambda p: len(p["instances"]) > 0
     problems = list(
-        filter(has_instances, api.problem.get_all_problems(show_disabled=True)))
+        filter(lambda p: len(p["instances"]) > 0,
+               api.problem.get_all_problems(show_disabled=True)))
 
     for problem in problems:
         problem["reviews"] = api.problem_feedback.get_problem_feedback(
@@ -72,8 +73,10 @@ def dismiss_exceptions_hook():
 @jsonify
 @require_admin
 def get_problem():
-    submission_data = {p["name"]:api.stats.get_problem_submission_stats(pid=p["pid"]) \
-                       for p in api.problem.get_all_problems(show_disabled=True)}
+    submission_data = {
+        p["name"]: api.stats.get_problem_submission_stats(pid=p["pid"])
+        for p in api.problem.get_all_problems(show_disabled=True)
+        }
     return WebSuccess(data=submission_data)
 
 
@@ -163,7 +166,8 @@ def check_status_of_shell_server():
         return WebSuccess("All problems are online", data=data)
     else:
         return WebError(
-            "One or more problems are offline. Please connect and fix the errors.",
+            "One or more problems are offline. " +
+            "Please connect and fix the errors.",
             data=data)
 
 

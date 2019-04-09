@@ -76,7 +76,7 @@ def get_all_events(show_disabled=False):
 
 def get_achievement(aid=None, name=None, show_disabled=False):
     """
-    Gets a single achievement
+    Get a single achievement.
 
     Args:
         aid: the achievement id
@@ -84,7 +84,6 @@ def get_achievement(aid=None, name=None, show_disabled=False):
         show_disabled: Boolean indicating whether or not to
                        show disabled achievements.
     """
-
     db = api.db.get_conn()
 
     match = {}

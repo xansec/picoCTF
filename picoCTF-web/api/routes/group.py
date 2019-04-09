@@ -1,3 +1,4 @@
+"""Routing functions for /api/group/."""
 import json
 
 from flask import Blueprint, request
@@ -270,7 +271,9 @@ def join_group_hook():
             if not api.user.verify_email_in_whitelist(
                     member["email"], group_settings["email_filter"]):
                 raise WebException(
-                    "{}'s email does not belong to the whitelist for that classroom. Your team may not join this classroom at this time.".
+                    "{}'s email does not belong to the whitelist " +
+                    "for that classroom. Your team may not join this " +
+                    "classroom at this time.".
                     format(member["username"]))
 
     roles = api.group.get_roles_in_group(group["gid"], tid=team["tid"])
@@ -358,7 +361,8 @@ def get_flag_shares():
     roles = api.group.get_roles_in_group(gid, uid=user["uid"])
     if not roles["teacher"]:
         return WebError(
-            "You must be a teacher of a classroom to see its flag sharing statistics."
+            "You must be a teacher of a classroom to see its flag " +
+            "sharing statistics."
         )
 
     return WebSuccess(
@@ -379,7 +383,8 @@ def force_leave_group_hook():
     user = api.user.get_user()
     roles = api.group.get_roles_in_group(gid, uid=user["uid"])
     if not roles["teacher"]:
-        return WebError("You must be a teacher of a classroom to remove a team.")
+        return WebError("You must be a teacher of a classroom " +
+                        "to remove a team.")
 
     api.group.leave_group(gid, tid)
 
@@ -415,7 +420,8 @@ def switch_user_role_group_hook():
         group["gid"], tid=affected_team["tid"])
     if affected_team_roles["owner"]:
         return WebError(
-            message="You can not change the role of the owner of the classroom.")
+            message="You can not change the role of the owner " +
+                    "of the classroom.")
 
     api.group.switch_role(group["gid"], affected_team["tid"], role)
     return WebSuccess(message="User's role has been successfully changed.")

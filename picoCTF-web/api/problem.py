@@ -130,14 +130,14 @@ DEBUG_KEY = None
 
 def get_all_categories(show_disabled=False):
     """
-    Gets the set of distinct problem categories.
+    Get the set of distinct problem categories.
 
     Args:
-        show_disabled: Whether to include categories that are only on disabled problems
+        show_disabled: Whether to include categories
+                       that are only on disabled problems
     Returns:
         The set of distinct problem categories.
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -148,10 +148,7 @@ def get_all_categories(show_disabled=False):
 
 
 def set_instance_ids(problem, sid):
-    """
-    Generate the instance ids for a set of problems.
-    """
-
+    """Generate the instance ids for a set of problems."""
     server_number = api.shell_servers.get_server_number(sid)
 
     for instance in problem["instances"]:
@@ -164,7 +161,9 @@ def set_instance_ids(problem, sid):
 
 def insert_problem(problem, sid=None):
     """
-    Inserts a problem into the database. Does sane validation.
+    Insert a problem into the database.
+
+    Does sane validation.
 
     Args:
         Problem dict.
@@ -181,7 +180,6 @@ def insert_problem(problem, sid=None):
     Returns:
         The newly created problem id.
     """
-
     if sid is None:
         raise InternalException("Must provide an sid to insert problem.")
 
@@ -231,14 +229,14 @@ def insert_problem(problem, sid=None):
 
 def remove_problem(pid):
     """
-    Removes a problem from the given database.
+    Remove a problem from the given database.
 
     Args:
         pid: the pid of the problem to remove.
     Returns:
         The removed problem object.
-    """
 
+    """
     db = api.db.get_conn()
     problem = get_problem(pid=pid)
 
@@ -250,15 +248,15 @@ def remove_problem(pid):
 
 def update_problem(pid, updated_problem):
     """
-    Updates a problem with new properties.
+    Update a problem with new properties.
 
     Args:
         pid: the pid of the problem to update.
         updated_problem: an updated problem object.
     Returns:
         The updated problem object.
-    """
 
+    """
     db = api.db.get_conn()
 
     problem = get_problem(pid=pid).copy()
@@ -281,14 +279,14 @@ def update_problem(pid, updated_problem):
 
 def search_problems(*conditions):
     """
-    Aggregates all problems that contain all of the given properties from the list specified.
+    Aggregate all problems that match all of the provided conditions.
 
     Args:
         conditions: multiple mongo queries to search.
     Returns:
         The list of matching problems.
-    """
 
+    """
     db = api.db.get_conn()
 
     return list(db.problems.find({"$or": list(conditions)}, {"_id": 0}))
@@ -296,7 +294,7 @@ def search_problems(*conditions):
 
 def assign_instance_to_team(pid, tid=None, reassign=False):
     """
-    Assigns an instance of problem pid to team tid. Updates it in the database.
+    Assign an instance of problem pid to team tid.
 
     Args:
         pid: the problem id
@@ -305,8 +303,8 @@ def assign_instance_to_team(pid, tid=None, reassign=False):
 
     Returns:
         The iid that was assigned
-    """
 
+    """
     team = api.team.get_team(tid=tid)
     problem = get_problem(pid=pid)
 
@@ -315,7 +313,8 @@ def assign_instance_to_team(pid, tid=None, reassign=False):
     settings = api.config.get_settings()
     if settings["shell_servers"]["enable_sharding"]:
         available_instances = list(
-            filter(lambda i: i.get("server_number") == team.get("server_number", 1),
+            filter(lambda i: i.get("server_number") == team.get(
+                                                        "server_number", 1),
                    problem["instances"]))
 
     if pid in team["instances"] and not reassign:
@@ -326,7 +325,8 @@ def assign_instance_to_team(pid, tid=None, reassign=False):
     if len(available_instances) == 0:
         if settings["shell_servers"]["enable_sharding"]:
             raise InternalException(
-                "Your assigned shell server is currently down. Please contact an admin."
+                "Your assigned shell server is currently down. " +
+                "Please contact an admin."
             )
         else:
             raise InternalException(
@@ -345,7 +345,7 @@ def assign_instance_to_team(pid, tid=None, reassign=False):
 
 def get_instance_data(pid, tid):
     """
-    Returns the instance dictionary for the specified pid, tid pair
+    Return the instance dictionary for the specified pid, tid pair.
 
     Args:
         pid: the problem id
@@ -353,8 +353,8 @@ def get_instance_data(pid, tid):
 
     Returns:
         The instance dictionary
-    """
 
+    """
     instance_map = api.team.get_team(tid=tid)["instances"]
     problem = get_problem(pid=pid)
 
@@ -374,7 +374,7 @@ def get_instance_data(pid, tid):
 
 def get_problem_instance(pid, tid):
     """
-    Returns the problem instance dictionary that can be displayed to the user.
+    Return the problem instance dictionary that can be displayed to the user.
 
     Args:
         pid: the problem id
@@ -382,8 +382,8 @@ def get_problem_instance(pid, tid):
 
     Returns:
         The problem instance
-    """
 
+    """
     problem = deepcopy(get_problem(pid=pid, tid=tid))
     instance = get_instance_data(pid, tid)
 
@@ -396,19 +396,20 @@ def get_problem_instance(pid, tid):
 
 def grade_problem(pid, key, tid=None):
     """
-    Grades the problem with its associated flag.
+    Grade the problem with its associated flag.
 
     Args:
         tid: tid if provided
         pid: problem's pid
         key: user's submission
+
     Returns:
         A dict.
         correct: boolean
         points: number of points the problem is worth.
         message: message indicating the correctness of the key.
-    """
 
+    """
     if tid is None:
         tid = api.user.get_user()["tid"]
 
@@ -429,7 +430,7 @@ def grade_problem(pid, key, tid=None):
 @log_action
 def submit_key(tid, pid, key, method, uid=None, ip=None):
     """
-    User problem submission. Problem submission is inserted into the database.
+    User problem submission.
 
     Args:
         tid: user's team id
@@ -444,7 +445,6 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
         points: number of points the problem is worth.
         message: message indicating the correctness of the key.
     """
-
     db = api.db.get_conn()
     validate(submission_schema, {"tid": tid, "pid": pid, "key": key})
 
@@ -454,7 +454,8 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
 
     if pid in get_solved_pids(tid=tid):
         exp = WebException(
-            "Flag correct: however, you have already received points for that flag.")
+            "Flag correct: " +
+            "however, you have already received points for that flag.")
         exp.data = {'code': 'solved'}
         raise exp
 
@@ -486,7 +487,8 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
     if (key, pid) in [(submission["key"], submission["pid"])
                       for submission in get_submissions(tid=tid)]:
         exp = WebException(
-            "Flag incorrect: please note that you or your team have already submitted this flag.")
+            "Flag incorrect: please note that you or your team " +
+            "have already submitted this flag.")
         exp.data = {'code': 'repeat'}
         raise exp
 
@@ -518,6 +520,7 @@ def count_submissions(pid=None,
                       category=None,
                       correctness=None,
                       eligibility=None):
+    """Count the problem submissions matching the given criteria."""
     db = api.db.get_conn()
     match = {}
     if uid is not None:
@@ -547,7 +550,8 @@ def get_submissions(pid=None,
                     correctness=None,
                     eligibility=None):
     """
-    Gets the submissions from a team or user.
+    Get the submissions from a team or user.
+
     Optional filters of pid or category.
 
     Args:
@@ -560,7 +564,6 @@ def get_submissions(pid=None,
     Returns:
         A list of submissions from the given entity.
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -586,10 +589,7 @@ def get_submissions(pid=None,
 
 
 def clear_all_submissions():
-    """
-    Removes all submissions from the database.
-    """
-
+    """Remove all submissions from the database."""
     if DEBUG_KEY is not None:
         db = api.db.get_conn()
         db.submissions.remove()
@@ -607,7 +607,6 @@ def clear_submissions(uid=None, tid=None, pid=None):
         tid: the team's tid to clear from.
         pid: the pid to clear from.
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -626,7 +625,9 @@ def clear_submissions(uid=None, tid=None, pid=None):
 
 def invalidate_submissions(pid=None, uid=None, tid=None):
     """
-    Invalidates the submissions for a given problem. Can be filtered by uid or tid.
+    Invalidates the submissions for a given problem.
+
+    Can be filtered by uid or tid.
     Passing no arguments will invalidate all submissions.
 
     Args:
@@ -634,7 +635,6 @@ def invalidate_submissions(pid=None, uid=None, tid=None):
         uid: the user's uid that will his submissions invalidated.
         tid: the team's tid that will have their submissions invalidated.
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -652,12 +652,11 @@ def invalidate_submissions(pid=None, uid=None, tid=None):
 
 def reevaluate_submissions_for_problem(pid):
     """
-    In the case of the problem being updated, this will reevaluate submissions for a problem.
+    Reevaluate submissions for an updated problem.
 
     Args:
         pid: the pid of the problem to be reevaluated.
     """
-
     db = api.db.get_conn()
 
     get_problem(pid=pid)
@@ -683,10 +682,7 @@ def reevaluate_submissions_for_problem(pid):
 
 
 def reevaluate_all_submissions():
-    """
-    In the case of the problem being updated, this will reevaluate all submissions.
-    """
-
+    """Reevaluate all submissions for all problems."""
     api.cache.clear_all()
     for problem in get_all_problems(show_disabled=True):
         reevaluate_submissions_for_problem(problem["pid"])
@@ -695,16 +691,16 @@ def reevaluate_all_submissions():
 @api.cache.memoize(timeout=60, fast=True)
 def get_problem(pid=None, name=None, tid=None, show_disabled=True):
     """
-    Gets a single problem.
+    Get a single problem.
 
     Args:
         pid: The problem id
         name: The name of the problem
-        show_disabled: Boolean indicating whether or not to show disabled problems. Defaults to True
+        show_disabled: Whether or not to show disabled problems.
+                       Defaults to True
     Returns:
         The problem dictionary from the database
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -734,16 +730,15 @@ def get_problem(pid=None, name=None, tid=None, show_disabled=True):
 
 def get_all_problems(category=None, show_disabled=False, basic_only=False):
     """
-    Gets all of the problems in the database.
+    Get all of the problems in the database.
 
     Args:
         category: Optional parameter to restrict which problems are returned
-        show_disabled: Boolean indicating whether or not to show disabled problems.
+        show_disabled: Whether or not to show disabled problems.
         basic_only: Only return name, cat, score. Used for progression tracking
     Returns:
         List of problems from the database
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -761,14 +756,15 @@ def get_all_problems(category=None, show_disabled=False, basic_only=False):
         projection.update({"name": 1, "category": 1, "score": 1})
 
     return list(
-        db.problems.find(match, projection).sort([('score', pymongo.ASCENDING),
-                                                  ('name', pymongo.ASCENDING)]))
+        db.problems.find(match, projection)
+          .sort([('score', pymongo.ASCENDING), ('name', pymongo.ASCENDING)]))
 
 
 @api.cache.memoize()
-def get_solved_problems(tid=None, uid=None, category=None, show_disabled=False):
+def get_solved_problems(tid=None, uid=None, category=None,
+                        show_disabled=False):
     """
-    Gets the solved problems for a given team or user.
+    Get the solved problems for a given team or user.
 
     Args:
         tid: The team id
@@ -776,7 +772,6 @@ def get_solved_problems(tid=None, uid=None, category=None, show_disabled=False):
     Returns:
         List of solved problem dictionaries
     """
-
     if uid is not None and tid is None:
         team = api.user.get_team(uid=uid)
     else:
@@ -794,7 +789,8 @@ def get_solved_problems(tid=None, uid=None, category=None, show_disabled=False):
     pids = []
     result = []
 
-    # Team submissions will take precedence because they appear first in the submissions list.
+    # Team submissions will take precedence because they appear first
+    # in the submissions list.
     for submission in submissions:
         if submission["pid"] not in pids:
             pids.append(submission["pid"])
@@ -808,7 +804,7 @@ def get_solved_problems(tid=None, uid=None, category=None, show_disabled=False):
 
 def get_solved_pids(*args, **kwargs):
     """
-    Gets the solved pids for a given team or user.
+    Get the solved pids for a given team or user.
 
     Args:
         tid: The team id
@@ -816,22 +812,22 @@ def get_solved_pids(*args, **kwargs):
     Returns:
         List of solved problem ids
     """
-
     return [problem["pid"] for problem in get_solved_problems(*args, **kwargs)]
 
 
 def is_problem_unlocked(problem, solved):
     """
-    Checks if the specified problem is unlocked.
+    Check whether the specified problem is unlocked.
+
     A problem is unlocked if either:
         1. It has no dependencies in any of the bundles
-        2. Its threshold is reached in all bundles that specify a dependency for it
+        2. Its threshold is reached in all bundles that
+           specify a dependency for it
 
     Args:
         problem: the problem object to check
         solved: the list of solved problem objects
     """
-
     unlocked = True
 
     for bundle in get_all_bundles():
@@ -852,7 +848,7 @@ def is_problem_unlocked(problem, solved):
 @api.cache.memoize()
 def get_unlocked_pids(tid, category=None):
     """
-    Gets the unlocked pids for a given team.
+    Get the unlocked pids for a given team.
 
     Args:
         tid: The team id
@@ -877,11 +873,7 @@ def get_unlocked_pids(tid, category=None):
 
 
 def filter_problem(problem, remove_list, set_dict):
-    """
-    Filters the problem by removing all keys in the remove_list
-    and setting all keys in the set_dict.
-    """
-
+    """Remove all keys in the remove_list and set all keys in the set_dict."""
     problem = copy(problem)
 
     for key in remove_list:
@@ -895,7 +887,7 @@ def filter_problem(problem, remove_list, set_dict):
 
 def unlocked_filter(problem, solved):
     """
-    Returns a filtered version of the problem for when it is in an unlocked state
+    Return a filtered version of a problem in an unlocked state.
 
     Args:
         problem: the problem object
@@ -903,8 +895,8 @@ def unlocked_filter(problem, solved):
 
     Returns:
         A filtered problem object
-    """
 
+    """
     return filter_problem(problem, ["flag", "tags", "files"], {
         "solved": solved,
         "unlocked": True
@@ -913,15 +905,15 @@ def unlocked_filter(problem, solved):
 
 def locked_filter(problem):
     """
-    Returns a filtered version of the problem for when it is in a locked state
+    Return a filtered version of a problem in a locked state.
 
     Args:
         problem: the problem object
 
     Returns:
         A filtered problem object
-    """
 
+    """
     return filter_problem(problem,
                           ["description", "instances", "hints", "tags"], {
                               "solved": False,
@@ -931,8 +923,9 @@ def locked_filter(problem):
 
 def count_all_problems(category=None):
     """
-    Returns all (enabled) category names and the number of (enabled) problems
-    in each, both visible and non-visible.
+    Return all (enabled) category names and their number of (enabled) problems.
+
+    Includes both visible and non-visible categories.
 
     Args:
         category: Optional parameter to restrict to only one category
@@ -955,8 +948,7 @@ def count_all_problems(category=None):
 
 def get_visible_problems(tid, category=None):
     """
-    Returns all of the problems where the unlocked problems have full information and the
-    locked problems show only name, category, and score.
+    Return all of the unlocked problems.
 
     Args:
         tid: The team id
@@ -964,15 +956,11 @@ def get_visible_problems(tid, category=None):
     Returns:
         List of visible problem dictionaries
     """
-
     all_problems = get_all_problems(category=category, show_disabled=False)
     unlocked_pids = get_unlocked_pids(tid, category=category)
     solved_pids = get_solved_pids(tid=tid)
 
     result = []
-
-    result = []
-    # locked = []
 
     for problem in all_problems:
         if problem["pid"] in unlocked_pids:
@@ -981,19 +969,12 @@ def get_visible_problems(tid, category=None):
                     get_problem_instance(problem["pid"], tid),
                     problem["pid"] in solved_pids))
 
-        # Disable locked problem display.
-        # else:
-        # locked.append(locked_filter(problem))
-
-    # place locked problems at the end of the list
-    # result.extend(locked)
-
     return result
 
 
 def get_unlocked_problems(tid, category=None):
     """
-    Gets the unlocked problems for a given team.
+    Get the unlocked problems for a given team.
 
     Args:
         tid: The team id
@@ -1001,7 +982,6 @@ def get_unlocked_problems(tid, category=None):
     Returns:
         List of unlocked problem dictionaries
     """
-
     return [
         problem for problem in get_visible_problems(tid, category=category)
         if problem['unlocked']
@@ -1009,11 +989,7 @@ def get_unlocked_problems(tid, category=None):
 
 
 def insert_bundle(bundle):
-    """
-    Inserts the bundle into the database after
-    validating it with the bundle_schema
-    """
-
+    """Insert a bundle into the database."""
     db = api.db.get_conn()
     validate(bundle_schema, bundle)
 
@@ -1037,7 +1013,6 @@ def load_published(data):
     Args:
         data: The output of "shell_manager publish"
     """
-
     if "problems" not in data:
         raise WebException("Please provide a problems list in your json.")
 
@@ -1045,7 +1020,6 @@ def load_published(data):
         insert_problem(problem, sid=data["sid"])
 
     if "bundles" in data:
-        db = api.db.get_conn()
         for bundle in data["bundles"]:
             insert_bundle(bundle)
 
@@ -1053,10 +1027,7 @@ def load_published(data):
 
 
 def get_bundle(bid):
-    """
-    Returns the bundle object corresponding to the given bid
-    """
-
+    """Return the bundle object corresponding to the given bid."""
     db = api.db.get_conn()
 
     bundle = db.bundles.find_one({"bid": bid})
@@ -1068,10 +1039,7 @@ def get_bundle(bid):
 
 
 def update_bundle(bid, updates):
-    """
-    Updates the bundle object in the database with the given updates.
-    """
-
+    """Update a bundle."""
     db = api.db.get_conn()
 
     bundle = db.bundles.find_one({"bid": bid}, {"_id": 0})
@@ -1088,38 +1056,34 @@ def update_bundle(bid, updates):
 
 
 def get_all_bundles():
-    """
-    Returns all bundles from the database
-    """
-
+    """Get all bundles."""
     db = api.db.get_conn()
-
     return list(db.bundles.find({}, {"_id": 0}))
 
 
 def set_bundle_dependencies_enabled(bid, enabled):
     """
-    Sets the dependencies_enabled field in the object in the database.
+    Set a bundle's dependencies_enabled field.
+
     This will affect the unlocked problems.
 
     Args:
         bid: the bundle id to update
         enabled:
     """
-
     update_bundle(bid, {"dependencies_enabled": enabled})
     api.cache.clear_all()
 
 
 def sanitize_problem_data(data):
     """
-    Removes problem data as specified in SANITATION_KEYS, to eliminate leakage
-    of unnecessary platform information to players.
+    Remove problem data specified in SANITATION_KEYS.
+
+    Helps to eliminate leakage of unnecessary platform information to players.
 
     Args:
         data: dict or list of problems
     """
-
     def pop_keys(problem_dict):
         for key in SANITATION_KEYS:
             problem_dict.pop(key, None)

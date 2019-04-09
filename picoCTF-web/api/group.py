@@ -304,10 +304,6 @@ def switch_role(gid, tid, role):
     else:
         raise InternalException("Only supported roles are member and teacher.")
 
-    # Disable promotion or demotion of teacher account
-    #for uid in api.team.get_team_uids(tid=team["tid"]):
-    #    sync_teacher_status(tid, uid)
-
 
 @log_action
 def delete_group(gid):

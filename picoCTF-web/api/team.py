@@ -1,6 +1,4 @@
-"""
-API functions relating to team management.
-"""
+"""Team management module."""
 
 from voluptuous import Length, Required, Schema
 
@@ -20,7 +18,6 @@ from api.common import (
   check,
   InternalException,
   safe_fail,
-  SevereInternalException,
   validate,
   WebException
 )
@@ -47,7 +44,7 @@ join_team_schema = Schema(
         Required("team_name"):
         check(
             ("The team name must be between 3 and 40 characters.",
-               [str, Length(min=3, max=40)]),
+             [str, Length(min=3, max=40)]),
             ("This team name conflicts with an existing user name.",
              [lambda name: safe_fail(api.user.get_user, name=name) is None]),
         ),
@@ -76,7 +73,6 @@ def get_team(tid=None, name=None):
     Returns:
         Returns the corresponding team object or None if it could not be found
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -107,12 +103,17 @@ def get_groups(tid=None, uid=None):
     Returns:
         List of group objects the team is a member of.
     """
-
     db = api.db.get_conn()
 
     groups = []
 
-    group_projection = {'name': 1, 'gid': 1, 'owner': 1, 'members': 1, '_id': 0}
+    group_projection = {
+                        'name': 1,
+                        'gid': 1,
+                        'owner': 1,
+                        'members': 1,
+                        '_id': 0
+                        }
 
     admin = False
 
@@ -156,15 +157,16 @@ def get_groups(tid=None, uid=None):
 
 def create_new_team_request(params, uid=None):
     """
-    Fulfills new team requests for users who have already registered.
+    Fulfill new team requests for users who have already registered.
 
     Args:
-        team_name: The desired name for the team. Must be unique across users and teams.
+        team_name: The desired name for the team.
+                   Must be unique across users and teams.
         team_password: The team's password.
     Returns:
         True if successful, exception thrown otherwise.
-    """
 
+    """
     user = api.user.get_user(uid=uid)
     if user["teacher"]:
         raise InternalException("Teachers may not create teams!")
@@ -177,21 +179,14 @@ def create_new_team_request(params, uid=None):
         raise InternalException(
             "You can only create one new team per user account!")
 
-    desired_tid = create_team({
-        "team_name": params["team_name"],
-        "password": api.common.hash_password(params["team_password"]),
-        "affiliation": current_team["affiliation"],
-        "eligible": user["eligible"],
-        "creator": user["uid"],
-        "country": user["country"],
-    })
-
     return join_team(params["team_name"], params["team_password"], user["uid"])
 
 
 def create_team(params):
     """
-    Directly inserts team into the database. Assumes all fields have been validated.
+    Directly insert team into the database.
+
+    Assumes all fields have been validated.
 
     Args:
         team_name: Name of the team
@@ -203,7 +198,6 @@ def create_team(params):
     Returns:
         The newly created team id.
     """
-
     db = api.db.get_conn()
 
     params['tid'] = api.common.token()
@@ -222,7 +216,7 @@ def create_team(params):
 
 def get_team_members(tid=None, name=None, show_disabled=True):
     """
-    Retrieves the members on a team.
+    Retrieve the members on a team.
 
     Args:
         tid: the team id to query
@@ -230,7 +224,6 @@ def get_team_members(tid=None, name=None, show_disabled=True):
     Returns:
         A list of the team's members.
     """
-
     db = api.db.get_conn()
 
     tid = get_team(name=name, tid=tid)["tid"]
@@ -257,7 +250,7 @@ def get_team_members(tid=None, name=None, show_disabled=True):
 
 def get_team_uids(tid=None, name=None, show_disabled=True):
     """
-    Gets the list of uids that belong to a team
+    Get the list of uids that belong to a team.
 
     Args:
         tid: the team id
@@ -265,7 +258,6 @@ def get_team_uids(tid=None, name=None, show_disabled=True):
     Returns:
         A list of uids
     """
-
     return [
         user['uid'] for user in get_team_members(
             tid=tid, name=name, show_disabled=show_disabled)
@@ -274,7 +266,7 @@ def get_team_uids(tid=None, name=None, show_disabled=True):
 
 def get_team_information(tid=None, gid=None):
     """
-    Retrieves the information of a team.
+    Retrieve the information of a team.
 
     Args:
         tid: the team id
@@ -283,15 +275,10 @@ def get_team_information(tid=None, gid=None):
             team_name
             members
     """
-
     team_info = get_team(tid=tid)
 
     if tid is None:
         tid = team_info["tid"]
-
-    if gid is not None:
-        group = api.group.get_group(gid=gid)
-        roles = api.group.get_roles_in_group(group["gid"], tid=tid)
 
     team_info["score"] = api.stats.get_score(tid=tid)
     team_info["members"] = [{
@@ -323,14 +310,15 @@ def get_team_information(tid=None, gid=None):
     return team_info
 
 
-def get_all_teams(ineligible=False, eligible=True, country=None, show_ineligible=False):
+def get_all_teams(ineligible=False, eligible=True, country=None,
+                  show_ineligible=False):
     """
-    Retrieves all teams.
+    Retrieve all teams.
 
     Returns:
         A list of all of the teams.
-    """
 
+    """
     if show_ineligible:
         match = {}
     else:
@@ -359,7 +347,6 @@ def join_team_request(params):
         team_name
         team_password
     """
-
     user = api.user.get_user()
     if user["teacher"]:
         raise InternalException("Teachers may not join teams!")
@@ -371,14 +358,15 @@ def join_team_request(params):
 
 def join_team(team_name, password, uid=None):
     """
-    Allow a user who is on an individual team to join a proper team. You can not use this to freely switch between teams.
+    Switch a user from their individual team to a proper team.
+
+    You can not use this to freely switch between teams.
 
     Args:
         team_name: The name of the team to join.
         password: The team's password.
         uid: The user's id.
     """
-
     user = api.user.get_user(uid=uid)
     current_team = api.user.get_team(uid=user["uid"])
 
@@ -391,8 +379,8 @@ def join_team(team_name, password, uid=None):
     db = api.db.get_conn()
     max_team_size = api.config.get_settings()["max_team_size"]
 
-    if api.auth.confirm_password(password, desired_team["password"]
-                                ) and desired_team["size"] < max_team_size:
+    if (api.auth.confirm_password(password, desired_team["password"]) and
+            desired_team["size"] < max_team_size):
         user_team_update = db.users.find_and_modify(
             query={
                 "uid": user["uid"],
@@ -430,18 +418,22 @@ def join_team(team_name, password, uid=None):
             }},
             new=True)
 
-        # Team country is no longer consistent amongst members. Flag as mixed and ineligible
+        # Team country is no longer consistent amongst members.
+        # Flag as mixed and ineligible
         if user["country"] != desired_team["country"]:
-            db.teams.update({"tid": desired_team["tid"]}, {"$set": {"country": "??",
-                                                                    "eligible": False}})
+            db.teams.update({"tid": desired_team["tid"]},
+                            {"$set": {"country": "??",
+                                      "eligible": False}})
 
         # Ineligible user has spoiled team eligibility
         if not user["eligible"] and desired_team["eligible"]:
-            db.teams.update({"tid": desired_team["tid"]}, {"$set": {"eligible": False}})
+            db.teams.update({"tid": desired_team["tid"]},
+                            {"$set": {"eligible": False}})
 
         if not desired_team_size_update or not current_team_size_update:
             raise InternalException(
-                "There was an issue switching your team! Please contact an administrator."
+                "There was an issue switching your team!" +
+                "Please contact an administrator."
             )
 
         # Remove membership of empty self-team.
@@ -450,12 +442,13 @@ def join_team(team_name, password, uid=None):
             api.group.leave_group(gid=group["gid"], tid=current_team["tid"])
             # Rejoin with new tid if not already member, and classroom
             # email filter is not enabled.
-            roles = api.group.get_roles_in_group(group["gid"], tid=desired_team["tid"])
+            roles = api.group.get_roles_in_group(group["gid"],
+                                                 tid=desired_team["tid"])
             if not roles["teacher"] and not roles["member"]:
                 group_settings = api.group.get_group_settings(gid=group["gid"])
                 if not group_settings["email_filter"]:
-                        api.group.join_group(gid=group["gid"], tid=desired_team["tid"])
-
+                    api.group.join_group(gid=group["gid"],
+                                         tid=desired_team["tid"])
 
         # Called from within get_solved_problems, clear first
         api.cache.invalidate_memoization(api.problem.get_unlocked_pids,
@@ -484,6 +477,7 @@ def join_team(team_name, password, uid=None):
 def update_password_request(params):
     """
     Update team password.
+
     Assumes args are keys in params.
 
     Args:
@@ -491,7 +485,6 @@ def update_password_request(params):
             new-password: the new password
             new-password-confirmation: confirmation of password
     """
-
     validate(update_team_schema, params)
     user = api.user.get_user()
     current_team = api.team.get_team(tid=user["tid"])
@@ -509,13 +502,12 @@ def update_password_request(params):
 
 def update_password(tid, password):
     """
-    Updates a team's password.
+    Update a team's password.
 
     Args:
         tid: teams's uid.
         password: the new user password.
     """
-
     db = api.db.get_conn()
     db.teams.update({
         'tid': tid
@@ -525,12 +517,12 @@ def update_password(tid, password):
 
 
 def is_teacher_team(tid):
-    """
-     Checks if team is a teacher's self-team
-    """
+    """Check if team is a teacher's self-team."""
     team = get_team(tid=tid)
     members = get_team_members(tid=tid)
-    if team["size"] == 1 and members[0]["username"] == team["team_name"] and members[0]["teacher"]:
+    if (team["size"] == 1 and
+        members[0]["username"] == team["team_name"] and
+            members[0]["teacher"]):
         return True
     else:
         return False

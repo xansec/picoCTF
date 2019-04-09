@@ -1,3 +1,4 @@
+"""Routing functions for /api/stats/."""
 import math
 
 from bson import json_util

@@ -1,3 +1,4 @@
+"""Routing functions for /api/user."""
 from flask import Blueprint, redirect, request, session
 
 import api.auth
@@ -15,10 +16,7 @@ blueprint = Blueprint("user_api", __name__)
 
 @blueprint.route("/authorize/<role>")
 def authorize_role(role=None):
-    """
-    This route is used to ensure sensitive static content is withheld from clients.
-    """
-
+    """Verify the role of the logged in user."""
     if role == "user" and safe_fail(api.user.get_user):
         return "Client is logged in.", 200
     elif role == "teacher" and safe_fail(api.user.is_teacher):
@@ -75,7 +73,8 @@ def reset_password_hook():
 
     api.email.request_password_reset(username)
     return WebSuccess(
-        "A password reset link has been sent to the email address provided during registration."
+        "A password reset link has been sent to the email address provided " +
+        "during registration."
     )
 
 

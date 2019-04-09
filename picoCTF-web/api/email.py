@@ -7,13 +7,8 @@ import api.config
 import api.group
 import api.token
 import api.user
-from api.common import (
-  check,
-  InternalException,
-  safe_fail,
-  validate,
-  WebException
-)
+from api.common import (check, InternalException, safe_fail, validate,
+                        WebException)
 
 # The Flask-Mail object. Should be initialized during app startup.
 mail = None
@@ -134,13 +129,13 @@ def send_user_verification_email(username):
             token_value = previous_key["tokens"]["email_verification"]
             api.token.delete_token(key_query, 'email_verification')
             api.token.set_token({
-                            'uid': user['uid'],
-                            'email_verification_count': previous_count + 1
-                            }, 'email_verification')
+                'uid': user['uid'],
+                'email_verification_count': previous_count + 1
+            }, 'email_verification')
         else:
             raise InternalException(
-                "User has been sent the maximum number of verification emails."
-                )
+                "User has been sent the maximum number of verification " +
+                "emails.")
 
     # Is there a better way to do this without dragging url_for + app_context
     # into it?
@@ -170,8 +165,7 @@ The {0} Team.
     bulk = [verification_message]
 
     if (settings["email"]["parent_verification_email"] and
-            previous_key is None and
-            user['demo']['age'] == "13-17"):
+            previous_key is None and user['demo']['age'] == "13-17"):
         body = """
 Welcome to {0}!
 
@@ -186,7 +180,8 @@ Competition Rules for {0} can be found at {1}.
 If you received this email in error because you did not authorize your child's
 registration for {0}, you are not the child's parent or legal guardian,
 or your child is under age 13, please email us immediately at {2}.
-        """.format(settings["competition_name"], "https://url", "admin@email.com")
+        """.format(settings["competition_name"], "https://url",
+                   "admin@email.com")
 
         subject = "{} Parent Account Verification".format(
             settings["competition_name"])

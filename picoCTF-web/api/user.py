@@ -1,6 +1,4 @@
-"""
-API functions relating to user management and registration.
-"""
+"""User management and registration module."""
 
 import json
 import re
@@ -29,22 +27,28 @@ from api.common import (
   WebException
 )
 
-_check_email_format = lambda email: re.match(r".+@.+\..{2,}", email) is not None
+
+def _check_email_format(email):
+    return re.match(r".+@.+\..{2,}", email) is not None
 
 
 def _check_username(username):
     return all(
-        [c in string.digits + string.ascii_lowercase for c in username.lower()])
+        [c in string.digits + string.ascii_lowercase
+            for c in username.lower()])
 
 
 def check_blacklisted_usernames(username):
     """
     Verify that the username isn't present in the username blacklist.
-    """
 
+    Args:
+        username: the username to check
+    """
     settings = api.config.get_settings()
     return username not in settings.get(
-        "username_blacklist", api.config.default_settings["username_blacklist"])
+        "username_blacklist",
+        api.config.default_settings["username_blacklist"])
 
 
 def verify_email_in_whitelist(email, whitelist=None):
@@ -54,7 +58,6 @@ def verify_email_in_whitelist(email, whitelist=None):
     Args:
         email: The email address to verify
     """
-
     if whitelist is None:
         settings = api.config.get_settings()
         whitelist = settings["email_filter"]
@@ -99,11 +102,12 @@ user_schema = Schema(
         check(("Passwords must be between 3 and 20 characters.",
                [str, Length(min=3, max=20)])),
         Required('affiliation'):
-        check(("You must specify a school or organization.", [str,
-                                                    Length(min=3, max=50)])),
+        check(("You must specify a school or organization.",
+              [str, Length(min=3, max=50)])),
         Required('usertype'):
         check(("You must specify a status",
-               [str, lambda status: status in ["student", "college", "teacher", "other"]])),
+               [str, lambda status: status in ["student", "college", "teacher",
+                                               "other"]])),
         Required('country'):
             check(("Please select a country", [str, Length(min=2, max=2)])),
         Required("demo"): Schema({
@@ -121,6 +125,7 @@ user_schema = Schema(
     },
     extra=True)
 
+
 def get_team(uid=None):
     """
     Retrieve the the corresponding team to the user's uid.
@@ -130,15 +135,13 @@ def get_team(uid=None):
     Returns:
         The user's team.
     """
-
     user = get_user(uid=uid)
     return api.team.get_team(tid=user["tid"])
 
 
 def get_user(name=None, uid=None):
     """
-    Retrieve a user based on a property. If the user is logged in,
-    it will return that user object.
+    Retrieve a user based on a property, or the current user, if logged in.
 
     Args:
         name: the user's username
@@ -146,7 +149,6 @@ def get_user(name=None, uid=None):
     Returns:
         Returns the corresponding user object or None if it could not be found
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -158,7 +160,7 @@ def get_user(name=None, uid=None):
     elif api.auth.is_logged_in():
         match.update({'uid': api.auth.get_uid()})
     else:
-        raise InternalException("Uid or name must be specified for get_user")
+        raise InternalException("uid or name must be specified for get_user")
 
     user = db.users.find_one(match)
 
@@ -182,7 +184,9 @@ def create_user(username,
                 admin=False,
                 verified=False):
     """
-    This inserts a user directly into the database. It assumes all data is valid.
+    Insert a user directly into the database.
+
+    Assumes all data is valid.
 
     Args:
         username: user's username
@@ -195,11 +199,12 @@ def create_user(username,
         country: primary country (dependent on usertype)
         demo: dict of demographic data
         teacher: whether this account is a teacher
-        eligible: whether this account is eligible for prizes (or at least, not ineligible)
+        eligible: whether this account is eligible for prizes
+                  (or at least, not ineligible)
     Returns:
         Returns the uid of the newly created user
-    """
 
+    """
     db = api.db.get_conn()
     settings = api.config.get_settings()
     uid = api.common.token()
@@ -258,14 +263,13 @@ def create_user(username,
 
 def get_all_users(show_teachers=False):
     """
-    Finds all the users in the database
+    Find all users in the database.
 
     Args:
         show_teachers: whether or not to include teachers in the response
     Returns:
         Returns the uid, username, and email of all users.
     """
-
     db = api.db.get_conn()
 
     match = {}
@@ -280,12 +284,11 @@ def get_all_users(show_teachers=False):
 
 def _validate_captcha(data):
     """
-    Validates a captcha with google's reCAPTCHA.
+    Validate a captcha with google's reCAPTCHA.
 
     Args:
         data: the posted form data
     """
-
     settings = api.config.get_settings()["captcha"]
 
     post_data = urllib.parse.urlencode({
@@ -307,7 +310,9 @@ def _validate_captcha(data):
 @log_action
 def create_simple_user_request(params):
     """
-    Registers a new user and creates a team for them automatically. Validates all fields.
+    Register a new user and creates a team for them automatically.
+
+    Validates all fields.
     Assume arguments to be specified in a dict.
 
     Args:
@@ -325,12 +330,13 @@ def create_simple_user_request(params):
             gid: group registration
             rid: registration id
     """
-
     params["eligibility"] = params["usertype"] == "student"
 
     validate(user_schema, params)
 
-    if api.config.get_settings()["email"]["parent_verification_email"] and params["demo"]["age"] != "18+" and not params["demo"].get("parentemail", None):
+    if (api.config.get_settings()["email"]["parent_verification_email"] and
+        params["demo"]["age"] != "18+" and not
+            params["demo"].get("parentemail", None)):
         raise WebException(
             "You must include your parent's email address")
 
@@ -366,7 +372,8 @@ def create_simple_user_request(params):
     else:
         if not verify_email_in_whitelist(params["email"], whitelist):
             raise WebException(
-                "Your email does not belong to the whitelist. Please see the registration form for details."
+                "Your email does not belong to the whitelist. " +
+                "Please see the registration form for details."
             )
 
     if api.config.get_settings(
@@ -415,35 +422,35 @@ def create_simple_user_request(params):
 
 def is_teacher(uid=None):
     """
-    Determines if a user is a teacher.
+    Determine if a user is a teacher.
 
     Args:
         uid: user's uid
     Returns:
         True if the user is a teacher, False otherwise
     """
-
     user = get_user(uid=uid)
     return user.get('teacher', False)
 
 
 def is_admin(uid=None):
     """
-    Determines if a user is an admin.
+    Determine if a user is an admin.
 
     Args:
         uid: user's uid
     Returns:
         True if the user is an admin, False otherwise
     """
-
     user = get_user(uid=uid)
     return user.get('admin', False)
 
 
 def verify_user(uid, token_value):
     """
-    Verify an unverified user account. Link should have been sent to the user's email.
+    Verify an unverified user account.
+
+    Link should have been sent to the user's email.
 
     Args:
         uid: the user id
@@ -451,7 +458,6 @@ def verify_user(uid, token_value):
     Returns:
         True if successful verification based on the (uid, token_value)
     """
-
     db = api.db.get_conn()
 
     if uid is None:
@@ -471,17 +477,17 @@ def verify_user(uid, token_value):
 def update_password_request(params, uid=None, check_current=False):
     """
     Update account password.
+
     Assumes args are keys in params.
 
     Args:
         uid: uid to reset
         check_current: whether to ensure that current-password is correct
-        params:
+        params (dict):
             current-password: the users current password
             new-password: the new password
             new-password-confirmation: confirmation of password
     """
-
     user = get_user(uid=uid)
 
     if check_current and not api.auth.confirm_password(
@@ -499,13 +505,12 @@ def update_password_request(params, uid=None, check_current=False):
 
 def update_password(uid, password):
     """
-    Updates an account's password.
+    Update an account's password.
 
     Args:
         uid: user's uid.
         password: the new user unhashed password.
     """
-
     db = api.db.get_conn()
     db.users.update({
         'uid': uid
@@ -516,13 +521,14 @@ def update_password(uid, password):
 
 def disable_account(uid):
     """
-    Disables a user account. They will no longer be able to login and do not count
-    towards a team's maximum size limit.
+    Disable a user account.
+
+    They will no longer be able to login and no longer count towards their
+    team's maximum size limit.
 
     Args:
         uid: user's uid
     """
-
     db = api.db.get_conn()
     result = db.users.update({
         "uid": uid,
@@ -553,15 +559,13 @@ def disable_account(uid):
 def disable_account_request(params, uid=None, check_current=False):
     """
     Disable user account so they can't login or consume space on a team.
-    Assumes args are keys in params.
 
     Args:
         uid: uid to reset
         check_current: whether to ensure that current-password is correct
-        params:
+        params (dict):
             current-password: the users current password
     """
-
     user = get_user(uid=uid)
 
     if check_current and not api.auth.confirm_password(
@@ -575,6 +579,7 @@ def disable_account_request(params, uid=None, check_current=False):
 def update_extdata(params):
     """
     Update user extdata.
+
     Assumes args are keys in params.
 
     Args:
