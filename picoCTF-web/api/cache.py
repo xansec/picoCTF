@@ -1,187 +1,123 @@
 """Caching Library."""
 
 import logging
-import time
 from functools import wraps
 
 from bson import datetime
 
 import api.db
-from api.common import InternalException
 
 log = logging.getLogger(__name__)
 
-no_cache = False
-fast_cache = {}
-_mongo_index = None
 
-
-def clear_all():
-    """Clear the caches."""
-    db = api.db.get_conn()
-    db.cache.remove()
-    fast_cache.clear()
-
-
-def get_mongo_key(f, *args, **kwargs):
+def _get_hash_key(f, args, kwargs):
     """
-    Return a mongo object key for the function.
+    Return a hash for a given function invocation.
 
     Args:
         f: the function
-        args: positional arguments
-        kwargs: keyword arguments
+        args: positional arguments (list)
+        kwargs: keyword arguments (dict)
+
     Returns:
-        The key.
-    """
-    min_kwargs = list(filter(lambda pair: pair[1] is not None, kwargs.items()))
-
-    return {
-        "function": "{}.{}".format(f.__module__, f.__name__),
-        "args": args,
-        "ordered_kwargs": sorted(min_kwargs),
-        "kwargs": dict(min_kwargs)
-    }
-
-
-def get_key(f, *args, **kwargs):
-    """
-    Return a unique key for a memoized function.
-
-    Args:
-        f: the function
-        args: positional arguments
-        kwargs: keyword arguments
-    Returns:
-        The key.
+        a hashed key (int), or None if any argument was unhashable
 
     """
-    if len(args) > 0:
-        kwargs["#args"] = ",".join(map(str, args))
-
-    sorted_keys = sorted(kwargs)
-    arg_key = "&".join(
-        ["{}:{}".format(key, kwargs[key]) for key in sorted_keys])
-
-    key = "{}.{}${}".format(f.__module__, f.__name__, arg_key).replace(
-        " ", "~")
-
-    return key
+    try:
+        return hash((f.__module__, f.__name__,
+                    tuple(args),
+                    tuple(sorted(kwargs.items()))))
+    except TypeError:
+        return None
 
 
-def get(key, fast=False):
+def _get(key):
     """
-    Get a key from the cache.
+    Get a result from the cache.
 
     Args:
         key: cache key
-        fast: whether or not to use the fast cache
     Returns:
-        The result from the cache.
+        The result from the cache, or None
     """
-    if fast:
-        return fast_cache.get(key, None)
-
     db = api.db.get_conn()
-
-    # We aren't interested in matching the unordered kwargs.
-    partial_key = key.copy()
-    partial_key.pop("kwargs", None)
-
-    cached_result = db.cache.find_one(partial_key)
+    cached_result = db.cache.find_one({'key': key})
 
     if cached_result:
         return cached_result["value"]
 
 
-def set(key, value, timeout=None, fast=False):
+def _set(key, value, timeout=None):
     """
     Set a key in the cache.
 
     Args:
-        key: The cache key.
-        timeout: Time the key is valid.
-        fast: whether or not to use the fast cache
+        key: The cache key
+        timeout: Time the key is valid (seconds)
     """
-    if fast:
-        fast_cache[key] = {
-            "result": value,
-            "timeout": timeout,
-            "set_time": time.time()
-        }
-        return
-
     db = api.db.get_conn()
-
-    update = key.copy()
-    update.update({"value": value})
+    cache_obj = {
+        '$set': {
+            'key': key,
+            'value': value,
+        }
+    }
 
     if timeout is not None:
-        expireAt = (
+        cache_obj['$set']['expireAt'] = (
             datetime.datetime.now() + datetime.timedelta(seconds=timeout))
-        update.update({"expireAt": expireAt})
-
-    db.cache.update(key, update, upsert=True)
+    db.cache.find_one_and_update({'key': key}, cache_obj, upsert=True)
 
 
-def timed_out(info):
-    """Determine whether a fast_cache entry has been timed out."""
-    return int(time.time()) - info['set_time'] > info['timeout']
-
-
-def memoize(timeout=None, fast=False):
+def memoize(*args, **kwargs):
     """
-    Cache a function based on its arguments.
+    Memoize a function by caching its results.
 
-    Args:
-        timeout: Time the result stays valid in the cache.
+    To force a cache update, set the kwarg 'recache=True' when calling
+    the decorated function.
+
+    Function calls containing unhashable arguments will not be cached.
+
+    Args (optionally specify as kwargs to the decorator):
+        timeout: Time the result stays valid in the cache (seconds, default 60)
     Returns:
-        The functions result.
+        The function's result.
 
     """
-    if fast and timeout is None:
-        raise InternalException("You cannot set fast cache without a timeout!")
+    # Allow use of decorator without () if no kwargs specified
+    f = None
+    if len(args) == 1 and callable(args[0]):
+        f = args[0]
+    timeout = kwargs.get('timeout', 60)
 
     def decorator(f):
         """Inner decorator."""
         @wraps(f)
         def wrapper(*args, **kwargs):
             """Cache a function result."""
-            if not kwargs.get("cache", True):
-                kwargs.pop("cache", None)
-                return f(*args, **kwargs)
-
-            key = get_key(f, *args, **kwargs) if fast else get_mongo_key(
-                f, *args, **kwargs)
-            cached_result = get(key, fast=fast)
-
-            if cached_result is None or no_cache or (fast and
-                                                     timed_out(cached_result)):
+            # Force a cache update if the "recache" kwarg is provided
+            if kwargs.get('recache', None) is not None:
+                kwargs.pop('recache', None)
+                key = _get_hash_key(f, args, kwargs)
                 function_result = f(*args, **kwargs)
-                set(key, function_result, timeout=timeout, fast=fast)
-
+                _set(key, function_result, timeout=timeout)
                 return function_result
 
-            return cached_result['result'] if fast else cached_result
-
+            key = _get_hash_key(f, args, kwargs)
+            if key is None:
+                # Invokation contains an unhashable argument
+                return f(*args, **kwargs)
+            cached_result = _get(key)
+            if cached_result is None:
+                function_result = f(*args, **kwargs)
+                _set(key, function_result, timeout=timeout)
+                return function_result
+            return cached_result
         return wrapper
+    return decorator(f) if f else decorator
 
-    return decorator
 
-
-def invalidate_memoization(f, *keys):
-    """
-    Invalidate a memoized function.
-
-    All arguments given to the function must be passed
-    to accurately invalidate it.
-
-    Args:
-        f: the function
-    """
+def clear():
+    """Clear the cache."""
     db = api.db.get_conn()
-
-    search = {"function": "{}.{}".format(f.__module__, f.__name__)}
-    search.update({"$or": list(keys)})
-
-    db.cache.remove(search)
+    db.cache.remove()

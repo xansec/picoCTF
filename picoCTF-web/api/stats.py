@@ -13,6 +13,7 @@ import api.problem
 import api.problem_feedback
 import api.stats
 import api.team
+from api.cache import memoize
 from api.common import InternalException
 
 top_teams = 5
@@ -23,7 +24,7 @@ def _get_problem_names(problems):
     return [problem['name'] for problem in problems]
 
 
-@api.cache.memoize()
+@memoize
 def get_score(tid=None, uid=None):
     """
     Get the score for a user or team.
@@ -61,9 +62,8 @@ def get_team_review_count(tid=None, uid=None):
         return count
 
 
-# This is on the /scoreboard handler hot path and should be cached. Stored by
-# the cache_stats daemon.
-@api.cache.memoize()
+# Stored by the cache_stats daemon.
+@memoize
 def get_group_scores(gid=None, name=None):
     """
     Get the group scores.
@@ -109,7 +109,7 @@ def get_group_average_score(gid=None, name=None):
 
 
 # Stored by the cache_stats daemon
-@api.cache.memoize()
+@memoize
 def get_all_team_scores(eligible=None, country=None, show_ineligible=False):
     """
     Get the score for every team in the database.
@@ -202,7 +202,7 @@ def get_all_user_scores():
     return sorted(result, key=lambda entry: entry['score'], reverse=True)
 
 
-@api.cache.memoize(timeout=120, fast=True)
+@api.cache.memoize(timeout=120)
 def get_problems_by_category():
     """
     Get the list of all problems divided into categories.
@@ -219,7 +219,7 @@ def get_problems_by_category():
     return result
 
 
-@api.cache.memoize(timeout=120, fast=True)
+@api.cache.memoize(timeout=120)
 def get_pids_by_category():
     """Return a dict of {category: [problems]}."""
     result = {
@@ -229,7 +229,7 @@ def get_pids_by_category():
     return result
 
 
-@api.cache.memoize(timeout=120, fast=True)
+@api.cache.memoize(timeout=120)
 def get_pid_categories():
     """Return a dict of {pid: category}."""
     pid_map = {}
@@ -280,7 +280,7 @@ def get_problem_submission_stats(pid=None, name=None):
     }
 
 
-@api.cache.memoize()
+@memoize
 def get_score_progression(tid=None, uid=None, category=None):
     """
     Find the score and time after each correct submission of a team or user.
@@ -342,7 +342,7 @@ def get_top_teams(gid=None, eligible=None, country=None,
 
 
 # Stored by the cache_stats daemon
-@api.cache.memoize()
+@memoize
 def get_problem_solves(name=None, pid=None):
     """
     Return the number of solves for a particular problem.
@@ -367,7 +367,8 @@ def get_problem_solves(name=None, pid=None):
     }).count()
 
 
-@api.cache.memoize()
+# Stored by the cache_stats daemon
+@memoize
 def get_top_teams_score_progressions(gid=None,
                                      eligible=True,
                                      country=None,
@@ -398,7 +399,7 @@ def get_top_teams_score_progressions(gid=None,
         show_ineligible=show_ineligible)]
 
 
-@api.cache.memoize(timeout=300)
+@memoize
 def check_invalid_instance_submissions(gid=None):
     """Get submissions of keys for the wrong problem instance."""
     db = api.db.get_conn()
@@ -430,7 +431,8 @@ def check_invalid_instance_submissions(gid=None):
     return shared_key_submissions
 
 
-@api.cache.memoize()
+# Stored by the cache_stats daemon.
+@memoize
 def get_registration_count():
     """Get the user, team, and group counts."""
     db = api.db.get_conn()

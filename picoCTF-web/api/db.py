@@ -65,9 +65,7 @@ def index_mongo():
     db.shell_servers.ensure_index("sid", unique=True, name="unique shell sid")
 
     db.cache.ensure_index("expireAt", expireAfterSeconds=0)
-    db.cache.ensure_index("kwargs", name="kwargs")
-    db.cache.ensure_index([("function", 1), ("ordered_kwargs", 1)])
-    db.cache.ensure_index("args", name="args")
+    db.cache.ensure_index("key")
 
     db.shell_servers.ensure_index(
         "sid", unique=True, name="unique shell server id")

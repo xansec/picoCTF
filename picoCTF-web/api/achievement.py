@@ -383,7 +383,6 @@ def insert_achievement(achievement):
         raise WebException("achievement with identical name already exists.")
 
     db.achievements.insert(achievement)
-    api.cache.fast_cache.clear()
 
     return achievement["aid"]
 
@@ -416,6 +415,5 @@ def update_achievement(aid, updated_achievement):
     achievement["aid"] = aid
 
     db.achievements.update({"aid": aid}, achievement)
-    api.cache.fast_cache.clear()
 
     return achievement

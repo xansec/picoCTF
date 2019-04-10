@@ -5,8 +5,6 @@ from importlib.machinery import SourceFileLoader
 import time
 from os.path import basename, splitext
 
-import api
-
 
 def load_modules(directory):
     files = glob.glob("{}/*.py".format(directory))

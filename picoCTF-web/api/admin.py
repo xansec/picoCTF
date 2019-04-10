@@ -62,7 +62,7 @@ def set_problem_availability(pid, disabled):
             "You cannot change the availability of \"{}\".".format(
                 problem["name"]))
     result = api.problem.update_problem(pid, {"disabled": disabled})
-    api.cache.clear_all()
+    api.cache.clear()
     return result
 
 

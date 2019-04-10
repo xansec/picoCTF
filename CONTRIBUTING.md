@@ -7,7 +7,6 @@ the platform should also be suitable for any organizations who want to
 incorporate CTFs into their training or professional development
 process.
 
-
 We hope you find the picoCTF platform useful and easy to get started
 with.  Towards that end we welcome any contributions that you find
 improve your competition. This guide captures the simple process to
@@ -17,7 +16,6 @@ Note: we keep everything in one repository so that anyone can bring up
 the whole infrastructure at once. We've tried alternate methods, e.g.,
 submodules, but we've found the one-big-repo workflow works best for
 us.
-
 
 ## Getting Setup
 
@@ -47,6 +45,7 @@ done by adding the official
 `upstream` remote.
 
 GitHub has two good guides that explain this process in greater detail:
+
 - First [configure a remote for a fork](https://help.github.com/articles/configuring-a-remote-for-a-fork/).
 - Then [sync a fork](https://help.github.com/articles/syncing-a-fork/).
 
@@ -56,10 +55,12 @@ GitHub has two good guides that explain this process in greater detail:
 2. Fetch any changes from the official repository.
     ```git fetch upstream```
 3. Merge any changes into your local copy of the repository.
-    ```
+
+    ```shell
     git checkout master
-  git merge upstream/master
+    git merge upstream/master
     ```
+
     Now your local copy of the repository has all the latest changes. Be sure to rebase any private feature branches you are working on off of this fresh version of `master`.
 4. Push your synchronized branch up to your copy of the repository on GitHub.
     ```git push origin master```
@@ -74,6 +75,7 @@ Additionally please consider reading their section on the
 which this is based.
 
 Other common conventions:
+
 - `master` is the primary branch and represents the official history
   of the project.
 - `master` should always be deployable.
@@ -92,17 +94,19 @@ off of a release as a stable, known good point.
 
 We are in the process of pushing for code quality. Going forward,
 please:
+
 - Follow the [PEP8 Standard](https://www.python.org/dev/peps/pep-0008/)
   (including editor line length).
 - Strive to leave the code base in better shape than when you got it.
 - Add test cases when you add code.
 - Run [Flake8](https://pypi.python.org/pypi/flake8)
-- Run [pydocstyle](https://pypi.org/project/pydocstyle/)
 - Use underscores (e.g., `get_unique`), not camelCase (e.g., not `getUnique`).
 - In docstrings, follow
   [PEP 257](https://www.python.org/dev/peps/pep-0257)
+  - [pydocstyle](https://pypi.org/project/pydocstyle/) is a good tool for validating this.
 - Use [isort](https://github.com/timothycrosley/isort#readme) for
   imports. We have checked in a `.isort.cfg` to help, so you should just have to
   run `isort -rv .`
+- Run [yapf](https://pypi.org/project/yapf/)
 
 We really appreciate your help improving the code quality.

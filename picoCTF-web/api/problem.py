@@ -15,8 +15,9 @@ import api.shell_servers
 import api.stats
 import api.team
 from api.annotations import log_action
-from api.common import (check, InternalException, safe_fail,
-                        SevereInternalException, validate, WebException)
+from api.cache import memoize
+from api.common import (InternalException, SevereInternalException,
+                        WebException, check, safe_fail, validate)
 
 submission_schema = Schema({
     Required("tid"):
@@ -216,7 +217,6 @@ def insert_problem(problem, sid=None):
                 problem["name"]))
 
     db.problems.insert(problem)
-    api.cache.fast_cache.clear()
 
     return problem["pid"]
 
@@ -235,7 +235,6 @@ def remove_problem(pid):
     problem = get_problem(pid=pid)
 
     db.problems.remove({"pid": pid})
-    api.cache.fast_cache.clear()
 
     return problem
 
@@ -266,7 +265,6 @@ def update_problem(pid, updated_problem):
     """
 
     db.problems.update({"pid": pid}, problem)
-    api.cache.fast_cache.clear()
 
     return problem
 
@@ -441,7 +439,7 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
     db = api.db.get_conn()
     validate(submission_schema, {"tid": tid, "pid": pid, "key": key})
 
-    if pid not in get_unlocked_pids(tid, category=None):
+    if pid not in get_unlocked_pids(tid):
         raise InternalException(
             "You can't submit flags to problems you haven't unlocked.")
 
@@ -487,16 +485,13 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
     db.submissions.insert(submission)
 
     if submission["correct"]:
-        api.cache.invalidate_memoization(
-            api.stats.get_score, {"kwargs.tid": tid}, {"kwargs.uid": uid})
-        api.cache.invalidate_memoization(get_unlocked_pids, {"args": tid})
-        api.cache.invalidate_memoization(
-            get_solved_problems, {"kwargs.tid": tid}, {"kwargs.uid": uid})
+        # Immediately invalidate some caches
+        api.stats.get_score(tid=tid, uid=uid, recache=True)
+        api.stats.get_unlocked_pids(tid, recache=True)
+        get_solved_problems(tid=tid, uid=uid, recache=True)
+        api.stats.get_score_progression(tid=tid, uid=uid, recache=True)
 
-        api.cache.invalidate_memoization(api.stats.get_score_progression,
-                                         {"kwargs.tid": tid},
-                                         {"kwargs.uid": uid})
-
+        # Process achievements
         api.achievement.process_achievements("submit", {
             "uid": uid,
             "tid": tid,
@@ -585,7 +580,7 @@ def clear_all_submissions():
     if DEBUG_KEY is not None:
         db = api.db.get_conn()
         db.submissions.remove()
-        api.cache.clear_all()
+        api.cache.clear()
     else:
         raise InternalException("DEBUG Mode must be enabled")
 
@@ -673,12 +668,12 @@ def reevaluate_submissions_for_problem(pid):
 
 def reevaluate_all_submissions():
     """Reevaluate all submissions for all problems."""
-    api.cache.clear_all()
+    api.cache.clear()
     for problem in get_all_problems(show_disabled=True):
         reevaluate_submissions_for_problem(problem["pid"])
 
 
-@api.cache.memoize(timeout=60, fast=True)
+@memoize
 def get_problem(pid=None, name=None, tid=None, show_disabled=True):
     """
     Get a single problem.
@@ -702,7 +697,7 @@ def get_problem(pid=None, name=None, tid=None, show_disabled=True):
     else:
         raise InternalException("Must supply pid or display name")
 
-    if tid is not None and pid not in get_unlocked_pids(tid, category=None):
+    if tid is not None and pid not in get_unlocked_pids(tid):
         raise InternalException("You cannot get this problem")
 
     if not show_disabled:
@@ -751,7 +746,7 @@ def get_all_problems(category=None, show_disabled=False, basic_only=False):
                                                    pymongo.ASCENDING)]))
 
 
-@api.cache.memoize()
+@memoize
 def get_solved_problems(tid=None, uid=None, category=None,
                         show_disabled=False):
     """
@@ -836,7 +831,7 @@ def is_problem_unlocked(problem, solved):
     return unlocked
 
 
-@api.cache.memoize()
+@memoize
 def get_unlocked_pids(tid, category=None):
     """
     Get the unlocked pids for a given team.
@@ -1014,7 +1009,7 @@ def load_published(data):
         for bundle in data["bundles"]:
             insert_bundle(bundle)
 
-    api.cache.clear_all()
+    api.cache.clear()
 
 
 def get_bundle(bid):
@@ -1063,7 +1058,7 @@ def set_bundle_dependencies_enabled(bid, enabled):
         enabled:
     """
     update_bundle(bid, {"dependencies_enabled": enabled})
-    api.cache.clear_all()
+    api.cache.clear()
 
 
 def sanitize_problem_data(data):

@@ -454,22 +454,12 @@ def join_team(team_name, password, uid=None):
                     api.group.join_group(
                         gid=group["gid"], tid=desired_team["tid"])
 
-        # Called from within get_solved_problems, clear first
-        api.cache.invalidate_memoization(api.problem.get_unlocked_pids,
-                                         {"args": [desired_team["tid"]]})
-
-        # Clear solved
-        api.cache.invalidate_memoization(api.problem.get_solved_problems,
-                                         {"kwargs.tid": desired_team["tid"]},
-                                         {"kwargs.uid": user["uid"]})
-
-        # Make sure team score is reflected as well
-        api.cache.invalidate_memoization(api.stats.get_score,
-                                         {"kwargs.tid": desired_team["tid"]})
-
-        # Update score progression
-        api.cache.invalidate_memoization(api.stats.get_score_progression,
-                                         {"kwargs.tid": desired_team["tid"]})
+        # Immediately invalidate some caches
+        api.problem.get_unlocked_pids(desired_team['tid'], recache=True)
+        api.problem.get_solved_problems(tid=desired_team['tid'],
+                                        uid=user['uid'], recache=True)
+        api.stats.get_score(tid=desired_team['tid'], recache=True)
+        api.stats.get_score_progression(tid=desired_team['tid'], recache=True)
 
         return True
     else:
