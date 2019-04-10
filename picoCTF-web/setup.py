@@ -92,7 +92,6 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'api_manager=api_manager:main',
             'daemon_manager=daemon_manager:main',
         ],
     },
