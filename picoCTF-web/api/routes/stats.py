@@ -57,7 +57,7 @@ def get_scoreboard_hook(board, page):
     # Old board, limit 1-50
     if board is None:
         result = {'tid': 0, 'groups': []}
-        global_board = api.stats.get_all_team_scores(eligible=True, country=None, show_ineligible=True)
+        global_board = api.stats.get_all_team_scores(include_ineligible=True)
         result['global'] = {
             'name': 'global',
             'pages': math.ceil(len(global_board) / scoreboard_page_len),
@@ -73,7 +73,7 @@ def get_scoreboard_hook(board, page):
             result['global']['start_page'] = math.ceil((global_pos + 1) / 50)
 
             result['country'] = user["country"]
-            student_board = api.stats.get_all_team_scores(eligible=True, country=None, show_ineligible=False)
+            student_board = api.stats.get_all_team_scores()
             student_pos = get_user_pos(student_board, user["tid"])
             start_slice = math.floor(student_pos / 50) * 50
             result['student'] = {
@@ -121,9 +121,9 @@ def get_scoreboard_hook(board, page):
                             group_board[start:end]
                     })
             elif board == "global":
-                result = api.stats.get_all_team_scores(eligible=True, country=None, show_ineligible=True)[start:end]
+                result = api.stats.get_all_team_scores(include_ineligible=True)[start:end]
             elif board == "student":
-                result = api.stats.get_all_team_scores(eligible=True, country=None, show_ineligible=False)[start:end]
+                result = api.stats.get_all_team_scores()[start:end]
             else:
                 result = []
             return WebSuccess(data=result)
@@ -134,20 +134,12 @@ def get_scoreboard_hook(board, page):
 @blueprint.route('/top_teams/score_progression', methods=['GET'])
 @api_wrapper
 def get_top_teams_score_progressions_hook():
-    eligible = request.args.get("eligible", "true")
-    eligible = bson.json_util.loads(eligible)
-
-    show_ineligible = request.args.get("show_ineligible", "false")
-    show_ineligible = bson.json_util.loads(show_ineligible)
-
-    country = None
-    # if api.auth.is_logged_in():
-    #    user = api.user.get_user()
-    #    if user["country"] in ["US"] and not show_ineligible:
-    #        country = user["country"]
+    include_ineligible = request.args.get("include_ineligible", "false")
+    include_ineligible = bson.json_util.loads(include_ineligible)
 
     return WebSuccess(
-        data=api.stats.get_top_teams_score_progressions(eligible=eligible, country=country, show_ineligible=show_ineligible))
+        data=api.stats.get_top_teams_score_progressions(
+            include_ineligible=include_ineligible))
 
 
 @blueprint.route('/group/score_progression', methods=['GET'])
@@ -155,7 +147,7 @@ def get_top_teams_score_progressions_hook():
 def get_group_top_teams_score_progressions_hook():
     gid = request.args.get("gid", None)
     return WebSuccess(
-        data=api.stats.get_top_teams_score_progressions(gid=gid, show_ineligible=True))
+        data=api.stats.get_top_teams_score_progressions(gid=gid, include_ineligible=True))
 
 
 @blueprint.route('/registration', methods=['GET'])
