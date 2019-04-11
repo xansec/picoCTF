@@ -24,10 +24,10 @@ Additionally, the picoCTF-web component provides a number of features that are u
 
 ## Components
 
-1. [api](./api): This is the picoCTF-web Flask API.
+1. [api](./api): The picoCTF-web Flask API.
 2. [tests](./tests): Automated tests for picoCTF-web components.
-3. [daemons](./daemons): Separate scripts that essentially run as cronjobs on the web server.
-4. [web](./ansible). A frontend for interacting with the Flask API.
+3. [daemons](./daemons): Cron job-style scripts that are run by `daemon_manager.py` on the web server.
+4. [web](./web). A frontend for interacting with the Flask API.
 
 ## Local Development <!-- markdownlint-disable MD014 -->
 
@@ -39,7 +39,7 @@ You can easily bring up an instance of the picoCTF-web API in Flask's developmen
     $ pip install -e .[dev]
     ```
 
-2. The picoCTF-web API has a dependency on a MongoDB server, and by default looks for one at `127.0.0.1:27017`. An easy way to bring one up is to use Docker:
+2. The picoCTF-web API has a dependency on a MongoDB server, and by default looks for one at `127.0.0.1:27017`. An easy way to bring one up is with Docker:
 
     ```shell
     $ docker run -p 27017:27017 mongo
@@ -55,6 +55,6 @@ You can easily bring up an instance of the picoCTF-web API in Flask's developmen
 
 ## Testing
 
-A MongoDB server also needs to be available at `127.0.0.1:27017` when running the tests. They will use the `ctf_test` database, so any data in the main `ctf` database from not be impacted by running the tests.
+A MongoDB server also needs to be available at `127.0.0.1:27017` when running the tests. Tests use the `ctf_test` database, so any data in the main `ctf` database (used by default with `flask run`) from not be impacted.
 
 Once a MongoDB server is running, simply run `pytest` from within the `picoCTF-web` root directory. This will also generate an HTML code coverage report at `coverage_report/`.
