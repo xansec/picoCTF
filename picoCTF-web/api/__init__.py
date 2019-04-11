@@ -6,7 +6,7 @@ import traceback
 from datetime import datetime
 
 from bson import json_util
-from flask import Flask, request, session
+from flask import Flask, session
 from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
 
@@ -21,15 +21,27 @@ import api.routes.stats
 import api.routes.team
 import api.routes.user
 from api.annotations import jsonify
-from api.common import (InternalException, SevereInternalException, WebError,
-                        WebException, WebSuccess)
+from api.common import (
+  InternalException,
+  SevereInternalException,
+  WebError,
+  WebException,
+  WebSuccess
+)
+
+log = logging.getLogger(__name__)
 
 
 def get_origin_logger(exception):
     """Get the logger for the module where an exception was raised."""
-    origin = inspect.getmodule(inspect.trace()[-1]).__name__
-    origin_logger = logging.getLogger(origin)
-    return origin_logger
+    try:
+        origin = inspect.getmodule(inspect.trace()[-1]).__name__
+        origin_logger = logging.getLogger(origin)
+        return origin_logger
+    except Exception as e:
+        log.error('Failed to get origin logger for exception: ' + str(e) +
+                  ' - returning fallback logger')
+        return logging.getLogger('origin_fallback')
 
 
 def update_mail_config(app):
@@ -117,21 +129,17 @@ def create_app(test_config=None):
         response.headers.add('Cache-Control', 'no-store')
         if api.auth.is_logged_in():
             # Flask 1.0+ bug loads config SESSION_COOKIE_DOMAIN
-            # correctly as None but later converts it to bool false. (@todo)
+            # correctly as None but later converts it to bool false.
             domain = app.config['SESSION_COOKIE_DOMAIN']
             if not domain:
                 domain = None
 
-            if 'token' in session:
-                response.set_cookie('token', session['token'], domain=domain)
-            else:
+            if 'token' not in session:
                 csrf_token = api.common.token()
                 session['token'] = csrf_token
-                response.set_cookie('token', csrf_token, domain=domain)
+            response.set_cookie('token', session['token'], domain=domain)
 
-        # JB: This is a hack. We need a better solution (@todo)
-        if request.path[0:19] != "/api/autogen/serve/":
-            response.mimetype = 'application/json'
+        response.mimetype = 'application/json'
         return response
 
     # Add a route for getting the time
