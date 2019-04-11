@@ -14,8 +14,13 @@ import api.stats
 import api.team
 import api.user
 from api.annotations import log_action
-from api.common import (check, InternalException, safe_fail, validate,
-                        WebException)
+from api.common import (
+  check,
+  InternalException,
+  safe_fail,
+  validate,
+  WebException
+)
 
 new_team_schema = Schema({
     Required("team_name"):
@@ -171,6 +176,14 @@ def create_new_team_request(params, uid=None):
         raise InternalException(
             "You can only create one new team per user account!")
 
+    create_team({
+        "team_name": params["team_name"],
+        "password": api.common.hash_password(params["team_password"]),
+        "affiliation": current_team["affiliation"],
+        "creator": user["uid"],
+        "country": user["country"],
+    })
+
     return join_team(params["team_name"], params["team_password"], user["uid"])
 
 
@@ -184,7 +197,6 @@ def create_team(params):
         team_name: Name of the team
         school: Name of the school
         password: Team's hashed password
-        eligible: the teams eligibility, inherited from creator
         country: primary country of team
         creator: uid of creating user
     Returns:
@@ -232,7 +244,6 @@ def get_team_members(tid=None, name=None, show_disabled=True):
             "teacher": 1,
             "country": 1,
             "usertype": 1,
-            "eligible": 1,
         }))
     return [
         user for user in users
@@ -307,38 +318,53 @@ def get_team_information(tid=None, gid=None):
         solved_problem.pop("organization", None)
         team_info["solved_problems"].append(solved_problem)
 
+    team_info["eligible"] = is_eligible(tid)
+
     return team_info
 
 
-def get_all_teams(ineligible=False,
-                  eligible=True,
-                  country=None,
-                  show_ineligible=False):
+def is_eligible(tid):
+    """
+    Return a team's eligibility for the current event.
+
+    Args:
+        tid: the team id
+    Returns:
+        True or False
+    """
+    members = get_team_members(tid)
+    conditions = api.config.get_settings()['eligibility']
+    for member in members:
+        is_eligible = all(
+            (member[k] == conditions[k] for k in conditions.keys()))
+        if not is_eligible:
+            return False
+    return True
+
+
+def get_all_teams(include_ineligible=False, country=None):
     """
     Retrieve all teams.
+
+    Args:
+        include_ineligible: include ineligible teams in result
 
     Returns:
         A list of all of the teams.
 
     """
-    if show_ineligible:
-        match = {}
-    else:
-        conditions = []
-        if ineligible:
-            conditions.append({"eligible": False})
-        elif eligible:
-            conditions.append({"eligible": True})
-        match = {"$or": conditions}
-
+    # Ignore empty teams (remnants of single player self-team ids)
+    match = {"size": {"$gt": 0}}
     if country is not None:
         match.update({"country": country})
 
-    # Ignore empty teams (remnants of single player self-team ids)
-    match.update({"size": {"$gt": 0}})
-
     db = api.db.get_conn()
-    return list(db.teams.find(match, {"_id": 0}))
+    teams = list(db.teams.find(match, {"_id": 0}))
+
+    # Filter out ineligible teams, if desired
+    if not include_ineligible:
+        teams = [t for t in teams if is_eligible(t['tid'])]
+    return teams
 
 
 def join_team_request(params):
@@ -420,21 +446,14 @@ def join_team(team_name, password, uid=None):
             }},
             new=True)
 
-        # Team country is no longer consistent amongst members.
-        # Flag as mixed and ineligible
+        # Team country is no longer consistent amongst members - set as mixed
         if user["country"] != desired_team["country"]:
             db.teams.update({"tid": desired_team["tid"]},
-                            {"$set": {
-                                "country": "??",
-                                "eligible": False
-                            }})
-
-        # Ineligible user has spoiled team eligibility
-        if not user["eligible"] and desired_team["eligible"]:
-            db.teams.update({"tid": desired_team["tid"]},
-                            {"$set": {
-                                "eligible": False
-                            }})
+                            {
+                                "$set": {
+                                    "country": "??",
+                                }
+                            })
 
         if not desired_team_size_update or not current_team_size_update:
             raise InternalException("There was an issue switching your team!" +

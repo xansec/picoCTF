@@ -369,7 +369,6 @@ def test_create_user(client):
         USER_DEMOGRAPHICS['demo[age]']
     assert db_user['admin'] is True  # first account in an empty DB is an admin
     assert db_user['teacher'] is True  # ...and admins are also teachers
-    assert db_user['eligible'] is True
     assert db_user['verified'] is True
 
 

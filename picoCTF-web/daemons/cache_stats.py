@@ -13,18 +13,22 @@ def run():
         api.stats.get_registration_count(recache=True)
 
         print("Caching the public scoreboard entries...")
-        api.stats.get_all_team_scores(eligible=True, country=None, show_ineligible=False, recache=True)
-        api.stats.get_all_team_scores(eligible=True, country=None, show_ineligible=True, recache=True)
+        api.stats.get_all_team_scores(recache=True)
+        api.stats.get_all_team_scores(include_ineligible=True, recache=True)
 
         print("Caching the public scoreboard graph...")
-        api.stats.get_top_teams_score_progressions(eligible=True, country=None, show_ineligible=False, recache=True)
-        api.stats.get_top_teams_score_progressions(eligible=True, country=None, show_ineligible=True, recache=True)
+        api.stats.get_top_teams_score_progressions(recache=True)
+        api.stats.get_top_teams_score_progressions(
+            include_ineligible=True, recache=True)
 
         print("Caching the scoreboard graph for each group...")
         for group in api.group.get_all_groups():
             api.stats.get_top_teams_score_progressions(
                 gid=group['gid'],
-                show_ineligible=True,
+                recache=True)
+            api.stats.get_top_teams_score_progressions(
+                gid=group['gid'],
+                include_ineligible=True,
                 recache=True)
             api.stats.get_group_scores(gid=group['gid'], recache=True)
 

@@ -86,7 +86,6 @@ def get_group_scores(gid=None, name=None):
                 "name": team['team_name'],
                 "tid": team['tid'],
                 "affiliation": team["affiliation"],
-                "eligible": team["eligible"],
                 "score": get_score(tid=team['tid'])
             })
 
@@ -110,32 +109,20 @@ def get_group_average_score(gid=None, name=None):
 
 # Stored by the cache_stats daemon
 @memoize
-def get_all_team_scores(eligible=None, country=None, show_ineligible=False):
+def get_all_team_scores(country=None, include_ineligible=False):
     """
     Get the score for every team in the database.
 
     Args:
-        eligible: required boolean field
-        show_ineligible: ignore eligibility, show all
         country: optional restriction by country
+        include_ineligible: include ineligible teams
 
     Returns:
         A list of dictionaries with name and score
 
     """
-    if show_ineligible:
-        teams = api.team.get_all_teams(show_ineligible=True)
-    else:
-        if eligible is None:
-            raise InternalException("Eligible must be set to either " +
-                                    "true or false")
-        if eligible:
-            teams = api.team.get_all_teams(
-                eligible=True, country=country, ineligible=False)
-        else:
-            teams = api.team.get_all_teams(
-                eligible=False, country=country, ineligible=True)
-
+    teams = api.team.get_all_teams(include_ineligible=include_ineligible,
+                                   country=country)
     db = api.db.get_conn()
 
     result = []
@@ -315,27 +302,25 @@ def get_score_progression(tid=None, uid=None, category=None):
     return result
 
 
-def get_top_teams(gid=None, eligible=None, country=None,
-                  show_ineligible=False):
+def get_top_teams(gid=None, country=None, include_ineligible=False):
     """
     Find the top teams.
 
     Args:
-        gid: if specified, return the top teams from this group only
-        eligible: required boolean field
+        gid: if specified, return the top teams from this group only.
+             overrides country and include_ineligible.
+
+        country: if specified, return the top teams from the country only
+        include_ineligible: include ineligible teams in result
 
     Returns:
         The top teams and their scores
 
     """
     if gid is None:
-        if eligible is None:
-            raise InternalException(
-                "Eligible must be set to either true or false")
         all_teams = api.stats.get_all_team_scores(
-            eligible=eligible,
             country=country,
-            show_ineligible=show_ineligible)
+            include_ineligible=include_ineligible)
     else:
         all_teams = api.stats.get_group_scores(gid=gid)
     return all_teams if len(all_teams) < top_teams else all_teams[:top_teams]
@@ -369,19 +354,17 @@ def get_problem_solves(name=None, pid=None):
 
 # Stored by the cache_stats daemon
 @memoize
-def get_top_teams_score_progressions(gid=None,
-                                     eligible=True,
-                                     country=None,
-                                     show_ineligible=False):
+def get_top_teams_score_progressions(gid=None, country=None,
+                                     include_ineligible=False):
     """
     Get the score progressions for the top teams.
 
     Args:
         gid: If specified, compute the progressions for the top teams
-             from this group only
+             from this group only. Overrides country and include_ineligible.
+
         country: If specified, limit teams by country
-        eligible: If specified, limit teams to eligible ones
-        show_ineligible: if specified, show all teams, eligible and eligible
+        include_ineligible: if specified, include ineligible teams in result
 
     Returns:
         The top teams and their score progressions.
@@ -394,12 +377,11 @@ def get_top_teams_score_progressions(gid=None,
         "score_progression": get_score_progression(tid=team["tid"]),
     } for team in get_top_teams(
         gid=gid,
-        eligible=eligible,
         country=country,
-        show_ineligible=show_ineligible)]
+        include_ineligible=include_ineligible)]
 
 
-@memoize
+@memoize(timeout=300)
 def check_invalid_instance_submissions(gid=None):
     """Get submissions of keys for the wrong problem instance."""
     db = api.db.get_conn()

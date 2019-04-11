@@ -176,7 +176,6 @@ def create_user(username,
                 usertype,
                 country,
                 demo,
-                eligible,
                 teacher=False,
                 admin=False,
                 verified=False):
@@ -196,8 +195,6 @@ def create_user(username,
         country: primary country (dependent on usertype)
         demo: dict of demographic data
         teacher: whether this account is a teacher
-        eligible: whether this account is eligible for prizes
-                  (or at least, not ineligible)
     Returns:
         Returns the uid of the newly created user
 
@@ -244,7 +241,6 @@ def create_user(username,
         'demo': demo,
         'teacher': teacher,
         'admin': admin,
-        'eligible': eligible,
         'disabled': False,
         'verified': not settings["email"]["email_verification"] or verified,
         'extdata': {},
@@ -319,7 +315,6 @@ def create_simple_user_request(params):
             firstname: user's first name
             lastname: user's first name
             email: user's email
-            eligibility: True or False
             country: 2-digit country code
             affiliation: user's affiliation
             usertype: "student", "teacher" or other
@@ -327,8 +322,6 @@ def create_simple_user_request(params):
             gid: group registration
             rid: registration id
     """
-    params["eligibility"] = params["usertype"] == "student"
-
     validate(user_schema, params)
 
     if (api.config.get_settings()["email"]["parent_verification_email"] and
@@ -378,7 +371,6 @@ def create_simple_user_request(params):
     team_params = {
         "team_name": params["username"],
         "password": api.common.token(),
-        "eligible": params["eligibility"],
         "affiliation": params["affiliation"],
         "country": params["country"]
     }
@@ -400,7 +392,6 @@ def create_simple_user_request(params):
         params["usertype"],
         params["country"],
         params["demo"],
-        params["eligibility"],
         teacher=user_is_teacher,
         verified=user_was_invited)
 
