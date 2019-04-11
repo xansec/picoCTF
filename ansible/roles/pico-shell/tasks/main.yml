@@ -35,6 +35,11 @@
     group: root
     mode: 0755
 
+- name: Disable inter-user messages by default
+  lineinfile:
+    path: /etc/profile
+    line: mesg n
+
 # Missing
 # journald
 # services
