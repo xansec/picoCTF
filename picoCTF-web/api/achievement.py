@@ -12,7 +12,8 @@ import api.db
 import api.user
 from api.annotations import log_action
 from api.common import (check, InternalException, safe_fail,
-                        SevereInternalException, validate, WebException)
+                        validate, WebException)
+from api.models import Achievement, AchievementSchema
 
 achievement_schema = Schema({
     Required("name"):
@@ -48,45 +49,16 @@ achievement_schema = Schema({
 })
 
 
-def get_all_events(show_disabled=False):
+def _get_achievement(aid, show_disabled=False):
     """
-    Get the set of distinct achievement events.
-
-    Args:
-        show_disabled: Whether to include events that are
-                       only on disabled achievements
-    Returns:
-        The set of distinct achievement events.
-    """
-    db = api.db.get_conn()
-
-    match = {}
-    if not show_disabled:
-        match.update({"disabled": False})
-
-    return db.achievemets.find(match).distinct("event")
-
-
-def get_achievement(aid=None, name=None, show_disabled=False):
-    """
-    Get a single achievement.
+    Get a single achievement by aid.
 
     Args:
         aid: the achievement id
-        name: the name of the achievement
         show_disabled: Boolean indicating whether or not to
                        show disabled achievements.
     """
-    db = api.db.get_conn()
-
-    match = {}
-
-    if aid is not None:
-        match.update({'aid': aid})
-    elif name is not None:
-        match.update({'name': name})
-    else:
-        raise InternalException("Must supply aid or display name")
+    match = {'aid': aid}
 
     if not show_disabled:
         match.update({"disabled": False})
@@ -95,13 +67,12 @@ def get_achievement(aid=None, name=None, show_disabled=False):
     achievement = db.achievements.find_one(match, {"_id": 0})
 
     if achievement is None:
-        raise SevereInternalException("Could not find achievement! You gave " +
-                                      str(match))
-
+        raise InternalException("Could not find achievement! DB query: {}"
+                                .format(str(match)))
     return achievement
 
 
-def get_all_achievements(event=None, show_disabled=False):
+def _get_all_achievements(event=None, show_disabled=False):
     """
     Get all of the achievements in the database.
 
@@ -123,9 +94,8 @@ def get_all_achievements(event=None, show_disabled=False):
         match.update({'disabled': False})
 
     return list(
-        db.achievements.find(match, {
-            "_id": 0
-        }).sort('score', pymongo.ASCENDING))
+        db.achievements.find(match, {"_id": 0}).sort(
+            'score', pymongo.ASCENDING))
 
 
 def get_earned_achievement_instances(tid=None, uid=None, aid=None):
@@ -207,7 +177,7 @@ def get_earned_achievements_display(tid=None, uid=None):
     set_earned_achievements_seen(tid=tid, uid=uid)
 
     for instance_achievement in instance_achievements:
-        achievement = get_achievement(aid=instance_achievement["aid"])
+        achievement = _get_achievement(instance_achievement["aid"])
 
         # Make sure not to override name or description.
         achievement.pop("name")
@@ -235,7 +205,7 @@ def get_earned_achievements(tid=None, uid=None):
     set_earned_achievements_seen(tid=tid, uid=uid)
 
     for achievement in achievements:
-        achievement.update(get_achievement(aid=achievement["aid"]))
+        achievement.update(_get_achievement(achievement["aid"]))
         achievement.pop("data")
 
     return achievements
@@ -266,7 +236,7 @@ def get_processor(aid):
 
     """
     try:
-        path = get_achievement(aid=aid, show_disabled=True)["processor"]
+        path = _get_achievement(aid, show_disabled=True)["processor"]
         base_path = api.config.get_settings(
         )["achievements"]["processor_base_path"]
         return SourceFileLoader(path[:-3], join(base_path, path)).load_module()
@@ -291,7 +261,7 @@ def process_achievement(aid, data):
     if data.get("tid", None) is None:
         data["tid"] = api.user.get_user(uid=data["uid"])["tid"]
 
-    get_achievement(aid=aid, show_disabled=True)
+    _get_achievement(aid=aid, show_disabled=True)
     processor = get_processor(aid)
 
     return processor.process(api, data)
@@ -338,7 +308,7 @@ def process_achievements(event, data):
         data["tid"] = api.user.get_user(uid=data["uid"])["tid"]
 
     eligible_achievements = [
-        achievement for achievement in get_all_achievements(event=event)
+        achievement for achievement in _get_all_achievements(event=event)
         if achievement["aid"] not in get_earned_aids(
             tid=data["tid"]) or achievement.get("multiple", False)
     ]
@@ -364,9 +334,10 @@ def insert_achievement(achievement):
     Insert an achievement object into the database.
 
     Args:
-        achievement: the achievement object loaded from json.
-    Returns:
-        The achievement's aid.
+        achievement(str): the achievement definition as JSON.
+    Raises:
+        WebException: an achievement with the same name already exists,
+                      or insertion into the database failed
 
     """
     db = api.db.get_conn()
@@ -406,7 +377,7 @@ def update_achievement(aid, updated_achievement):
             raise WebException(
                 "Achievement with identical name already exists.")
 
-    achievement = get_achievement(aid=aid, show_disabled=True).copy()
+    achievement = _get_achievement(aid, show_disabled=True).copy()
     achievement.update(updated_achievement)
 
     # pass validation by removing/re-adding aid
