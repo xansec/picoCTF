@@ -273,12 +273,12 @@ def request_minigame_completion_hook():
         )
 
 
-@blueprint.route("/clear_minigame", methods=['POST'])
+@blueprint.route("/clear_minigames", methods=['POST'])
 @api_wrapper
 @check_csrf
 @require_login
 @block_before_competition(WebError("The competition has not begun yet!"))
-def request_minigame_completion_hook():
+def request_minigame_clear_hook():
     # if DEBUG_KEY is not None:
 
     db = api.common.get_conn()
