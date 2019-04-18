@@ -79,12 +79,23 @@ def submit_key_hook():
     method = request.form.get('method', '')
     ip = request.remote_addr
 
-    result = api.problem.submit_key(tid, pid, key, method, uid, ip)
+    correct, previously_solved = api.problem.submit_key(
+        tid, pid, key, method, uid, ip)
 
-    if result['correct']:
-        return WebSuccess(result['message'], result['points'])
-    else:
-        return WebError(result['message'], {'code': 'wrong'})
+    if correct and not previously_solved:
+        return WebSuccess("That is correct!")
+    elif not correct and not previously_solved:
+        return WebError("That is incorrect!")
+    elif correct and previously_solved:
+        return WebSuccess(
+            'Flag correct: however, you have already received points ' +
+            'for that flag.'
+        )
+    elif not correct and previously_solved:
+        return WebError(
+            'Flag incorrect: please note that you or your team have ' +
+            'already solved this problem.'
+        )
 
 
 @blueprint.route('/<path:pid>', methods=['GET'])

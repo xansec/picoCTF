@@ -64,7 +64,7 @@ class StatsHandler(logging.StreamHandler):
                 "pid": pid,
                 "key": key,
                 "method": method,
-                "success": result["correct"]
+                "success": result[0]
             },
         "api.problem_feedback.add_problem_feedback":
             lambda pid, uid, feedback, result=None: {
