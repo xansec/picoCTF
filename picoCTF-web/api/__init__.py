@@ -20,14 +20,8 @@ import api.routes.problem
 import api.routes.stats
 import api.routes.team
 import api.routes.user
-from api.annotations import jsonify
-from api.common import (
-  InternalException,
-  SevereInternalException,
-  WebError,
-  WebException,
-  WebSuccess
-)
+from api.common import (InternalException, SevereInternalException, WebError,
+                        WebException, WebResponse, WebSuccess)
 
 log = logging.getLogger(__name__)
 
@@ -93,27 +87,25 @@ def create_app(test_config=None):
     # Register error handlers
     @app.errorhandler(WebException)
     def handle_web_exception(e):
-        return json_util.dumps(WebError(e.args[0], e.data))
+        return WebError(e.args[0], e.data).as_json()
 
     @app.errorhandler(InternalException)
     def handle_internal_exception(e):
         get_origin_logger(e).error(traceback.format_exc())
-        return json_util.dumps(WebError(e.args[0]))
+        return WebError(e.args[0]).as_json()
 
     @app.errorhandler(SevereInternalException)
     def handle_severe_internal_exception(e):
         get_origin_logger(e).critical(traceback.format_exc())
-        return json_util.dumps(
-            WebError(
+        return WebError(
                 "There was a critical internal error. " +
                 "Contact an administrator."
-            ))
+            ).as_json()
 
     @app.errorhandler(Exception)
     def handle_generic_exception(e):
         get_origin_logger(e).error(traceback.format_exc())
-        return json_util.dumps(
-            WebError("An error occurred. Please contact an administrator."))
+        return WebError("An error occurred. Please contact an administrator.").as_json()
 
     # Configure logging
     with app.app_context():
@@ -144,8 +136,7 @@ def create_app(test_config=None):
 
     # Add a route for getting the time
     @app.route('/api/time', methods=['GET'])
-    @jsonify
-    def get_time():
-        return WebSuccess(data=int(datetime.utcnow().timestamp()))
+    def get_time() -> WebResponse:
+        return WebSuccess(data=int(datetime.utcnow().timestamp())).as_json()
 
     return app

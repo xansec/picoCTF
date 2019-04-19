@@ -8,7 +8,7 @@ import api.auth
 import api.stats
 import api.team
 import api.user
-from api.annotations import block_before_competition, jsonify, require_login
+from api.annotations import block_before_competition, require_login
 from api.common import WebError, WebSuccess
 
 blueprint = Blueprint("stats_api", __name__)
@@ -16,30 +16,28 @@ scoreboard_page_len = 50
 
 
 @blueprint.route('/team/solved_problems', methods=['GET'])
-@jsonify
 @require_login
 @block_before_competition()
-def get_team_solved_problems_hook():
+def get_team_solved_problems_hook() -> str:
     tid = request.args.get("tid", None)
     stats = {
         "problems": api.stats.get_problems_by_category(),
         "members": api.stats.get_team_member_stats(tid)
     }
 
-    return WebSuccess(data=stats)
+    return WebSuccess(data=stats).as_json()
 
 
 @blueprint.route('/team/score_progression', methods=['GET'])
-@jsonify
 @require_login
 @block_before_competition()
-def get_team_score_progression():
+def get_team_score_progression() -> str:
     category = request.args.get("category", None)
 
     tid = api.user.get_team()["tid"]
 
     return WebSuccess(
-        data=api.stats.get_score_progression(tid=tid, category=category))
+        data=api.stats.get_score_progression(tid=tid, category=category)).as_json()
 
 
 @blueprint.route(
@@ -48,9 +46,8 @@ def get_team_score_progression():
         'page': 1
     }, methods=['GET'])
 @blueprint.route('/scoreboard/<board>/<int:page>', methods=['GET'])
-@jsonify
 @block_before_competition()
-def get_scoreboard_hook(board, page):
+def get_scoreboard_hook(board, page) -> str:
     def get_user_pos(scoreboard, tid):
         for pos, team in enumerate(scoreboard):
             if team["tid"] == tid:
@@ -110,7 +107,7 @@ def get_scoreboard_hook(board, page):
                     math.ceil((group_pos + 1) / 50),
                 })
 
-        return WebSuccess(data=result)
+        return WebSuccess(data=result).as_json()
     else:
         if board in ["groups", "global", "student"]:
             # 1-index page
@@ -134,32 +131,29 @@ def get_scoreboard_hook(board, page):
                 result = api.stats.get_all_team_scores()[start:end]
             else:
                 result = []
-            return WebSuccess(data=result)
+            return WebSuccess(data=result).as_json()
         else:
-            return WebError("A valid board must be specified")
+            return WebError("A valid board must be specified").as_json()
 
 
 @blueprint.route('/top_teams/score_progression', methods=['GET'])
-@jsonify
-def get_top_teams_score_progressions_hook():
+def get_top_teams_score_progressions_hook() -> str:
     include_ineligible = request.args.get("include_ineligible", "false")
     include_ineligible = json_util.loads(include_ineligible)
 
     return WebSuccess(
         data=api.stats.get_top_teams_score_progressions(
-            include_ineligible=include_ineligible))
+            include_ineligible=include_ineligible)).as_json()
 
 
 @blueprint.route('/group/score_progression', methods=['GET'])
-@jsonify
-def get_group_top_teams_score_progressions_hook():
+def get_group_top_teams_score_progressions_hook() -> str:
     gid = request.args.get("gid", None)
     return WebSuccess(
         data=api.stats.get_top_teams_score_progressions(
-            gid=gid, include_ineligible=True))
+            gid=gid, include_ineligible=True)).as_json()
 
 
 @blueprint.route('/registration', methods=['GET'])
-@jsonify
-def get_registration_count_hook():
-    return WebSuccess(data=api.stats.get_registration_count())
+def get_registration_count_hook() -> str:
+    return WebSuccess(data=api.stats.get_registration_count()).as_json()

@@ -10,9 +10,15 @@ import api.group
 import api.stats
 import api.team
 import api.user
-from api.annotations import check_csrf, jsonify, require_login, require_teacher
-from api.common import (WebError, WebException, WebSuccess, check, safe_fail,
-                        validate)
+from api.annotations import check_csrf, require_login, require_teacher
+from api.common import (
+  check,
+  safe_fail,
+  validate,
+  WebError,
+  WebException,
+  WebSuccess
+)
 
 register_group_schema = Schema({
     Required("group-name"):
@@ -52,9 +58,8 @@ blueprint = Blueprint("group_api", __name__)
 
 
 @blueprint.route('', methods=['GET'])
-@jsonify
 @require_login
-def get_group_hook():
+def get_group_hook() -> str:
     name = request.form.get("group-name")
     owner = request.form.get("group-owner")
     gid = request.form.get("gid")
@@ -69,14 +74,13 @@ def get_group_hook():
     roles = api.group.get_roles_in_group(gid=group["gid"], uid=user["uid"])
 
     if not roles["member"] and not roles["teacher"]:
-        return WebError("You are not a member of this classroom.")
+        return WebError("You are not a member of this classroom.").as_json()
 
-    return WebSuccess(data=group)
+    return WebSuccess(data=group).as_json()
 
 
 @blueprint.route('/settings', methods=['GET'])
-@jsonify
-def get_group_settings_hook():
+def get_group_settings_hook() -> str:
     gid = request.args.get("gid")
     group = api.group.get_group(gid=gid)
 
@@ -85,13 +89,12 @@ def get_group_settings_hook():
         "settings": api.group.get_group_settings(gid=group["gid"])
     }
 
-    return WebSuccess(data=prepared_data)
+    return WebSuccess(data=prepared_data).as_json()
 
 
 @blueprint.route('/settings', methods=['POST'])
-@jsonify
 @require_teacher
-def change_group_settings_hook():
+def change_group_settings_hook() -> str:
     gid = request.form.get("gid")
     settings = json.loads(request.form.get("settings"))
 
@@ -102,16 +105,16 @@ def change_group_settings_hook():
 
     if roles["teacher"]:
         api.group.change_group_settings(group["gid"], settings)
-        return WebSuccess(message="Classroom settings changed successfully.")
+        return WebSuccess(
+            message="Classroom settings changed successfully.").as_json()
     else:
         return WebError(
-            message="You do not have sufficient privilege to do that.")
+            message="You do not have sufficient privilege to do that.").as_json()
 
 
 @blueprint.route('/invite', methods=['POST'])
-@jsonify
 @require_teacher
-def invite_email_to_group_hook():
+def invite_email_to_group_hook() -> str:
     gid = request.form.get("gid")
     email = request.form.get("email")
     role = request.form.get("role")
@@ -120,10 +123,10 @@ def invite_email_to_group_hook():
 
     if gid is None or email is None or len(email) == 0:
         return WebError(
-            message="You must specify a gid and email address to invite.")
+            message="You must specify a gid and email address to invite.").as_json()
 
     if role not in ["member", "teacher"]:
-        return WebError(message="A user's role is either a member or teacher.")
+        return WebError(message="A user's role is either a member or teacher.").as_json()
 
     group = api.group.get_group(gid=gid)
     roles = api.group.get_roles_in_group(group["gid"], uid=user["uid"])
@@ -131,74 +134,69 @@ def invite_email_to_group_hook():
     if roles["teacher"]:
         api.email.send_email_invite(
             group["gid"], email, teacher=(role == "teacher"))
-        return WebSuccess(message="Email invitation has been sent.")
+        return WebSuccess(message="Email invitation has been sent.").as_json()
     else:
         return WebError(
-            message="You do not have sufficient privilege to do that.")
+            message="You do not have sufficient privilege to do that.").as_json()
 
 
 @blueprint.route('/list')
-@jsonify
 @require_login
-def get_group_list_hook():
+def get_group_list_hook() -> str:
     user = api.user.get_user()
-    return WebSuccess(data=api.team.get_groups(uid=user["uid"]))
+    return WebSuccess(data=api.team.get_groups(uid=user["uid"])).as_json()
 
 
 @blueprint.route('/teacher_information', methods=['GET'])
-@jsonify
 @require_teacher
-def get_teacher_information_hook(gid=None):
+def get_teacher_information_hook(gid=None) -> str:
     gid = request.args.get("gid")
 
     user = api.user.get_user()
     roles = api.group.get_roles_in_group(gid, uid=user["uid"])
 
     if not roles["teacher"]:
-        return WebError("You are not a teacher for this classroom.")
+        return WebError("You are not a teacher for this classroom.").as_json()
 
-    return WebSuccess(data=api.group.get_teacher_information(gid=gid))
+    return WebSuccess(data=api.group.get_teacher_information(gid=gid)).as_json()
 
 
 @blueprint.route('/member_information', methods=['GET'])
-@jsonify
 @require_teacher
-def get_member_information_hook(gid=None):
+def get_member_information_hook(gid=None) -> str:
     gid = request.args.get("gid")
 
     user = api.user.get_user()
     roles = api.group.get_roles_in_group(gid, uid=user["uid"])
 
     if not roles["teacher"]:
-        return WebError("You are not a teacher for this classroom.")
+        return WebError("You are not a teacher for this classroom.").as_json()
 
-    return WebSuccess(data=api.group.get_member_information(gid=gid))
+    return WebSuccess(data=api.group.get_member_information(gid=gid)).as_json()
 
 
 @blueprint.route('/score', methods=['GET'])
-@jsonify
 @require_teacher
-def get_group_score_hook():
+def get_group_score_hook() -> str:
     name = request.args.get("group-name")
 
     user = api.user.get_user()
     roles = api.group.get_roles_in_group(gid, uid=user["uid"])
 
     if not roles["teacher"]:
-        return WebError("You are not a teacher for this classroom.")
+        return WebError("You are not a teacher for this classroom.").as_json()
 
     score = api.stats.get_group_scores(name=name)
     if score is None:
-        return WebError("There was an error retrieving the classroom's score.")
+        return WebError("There was an error retrieving the classroom's score.").as_json()
 
-    return WebSuccess(data={'score': score})
+    return WebSuccess(data={'score': score}).as_json()
 
 
 @blueprint.route('/create', methods=['POST'])
-@jsonify
 @check_csrf
 @require_teacher
-def create_group_hook():
+def create_group_hook() -> str:
     """
     Create a new group. Validates forms.
 
@@ -216,14 +214,13 @@ def create_group_hook():
         raise WebException("A classroom with that name already exists!")
 
     gid = api.group.create_group(team["tid"], params["group-name"])
-    return WebSuccess("Successfully created classroom.", data=gid)
+    return WebSuccess("Successfully created classroom.", data=gid).as_json()
 
 
 @blueprint.route('/join', methods=['POST'])
-@jsonify
 @check_csrf
 @require_login
-def join_group_hook():
+def join_group_hook() -> str:
     """
     Try to place a team into a group.
 
@@ -266,14 +263,13 @@ def join_group_hook():
 
     api.group.join_group(group["gid"], team["tid"])
 
-    return WebSuccess("Successfully joined classroom")
+    return WebSuccess("Successfully joined classroom").as_json()
 
 
 @blueprint.route('/leave', methods=['POST'])
-@jsonify
 @check_csrf
 @require_login
-def leave_group_hook():
+def leave_group_hook() -> str:
     """
     Try to remove a team from a group.
 
@@ -295,14 +291,13 @@ def leave_group_hook():
 
     api.group.leave_group(group["gid"], team["tid"])
 
-    return WebSuccess("Successfully left classroom.")
+    return WebSuccess("Successfully left classroom.").as_json()
 
 
 @blueprint.route('/delete', methods=['POST'])
-@jsonify
 @check_csrf
 @require_teacher
-def delete_group_hook():
+def delete_group_hook() -> str:
     """
     Try to delete a group.
 
@@ -328,55 +323,52 @@ def delete_group_hook():
     else:
         raise WebException("Only the owner of a classroom can delete it!")
 
-    return WebSuccess("Successfully deleted classroom")
+    return WebSuccess("Successfully deleted classroom").as_json()
 
 
 @blueprint.route('/flag_sharing', methods=['GET'])
-@jsonify
 @require_teacher
-def get_flag_shares():
+def get_flag_shares() -> str:
     gid = request.args.get("gid", None)
 
     if gid is None:
         return WebError(
-            "You must specify a gid when looking at flag sharing statistics.")
+            "You must specify a gid when looking at flag sharing statistics.").as_json()
 
     user = api.user.get_user()
     roles = api.group.get_roles_in_group(gid, uid=user["uid"])
     if not roles["teacher"]:
         return WebError("You must be a teacher of a classroom to see its " +
-                        "flag sharing statistics.")
+                        "flag sharing statistics.").as_json()
 
     return WebSuccess(
-        data=api.stats.check_invalid_instance_submissions(gid=gid))
+        data=api.stats.check_invalid_instance_submissions(gid=gid)).as_json()
 
 
 @blueprint.route('/teacher/leave', methods=['POST'])
-@jsonify
 @check_csrf
 @require_teacher
-def force_leave_group_hook():
+def force_leave_group_hook() -> str:
     gid = request.form.get("gid")
     tid = request.form.get("tid")
 
     if gid is None or tid is None:
-        return WebError("You must specify a gid and tid.")
+        return WebError("You must specify a gid and tid.").as_json()
 
     user = api.user.get_user()
     roles = api.group.get_roles_in_group(gid, uid=user["uid"])
     if not roles["teacher"]:
         return WebError("You must be a teacher of a classroom " +
-                        "to remove a team.")
+                        "to remove a team.").as_json()
 
     api.group.leave_group(gid, tid)
 
-    return WebSuccess("Team has successfully left the classroom.")
+    return WebSuccess("Team has successfully left the classroom.").as_json()
 
 
 @blueprint.route('/teacher/role_switch', methods=['POST'])
-@jsonify
 @require_teacher
-def switch_user_role_group_hook():
+def switch_user_role_group_hook() -> str:
     gid = request.form.get("gid")
     tid = request.form.get("tid")
     role = request.form.get("role")
@@ -385,24 +377,24 @@ def switch_user_role_group_hook():
 
     if gid is None or tid is None:
         return WebError(
-            message="You must specify a gid and tid to perform a role switch.")
+            message="You must specify a gid and tid to perform a role switch.").as_json()
 
     if role not in ["member", "teacher"]:
-        return WebError(message="A user's role is either a member or teacher.")
+        return WebError(message="A user's role is either a member or teacher.").as_json()
 
     group = api.group.get_group(gid=gid)
 
     roles = api.group.get_roles_in_group(group["gid"], uid=user["uid"])
     if not roles["teacher"]:
         return WebError(
-            message="You do not have sufficient privilege to do that.")
+            message="You do not have sufficient privilege to do that.").as_json()
 
     affected_team = api.team.get_team(tid=tid)
     affected_team_roles = api.group.get_roles_in_group(
         group["gid"], tid=affected_team["tid"])
     if affected_team_roles["owner"]:
         return WebError(message="You can not change the role of the owner " +
-                        "of the classroom.")
+                        "of the classroom.").as_json()
 
     api.group.switch_role(group["gid"], affected_team["tid"], role)
-    return WebSuccess(message="User's role has been successfully changed.")
+    return WebSuccess(message="User's role has been successfully changed.").as_json()

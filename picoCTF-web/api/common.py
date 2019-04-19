@@ -1,10 +1,12 @@
 """Classes and functions used by multiple modules in the system."""
 import uuid
+from dataclasses import dataclass
 from datetime import datetime
 from hashlib import md5
-
+from typing import Any
 import bcrypt
 from voluptuous import Invalid, MultipleInvalid
+import bson.json_util as json_util
 
 import api.config
 
@@ -57,14 +59,41 @@ class SevereInternalException(InternalException):
     pass
 
 
-def WebSuccess(message=None, data=None):
-    """Successful web request wrapper."""
-    return {"status": 1, "message": message, "data": data}
+# def WebSuccess(message=None, data=None):
+#     """Successful web request wrapper."""
+#     return {"status": 1, "message": message, "data": data}
 
 
-def WebError(message=None, data=None):
-    """Unsuccessful web request wrapper."""
-    return {"status": 0, "message": message, "data": data}
+# def WebError(message=None, data=None):
+#     """Unsuccessful web request wrapper."""
+#     return {"status": 0, "message": message, "data": data}
+
+
+@dataclass
+class WebResponse():
+    status: int
+    message: str = None
+    data: Any = None
+    def as_json(self):
+        return json_util.dumps({
+            'status': self.status,
+            'message': self.message,
+            'data': self.data
+        })
+
+
+class WebSuccess(WebResponse):
+    status = 1
+    def __init__(self, message=None, data=None):
+        self.message = message
+        self.data = data
+
+
+class WebError(WebResponse):
+    status = 0
+    def __init__(self, message=None, data=None):
+        self.message = message
+        self.data = data
 
 
 def flat_multi(multidict):

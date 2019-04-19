@@ -8,7 +8,7 @@ import api.email
 import api.shell_servers
 import api.stats
 import api.user
-from api.annotations import check_csrf, jsonify, require_login
+from api.annotations import check_csrf, require_login
 from api.common import safe_fail, WebError, WebSuccess
 
 blueprint = Blueprint("user_api", __name__)
@@ -30,8 +30,7 @@ def authorize_role(role=None):
 
 
 @blueprint.route('/create_simple', methods=['POST'])
-@jsonify
-def create_simple_user_hook():
+def create_simple_user_hook() -> str:
     new_uid = api.user.create_simple_user_request(
         api.common.parse_multi_form(request.form))
 
@@ -42,49 +41,45 @@ def create_simple_user_hook():
     return WebSuccess(
         message="User '{}' registered successfully!".format(
             request.form["username"]),
-        data={'teacher': api.user.is_teacher(new_uid)})
+        data={'teacher': api.user.is_teacher(new_uid)}).as_json()
 
 
 @blueprint.route('/update_password', methods=['POST'])
-@jsonify
 @check_csrf
 @require_login
-def update_password_hook():
+def update_password_hook() -> str:
     api.user.update_password_request(
         api.common.flat_multi(request.form), check_current=True)
-    return WebSuccess("Your password has been successfully updated!")
+    return WebSuccess("Your password has been successfully updated!").as_json()
 
 
 @blueprint.route('/disable_account', methods=['POST'])
-@jsonify
 @check_csrf
 @require_login
-def disable_account_hook():
+def disable_account_hook() -> str:
     api.user.disable_account_request(
         api.common.flat_multi(request.form), check_current=True)
-    return WebSuccess("You have successfully disabled your account!")
+    return WebSuccess("You have successfully disabled your account!").as_json()
 
 
 @blueprint.route('/reset_password', methods=['POST'])
-@jsonify
-def reset_password_hook():
+def reset_password_hook() -> str:
     username = request.form.get("username", None)
 
     api.email.request_password_reset(username)
     return WebSuccess(
         "A password reset link has been sent to the email address provided " +
-        "during registration.")
+        "during registration.").as_json()
 
 
 @blueprint.route('/confirm_password_reset', methods=['POST'])
-@jsonify
-def confirm_password_reset_hook():
+def confirm_password_reset_hook() -> str:
     password = request.form.get("new-password")
     confirm = request.form.get("new-password-confirmation")
     token_value = request.form.get("reset-token")
 
     api.email.reset_password(token_value, password, confirm)
-    return WebSuccess("Your password has been reset")
+    return WebSuccess("Your password has been reset").as_json()
 
 
 @blueprint.route('/verify', methods=['GET'])
@@ -103,8 +98,7 @@ def verify_user_hook():
 
 
 @blueprint.route('/login', methods=['POST'])
-@jsonify
-def login_hook():
+def login_hook() -> str:
     username = request.form.get('username')
     password = request.form.get('password')
     api.auth.login(username, password)
@@ -113,22 +107,20 @@ def login_hook():
         data={
             'teacher': api.user.is_teacher(),
             'admin': api.user.is_admin()
-        })
+        }).as_json()
 
 
 @blueprint.route('/logout', methods=['GET'])
-@jsonify
-def logout_hook():
+def logout_hook() -> str:
     if api.auth.is_logged_in():
         api.auth.logout()
-        return WebSuccess("Successfully logged out.")
+        return WebSuccess("Successfully logged out.").as_json()
     else:
-        return WebError("You do not appear to be logged in.")
+        return WebError("You do not appear to be logged in.").as_json()
 
 
 @blueprint.route('/status', methods=['GET'])
-@jsonify
-def status_hook():
+def status_hook() -> str:
     settings = api.config.get_settings()
     status = {
         "logged_in":
@@ -158,38 +150,35 @@ def status_hook():
         status["team_name"] = team["team_name"]
         status["score"] = api.stats.get_score(tid=team["tid"])
 
-    return WebSuccess(data=status)
+    return WebSuccess(data=status).as_json()
 
 
 @blueprint.route('/shell_servers', methods=['GET'])
-@jsonify
 @require_login
-def shell_servers_hook():
+def shell_servers_hook() -> str:
     servers = [{
         "host": server['host'],
         "protocol": server['protocol']
     } for server in api.shell_servers.get_servers()]
-    return WebSuccess(data=servers)
+    return WebSuccess(data=servers).as_json()
 
 
 @blueprint.route('/extdata', methods=['GET'])
-@jsonify
 @require_login
-def get_extdata_hook():
+def get_extdata_hook() -> str:
     """
     Return user extdata, or empty JSON object if unset.
     """
     user = api.user.get_user(uid=None)
-    return WebSuccess(data=user['extdata'])
+    return WebSuccess(data=user['extdata']).as_json()
 
 
 @blueprint.route('/extdata', methods=['PUT'])
-@jsonify
 @check_csrf
 @require_login
-def update_extdata_hook():
+def update_extdata_hook() -> str:
     """
     Sets user extdata via HTTP form. Takes in any key-value pairs.
     """
     api.user.update_extdata(api.common.flat_multi(request.form))
-    return WebSuccess("Your Extdata has been successfully updated.")
+    return WebSuccess("Your Extdata has been successfully updated.").as_json()

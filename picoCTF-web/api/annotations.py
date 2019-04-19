@@ -38,15 +38,6 @@ def log_action(f):
     return wrapper
 
 
-def jsonify(f):
-    """Convert response data to JSON."""
-    @wraps(f)
-    def wrapper(*args, **kwds):
-        return json_util.dumps(f(*args, **kwds))
-
-    return wrapper
-
-
 def require_login(f):
     """Wrap routing functions that require a user to be logged in."""
     @wraps(f)
