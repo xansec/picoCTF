@@ -654,7 +654,7 @@ def check_invalid_instance_submissions(gid=None):
                 # make sure that the key is still invalid
                 if not api.problem.grade_problem(
                         submission['pid'], submission['key'],
-                        tid=submission['tid'])['correct']:
+                        tid=submission['tid']):
                     if group is None or submission['tid'] in group['members']:
                         submission['username'] = api.user.get_user(
                             uid=submission['uid'])['username']

@@ -393,27 +393,19 @@ def grade_problem(pid, key, tid=None):
         pid: problem's pid
         key: user's submission
     Returns:
-        A dict.
-        correct: boolean
-        points: number of points the problem is worth.
-        message: message indicating the correctness of the key.
+        bool: whether the key is correct
     """
 
     if tid is None:
         tid = api.user.get_user()["tid"]
 
-    problem = get_problem(pid=pid)
     instance = get_instance_data(pid, tid)
 
     correct = instance['flag'] in key
     if not correct and DEBUG_KEY is not None:
         correct = DEBUG_KEY in key
 
-    return {
-        "correct": correct,
-        "points": problem["score"],
-        "message": "That is correct!" if correct else "That is incorrect!"
-    }
+    return correct
 
 
 @log_action
@@ -429,10 +421,8 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
         uid: user's uid
         ip: user's ip
     Returns:
-        A dict.
-        correct: boolean
-        points: number of points the problem is worth.
-        message: message indicating the correctness of the key.
+        tuple: (correct, previously_solved_by_user,
+                previously_solved_by_team)
     """
 
     db = api.common.get_conn()
@@ -442,44 +432,39 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
         raise InternalException(
             "You can't submit flags to problems you haven't unlocked.")
 
-    if pid in get_solved_pids(tid=tid):
-        exp = WebException(
-            "Flag correct: however, you have already received points for that flag.")
-        exp.data = {'code': 'solved'}
-        raise exp
-
     user = api.user.get_user(uid=uid)
     if user is None:
         raise InternalException("User submitting flag does not exist.")
-
     uid = user["uid"]
 
-    result = grade_problem(pid, key, tid)
+    previously_solved_by_user = db.submissions.find_one(
+        filter={
+            'uid': uid,
+            'correct': True
+        }) is not None
 
-    problem = get_problem(pid=pid)
+    previously_solved_by_team = db.submissions.find_one(
+        filter={
+            'tid': tid,
+            'correct': True
+        }) is not None
 
-    submission = {
-        'uid': uid,
-        'tid': tid,
-        'timestamp': datetime.utcnow(),
-        'pid': pid,
-        'ip': ip,
-        'key': key,
-        'method': method,
-        'category': problem['category'],
-        'correct': result['correct'],
-    }
+    correct = grade_problem(pid, key, tid)
 
-    if (key, pid) in [(submission["key"], submission["pid"])
-                      for submission in get_submissions(tid=tid)]:
-        exp = WebException(
-            "Flag incorrect: please note that you or your team have already submitted this flag.")
-        exp.data = {'code': 'repeat'}
-        raise exp
+    if not previously_solved_by_user:
+        db.submissions.insert({
+            'uid': uid,
+            'tid': tid,
+            'timestamp': datetime.utcnow(),
+            'pid': pid,
+            'ip': ip,
+            'key': key,
+            'method': method,
+            'category': get_problem(pid=pid)['category'],
+            'correct': correct,
+        })
 
-    db.submissions.insert(submission)
-
-    if submission["correct"]:
+    if correct and not previously_solved_by_user:
         api.cache.invalidate_memoization(
             api.stats.get_score, {"kwargs.tid": tid}, {"kwargs.uid": uid})
         api.cache.invalidate_memoization(get_unlocked_pids, {"args": tid})
@@ -496,7 +481,7 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
             "pid": pid
         })
 
-    return result
+    return (correct, previously_solved_by_user, previously_solved_by_team)
 
 
 def count_submissions(pid=None,
@@ -648,8 +633,8 @@ def reevaluate_submissions_for_problem(pid):
         key = submission["key"]
         if key not in keys:
             result = grade_problem(pid, key, submission["tid"])
-            if result["correct"] != submission["correct"]:
-                keys[key] = result["correct"]
+            if result != submission["correct"]:
+                keys[key] = result
             else:
                 keys[key] = None
 
