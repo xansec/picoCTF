@@ -421,7 +421,8 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
         uid: user's uid
         ip: user's ip
     Returns:
-        tuple: (correct, previously_solved)
+        tuple: (correct, previously_solved_by_user,
+                previously_solved_by_team)
     """
 
     db = api.common.get_conn()
@@ -436,12 +437,21 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
         raise InternalException("User submitting flag does not exist.")
     uid = user["uid"]
 
-    previously_solved = False
-    if pid in get_solved_pids(tid=tid):
-        previously_solved = True
+    previously_solved_by_user = db.submissions.find_one(
+        filter={
+            'uid': uid,
+            'correct': True
+        }) is not None
+
+    previously_solved_by_team = db.submissions.find_one(
+        filter={
+            'tid': tid,
+            'correct': True
+        }) is not None
+
     correct = grade_problem(pid, key, tid)
 
-    if not previously_solved:
+    if not previously_solved_by_user:
         db.submissions.insert({
             'uid': uid,
             'tid': tid,
@@ -454,7 +464,7 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
             'correct': correct,
         })
 
-    if correct and not previously_solved:
+    if correct and not previously_solved_by_user:
         api.cache.invalidate_memoization(
             api.stats.get_score, {"kwargs.tid": tid}, {"kwargs.uid": uid})
         api.cache.invalidate_memoization(get_unlocked_pids, {"args": tid})
@@ -471,7 +481,7 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
             "pid": pid
         })
 
-    return (correct, previously_solved)
+    return (correct, previously_solved_by_user, previously_solved_by_team)
 
 
 def count_submissions(pid=None,

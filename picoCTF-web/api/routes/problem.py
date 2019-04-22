@@ -79,21 +79,32 @@ def submit_key_hook():
     method = request.form.get('method', '')
     ip = request.remote_addr
 
-    correct, previously_solved = api.problem.submit_key(
-        tid, pid, key, method, uid, ip)
+    (correct, previously_solved_by_user,
+     previously_solved_by_team) = api.problem.submit_key(
+            tid, pid, key, method, uid, ip)
 
-    if correct and not previously_solved:
+    if correct and not previously_solved_by_team:
         return WebSuccess("That is correct!")
-    elif not correct and not previously_solved:
+    elif not correct and not previously_solved_by_team:
         return WebError("That is incorrect!")
-    elif correct and previously_solved:
+    elif correct and previously_solved_by_user:
         return WebSuccess(
-            'Flag correct: however, you have already received points ' +
-            'for that flag.'
+            'Flag correct: however, you have already solved ' +
+            'this problem.'
         )
-    elif not correct and previously_solved:
+    elif correct and previously_solved_by_team:
+        return WebSuccess(
+            'Flag correct: however, your team has already received points ' +
+            'for this flag.'
+        )
+    elif not correct and previously_solved_by_user:
         return WebError(
-            'Flag incorrect: please note that you or your team have ' +
+            'Flag incorrect: please note that you have ' +
+            'already solved this problem.'
+        )
+    elif not correct and previously_solved_by_team:
+        return WebError(
+            'Flag incorrect: please note that someone on your team has ' +
             'already solved this problem.'
         )
 
