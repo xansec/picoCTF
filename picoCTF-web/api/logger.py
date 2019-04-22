@@ -25,51 +25,62 @@ class StatsHandler(logging.StreamHandler):
     time_format = "%H:%M:%S %Y-%m-%d"
 
     action_parsers = {
-        "api.user.create_user_request": lambda params, result=None: {
-            "username": params["username"]
-        },
-        "api.achievement.process_achievement": lambda aid, data, result=None: {
-            "aid": aid,
-            "success": result[0]
-        },
-        "api.autogen.grade_problem_instance": lambda pid, tid, key, result=
-        None: {
-            "pid": pid,
-            "key": key,
-            "correct": result["correct"]
-        },
-        "api.group.create_group": lambda uid, group_name, result=None: {
-            "name": group_name,
-            "owner": uid
-        },
-        "api.group.join_group": lambda gid, tid, teacher=False, result=None: {
-            "gid": gid,
-            "tid": tid
-        },
-        "api.group.leave_group": lambda gid, tid, result=None: {
-            "gid": gid,
-            "tid": tid
-        },
-        "api.group.delete_group": lambda gid, result=None: {
-            "gid": gid
-        },
-        "api.problem.submit_key": lambda tid, pid, key, method, uid=None, ip=
-        None, result=None: {
-            "pid": pid,
-            "key": key,
-            "method": method,
-            "success": result["correct"]
-        },
-        "api.problem_feedback.add_problem_feedback": lambda pid, uid, feedback,
-        result=None: {
-            "pid": pid,
-            "feedback": feedback
-        },
-        "api.user.update_password_request": lambda params, uid=None,
-        check_current=False, result=None: {},
-        "api.team.update_password_request": lambda params, result=None: {},
-        "api.email.request_password_reset": lambda username, result=None: {},
-        "api.team.create_team": lambda params, result=None: params,
+        "api.user.create_user_request":
+            lambda params, result=None: {
+                "username": params["username"]
+            },
+        "api.achievement.process_achievement":
+            lambda aid, data, result=None: {
+                "aid": aid,
+                "success": result[0]
+            },
+        "api.autogen.grade_problem_instance":
+            lambda pid, tid, key, result=None: {
+                "pid": pid,
+                "key": key,
+                "correct": result["correct"]
+            },
+        "api.group.create_group":
+            lambda uid, group_name, result=None: {
+                "name": group_name,
+                "owner": uid
+            },
+        "api.group.join_group":
+            lambda gid, tid, teacher=False, result=None: {
+                "gid": gid,
+                "tid": tid
+            },
+        "api.group.leave_group":
+            lambda gid, tid, result=None: {
+                "gid": gid,
+                "tid": tid
+            },
+        "api.group.delete_group":
+            lambda gid, result=None: {
+                "gid": gid
+            },
+        "api.problem.submit_key":
+            lambda tid, pid, key, method, uid=None, ip=None, result=None: {
+                "pid": pid,
+                "key": key,
+                "method": method,
+                "success": result[0]
+            },
+        "api.problem_feedback.add_problem_feedback":
+            lambda pid, uid, feedback, result=None: {
+                "pid": pid,
+                "feedback": feedback
+            },
+        "api.user.update_password_request":
+            lambda params, uid=None, check_current=False, result=None: {},
+        "api.team.update_password_request":
+            lambda params, result=None: {},
+        "api.email.request_password_reset":
+            lambda username, result=None: {},
+        "api.team.create_team":
+            lambda params, result=None: params,
+        "api.app.hint":
+            lambda pid, source, result=None: {"pid": pid, "source": source}
     }
 
     def __init__(self):
