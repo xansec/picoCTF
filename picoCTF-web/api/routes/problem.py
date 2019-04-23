@@ -20,10 +20,11 @@ blueprint = Blueprint("problem_api", __name__)
 @blueprint.route('/category/<category>', methods=['GET'])
 @require_login
 @block_before_competition()
-def get_visible_problems_hook(category) -> str:
+def get_visible_problems_hook(category):
     visible_problems = api.problem.get_visible_problems(
         api.user.get_user()['tid'], category=category)
-    return WebSuccess(data=api.problem.sanitize_problem_data(visible_problems)).as_json()
+    return WebSuccess(
+        data=api.problem.sanitize_problem_data(visible_problems)), 200
 
 
 @blueprint.route('/all', defaults={'category': None}, methods=['GET'])
@@ -31,38 +32,40 @@ def get_visible_problems_hook(category) -> str:
 @require_login
 @require_teacher
 @block_before_competition()
-def get_all_problems_hook(category) -> str:
+def get_all_problems_hook(category):
     all_problems = api.problem.get_all_problems(
         category=category, basic_only=True)
-    return WebSuccess(data=api.problem.sanitize_problem_data(all_problems)).as_json()
+    return WebSuccess(
+        data=api.problem.sanitize_problem_data(all_problems)), 200
 
 
 @blueprint.route('/count', defaults={'category': None}, methods=['GET'])
 @blueprint.route('/count/<category>', methods=['GET'])
 @require_login
 @block_before_competition()
-def get_all_problems_count_hook(category) -> str:
-    return WebSuccess(data=api.problem.count_all_problems(category=category)).as_json()
+def get_all_problems_count_hook(category):
+    return WebSuccess(
+        data=api.problem.count_all_problems(category=category)), 200
 
 
 @blueprint.route('/unlocked', methods=['GET'])
 @require_login
 @block_before_competition()
-def get_unlocked_problems_hook() -> str:
+def get_unlocked_problems_hook():
     unlocked_problems = api.problem.get_unlocked_problems(
         api.user.get_user()['tid'])
     return WebSuccess(
-        data=api.problem.sanitize_problem_data(unlocked_problems)).as_json()
+        data=api.problem.sanitize_problem_data(unlocked_problems)), 200
 
 
 @blueprint.route('/solved', methods=['GET'])
 @require_login
 @block_before_competition()
-def get_solved_problems_hook() -> str:
+def get_solved_problems_hook():
     solved_problems = api.problem.get_solved_problems(
         tid=api.user.get_user()['tid'])
-
-    return WebSuccess(data=api.problem.sanitize_problem_data(solved_problems)).as_json()
+    return WebSuccess(
+        data=api.problem.sanitize_problem_data(solved_problems)), 200
 
 
 @blueprint.route('/submit', methods=['POST'])
@@ -70,7 +73,7 @@ def get_solved_problems_hook() -> str:
 @require_login
 @block_before_competition()
 @block_after_competition()
-def submit_key_hook() -> str:
+def submit_key_hook():
     user_account = api.user.get_user()
     tid = user_account['tid']
     uid = user_account['uid']
@@ -84,106 +87,105 @@ def submit_key_hook() -> str:
             tid, pid, key, method, uid, ip)
 
     if correct and not previously_solved_by_team:
-        return WebSuccess("That is correct!")
+        return WebSuccess("That is correct!"), 200
     elif not correct and not previously_solved_by_team:
-        return WebError("That is incorrect!")
+        return WebError("That is incorrect!"), 200
     elif correct and previously_solved_by_user:
         return WebSuccess(
             'Flag correct: however, you have already solved ' +
             'this problem.'
-        )
+        ), 200
     elif correct and previously_solved_by_team:
         return WebSuccess(
             'Flag correct: however, your team has already received points ' +
             'for this flag.'
-        )
+        ), 200
     elif not correct and previously_solved_by_user:
         return WebError(
             'Flag incorrect: please note that you have ' +
             'already solved this problem.'
-        )
+        ), 200
     elif not correct and previously_solved_by_team:
         return WebError(
             'Flag incorrect: please note that someone on your team has ' +
             'already solved this problem.'
-        )
+        ), 200
 
 
 @blueprint.route('/<path:pid>', methods=['GET'])
 @require_login
 @block_before_competition()
 @block_after_competition()
-def get_single_problem_hook(pid) -> str:
+def get_single_problem_hook(pid):
     problem_info = api.problem.get_problem(pid, tid=api.user.get_user()['tid'])
     if not api.user.is_admin():
         problem_info.pop("instances")
-    return WebSuccess(data=api.problem.sanitize_problem_data(problem_info)).as_json()
+    return WebSuccess(
+        data=api.problem.sanitize_problem_data(problem_info)), 200
 
 
 @blueprint.route('/feedback', methods=['POST'])
 @check_csrf
 @require_login
 @block_before_competition()
-def problem_feedback_hook() -> str:
+def problem_feedback_hook():
     feedback = json.loads(request.form.get("feedback", ""))
     pid = request.form.get("pid", None)
 
     if feedback is None or pid is None:
-        return WebError("Please supply a pid and feedback.").as_json()
+        return WebError("Please supply a pid and feedback."), 400
 
     if not api.config.get_settings()["enable_feedback"]:
-        return WebError("Problem feedback is not currently being accepted.").as_json()
+        return WebError(
+            "Problem feedback is not currently being accepted."), 403
 
     api.problem_feedback.add_problem_feedback(pid, api.auth.get_uid(),
                                               feedback)
-    return WebSuccess("Your feedback has been accepted.").as_json()
+    return WebSuccess("Your feedback has been accepted."), 201
 
 
 @blueprint.route('/feedback/reviewed', methods=['GET'])
 @require_login
 @block_before_competition()
-def problem_reviews_hook() -> str:
+def problem_reviews_hook():
     uid = api.user.get_user()['uid']
-    return WebSuccess(data=api.problem_feedback.get_problem_feedback(uid=uid)).as_json()
+    return WebSuccess(
+        data=api.problem_feedback.get_problem_feedback(uid=uid)), 200
 
 
 @blueprint.route("/hint", methods=['GET'])
 @require_login
 @block_before_competition()
-def request_problem_hint_hook() -> str:
-    @log_action
-    def hint(pid, source):
-        return None
-
+def request_problem_hint_hook():
     source = request.args.get("source")
     pid = request.args.get("pid")
 
     if pid is None:
-        return WebError("Please supply a pid.")
+        return WebError("Please supply a pid."), 400
     if source is None:
-        return WebError("You have to supply the source of the hint.").as_json()
+        return WebError("You have to supply the source of the hint."), 400
 
     tid = api.user.get_team()["tid"]
     if pid not in api.problem.get_unlocked_pids(tid, category=None):
-        return WebError("Your team hasn't unlocked this problem yet!").as_json()
+        return WebError("Your team hasn't unlocked this problem yet!"), 403
 
-    hint(pid, source)
-    return WebSuccess("Hint noted.").as_json()
+    return WebSuccess("Hint noted."), 200
 
 
 @blueprint.route("/load_problems", methods=['POST'])
 @require_login
 @require_admin
-def load_problems_hook() -> str:
+def load_problems_hook():
     data = json.loads(request.form.get("competition_data", ""))
 
     api.problem.load_published(data)
-    return WebSuccess("Inserted {} problems.".format(len(data["problems"]))).as_json()
+    return WebSuccess(
+        "Inserted {} problems.".format(len(data["problems"]))), 201
 
 
 @blueprint.route('/clear_submissions', methods=['GET'])
 @require_login
 @require_admin
-def clear_all_submissions_hook() -> str:
+def clear_all_submissions_hook():
     api.problem.clear_all_submissions()
-    return WebSuccess("All submissions reset.").as_json()
+    return WebSuccess("All submissions reset."), 200

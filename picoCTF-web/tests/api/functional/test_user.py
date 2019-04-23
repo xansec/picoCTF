@@ -227,7 +227,7 @@ def test_reset_password(client):
             })
     status, message, data = decode_response(res)
     assert status == 1
-    assert message == 'Your password has been reset'
+    assert message == 'Your password has been reset.'
     # Log in with the new password
     res = client.post('/api/user/login', data={
         'username': USER_DEMOGRAPHICS['username'],

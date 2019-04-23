@@ -59,41 +59,20 @@ class SevereInternalException(InternalException):
     pass
 
 
-# def WebSuccess(message=None, data=None):
-#     """Successful web request wrapper."""
-#     return {"status": 1, "message": message, "data": data}
-
-
-# def WebError(message=None, data=None):
-#     """Unsuccessful web request wrapper."""
-#     return {"status": 0, "message": message, "data": data}
-
-
-@dataclass
-class WebResponse():
-    status: int
-    message: str = None
-    data: Any = None
-    def as_json(self):
-        return json_util.dumps({
-            'status': self.status,
-            'message': self.message,
-            'data': self.data
+def WebSuccess(message=None, data=None):
+    return json_util.dumps({
+            'status': 1,
+            'message': message,
+            'data': data
         })
 
 
-class WebSuccess(WebResponse):
-    status = 1
-    def __init__(self, message=None, data=None):
-        self.message = message
-        self.data = data
-
-
-class WebError(WebResponse):
-    status = 0
-    def __init__(self, message=None, data=None):
-        self.message = message
-        self.data = data
+def WebError(message=None, data=None):
+    return json_util.dumps({
+            'status': 0,
+            'message': message,
+            'data': data
+        })
 
 
 def flat_multi(multidict):

@@ -5,7 +5,6 @@ import logging
 import traceback
 from datetime import datetime
 
-from bson import json_util
 from flask import Flask, session
 from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
@@ -21,7 +20,7 @@ import api.routes.stats
 import api.routes.team
 import api.routes.user
 from api.common import (InternalException, SevereInternalException, WebError,
-                        WebException, WebResponse, WebSuccess)
+                        WebException, WebSuccess)
 
 log = logging.getLogger(__name__)
 
@@ -87,12 +86,12 @@ def create_app(test_config=None):
     # Register error handlers
     @app.errorhandler(WebException)
     def handle_web_exception(e):
-        return WebError(e.args[0], e.data).as_json()
+        return WebError(e.args[0], e.data), 500
 
     @app.errorhandler(InternalException)
     def handle_internal_exception(e):
         get_origin_logger(e).error(traceback.format_exc())
-        return WebError(e.args[0]).as_json()
+        return WebError(e.args[0]), 500
 
     @app.errorhandler(SevereInternalException)
     def handle_severe_internal_exception(e):
@@ -100,12 +99,14 @@ def create_app(test_config=None):
         return WebError(
                 "There was a critical internal error. " +
                 "Contact an administrator."
-            ).as_json()
+            ), 500
 
     @app.errorhandler(Exception)
     def handle_generic_exception(e):
         get_origin_logger(e).error(traceback.format_exc())
-        return WebError("An error occurred. Please contact an administrator.").as_json()
+        return WebError(
+            "An error occurred. Please contact an " +
+            "administrator."), 500
 
     # Configure logging
     with app.app_context():
@@ -136,7 +137,7 @@ def create_app(test_config=None):
 
     # Add a route for getting the time
     @app.route('/api/time', methods=['GET'])
-    def get_time() -> WebResponse:
-        return WebSuccess(data=int(datetime.utcnow().timestamp())).as_json()
+    def get_time():
+        return WebSuccess(data=int(datetime.utcnow().timestamp())), 200
 
     return app

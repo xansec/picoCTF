@@ -11,7 +11,7 @@ blueprint = Blueprint("achievements_api", __name__)
 
 @blueprint.route('', methods=['GET'])
 @require_login
-def get_achievements_hook() -> str:
+def get_achievements_hook():
     """Get the achievements of the currently logged in user."""
     tid = api.user.get_team()["tid"]
     achievements = api.achievement.get_earned_achievements_display(tid=tid)
@@ -20,4 +20,4 @@ def get_achievements_hook() -> str:
         # JB : Hack to temporarily fix achievements timestamp problem
         achievement["timestamp"] = None
 
-    return WebSuccess(data=achievements).as_json()
+    return WebSuccess(data=achievements), 200

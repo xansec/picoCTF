@@ -81,6 +81,7 @@ def request_password_reset(username):
         raise WebException("No registration found for '{}'.".format(username))
 
     token_value = api.token.set_token({"uid": user['uid']}, "password_reset")
+    print('setting token in db: {}'.format(str(token_value)))
 
     settings = api.config.get_settings()
 
