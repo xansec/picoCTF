@@ -5,7 +5,7 @@ import logging
 import traceback
 from datetime import datetime
 
-from flask import Flask, session
+from flask import Flask, session, jsonify
 from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
 
@@ -19,8 +19,15 @@ import api.routes.problem
 import api.routes.stats
 import api.routes.team
 import api.routes.user
-from api.common import (InternalException, SevereInternalException, WebError,
-                        WebException, WebSuccess)
+from api.common import (
+  InternalException,
+  PicoException,
+  SevereInternalException,
+  WebError,
+  WebException,
+  WebSuccess
+)
+from api.routes.v1 import blueprint as v1_blueprint
 
 log = logging.getLogger(__name__)
 
@@ -82,8 +89,21 @@ def create_app(test_config=None):
         api.routes.problem.blueprint, url_prefix="/api/problems")
     app.register_blueprint(
         api.routes.achievements.blueprint, url_prefix="/api/achievements")
+    app.register_blueprint(
+        v1_blueprint, url_prefix="/api/v1"
+    )
+
+    # Report all validation errors
+    app.config['BUNDLE_ERRORS'] = True
 
     # Register error handlers
+    @app.errorhandler(PicoException)
+    def handle_pico_exception(e):
+        """Handle exceptions."""
+        response = jsonify(e.to_dict())
+        response.status_code = 500
+        return response
+
     @app.errorhandler(WebException)
     def handle_web_exception(e):
         return WebError(e.args[0], e.data), 500
@@ -132,7 +152,7 @@ def create_app(test_config=None):
                 session['token'] = csrf_token
             response.set_cookie('token', session['token'], domain=domain)
 
-        response.mimetype = 'application/json'
+        # response.mimetype = 'application/json'
         return response
 
     # Add a route for getting the time

@@ -11,9 +11,14 @@ import api.config
 import api.db
 import api.user
 from api.annotations import log_action
-from api.common import (check, InternalException, safe_fail,
-                        validate, WebException)
-from api.models import Achievement, AchievementSchema
+from api.common import (
+  check,
+  InternalException,
+  PicoException,
+  safe_fail,
+  validate,
+  WebException
+)
 
 achievement_schema = Schema({
     Required("name"):
@@ -329,33 +334,54 @@ def process_achievements(event, data):
             insert_earned_achievement(aid, data)
 
 
-def insert_achievement(achievement):
+def insert_achievement(
+        *ignore,
+        name,
+        score,
+        description,
+        processor,
+        hidden,
+        image,
+        smallimage,
+        disabled,
+        multiple,
+        ):
     """
     Insert an achievement object into the database.
 
-    Args:
-        achievement(str): the achievement definition as JSON.
+    Kwargs:
+        name: Name of the achievement.
+        score: Point value of the achievement (positive integer).
+        description: Description of the achievement.
+        processor: Path to the achievement processor.
+        hidden: Hide this achievement?
+        image: Path to the achievement image.
+        smallimage: Path to the achievement thumbnail.
+        disabled: Disable this achievement?
+        multiple: Allow earning multiple instances of this achievement?
+    Returns:
+        ID of the newly inserted achievement
     Raises:
-        WebException: an achievement with the same name already exists,
-                      or insertion into the database failed
+        PicoException: an achievement with the same name already exists
 
     """
     db = api.db.get_conn()
-    validate(achievement_schema, achievement)
-
-    achievement["disabled"] = achievement.get("disabled", False)
-
-    achievement["aid"] = api.common.hash(achievement["name"])
-
-    if safe_fail(get_achievement, aid=achievement["aid"]) is not None:
-        raise WebException("achievement with identical aid already exists.")
-
-    if safe_fail(get_achievement, name=achievement["name"]) is not None:
-        raise WebException("achievement with identical name already exists.")
-
-    db.achievements.insert(achievement)
-
-    return achievement["aid"]
+    if db.achievements.find_one({'name': name}):
+        raise PicoException('Achievement with that name already exists',
+                            status_code=409)
+    aid = api.common.token()
+    db.achievements.insert_one({
+        'aid': aid,
+        'name': name,
+        'description': description,
+        'processor': processor,
+        'hidden': hidden,
+        'image': image,
+        'smallimage': smallimage,
+        'disabled': disabled,
+        'multiple': multiple
+    })
+    return aid
 
 
 def update_achievement(aid, updated_achievement):
@@ -373,7 +399,7 @@ def update_achievement(aid, updated_achievement):
 
     if updated_achievement.get("name", None) is not None:
         if safe_fail(
-                get_achievement, name=updated_achievement["name"]) is not None:
+                _get_achievement, name=updated_achievement["name"]) is not None:
             raise WebException(
                 "Achievement with identical name already exists.")
 

@@ -11,8 +11,8 @@ blueprint = Blueprint("achievements_api", __name__)
 
 @blueprint.route('', methods=['GET'])
 @require_login
-def get_achievements_hook():
-    """Get the achievements of the currently logged in user."""
+def get_earned_achievements_hook():
+    """Get the current user's earned achievements."""
     tid = api.user.get_team()["tid"]
     achievements = api.achievement.get_earned_achievements_display(tid=tid)
 

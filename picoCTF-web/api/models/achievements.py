@@ -1,7 +1,5 @@
 """Achievement models."""
 from dataclasses import dataclass
-import marshmallow.validate as validate
-from marshmallow import Schema, fields, post_load
 from datetime import datetime
 
 
@@ -37,26 +35,6 @@ class Achievement():
     multiple: bool
 
 
-class AchievementSchema(Schema):
-    """Validation schema for Achievement."""
-
-    name = fields.Str(required=True)
-    score = fields.Int(required=True, validate=validate.Range(min=0))
-    event = fields.Str(required=True)
-    description = fields.Str(required=True)
-    processor = fields.Str(required=True)
-    hidden = fields.Bool(required=True)
-    image = fields.Str(required=True)
-    smallimage = fields.Str(required=True)
-    disabled = fields.Bool(required=True)
-    multiple = fields.Bool(required=True)
-
-    @post_load
-    def make_achievement(self, data):
-        """Return validated Achievements."""
-        return Achievement(**data)
-
-
 @dataclass
 class EarnedAchievement():
     """
@@ -73,12 +51,3 @@ class EarnedAchievement():
     uid: int
     timestamp: datetime
     seen: bool
-
-
-class EarnedAchievementSchema(Schema):
-    """Validation schema for EarnedAchievement."""
-
-    aid = fields.Int(required=True)
-    uid = fields.Int(required=True)
-    timestamp = fields.DateTime(required=True)
-    seen = fields.Bool(required=True)
