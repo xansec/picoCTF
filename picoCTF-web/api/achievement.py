@@ -4,103 +4,37 @@ from datetime import datetime
 from importlib.machinery import SourceFileLoader
 from os.path import join
 
-import pymongo
-from voluptuous import Range, Required, Schema
-
 import api.config
 import api.db
 import api.user
 from api.annotations import log_action
-from api.common import (
-  check,
-  InternalException,
-  PicoException,
-  safe_fail,
-  validate,
-  WebException
-)
-
-achievement_schema = Schema({
-    Required("name"):
-    check(("The achievement's display name must be a string.", [str])),
-    Required("score"):
-    check(("Score must be a positive integer.", [int, Range(min=0)])),
-    Required("event"):
-    check(("Type must be a string.", [str])),
-    Required("description"):
-    check(("The description must be a string.", [str])),
-    Required("processor"):
-    check(("The processor path must be a string.", [str])),
-    Required("hidden"):
-    check(("An achievement's hidden state is either True or False.",
-           [lambda hidden: type(hidden) == bool])),
-    Required("image"):
-    check(("An achievement's image path must be a string.", [str])),
-    Required("smallimage"):
-    check(("An achievement's smallimage path must be a string.", [str])),
-    "disabled":
-    check(("An achievement's disabled state is either True or False.",
-           [lambda disabled: type(disabled) == bool])),
-    "multiple":
-    check(("Whether an achievement can be earned multiple times" +
-           "is either True or False.",
-           [lambda disabled: type(disabled) == bool])),
-    "aid":
-    check(("You should not specify a aid for an achievement.",
-           [lambda _: False])),
-    "_id":
-    check(("Your achievements should not already have _ids.",
-           [lambda id: False]))
-})
+from api.common import InternalException
 
 
-def _get_achievement(aid, show_disabled=False):
+def get_achievement(aid):
     """
     Get a single achievement by aid.
 
     Args:
         aid: the achievement id
-        show_disabled: Boolean indicating whether or not to
-                       show disabled achievements.
+    Returns:
+        the achievement dict, or None if not found
     """
-    match = {'aid': aid}
-
-    if not show_disabled:
-        match.update({"disabled": False})
-
     db = api.db.get_conn()
-    achievement = db.achievements.find_one(match, {"_id": 0})
-
-    if achievement is None:
-        raise InternalException("Could not find achievement! DB query: {}"
-                                .format(str(match)))
-    return achievement
+    return db.achievements.find_one({'aid': aid}, {"_id": 0})
 
 
-def _get_all_achievements(event=None, show_disabled=False):
+def get_all_achievements():
     """
     Get all of the achievements in the database.
 
-    Args:
-        event: Optional parameter to restrict which achievements are returned
-        show_disabled: Boolean indicating whether or not to
-                       show disabled achievements.
     Returns:
-        List of achievements from the database
+        List of achievement dicts from the database
 
     """
     db = api.db.get_conn()
-
-    match = {}
-    if event is not None:
-        match.update({'event': event})
-
-    if not show_disabled:
-        match.update({'disabled': False})
-
     return list(
-        db.achievements.find(match, {"_id": 0}).sort(
-            'score', pymongo.ASCENDING))
+        db.achievements.find({}, {"_id": 0}))
 
 
 def get_earned_achievement_instances(tid=None, uid=None, aid=None):
@@ -182,7 +116,7 @@ def get_earned_achievements_display(tid=None, uid=None):
     set_earned_achievements_seen(tid=tid, uid=uid)
 
     for instance_achievement in instance_achievements:
-        achievement = _get_achievement(instance_achievement["aid"])
+        achievement = get_achievement(instance_achievement["aid"])
 
         # Make sure not to override name or description.
         achievement.pop("name")
@@ -210,24 +144,10 @@ def get_earned_achievements(tid=None, uid=None):
     set_earned_achievements_seen(tid=tid, uid=uid)
 
     for achievement in achievements:
-        achievement.update(_get_achievement(achievement["aid"]))
+        achievement.update(get_achievement(achievement["aid"]))
         achievement.pop("data")
 
     return achievements
-
-
-def set_achievement_disabled(aid, disabled):
-    """
-    Update a achievement's availability.
-
-    Args:
-        aid: the achievement's aid
-        disabled: whether or not the achievement should be disabled.
-    Returns:
-        The updated achievement object.
-
-    """
-    return update_achievement(aid, {"disabled": disabled})
 
 
 def get_processor(aid):
@@ -241,7 +161,7 @@ def get_processor(aid):
 
     """
     try:
-        path = _get_achievement(aid, show_disabled=True)["processor"]
+        path = get_achievement(aid)["processor"]
         base_path = api.config.get_settings(
         )["achievements"]["processor_base_path"]
         return SourceFileLoader(path[:-3], join(base_path, path)).load_module()
@@ -266,7 +186,7 @@ def process_achievement(aid, data):
     if data.get("tid", None) is None:
         data["tid"] = api.user.get_user(uid=data["uid"])["tid"]
 
-    _get_achievement(aid=aid, show_disabled=True)
+    get_achievement(aid=aid)
     processor = get_processor(aid)
 
     return processor.process(api, data)
@@ -313,6 +233,7 @@ def process_achievements(event, data):
         data["tid"] = api.user.get_user(uid=data["uid"])["tid"]
 
     eligible_achievements = [
+        # @todo
         achievement for achievement in _get_all_achievements(event=event)
         if achievement["aid"] not in get_earned_aids(
             tid=data["tid"]) or achievement.get("multiple", False)
@@ -361,14 +282,8 @@ def insert_achievement(
         multiple: Allow earning multiple instances of this achievement?
     Returns:
         ID of the newly inserted achievement
-    Raises:
-        PicoException: an achievement with the same name already exists
-
     """
     db = api.db.get_conn()
-    if db.achievements.find_one({'name': name}):
-        raise PicoException('Achievement with that name already exists',
-                            status_code=409)
     aid = api.common.token()
     db.achievements.insert_one({
         'aid': aid,
@@ -384,33 +299,23 @@ def insert_achievement(
     return aid
 
 
-def update_achievement(aid, updated_achievement):
+def update_achievement(aid, updates):
     """
     Update a achievement with new properties.
 
     Args:
-        aid: the aid of the achievement to update.
-        updated_achievement: an updated achievement object.
+        aid: the aid of the achievement to update
+        updates: dict of updated achievement fields
+
     Returns:
-        The updated achievement object.
+        aid of the updated achievement (unchanged), or
+        None if the provided aid was not found
 
     """
     db = api.db.get_conn()
-
-    if updated_achievement.get("name", None) is not None:
-        if safe_fail(
-                _get_achievement, name=updated_achievement["name"]) is not None:
-            raise WebException(
-                "Achievement with identical name already exists.")
-
-    achievement = _get_achievement(aid, show_disabled=True).copy()
-    achievement.update(updated_achievement)
-
-    # pass validation by removing/re-adding aid
-    achievement.pop("aid")
-    validate(achievement_schema, achievement)
-    achievement["aid"] = aid
-
-    db.achievements.update({"aid": aid}, achievement)
-
-    return achievement
+    success = db.achievements.find_one_and_update(
+        {'aid': aid}, {'$set': updates})
+    if not success:
+        return None
+    else:
+        return aid

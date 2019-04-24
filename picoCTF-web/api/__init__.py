@@ -101,7 +101,7 @@ def create_app(test_config=None):
     def handle_pico_exception(e):
         """Handle exceptions."""
         response = jsonify(e.to_dict())
-        response.status_code = 500
+        response.status_code = e.status_code
         return response
 
     @app.errorhandler(WebException)
