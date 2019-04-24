@@ -2,32 +2,25 @@
 
 import inspect
 import logging
-import traceback
 from datetime import datetime
 
-from flask import Flask, session, jsonify
+from flask import Flask, jsonify, session
 from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
 
+import api.apps.achievements
+import api.apps.admin
+import api.apps.group
+import api.apps.problem
+import api.apps.stats
+import api.apps.team
+import api.apps.user
 import api.auth
 import api.config
 import api.logger
-import api.routes.achievements
-import api.routes.admin
-import api.routes.group
-import api.routes.problem
-import api.routes.stats
-import api.routes.team
-import api.routes.user
-from api.common import (
-  InternalException,
-  PicoException,
-  SevereInternalException,
-  WebError,
-  WebException,
-  WebSuccess
-)
-from api.routes.v1 import blueprint as v1_blueprint
+from api.apps.v0 import blueprint as v0_blueprint
+from api.apps.v1 import blueprint as v1_blueprint
+from api.common import PicoException, WebSuccess
 
 log = logging.getLogger(__name__)
 
@@ -80,15 +73,18 @@ def create_app(test_config=None):
     update_mail_config(app)
 
     # Register routes
-    app.register_blueprint(api.routes.user.blueprint, url_prefix="/api/user")
-    app.register_blueprint(api.routes.team.blueprint, url_prefix="/api/team")
-    app.register_blueprint(api.routes.stats.blueprint, url_prefix="/api/stats")
-    app.register_blueprint(api.routes.admin.blueprint, url_prefix="/api/admin")
-    app.register_blueprint(api.routes.group.blueprint, url_prefix="/api/group")
+    app.register_blueprint(api.apps.user.blueprint, url_prefix="/api/user")
+    app.register_blueprint(api.apps.team.blueprint, url_prefix="/api/team")
+    app.register_blueprint(api.apps.stats.blueprint, url_prefix="/api/stats")
+    app.register_blueprint(api.apps.admin.blueprint, url_prefix="/api/admin")
+    app.register_blueprint(api.apps.group.blueprint, url_prefix="/api/group")
     app.register_blueprint(
-        api.routes.problem.blueprint, url_prefix="/api/problems")
+        api.apps.problem.blueprint, url_prefix="/api/problems")
     app.register_blueprint(
-        api.routes.achievements.blueprint, url_prefix="/api/achievements")
+        api.apps.achievements.blueprint, url_prefix="/api/achievements")
+    app.register_blueprint(
+        v0_blueprint, url_prefix="/api/v0"
+    )
     app.register_blueprint(
         v1_blueprint, url_prefix="/api/v1"
     )
@@ -104,29 +100,29 @@ def create_app(test_config=None):
         response.status_code = e.status_code
         return response
 
-    @app.errorhandler(WebException)
-    def handle_web_exception(e):
-        return WebError(e.args[0], e.data), 500
+    # @app.errorhandler(WebException)
+    # def handle_web_exception(e):
+    #     return WebError(e.args[0], e.data), 500
 
-    @app.errorhandler(InternalException)
-    def handle_internal_exception(e):
-        get_origin_logger(e).error(traceback.format_exc())
-        return WebError(e.args[0]), 500
+    # @app.errorhandler(InternalException)
+    # def handle_internal_exception(e):
+    #     get_origin_logger(e).error(traceback.format_exc())
+    #     return WebError(e.args[0]), 500
 
-    @app.errorhandler(SevereInternalException)
-    def handle_severe_internal_exception(e):
-        get_origin_logger(e).critical(traceback.format_exc())
-        return WebError(
-                "There was a critical internal error. " +
-                "Contact an administrator."
-            ), 500
+    # @app.errorhandler(SevereInternalException)
+    # def handle_severe_internal_exception(e):
+    #     get_origin_logger(e).critical(traceback.format_exc())
+    #     return WebError(
+    #             "There was a critical internal error. " +
+    #             "Contact an administrator."
+    #         ), 500
 
-    @app.errorhandler(Exception)
-    def handle_generic_exception(e):
-        get_origin_logger(e).error(traceback.format_exc())
-        return WebError(
-            "An error occurred. Please contact an " +
-            "administrator."), 500
+    # @app.errorhandler(Exception)
+    # def handle_generic_exception(e):
+    #     get_origin_logger(e).error(traceback.format_exc())
+    #     return WebError(
+    #         "An error occurred. Please contact an " +
+    #         "administrator."), 500
 
     # Configure logging
     with app.app_context():

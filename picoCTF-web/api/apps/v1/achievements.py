@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource, reqparse, inputs
 from api.common import PicoException
 import api.achievement
-ns = Namespace('achievements', description='Achievement related endpoints')
+ns = Namespace('achievements', description='Achievement management')
 
 achievement_req = reqparse.RequestParser()
 achievement_req.add_argument(

@@ -696,7 +696,7 @@ def get_all_problems(category=None, show_disabled=False, basic_only=False):
         show_disabled: Whether or not to show disabled problems.
         basic_only: Only return name, cat, score. Used for progression tracking
     Returns:
-        List of problems from the database
+        List of problem dicts
     """
     db = api.db.get_conn()
 

@@ -6,8 +6,9 @@ from flask_restplus import Api
 from api.common import PicoException
 
 from .achievements import ns as achievements_ns
+from .problems import ns as problems_ns
 
-blueprint = Blueprint('api', __name__)
+blueprint = Blueprint('v1_api', __name__)
 api = Api(
     app=blueprint,
     title='picoCTF API',
@@ -15,6 +16,7 @@ api = Api(
 )
 
 api.add_namespace(achievements_ns)
+api.add_namespace(problems_ns)
 
 
 @api.errorhandler(PicoException)
