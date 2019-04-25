@@ -144,7 +144,7 @@ def get_all_categories(show_disabled=False):
 
 def set_instance_ids(problem, sid):
     """Generate the instance ids for a set of problems."""
-    server_number = api.shell_servers.get_server_number(sid)
+    server_number = api.shell_servers.get_server(sid)['server_number']
 
     for instance in problem["instances"]:
         instance["iid"] = api.common.hash(

@@ -24,7 +24,7 @@ from flask_restplus import Namespace, Resource
 
 import api.problem
 
-from .schemas import shell_server_req
+from .schemas import shell_server_out
 
 
 ns = Namespace('problems', description='Problem management')
@@ -40,12 +40,12 @@ class ProblemList(Resource):
         return api.problem.get_all_problems(), 200
 
     # @require_admin
-    @ns.expect(shell_server_req)
+    @ns.expect(shell_server_out)
     @ns.response(200, 'Problem list updated')
     @ns.response(400, 'Error parsing request')
     def patch(self):
         """Update the problem and bundle state via shell server output."""
-        req = shell_server_req.parse_args(strict=True)
+        req = shell_server_out.parse_args(strict=True)
         api.problem.load_published({
             'problems': req['problems'][0],
             'bundles': req['bundles'][0],

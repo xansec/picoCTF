@@ -8,6 +8,12 @@ def object_type(value):
 object_type.__schema__ = {'type': 'object'} # noqa
 
 
+def protocol_type(value):
+    if value not in ['HTTP', 'HTTPS']:
+        raise ValueError('Invalid protocol (must be HTTP or HTTPS)')
+    return value
+protocol_type.__schema__ = {'type': 'string'} # noqa
+
 # Achievement request schema
 achievement_req = reqparse.RequestParser()
 achievement_req.add_argument(
@@ -44,14 +50,14 @@ for arg in achievement_patch_req.args:
 # Shell server output schema
 # (This is too complex for reqparse to really handle, so we'll trust it.
 #  If we move to another validation engine e.g. marshmallow, we can revisit.)
-shell_server_req = reqparse.RequestParser()
-shell_server_req.add_argument(
+shell_server_out = reqparse.RequestParser()
+shell_server_out.add_argument(
     'sid', required=True, type=inputs.natural, location='args',
     help="Shell server ID.")
-shell_server_req.add_argument(
+shell_server_out.add_argument(
     'problems', required=True, type=object_type, action='append',
     location='json')
-shell_server_req.add_argument(
+shell_server_out.add_argument(
     'bundles', required=False, type=object_type, action='append',
     location='json')
 
@@ -59,6 +65,35 @@ shell_server_req.add_argument(
 # ("disabled" is the only mutable field as the others are controlled by the
 #  shell manager.)
 problem_patch_req = reqparse.RequestParser()
+# @TODO: finish after shell server part is in place
 problem_patch_req.add_argument(
     ''
 )
+
+# Shell server request schema
+shell_server_req = reqparse.RequestParser()
+shell_server_req.add_argument(
+    'name', required=True, type=str,
+    help='Shell server display name.')
+shell_server_req.add_argument(
+    'host', required=True, type=str,
+    help='Shell server hostname.')
+shell_server_req.add_argument(
+    'port', required=True, type=inputs.int_range(1, 65535),
+    help='Shell server port.')
+shell_server_req.add_argument(
+    'username', required=True, type=str,
+    help='Username.')
+shell_server_req.add_argument(
+    'password', required=True, type=str,
+    help='Password.')
+shell_server_req.add_argument(
+    'protocol', required=True, type=protocol_type,
+    help='Protocol (HTTP/HTTPS).'
+)
+shell_server_req.add_argument(
+    'server_number', required=False, type=inputs.positive,
+    help='Server number (will be automatically assigned if not provided).')
+shell_server_patch_req = shell_server_req.copy()
+for arg in shell_server_patch_req.args:
+    arg.required = False

@@ -60,8 +60,6 @@ def index_mongo():
     db.teams.ensure_index("team_name", unique=True, name="unique team names")
     db.teams.ensure_index("country")
 
-    db.shell_servers.ensure_index(
-        "name", unique=True, name="unique shell name")
     db.shell_servers.ensure_index("sid", unique=True, name="unique shell sid")
 
     db.cache.ensure_index("expireAt", expireAfterSeconds=0)

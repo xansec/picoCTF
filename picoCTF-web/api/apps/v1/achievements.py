@@ -14,6 +14,7 @@ ns = Namespace('achievements', description='Achievement management')
 class AchievementList(Resource):
     """Get the full list of achievements, or add a new achievement."""
 
+    @ns.response(200, 'Success')
     def get(self):
         """Get the full list of achievements."""
         return api.achievement.get_all_achievements(), 200
@@ -22,7 +23,7 @@ class AchievementList(Resource):
     @ns.response(201, 'Achievement added')
     @ns.response(400, 'Error parsing request')
     def post(self):
-        """Insert a new achievement."""
+        """Add a new achievement."""
         req = achievement_req.parse_args(strict=True)
         aid = api.achievement.insert_achievement(**req)
         res = jsonify({
@@ -33,12 +34,12 @@ class AchievementList(Resource):
         return res
 
 
-@ns.route('/<string:achievement_id>')
+@ns.response(200, 'Success')
 @ns.response(404, 'Achievement not found')
+@ns.route('/<string:achievement_id>')
 class Achievement(Resource):
     """Get or update a specific achievement."""
 
-    @ns.response(200, 'Success')
     def get(self, achievement_id):
         """Retrieve a specific achievement."""
         res = api.achievement.get_achievement(achievement_id)
@@ -48,9 +49,7 @@ class Achievement(Resource):
             return res, 200
 
     @ns.expect(achievement_req)
-    @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
-    @ns.response(404, 'Achievement not found')
     def put(self, achievement_id):
         """Replace an existing achievement."""
         req = achievement_req.parse_args(strict=True)
@@ -65,9 +64,7 @@ class Achievement(Resource):
         return res
 
     @ns.expect(achievement_patch_req)
-    @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
-    @ns.response(404, 'Achievement not found')
     def patch(self, achievement_id):
         """Update an existing achievement."""
         req = {
