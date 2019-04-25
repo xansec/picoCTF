@@ -107,6 +107,5 @@ please:
 - Use [isort](https://github.com/timothycrosley/isort#readme) for
   imports. We have checked in a `.isort.cfg` to help, so you should just have to
   run `isort -rv .`
-- Run [yapf](https://pypi.org/project/yapf/)
 
 We really appreciate your help improving the code quality.

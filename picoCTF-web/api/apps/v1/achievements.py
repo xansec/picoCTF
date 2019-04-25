@@ -1,41 +1,13 @@
 """Achievement related endpoints."""
 from flask import jsonify
-from flask_restplus import Namespace, Resource, reqparse, inputs
-from api.common import PicoException
-import api.achievement
-ns = Namespace('achievements', description='Achievement management')
+from flask_restplus import Namespace, Resource
 
-achievement_req = reqparse.RequestParser()
-achievement_req.add_argument(
-    'name', required=True, type=str,
-    help='Name of the achievement.')
-achievement_req.add_argument(
-    'score', required=True, type=inputs.natural,
-    help='Point value of the achievement (positive integer).')
-achievement_req.add_argument(
-    'description', required=True, type=str,
-    help='Description of the achievement.')
-achievement_req.add_argument(
-    'processor', required=True, type=str,
-    help='Path to the achievement processor.')
-achievement_req.add_argument(
-    'hidden', required=True, type=inputs.boolean,
-    help='Hide this achievement?')
-achievement_req.add_argument(
-    'image', required=True, type=str,
-    help='Path to achievement image.')
-achievement_req.add_argument(
-    'smallimage', required=True, type=str,
-    help='Path to achievement thumbnail.')
-achievement_req.add_argument(
-    'disabled', required=True, type=inputs.boolean,
-    help='Disable this achievement?')
-achievement_req.add_argument(
-    'multiple', required=True, type=inputs.boolean,
-    help='Allow earning multiple instances of this achievement?')
-achievement_patch_req = achievement_req.copy()
-for arg in achievement_patch_req.args:
-    arg.required = False
+import api.achievement
+from api.common import PicoException
+
+from .schemas import achievement_patch_req, achievement_req
+
+ns = Namespace('achievements', description='Achievement management')
 
 
 @ns.route('/')

@@ -154,18 +154,15 @@ def set_instance_ids(problem, sid):
             instance["server_number"] = server_number
 
 
-def insert_problem(problem, sid=None):
+def insert_problem(problem, sid):
     """
     Insert a problem into the database.
 
     Does sane validation.
 
     Args:
-        Problem dict.
-        score: points awarded for completing the problem.
-        category: problem's category
-        author: author of the problem
-        description: description of the problem.
+        problem dict,
+        shell server ID
 
         Optional:
         version: version of the problem
@@ -175,8 +172,6 @@ def insert_problem(problem, sid=None):
     Returns:
         The newly created problem id.
     """
-    if sid is None:
-        raise InternalException("Must provide an sid to insert problem.")
 
     db = api.db.get_conn()
     validate(problem_schema, problem)
@@ -973,9 +968,6 @@ def load_published(data):
     Args:
         data: The output of "shell_manager publish"
     """
-    if "problems" not in data:
-        raise WebException("Please provide a problems list in your json.")
-
     for problem in data["problems"]:
         insert_problem(problem, sid=data["sid"])
 

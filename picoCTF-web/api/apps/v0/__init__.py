@@ -1,6 +1,6 @@
-"""Legacy API shim to support 2019 game."""
-
 """
+Legacy API shim to support 2019 game.
+
 Provides legacy behavior for:
 
 /api/user/login
@@ -14,10 +14,7 @@ Provides legacy behavior for:
 /api/problems/walkthrough?pid=<pid>
 """
 
-from flask import Blueprint, jsonify
-from flask_restplus import Api
-
-from api.common import PicoException
+from flask import Blueprint
 
 
 blueprint = Blueprint('v0_api', __name__)
