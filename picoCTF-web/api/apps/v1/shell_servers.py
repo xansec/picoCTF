@@ -90,12 +90,31 @@ class ShellServer(Resource):
 
     # @require_admin
     def delete(self, server_id):
-        """Delete a shell server."""
+        """Delete a specific shell server."""
         sid = api.shell_servers.remove_server(server_id)
         if sid is None:
             raise PicoException('Shell server not found', status_code=404)
         res = jsonify({
             'success': True,
+        })
+        res.response_code = 200
+        return res
+
+
+@ns.response(200, 'Success')
+@ns.response(404, 'Shell server not found')
+@ns.route('/<string:server_id>/status')
+class ShellServerStatus(Resource):
+    """Get the problem status for a specific shell server."""
+
+    # @require_admin
+    def get(self, server_id):
+        """Get the problem status on a specific shell server."""
+        all_online, data = \
+            api.shell_servers.get_problem_status_from_server(server_id)
+        res = jsonify({
+            'all_problems_online': all_online,
+            'status': data
         })
         res.response_code = 200
         return res

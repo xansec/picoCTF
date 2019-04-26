@@ -23,9 +23,9 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api.problem
+from api.common import PicoException
 
 from .schemas import shell_server_out
-
 
 ns = Namespace('problems', description='Problem management')
 
@@ -37,20 +37,44 @@ class ProblemList(Resource):
     # @require_admin
     def get(self):
         """Get the full list of problems."""
-        return api.problem.get_all_problems(), 200
+        return api.problem.get_all_problems(show_disabled=True), 200
 
     # @require_admin
     @ns.expect(shell_server_out)
     @ns.response(200, 'Problem list updated')
     @ns.response(400, 'Error parsing request')
+    @ns.response(404, 'Shell server not found')
     def patch(self):
-        """Update the problem and bundle state via shell server output."""
-        req = shell_server_out.parse_args(strict=True)
-        api.problem.load_published({
-            'problems': req['problems'][0],
-            'bundles': req['bundles'][0],
-            'sid': req['sid']
-        })
+        """
+        Update the problem and bundle state via shell server output.
+
+        If `shell_manager publish` output is not provided as a payload,
+        will attempt to automatically request it from the provided
+        shell server.
+        """
+        req = {
+            k: v for k, v in
+            shell_server_out.parse_args(strict=True).items() if
+            v is not None
+        }
+        # Check that the provided sid is valid
+        found = api.shell_servers.get_server(req['sid'])
+        if found is None:
+            raise PicoException('Shell server not found', status_code=404)
+        if 'problems' in req:
+            api.problem.load_published({
+                'problems': req['problems'][0],
+                'bundles': req['bundles'][0],
+                'sid': req['sid']
+            })
+        else:
+            output = api.shell_servers.get_publish_output(req['sid'])
+            api.problem.load_published({
+                'problems': output['problems'],
+                'bundles': output['bundles'],
+                'sid': req['sid']
+            })
+
         res = jsonify({
             'success': True,
             })

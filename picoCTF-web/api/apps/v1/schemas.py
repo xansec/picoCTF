@@ -52,10 +52,10 @@ for arg in achievement_patch_req.args:
 #  If we move to another validation engine e.g. marshmallow, we can revisit.)
 shell_server_out = reqparse.RequestParser()
 shell_server_out.add_argument(
-    'sid', required=True, type=inputs.natural, location='args',
+    'sid', required=True, type=str, location='args',
     help="Shell server ID.")
 shell_server_out.add_argument(
-    'problems', required=True, type=object_type, action='append',
+    'problems', required=False, type=object_type, action='append',
     location='json')
 shell_server_out.add_argument(
     'bundles', required=False, type=object_type, action='append',

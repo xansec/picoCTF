@@ -11,9 +11,7 @@ import api.team
 from api.common import (
   InternalException,
   PicoException,
-  safe_fail,
-  validate,
-  WebException
+  safe_fail
 )
 
 
@@ -33,7 +31,20 @@ def get_server(sid):
 
 
 def get_connection(sid):
-    """Attempt to connect to the given server and returns a connection."""
+    """
+    Connect to a shell server via SSH.
+
+    Args:
+        sid: the shell server ID
+
+    Returns:
+        spur SshShell connection object
+
+    Raises:
+        PicoException if cannot connect to the host, authenticate, or
+        run shell_manager successfully
+
+    """
     server = get_server(sid)
 
     try:
@@ -46,24 +57,18 @@ def get_connection(sid):
             connect_timeout=10)
         shell.run(["echo", "connected"])
     except spur.ssh.ConnectionError:
-        raise WebException(
+        raise PicoException(
             "Cannot connect to {}@{}:{} with the specified password".format(
                 server["username"], server["host"], server["port"]))
 
-    return shell
-
-
-def ensure_setup(shell):
-    """
-    Verify that shell_manager is set up correctly.
-
-    Leaves connection open.
-    """
     result = shell.run(["sudo", "/picoCTF-env/bin/shell_manager", "status"],
                        allow_error=True)
-    if (result.return_code == 1 and
-            "command not found" in result.stderr_output.decode("utf-8")):
-        raise WebException("shell_manager not installed on server.")
+    if (result.return_code != 0):
+        raise PicoException("Cannot retrieve status from shell_manager.",
+                            data={
+                                'stderr': result.stderr_output.decode('utf-8')
+                            })
+    return shell
 
 
 def add_server(
@@ -109,6 +114,7 @@ def add_server(
     db.shell_servers.insert_one({
         'sid': sid,
         'name': name,
+        'host': host,
         'port': port,
         'username': username,
         'password': password,
@@ -164,6 +170,7 @@ def remove_server(sid):
     Returns:
         sid of the removed shell server, or
         None if the provided sid was not found
+
     """
     db = api.db.get_conn()
     res = db.shell_servers.find_one_and_delete({"sid": sid})
@@ -215,7 +222,6 @@ def get_problem_status_from_server(sid):
 
     """
     shell = get_connection(sid)
-    ensure_setup(shell)
 
     with shell:
         output = shell.run(
@@ -238,19 +244,15 @@ def get_problem_status_from_server(sid):
     return (all_online, data)
 
 
-def load_problems_from_server(sid):
+def get_publish_output(sid):
     """
-    Connect to the server and loads the problems from its deployment state.
-
-    Runs `sudo shell_manager publish` and captures its output.
-
-    Closes connection after running command.
+    Connect to the server and capture the `shell_manager publish` output.
 
     Args:
-        sid: The sid of the server to load problems from.
+        sid: the shell server ID to run the command on
 
     Returns:
-        The number of problems loaded
+        the output as a dict
 
     """
     shell = get_connection(sid)
@@ -258,15 +260,7 @@ def load_problems_from_server(sid):
     with shell:
         result = shell.run(
             ["sudo", "/picoCTF-env/bin/shell_manager", "publish"])
-    data = json.loads(result.output.decode("utf-8"))
-
-    # Pass along the server
-    data["sid"] = sid
-
-    api.problem.load_published(data)
-
-    return len(
-        list(filter(lambda p: len(p["instances"]) > 0, data["problems"])))
+    return json.loads(result.output.decode("utf-8"))
 
 
 def get_assigned_server_number(new_team=True, tid=None):

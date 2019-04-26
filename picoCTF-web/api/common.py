@@ -36,15 +36,17 @@ def hash(string):
 
 
 class PicoException(Exception):
-    def __init__(self, message, status_code=500, payload=None):
+    def __init__(self, message, status_code=500, data=None):
         Exception.__init__(self)
         self.message = message
         self.status_code = status_code
-        self.payload = payload
+        self.data = data
 
     def to_dict(self):
-        rv = dict(self.payload or ())
+        rv = dict()
         rv['message'] = self.message
+        if self.data:
+            rv['data'] = self.data
         return rv
 
 
