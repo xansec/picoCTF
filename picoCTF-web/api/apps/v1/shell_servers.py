@@ -2,10 +2,12 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
+import api.config
 import api.shell_servers
 from api.common import PicoException
 
-from .schemas import shell_server_req, shell_server_patch_req
+from .schemas import (shell_server_reassignment_req, shell_server_patch_req,
+                      shell_server_req)
 
 ns = Namespace('shell_servers', description='Shell server management')
 
@@ -115,6 +117,32 @@ class ShellServerStatus(Resource):
         res = jsonify({
             'all_problems_online': all_online,
             'status': data
+        })
+        res.response_code = 200
+        return res
+
+
+@ns.route('/update_assignments')
+@ns.response(200, 'Success')
+@ns.response(500, 'Sharding not enabled')
+class ShellServerAssignment(Resource):
+    """Update team to shell server mappings when sharding is enabled."""
+
+    # @require_admin
+    @ns.expect(shell_server_reassignment_req)
+    def post(self):
+        """Update teams' shell server assignments."""
+        if not api.config.get_settings()["shell_servers"]["enable_sharding"]:
+            raise PicoException(
+                "Sharding must be enabled to update server assignments.")
+        # replace with req parser
+        req = shell_server_reassignment_req.parse_args(strict=True)
+        include_assigned = req['include_assigned'] is True
+        assigned_count = api.shell_servers.reassign_teams(
+            include_assigned=include_assigned)
+        res = jsonify({
+            'success': True,
+            'teams_reassigned': assigned_count
         })
         res.response_code = 200
         return res

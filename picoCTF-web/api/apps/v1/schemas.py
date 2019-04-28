@@ -97,3 +97,11 @@ shell_server_req.add_argument(
 shell_server_patch_req = shell_server_req.copy()
 for arg in shell_server_patch_req.args:
     arg.required = False
+
+# Shell server reassignment schema
+shell_server_reassignment_req = reqparse.RequestParser()
+shell_server_reassignment_req.add_argument(
+    'include_assigned', required=False, type=inputs.boolean,
+    help="Whether to update the assignments of teams that already have " +
+         "an assigned shell server."
+)
