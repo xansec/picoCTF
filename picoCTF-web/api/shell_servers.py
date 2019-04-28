@@ -180,18 +180,25 @@ def remove_server(sid):
         return sid
 
 
-def get_servers(get_all=False):
-    """
-    Return the list of added shell servers, or the assigned shard.
+def get_all_servers():
+    """Return the full list of shell servers."""
+    db = api.db.get_conn()
+    return list(
+        db.shell_servers.find({}, {"_id": 0})
+    )
 
-    Depends on whether sharding is enabled.
-    Defaults to server 1 if not assigned.
+
+# @TODO remove this and have the shell page get the server_number from the
+# /team call
+def get_assigned_server():
+    """
+    Return the assigned shell server for the currently logged-in team.
     """
     db = api.db.get_conn()
 
     settings = api.config.get_settings()
     match = {}
-    if not get_all and settings["shell_servers"]["enable_sharding"]:
+    if settings["shell_servers"]["enable_sharding"]:
         team = api.team.get_team()
         match = {"server_number": team.get("server_number", 1)}
 

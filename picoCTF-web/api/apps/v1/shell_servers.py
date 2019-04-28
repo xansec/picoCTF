@@ -17,7 +17,7 @@ class ShellServerList(Resource):
     # @require_admin
     def get(self):
         """Get the full list of shell servers."""
-        return api.shell_servers.get_servers(get_all=True), 200
+        return api.shell_servers.get_all_servers(), 200
 
     # @require_admin
     @ns.expect(shell_server_req)

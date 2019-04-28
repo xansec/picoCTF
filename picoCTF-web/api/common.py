@@ -36,13 +36,22 @@ def hash(string):
 
 
 class PicoException(Exception):
+    """
+    General class for exceptions in the picoCTF API.
+
+    Allows specification of a message and response code to display to the
+    client, as well as an optional field for arbitrary data.
+    """
+
     def __init__(self, message, status_code=500, data=None):
+        """Initialize a new PicoException."""
         Exception.__init__(self)
         self.message = message
         self.status_code = status_code
         self.data = data
 
     def to_dict(self):
+        """Convert a PicoException to a dict for serialization."""
         rv = dict()
         rv['message'] = self.message
         if self.data:
