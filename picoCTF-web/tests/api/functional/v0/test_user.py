@@ -64,9 +64,8 @@ def test_login(client):
 def test_status(client):
     """
     Tests the /user/status endpoint.
-
-    Expected results based on a newly initialized DB.
     """
+    # Test with an new empty database
     clear_db()
     res = client.get('/api/user/status')
     status, message, data = decode_response(res)
@@ -80,6 +79,8 @@ def test_status(client):
     assert data['username'] == ''
     assert data['tid'] == ''
     assert data['email_verification'] is False
+
+    # @TODO test when logged in
 
 
 def test_extdata(client):

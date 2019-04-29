@@ -642,7 +642,7 @@ def reevaluate_all_submissions():
         reevaluate_submissions_for_problem(problem["pid"])
 
 
-@memoize
+# @memoize
 def get_problem(pid=None, name=None, tid=None, show_disabled=True):
     """
     Get a single problem.
@@ -715,7 +715,7 @@ def get_all_problems(category=None, show_disabled=False, basic_only=False):
                                                    pymongo.ASCENDING)]))
 
 
-@memoize
+# @memoize
 def get_solved_problems(tid=None, uid=None, category=None,
                         show_disabled=False):
     """
@@ -800,7 +800,7 @@ def is_problem_unlocked(problem, solved):
     return unlocked
 
 
-@memoize
+# @memoize
 def get_unlocked_pids(tid, category=None):
     """
     Get the unlocked pids for a given team.
@@ -823,7 +823,6 @@ def get_unlocked_pids(tid, category=None):
     for pid in unlocked:
         if pid not in team["instances"]:
             assign_instance_to_team(pid, tid)
-
     return unlocked
 
 
@@ -923,7 +922,6 @@ def get_visible_problems(tid, category=None):
                 unlocked_filter(
                     get_problem_instance(problem["pid"], tid),
                     problem["pid"] in solved_pids))
-
     return result
 
 

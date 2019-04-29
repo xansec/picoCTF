@@ -113,13 +113,12 @@ def update_extdata_hook():
     return WebSuccess("Your Extdata has been successfully updated."), 200
 
 
-@blueprint.route('/problems/', defaults={'category': None}, methods=['GET'])
-@blueprint.route('/problems/category/<category>', methods=['GET'])
+@blueprint.route('/problems/', methods=['GET'])
 @require_login
 @block_before_competition()
-def get_visible_problems_hook(category):
+def get_visible_problems_hook():
     visible_problems = api.problem.get_visible_problems(
-        api.user.get_user()['tid'], category=category)
+        api.user.get_user()['tid'], category=None)
     return WebSuccess(
         data=api.problem.sanitize_problem_data(visible_problems)), 200
 
