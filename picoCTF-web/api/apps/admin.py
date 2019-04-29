@@ -16,6 +16,9 @@ from api.common import WebError, WebSuccess
 
 blueprint = Blueprint("admin_api", __name__)
 
+# (/v1/problems, although feedback is not included currently)
+# check if not displaying feedback or bundles in the new
+# endpoint is a frontend problem
 
 @blueprint.route('/problems', methods=['GET'])
 @require_admin
@@ -90,14 +93,14 @@ def change_problem_availability_hook():
     api.admin.set_problem_availability(pid, state)
     return WebSuccess(data="Problem state changed successfully."), 200
 
-
+# done (v1/shell_servers)
 @blueprint.route("/shell_servers", methods=["GET"])
 @require_admin
 def get_shell_servers():
     return WebSuccess(data=api.shell_servers
-                              .get_servers(get_all=True)), 200
+                              .get_all_servers()), 200
 
-
+# done
 @blueprint.route("/shell_servers/add", methods=["POST"])
 @require_admin
 def add_shell_server():
@@ -105,7 +108,7 @@ def add_shell_server():
     api.shell_servers.add_server(params)
     return WebSuccess("Shell server added."), 201
 
-
+# done
 @blueprint.route("/shell_servers/update", methods=["POST"])
 @require_admin
 def update_shell_server():
@@ -118,7 +121,7 @@ def update_shell_server():
     api.shell_servers.update_server(sid, params)
     return WebSuccess("Shell server updated."), 200
 
-
+# done
 @blueprint.route("/shell_servers/remove", methods=["POST"])
 @require_admin
 def remove_shell_server():
@@ -129,7 +132,7 @@ def remove_shell_server():
     api.shell_servers.remove_server(sid)
     return WebSuccess("Shell server removed."), 200
 
-
+# done (PATCH v1/problems)
 @blueprint.route("/shell_servers/load_problems", methods=["POST"])
 @require_admin
 def load_problems_from_shell_server():
@@ -143,6 +146,7 @@ def load_problems_from_shell_server():
         "Loaded {} problems from the server".format(number)), 200
 
 
+# done
 @blueprint.route("/shell_servers/check_status", methods=["GET"])
 @require_admin
 def check_status_of_shell_server():

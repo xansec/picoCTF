@@ -2,6 +2,7 @@
 
 import inspect
 import logging
+import traceback
 from datetime import datetime
 
 from flask import Flask, jsonify, session
@@ -20,7 +21,14 @@ import api.config
 import api.logger
 from api.apps.v0 import blueprint as v0_blueprint
 from api.apps.v1 import blueprint as v1_blueprint
-from api.common import PicoException, WebSuccess
+from api.common import (
+  InternalException,
+  PicoException,
+  SevereInternalException,
+  WebError,
+  WebException,
+  WebSuccess
+)
 
 log = logging.getLogger(__name__)
 
@@ -100,29 +108,30 @@ def create_app(test_config=None):
         response.status_code = e.status_code
         return response
 
-    # @app.errorhandler(WebException)
-    # def handle_web_exception(e):
-    #     return WebError(e.args[0], e.data), 500
+    if not app.debug:
+        @app.errorhandler(WebException)
+        def handle_web_exception(e):
+            return WebError(e.args[0], e.data), 500
 
-    # @app.errorhandler(InternalException)
-    # def handle_internal_exception(e):
-    #     get_origin_logger(e).error(traceback.format_exc())
-    #     return WebError(e.args[0]), 500
+        @app.errorhandler(InternalException)
+        def handle_internal_exception(e):
+            get_origin_logger(e).error(traceback.format_exc())
+            return WebError(e.args[0]), 500
 
-    # @app.errorhandler(SevereInternalException)
-    # def handle_severe_internal_exception(e):
-    #     get_origin_logger(e).critical(traceback.format_exc())
-    #     return WebError(
-    #             "There was a critical internal error. " +
-    #             "Contact an administrator."
-    #         ), 500
+        @app.errorhandler(SevereInternalException)
+        def handle_severe_internal_exception(e):
+            get_origin_logger(e).critical(traceback.format_exc())
+            return WebError(
+                    "There was a critical internal error. " +
+                    "Contact an administrator."
+                ), 500
 
-    # @app.errorhandler(Exception)
-    # def handle_generic_exception(e):
-    #     get_origin_logger(e).error(traceback.format_exc())
-    #     return WebError(
-    #         "An error occurred. Please contact an " +
-    #         "administrator."), 500
+        @app.errorhandler(Exception)
+        def handle_generic_exception(e):
+            get_origin_logger(e).error(traceback.format_exc())
+            return WebError(
+                "An error occurred. Please contact an " +
+                "administrator."), 500
 
     # Configure logging
     with app.app_context():

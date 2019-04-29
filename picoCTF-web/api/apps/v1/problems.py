@@ -32,11 +32,16 @@ ns = Namespace('problems', description='Problem management')
 
 @ns.route('/')
 class ProblemList(Resource):
-    """Get the full list of problems, or update the problem/bundle state."""
+    """Get the list of problems, or update the problem/bundle state."""
 
     # @require_admin
     def get(self):
-        """Get the full list of problems."""
+        """
+        Get the list of problems.
+
+        As an admin, displays the full list of problems.
+        As a user, displays a filtered list of unlocked problems.
+        """
         return api.problem.get_all_problems(show_disabled=True), 200
 
     # @require_admin
