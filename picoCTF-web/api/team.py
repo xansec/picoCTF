@@ -474,11 +474,11 @@ def join_team(team_name, password, uid=None):
                         gid=group["gid"], tid=desired_team["tid"])
 
         # Immediately invalidate some caches
-        api.problem.get_unlocked_pids(desired_team['tid'], recache=True)
+        api.problem.get_unlocked_pids(desired_team['tid'])
         api.problem.get_solved_problems(tid=desired_team['tid'],
-                                        uid=user['uid'], recache=True)
-        api.stats.get_score(tid=desired_team['tid'], recache=True)
-        api.stats.get_score_progression(tid=desired_team['tid'], recache=True)
+                                        uid=user['uid'])
+        api.stats.get_score(tid=desired_team['tid'])
+        api.stats.get_score_progression(tid=desired_team['tid'])
 
         return True
     else:

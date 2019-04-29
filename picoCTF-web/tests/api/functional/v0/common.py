@@ -1,13 +1,15 @@
 """Utilities for functional tests."""
 
-import pytest
+import datetime
 import json
-import pymongo
 import re
+
+import pymongo
+import pytest
+
 import api
 import api.problem
 import api.shell_servers
-from bson import json_util
 
 TESTING_DB_NAME = 'ctf_test'
 db = None
@@ -476,3 +478,12 @@ def enable_sample_problems():
     """Enable any sample problems in the DB."""
     db = get_conn()
     db.problems.update_many({}, {'$set': {'disabled': False}})
+
+
+def ensure_within_competition():
+    """Adjust the competition times so that protected methods are callable."""
+    db = get_conn()
+    db.settings.update_one({}, {'$set': {
+        'start_time': datetime.datetime.utcnow() - datetime.timedelta(1),
+        'end_time': datetime.datetime.utcnow() + datetime.timedelta(1),
+        }})

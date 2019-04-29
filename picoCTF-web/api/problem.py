@@ -462,10 +462,10 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
 
     if correct and not previously_solved_by_user:
         # Immediately invalidate some caches
-        api.stats.get_score(tid=tid, uid=uid, recache=True)
-        api.stats.get_unlocked_pids(tid, recache=True)
-        get_solved_problems(tid=tid, uid=uid, recache=True)
-        api.stats.get_score_progression(tid=tid, uid=uid, recache=True)
+        api.stats.get_score(tid=tid, uid=uid)
+        # api.stats.get_unlocked_pids(tid) # @TODO fix this
+        get_solved_problems(tid=tid, uid=uid)
+        api.stats.get_score_progression(tid=tid, uid=uid)
 
         # Process achievements
         api.achievement.process_achievements("submit", {

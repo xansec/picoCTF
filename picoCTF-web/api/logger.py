@@ -59,12 +59,14 @@ class StatsHandler(logging.StreamHandler):
             lambda gid, result=None: {
                 "gid": gid
             },
+
+        # @TODO fix this
         "api.problem.submit_key":
             lambda tid, pid, key, method, uid=None, ip=None, result=None: {
                 "pid": pid,
                 "key": key,
                 "method": method,
-                "success": result[0]
+                "success": result,
             },
         "api.problem_feedback.add_problem_feedback":
             lambda pid, uid, feedback, result=None: {

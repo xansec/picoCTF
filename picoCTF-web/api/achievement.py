@@ -233,8 +233,8 @@ def process_achievements(event, data):
         data["tid"] = api.user.get_user(uid=data["uid"])["tid"]
 
     eligible_achievements = [
-        # @todo
-        achievement for achievement in _get_all_achievements(event=event)
+        # @TODO fix achievement processing (no longer by event)
+        achievement for achievement in get_all_achievements()
         if achievement["aid"] not in get_earned_aids(
             tid=data["tid"]) or achievement.get("multiple", False)
     ]

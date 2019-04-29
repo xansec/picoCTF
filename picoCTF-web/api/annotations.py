@@ -5,7 +5,7 @@ from datetime import datetime
 from functools import wraps
 
 from bson import json_util
-from flask import request, session
+from flask import request, session, current_app
 
 import api.auth
 import api.config
