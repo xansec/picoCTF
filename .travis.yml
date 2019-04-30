@@ -4,6 +4,12 @@ sudo: false
 
 language: python
 cache: pip
+
+# turn off notifications
+notifications:
+  email: false
+
+
 before_script:
   - pip install tox
 
