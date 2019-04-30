@@ -113,7 +113,7 @@ def update_extdata_hook():
     return WebSuccess("Your Extdata has been successfully updated."), 200
 
 
-@blueprint.route('/problems/', methods=['GET'])
+@blueprint.route('/problems', methods=['GET'])
 @require_login
 @block_before_competition()
 def get_visible_problems_hook():

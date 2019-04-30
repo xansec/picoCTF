@@ -1,4 +1,4 @@
-"""Tests for the /api/team routes."""
+"""Tests for the /api/v0/team routes."""
 
 from .common import (
   ADMIN_DEMOGRAPHICS,
@@ -22,17 +22,17 @@ def test_score(client):
     register_test_accounts()
 
     # Test without being logged in
-    res = client.get('/api/team/score')
+    res = client.get('/api/v0/team/score')
     status, message, data = decode_response(res)
     assert status == 0
     assert message == 'You must be logged in'
 
     # Test after logging in - inital score should be 0
-    client.post('/api/user/login', data={
+    client.post('/api/v0/user/login', data={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password'],
         })
-    res = client.get('/api/team/score')
+    res = client.get('/api/v0/team/score')
     csrf_t = get_csrf_token(res)
     status, message, data = decode_response(res)
     assert status == 1
@@ -42,7 +42,7 @@ def test_score(client):
     load_sample_problems()
     enable_sample_problems()
     ensure_within_competition()
-    res = client.get('/api/problems')
+    res = client.get('/api/v0/problems')
     status, message, data = decode_response(res)
     unlocked_pids = [problem['pid'] for problem in data]
     db = get_conn()
@@ -61,14 +61,14 @@ def test_score(client):
             assigned_instance = instance
             break
     correct_key = assigned_instance['flag']
-    res = client.post('/api/problems/submit', data={
+    res = client.post('/api/v0/problems/submit', data={
         'token': csrf_t,
         'pid': unlocked_pids[0],
         'key': correct_key,
         'method': 'testing'
     })
 
-    res = client.get('/api/team/score')
+    res = client.get('/api/v0/team/score')
     csrf_t = get_csrf_token(res)
     status, message, data = decode_response(res)
     assert status == 1

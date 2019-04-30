@@ -1,4 +1,4 @@
-"""Tests for the /api/problem/ routes."""
+"""Tests for the /api/v0/problems/ routes."""
 
 from .common import (
   clear_db,
@@ -21,18 +21,18 @@ def test_problems(client):
     register_test_accounts()
 
     # Test without logging in
-    res = client.get('/api/problems')
+    res = client.get('/api/v0/problems')
     status, message, data = decode_response(res)
     assert status == 0
     assert message == 'You must be logged in'
 
     # Test without any loaded problems
-    client.post('/api/user/login', data={
+    client.post('/api/v0/user/login', data={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password'],
         })
 
-    res = client.get('/api/problems')
+    res = client.get('/api/v0/problems')
     status, message, data = decode_response(res)
     assert status == 1
     assert data == []
@@ -40,14 +40,14 @@ def test_problems(client):
     # Test after loading sample problems
     # Should still display none as disabled problems are filtered out
     load_sample_problems()
-    res = client.get('/api/problems')
+    res = client.get('/api/v0/problems')
     status, message, data = decode_response(res)
     assert status == 1
     assert data == []
 
     # Test after enabling sample problems
     enable_sample_problems()
-    res = client.get('/api/problems')
+    res = client.get('/api/v0/problems')
     status, message, data = decode_response(res)
     assert status == 1
     for i in range(len(data)):
@@ -69,25 +69,25 @@ def test_submit(client):
     ensure_within_competition()
 
     # Test without being logged in
-    res = client.post('/api/problems/submit', data={})
+    res = client.post('/api/v0/problems/submit', data={})
     status, message, data = decode_response(res)
     assert status == 0
     assert message == 'You must be logged in'
 
     # Test without CSRF token
-    client.post('/api/user/login', data={
+    client.post('/api/v0/user/login', data={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password'],
         })
 
-    res = client.post('/api/problems/submit', data={})
+    res = client.post('/api/v0/problems/submit', data={})
     status, message, data = decode_response(res)
     assert status == 0
     assert message == 'CSRF token not in form'
     csrf_t = get_csrf_token(res)
 
     # Test submitting a solution to an invalid problem
-    res = client.post('/api/problems/submit', data={
+    res = client.post('/api/v0/problems/submit', data={
         'token': csrf_t,
         'pid': 'invalid',
         'key': 'incorrect',
@@ -99,11 +99,11 @@ def test_submit(client):
                       "unlocked."
 
     # Test submitting an incorrect solution to a valid problem
-    res = client.get('/api/problems')
+    res = client.get('/api/v0/problems')
     status, message, data = decode_response(res)
     unlocked_pids = [problem['pid'] for problem in data]
 
-    res = client.post('/api/problems/submit', data={
+    res = client.post('/api/v0/problems/submit', data={
         'token': csrf_t,
         'pid': unlocked_pids[0],
         'key': 'incorrect',
@@ -128,7 +128,7 @@ def test_submit(client):
             break
     correct_key = assigned_instance['flag']
 
-    res = client.post('/api/problems/submit', data={
+    res = client.post('/api/v0/problems/submit', data={
         'token': csrf_t,
         'pid': unlocked_pids[0],
         'key': correct_key,
@@ -139,7 +139,7 @@ def test_submit(client):
     assert message == 'That is correct!'
 
     # Test submitting the correct solution a second time
-    res = client.post('/api/problems/submit', data={
+    res = client.post('/api/v0/problems/submit', data={
         'token': csrf_t,
         'pid': unlocked_pids[0],
         'key': correct_key,
@@ -152,7 +152,7 @@ def test_submit(client):
 
     # Test submitting an incorrect solution a second time
     # @TODO cases where another team member has solved
-    res = client.post('/api/problems/submit', data={
+    res = client.post('/api/v0/problems/submit', data={
         'token': csrf_t,
         'pid': unlocked_pids[0],
         'key': 'incorrect',

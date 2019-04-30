@@ -23,7 +23,7 @@ def test_login(client):
     assert message == 'You do not appear to be logged in.'
 
     # Test logging in with an invalid username
-    res = client.post('/api/user/login', data={
+    res = client.post('/api/v0/user/login', data={
         'username': 'invalidusername',
         'password': USER_DEMOGRAPHICS['password'],
         })
@@ -32,7 +32,7 @@ def test_login(client):
     assert message == 'Incorrect username.'
 
     # Test logging in with an invalid password
-    res = client.post('/api/user/login', data={
+    res = client.post('/api/v0/user/login', data={
         'username': USER_DEMOGRAPHICS['username'],
         'password': 'invalidpassword',
         })
@@ -41,7 +41,7 @@ def test_login(client):
     assert message == 'Incorrect password'
 
     # Test logging in with correct credentials
-    res = client.post('/api/user/login', data={
+    res = client.post('/api/v0/user/login', data={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password'],
         })
@@ -63,7 +63,7 @@ def test_status(client):
     clear_db()
     register_test_accounts()
     # Test with an new empty database
-    res = client.get('/api/user/status')
+    res = client.get('/api/v0/user/status')
     status, message, data = decode_response(res)
     assert res.status_code == 200
     assert data['logged_in'] is False
@@ -77,11 +77,11 @@ def test_status(client):
     assert data['email_verification'] is False
 
     # Test when logged in as a standard user
-    res = client.post('/api/user/login', data={
+    res = client.post('/api/v0/user/login', data={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password'],
         })
-    res = client.get('/api/user/status')
+    res = client.get('/api/v0/user/status')
     status, message, data = decode_response(res)
     assert data['logged_in'] is True
     assert data['admin'] is False
@@ -95,12 +95,12 @@ def test_status(client):
     assert data['score'] == 0
 
     # Test when logged in as a teacher
-    res = client.get('/api/user/logout')
-    res = client.post('/api/user/login', data={
+    res = client.get('/api/v0/user/logout')
+    res = client.post('/api/v0/user/login', data={
         'username': TEACHER_DEMOGRAPHICS['username'],
         'password': TEACHER_DEMOGRAPHICS['password'],
         })
-    res = client.get('/api/user/status')
+    res = client.get('/api/v0/user/status')
     status, message, data = decode_response(res)
     assert data['logged_in'] is True
     assert data['admin'] is False
@@ -115,11 +115,11 @@ def test_status(client):
 
     # Test when logged in as an admin
     res = client.get('/api/user/logout')
-    res = client.post('/api/user/login', data={
+    res = client.post('/api/v0/user/login', data={
         'username': ADMIN_DEMOGRAPHICS['username'],
         'password': ADMIN_DEMOGRAPHICS['password'],
         })
-    res = client.get('/api/user/status')
+    res = client.get('/api/v0/user/status')
     status, message, data = decode_response(res)
     assert data['logged_in'] is True
     assert data['admin'] is True
@@ -137,13 +137,13 @@ def test_extdata(client):
     """Tests the /user/extdata endpoint."""
     clear_db()
     register_test_accounts()
-    res = client.post('/api/user/login', data={
+    res = client.post('/api/v0/user/login', data={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password'],
         })
     csrf_t = get_csrf_token(res)
     # Set some extdata
-    res = client.put('/api/user/extdata', data={
+    res = client.put('/api/v0/user/extdata', data={
         'samplekey': 'samplevalue',
         'numerickey': 2,
         'token': csrf_t
@@ -152,7 +152,7 @@ def test_extdata(client):
     assert status == 1
     assert message == 'Your Extdata has been successfully updated.'
     # Retrieve extdata
-    res = client.get('/api/user/extdata')
+    res = client.get('/api/v0/user/extdata')
     status, message, data = decode_response(res)
     assert status == 1
     assert data['samplekey'] == 'samplevalue'
