@@ -1,14 +1,10 @@
 """Classes and functions used by multiple modules in the system."""
 import uuid
-from dataclasses import dataclass
-from datetime import datetime
 from hashlib import md5
-from typing import Any
-import bcrypt
-from voluptuous import Invalid, MultipleInvalid
-import bson.json_util as json_util
 
-import api.config
+import bcrypt
+import bson.json_util as json_util
+from voluptuous import Invalid, MultipleInvalid
 
 
 def token():
@@ -243,11 +239,3 @@ def hash_password(password):
 
     """
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(8))
-
-
-def check_competition_active():
-    """Check whether the competition is currently running."""
-    settings = api.config.get_settings()
-
-    return settings["start_time"].timestamp() < datetime.utcnow().timestamp(
-    ) < settings["end_time"].timestamp()

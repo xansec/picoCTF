@@ -49,9 +49,11 @@ You can easily bring up an instance of the picoCTF-web API in Flask's developmen
 
     ```shell
     $ export FLASK_APP=api
-    $ export FLASK_ENV=development
+    $ export FLASK_ENV=development # see warning below regarding tests
     $ flask run
     ```
+
+    Note that enabling development mode (setting `FLASK_ENV` to `development`) will enable live reloading and disable global exception handling, but will break the pytest tests, which expect exceptions to be handled. Consider running the tests in a different shell.
 
 ## Testing
 

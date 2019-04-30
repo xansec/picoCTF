@@ -24,7 +24,7 @@ import api.problem
 import api.stats
 from api.annotations import (block_after_competition, block_before_competition,
                              check_csrf, require_login)
-from api.common import check_competition_active, flat_multi
+from api.common import flat_multi
 
 blueprint = Blueprint('v0_api', __name__)
 
@@ -75,7 +75,7 @@ def status_hook():
         "reCAPTCHA_public_key":
         settings["captcha"]["reCAPTCHA_public_key"],
         "competition_active":
-        check_competition_active(),
+        api.config.check_competition_active(),
         "username":
         api.user.get_user()['username'] if api.auth.is_logged_in() else "",
         "tid":

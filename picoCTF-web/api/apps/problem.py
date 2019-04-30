@@ -172,17 +172,6 @@ def request_problem_hint_hook():
     return WebSuccess("Hint noted."), 200
 
 
-@blueprint.route("/load_problems", methods=['POST'])
-@require_login
-@require_admin
-def load_problems_hook():
-    data = json.loads(request.form.get("competition_data", ""))
-
-    api.problem.load_published(data)
-    return WebSuccess(
-        "Inserted {} problems.".format(len(data["problems"]))), 201
-
-
 @blueprint.route('/clear_submissions', methods=['GET'])
 @require_login
 @require_admin

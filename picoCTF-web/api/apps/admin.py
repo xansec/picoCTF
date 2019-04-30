@@ -16,25 +16,6 @@ from api.common import WebError, WebSuccess
 
 blueprint = Blueprint("admin_api", __name__)
 
-# (/v1/problems, although feedback is not included currently)
-# check if not displaying feedback or bundles in the new
-# endpoint is a frontend problem
-
-@blueprint.route('/problems', methods=['GET'])
-@require_admin
-def get_problem_data_hook():
-    problems = list(
-        filter(lambda p: len(p["instances"]) > 0,
-               api.problem.get_all_problems(show_disabled=True)))
-
-    for problem in problems:
-        problem["reviews"] = api.problem_feedback.get_problem_feedback(
-            pid=problem["pid"])
-
-    data = {"problems": problems, "bundles": api.problem.get_all_bundles()}
-
-    return WebSuccess(data=data), 200
-
 
 @blueprint.route('/users', methods=['GET'])
 @require_admin
@@ -92,95 +73,6 @@ def change_problem_availability_hook():
 
     api.admin.set_problem_availability(pid, state)
     return WebSuccess(data="Problem state changed successfully."), 200
-
-# done (v1/shell_servers)
-@blueprint.route("/shell_servers", methods=["GET"])
-@require_admin
-def get_shell_servers():
-    return WebSuccess(data=api.shell_servers
-                              .get_all_servers()), 200
-
-# done
-@blueprint.route("/shell_servers/add", methods=["POST"])
-@require_admin
-def add_shell_server():
-    params = api.common.flat_multi(request.form)
-    api.shell_servers.add_server(params)
-    return WebSuccess("Shell server added."), 201
-
-# done
-@blueprint.route("/shell_servers/update", methods=["POST"])
-@require_admin
-def update_shell_server():
-    params = api.common.flat_multi(request.form)
-
-    sid = params.get("sid", None)
-    if sid is None:
-        return WebError("Must specify sid to be updated"), 400
-
-    api.shell_servers.update_server(sid, params)
-    return WebSuccess("Shell server updated."), 200
-
-# done
-@blueprint.route("/shell_servers/remove", methods=["POST"])
-@require_admin
-def remove_shell_server():
-    sid = request.form.get("sid", None)
-    if sid is None:
-        return WebError("Must specify sid to be removed"), 400
-
-    api.shell_servers.remove_server(sid)
-    return WebSuccess("Shell server removed."), 200
-
-# done (PATCH v1/problems)
-@blueprint.route("/shell_servers/load_problems", methods=["POST"])
-@require_admin
-def load_problems_from_shell_server():
-    sid = request.form.get("sid", None)
-
-    if sid is None:
-        return WebError("Must provide sid to load from."), 400
-
-    number = api.shell_servers.load_problems_from_server(sid)
-    return WebSuccess(
-        "Loaded {} problems from the server".format(number)), 200
-
-
-# done
-@blueprint.route("/shell_servers/check_status", methods=["GET"])
-@require_admin
-def check_status_of_shell_server():
-    sid = request.args.get("sid", None)
-
-    if sid is None:
-        return WebError("Must provide sid to load from."), 400
-
-    all_online, data = api.shell_servers.get_problem_status_from_server(sid)
-
-    if all_online:
-        return WebSuccess("All problems are online", data=data), 200
-    else:
-        return WebError(
-            "One or more problems are offline. " +
-            "Please connect and fix the errors.",
-            data=data), 200
-
-
-@blueprint.route("/shell_servers/reassign_teams", methods=['POST'])
-@require_admin
-def reassign_teams_hook():
-    if not api.config.get_settings()["shell_servers"]["enable_sharding"]:
-        return WebError(
-            "Enable sharding first before assigning server numbers."), 500
-    else:
-        include_assigned = request.form.get("include_assigned", False)
-        count = api.shell_servers.reassign_teams(
-            include_assigned=include_assigned)
-        if include_assigned:
-            action = "reassigned."
-        else:
-            action = "assigned."
-        return WebSuccess(str(count) + " teams " + action), 200
 
 
 @blueprint.route("/bundle/dependencies_active", methods=["POST"])

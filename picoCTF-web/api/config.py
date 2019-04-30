@@ -188,3 +188,12 @@ def change_settings(changes):
 
     check_keys(settings, changes)
     db.settings.update({"_id": settings["_id"]}, {"$set": changes})
+
+
+def check_competition_active():
+    """Check whether the competition is currently running."""
+    settings = get_settings()
+
+    return (settings["start_time"].timestamp() <
+            datetime.datetime.utcnow().timestamp() <
+            settings["end_time"].timestamp())

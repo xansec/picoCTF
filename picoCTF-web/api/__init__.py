@@ -9,7 +9,6 @@ from flask import Flask, jsonify, session
 from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
 
-import api.apps.achievements
 import api.apps.admin
 import api.apps.group
 import api.apps.problem
@@ -88,8 +87,6 @@ def create_app(test_config=None):
     app.register_blueprint(api.apps.group.blueprint, url_prefix="/api/group")
     app.register_blueprint(
         api.apps.problem.blueprint, url_prefix="/api/problems")
-    app.register_blueprint(
-        api.apps.achievements.blueprint, url_prefix="/api/achievements")
     app.register_blueprint(
         v0_blueprint, url_prefix="/api/v0"
     )

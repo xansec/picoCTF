@@ -297,7 +297,7 @@ def get_team_information(tid=None, gid=None):
         "country": member["country"],
         "usertype": member["usertype"],
     } for member in get_team_members(tid=tid, show_disabled=False)]
-    team_info["competition_active"] = api.common.check_competition_active()
+    team_info["competition_active"] = api.config.check_competition_active()
     team_info["progression"] = api.stats.get_score_progression(tid=tid)
     team_info["flagged_submissions"] = [
         sub for sub in api.stats.check_invalid_instance_submissions()
