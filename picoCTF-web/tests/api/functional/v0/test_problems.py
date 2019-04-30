@@ -1,5 +1,4 @@
-import api.problem
-import api.user
+"""Tests for the /api/problem/ routes."""
 
 from .common import (
   clear_db,
@@ -7,13 +6,12 @@ from .common import (
   decode_response,
   enable_sample_problems,
   ensure_within_competition,
+  get_conn,
   get_csrf_token,
   load_sample_problems,
   problems_endpoint_response,
   register_test_accounts,
-  USER_DEMOGRAPHICS,
-  app,
-  get_conn
+  USER_DEMOGRAPHICS
 )
 
 
@@ -130,9 +128,6 @@ def test_submit(client):
             break
     correct_key = assigned_instance['flag']
 
-    print('unlocked_pids: {}\nattempting to submit pid: {}, key: {}'.format(
-        unlocked_pids, unlocked_pids[0], correct_key))
-
     res = client.post('/api/problems/submit', data={
         'token': csrf_t,
         'pid': unlocked_pids[0],
@@ -140,7 +135,6 @@ def test_submit(client):
         'method': 'testing'
     })
     status, message, data = decode_response(res)
-    print('{}{}{}'.format(status, message, data))
     assert status == 1
     assert message == 'That is correct!'
 
@@ -152,7 +146,6 @@ def test_submit(client):
         'method': 'testing'
     })
     status, message, data = decode_response(res)
-    print('{}{}{}'.format(status, message, data))
     assert status == 1
     assert message == 'Flag correct: however, you have already ' + \
                       'solved this problem.'
@@ -166,7 +159,6 @@ def test_submit(client):
         'method': 'testing'
     })
     status, message, data = decode_response(res)
-    print('{}{}{}'.format(status, message, data))
     assert status == 0
     assert message == 'Flag incorrect: please note that you have ' + \
                       'already solved this problem.'

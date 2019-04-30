@@ -1,14 +1,9 @@
 """Tests for the /api/user/ routes."""
-import api.email
-from api import api
-from api.auth import confirm_password
-
 from .common import (
   ADMIN_DEMOGRAPHICS,
   clear_db,
   client,
   decode_response,
-  get_conn,
   get_csrf_token,
   register_test_accounts,
   TEACHER_DEMOGRAPHICS,
@@ -65,8 +60,9 @@ def test_status(client):
     """
     Tests the /user/status endpoint.
     """
-    # Test with an new empty database
     clear_db()
+    register_test_accounts()
+    # Test with an new empty database
     res = client.get('/api/user/status')
     status, message, data = decode_response(res)
     assert res.status_code == 200
@@ -80,7 +76,61 @@ def test_status(client):
     assert data['tid'] == ''
     assert data['email_verification'] is False
 
-    # @TODO test when logged in
+    # Test when logged in as a standard user
+    res = client.post('/api/user/login', data={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password'],
+        })
+    res = client.get('/api/user/status')
+    status, message, data = decode_response(res)
+    assert data['logged_in'] is True
+    assert data['admin'] is False
+    assert data['teacher'] is False
+    assert data['enable_feedback'] is True
+    assert data['enable_captcha'] is False
+    assert data['competition_active'] is False
+    assert data['username'] == USER_DEMOGRAPHICS['username']
+    assert data['tid'] != ''
+    assert data['team_name'] == USER_DEMOGRAPHICS['username']
+    assert data['score'] == 0
+
+    # Test when logged in as a teacher
+    res = client.get('/api/user/logout')
+    res = client.post('/api/user/login', data={
+        'username': TEACHER_DEMOGRAPHICS['username'],
+        'password': TEACHER_DEMOGRAPHICS['password'],
+        })
+    res = client.get('/api/user/status')
+    status, message, data = decode_response(res)
+    assert data['logged_in'] is True
+    assert data['admin'] is False
+    assert data['teacher'] is True
+    assert data['enable_feedback'] is True
+    assert data['enable_captcha'] is False
+    assert data['competition_active'] is False
+    assert data['username'] == TEACHER_DEMOGRAPHICS['username']
+    assert data['tid'] != ''
+    assert data['team_name'] == TEACHER_DEMOGRAPHICS['username']
+    assert data['score'] == 0
+
+    # Test when logged in as an admin
+    res = client.get('/api/user/logout')
+    res = client.post('/api/user/login', data={
+        'username': ADMIN_DEMOGRAPHICS['username'],
+        'password': ADMIN_DEMOGRAPHICS['password'],
+        })
+    res = client.get('/api/user/status')
+    status, message, data = decode_response(res)
+    assert data['logged_in'] is True
+    assert data['admin'] is True
+    assert data['teacher'] is True
+    assert data['enable_feedback'] is True
+    assert data['enable_captcha'] is False
+    assert data['competition_active'] is False
+    assert data['username'] == ADMIN_DEMOGRAPHICS['username']
+    assert data['tid'] != ''
+    assert data['team_name'] == ADMIN_DEMOGRAPHICS['username']
+    assert data['score'] == 0
 
 
 def test_extdata(client):
