@@ -8,7 +8,7 @@ from voluptuous import Length, Required, Schema
 
 import api.email
 import api.user
-from api.logger import log_action
+import api.logger
 from api.common import check, safe_fail, validate, WebException
 
 log = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def confirm_password(attempt, password_hash):
                          password_hash) == password_hash
 
 
-@log_action
+@api.logger.log_action
 def login(username, password):
     """Authenticate a user."""
     # Read in submitted username and password
@@ -58,7 +58,7 @@ def login(username, password):
         raise WebException("Incorrect password")
 
 
-@log_action
+@api.logger.log_action
 def logout():
     """Clear the session."""
     session.clear()

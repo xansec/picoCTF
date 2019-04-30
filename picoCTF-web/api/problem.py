@@ -14,7 +14,7 @@ import api.db
 import api.shell_servers
 import api.stats
 import api.team
-from api.logger import log_action
+import api.logger
 from api.cache import memoize
 from api.common import (InternalException, SevereInternalException,
                         WebException, check, safe_fail, validate)
@@ -405,7 +405,7 @@ def grade_problem(pid, key, tid=None):
     return correct
 
 
-@log_action
+@api.logger.log_action
 def submit_key(tid, pid, key, method, uid=None, ip=None):
     """
     User problem submission.
@@ -1044,3 +1044,26 @@ def sanitize_problem_data(data):
     elif isinstance(data, dict):
         pop_keys(data)
     return data
+
+
+def set_problem_availability(pid, disabled):
+    """
+    Update a problem's availability.
+
+    A problem with no active instances cannot be disabled.
+
+    Args:
+        pid: the problem's pid
+        disabled: whether or not the problem should be disabled.
+    Returns:
+        The updated problem object.
+
+    """
+    problem = get_problem(pid=pid)
+    if len(problem['instances']) < 1:
+        raise WebException(
+            "You cannot change the availability of \"{}\".".format(
+                problem["name"]))
+    result = update_problem(pid, {"disabled": disabled})
+    api.cache.clear()
+    return result

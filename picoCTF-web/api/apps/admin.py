@@ -2,7 +2,6 @@
 from bson import json_util
 from flask import Blueprint, current_app, request
 
-import api.admin
 import api.common
 import api.config
 import api.logger
@@ -26,28 +25,28 @@ def get_all_users_hook():
     return WebSuccess(data=users), 200
 
 
-@blueprint.route('/exceptions', methods=['GET'])
-@require_admin
-def get_exceptions_hook():
-    try:
-        limit = abs(int(request.args.get("limit")))
-        exceptions = api.admin.get_api_exceptions(result_limit=limit)
-        return WebSuccess(data=exceptions)
+# @blueprint.route('/exceptions', methods=['GET'])
+# @require_admin
+# def get_exceptions_hook():
+#     try:
+#         limit = abs(int(request.args.get("limit")))
+#         exceptions = api.logger.get_api_exceptions(result_limit=limit)
+#         return WebSuccess(data=exceptions)
 
-    except (ValueError, TypeError):
-        return WebError("limit is not a valid integer."), 400
+#     except (ValueError, TypeError):
+#         return WebError("limit is not a valid integer."), 400
 
 
-@blueprint.route('/exceptions/dismiss', methods=['POST'])
-@require_admin
-def dismiss_exceptions_hook():
-    trace = request.form.get("trace", None)
-    if trace:
-        api.admin.dismiss_api_exceptions(trace)
-        return WebSuccess(
-            data="Successfully changed exception visibility."), 200
-    else:
-        return WebError(message="You must supply a trace to hide."), 400
+# @blueprint.route('/exceptions/dismiss', methods=['POST'])
+# @require_admin
+# def dismiss_exceptions_hook():
+#     trace = request.form.get("trace", None)
+#     if trace:
+#         api.logger.dismiss_api_exceptions(trace)
+#         return WebSuccess(
+#             data="Successfully changed exception visibility."), 200
+#     else:
+#         return WebError(message="You must supply a trace to hide."), 400
 
 
 @blueprint.route("/problems/submissions", methods=["GET"])
@@ -71,7 +70,7 @@ def change_problem_availability_hook():
     else:
         state = json_util.loads(desired_state)
 
-    api.admin.set_problem_availability(pid, state)
+    api.problem.set_problem_availability(pid, state)
     return WebSuccess(data="Problem state changed successfully."), 200
 
 

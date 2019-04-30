@@ -1,0 +1,1 @@
+"Exception related endpoints."

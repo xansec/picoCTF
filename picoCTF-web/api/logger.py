@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 from functools import wraps
 
+import pymongo
 from flask import has_request_context
 from flask import logging as flask_logging
 from flask import request
@@ -174,19 +175,6 @@ class SevereHandler(logging.handlers.SMTPHandler):
             self.messages[record.msg] = time.time()
 
 
-def set_level(name, level):
-    """
-    Get and set log level of a given logger.
-
-    Args:
-        name: name of logger
-        level: level to set
-    """
-    logger = logging.getLogger(name)
-    if logger:
-        logger.setLevel(level)
-
-
 def get_request_information():
     """
     Return a dictionary of information about the user at the time of logging.
@@ -235,7 +223,9 @@ def setup_logs(args):
                                                                )
 
     if not args.get("debug", True):
-        set_level("werkzeug", logging.ERROR)
+        logger = logging.getLogger("werkzeug")
+        if logger:
+            logger.setLevel(logging.ERROR)
 
     level = [logging.WARNING, logging.INFO, logging.DEBUG][min(
         args.get("verbose", 1), 2)]
@@ -278,3 +268,30 @@ def log_action(f):
         return log_information["result"]
 
     return wrapper
+
+
+def get_api_exceptions(result_limit=50, sort_direction=pymongo.DESCENDING):
+    """
+    Retrieve api exceptions.
+
+    Args:
+        result_limit: the maximum number of exceptions to return.
+        sort_direction: pymongo.ASCENDING or pymongo.DESCENDING
+    """
+    db = api.db.get_conn()
+
+    results = db.exceptions.find({
+        "visible": True
+    }).sort([("time", sort_direction)]).limit(result_limit)
+    return list(results)
+
+
+def dismiss_api_exceptions(trace):
+    """
+    Remove exceptions from the management tab.
+
+    Args:
+        trace: the exception trace
+    """
+    db = api.db.get_conn()
+    db.exceptions.remove({"trace": trace})

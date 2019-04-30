@@ -7,7 +7,7 @@ from os.path import join
 import api.config
 import api.db
 import api.user
-from api.logger import log_action
+import api.logger
 from api.common import InternalException
 
 
@@ -169,7 +169,7 @@ def get_processor(aid):
         raise InternalException("Achievement processor is offline.")
 
 
-@log_action
+@api.logger.log_action
 def process_achievement(aid, data):
     """
     Determine whether or not an achievement has been earned.

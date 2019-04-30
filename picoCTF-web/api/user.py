@@ -18,7 +18,7 @@ import api.group
 import api.team
 import api.token
 import api.user
-from api.logger import log_action
+import api.logger
 from api.common import (check, InternalException, safe_fail, validate,
                         WebException)
 
@@ -300,7 +300,7 @@ def _validate_captcha(data):
     return parsed_response['success'] is True
 
 
-@log_action
+@api.logger.log_action
 def create_simple_user_request(params):
     """
     Register a new user and creates a team for them automatically.
@@ -459,7 +459,7 @@ def verify_user(uid, token_value):
         raise InternalException("This is not a valid token for your user.")
 
 
-@log_action
+@api.logger.log_action
 def update_password_request(params, uid=None, check_current=False):
     """
     Update account password.
@@ -541,7 +541,7 @@ def disable_account(uid):
             new=True)
 
 
-@log_action
+@api.logger.log_action
 def disable_account_request(params, uid=None, check_current=False):
     """
     Disable user account so they can't login or consume space on a team.
@@ -576,3 +576,17 @@ def update_extdata(params):
     db = api.db.get_conn()
     params.pop('token', None)
     db.users.update_one({'uid': user['uid']}, {'$set': {'extdata': params}})
+
+
+def give_teacher_role(name=None, uid=None):
+    """
+    Grant a particular user teacher privileges.
+
+    Args:
+        name: the user's name
+        uid: the user's id
+    """
+    db = api.db.get_conn()
+
+    user = get_user(name=name, uid=uid)
+    db.users.update({"uid": user["uid"]}, {"$set": {"teacher": True}})

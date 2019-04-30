@@ -2,12 +2,11 @@
 
 from voluptuous import Required, Schema
 
-import api.admin
 import api.common
 import api.db
 import api.team
 import api.user
-from api.logger import log_action
+import api.logger
 from api.common import check, InternalException, validate
 
 group_settings_schema = Schema({
@@ -130,7 +129,7 @@ def get_member_information(gid):
     return member_information
 
 
-@log_action
+@api.logger.log_action
 def create_group(tid, group_name):
     """
     Insert group into the db. Assumes everything is validated.
@@ -189,7 +188,7 @@ def change_group_settings(gid, settings):
     db.groups.update({"gid": group["gid"]}, {"$set": {"settings": settings}})
 
 
-@log_action
+@api.logger.log_action
 def join_group(gid, tid, teacher=False):
     """
     Add a team to a group. Assumes everything is valid.
@@ -206,7 +205,7 @@ def join_group(gid, tid, teacher=False):
     if teacher:
         uids = api.team.get_team_uids(tid=tid)
         for uid in uids:
-            api.admin.give_teacher_role(uid=uid)
+            api.user.give_teacher_role(uid=uid)
 
     db.groups.update({'gid': gid}, {'$push': {role_group: tid}})
 
@@ -228,7 +227,7 @@ def sync_teacher_status(tid, uid):
                     }})
 
 
-@log_action
+@api.logger.log_action
 def leave_group(gid, tid):
     """
     Remove a team from a group.
@@ -299,7 +298,7 @@ def switch_role(gid, tid, role):
         sync_teacher_status(tid, uid)
 
 
-@log_action
+@api.logger.log_action
 def delete_group(gid):
     """
     Delete a group.

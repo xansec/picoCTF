@@ -8,7 +8,7 @@ import api.achievement
 import api.db
 import api.problem
 import api.user
-from api.logger import log_action
+import api.logger
 from api.common import check, validate
 
 feedback_schema = Schema({
@@ -64,7 +64,7 @@ def get_reviewed_pids(uid=None):
     return [entry["pid"] for entry in get_problem_feedback(uid=uid)]
 
 
-@log_action
+@api.logger.log_action
 def add_problem_feedback(pid, uid, feedback):
     """
     Add user problem feedback to the database.

@@ -13,7 +13,7 @@ import api.problem
 import api.stats
 import api.team
 import api.user
-from api.logger import log_action
+import api.logger
 from api.common import (
   check,
   InternalException,
@@ -486,7 +486,7 @@ def join_team(team_name, password, uid=None):
             "That is not the correct password to join that team.")
 
 
-@log_action
+@api.logger.log_action
 def update_password_request(params):
     """
     Update team password.
