@@ -13,7 +13,7 @@ import api.problem
 import api.stats
 import api.team
 import api.user
-from api.annotations import log_action
+from api.logger import log_action
 from api.common import (
   check,
   InternalException,

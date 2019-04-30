@@ -18,7 +18,7 @@ import api.group
 import api.team
 import api.token
 import api.user
-from api.annotations import log_action
+from api.logger import log_action
 from api.common import (check, InternalException, safe_fail, validate,
                         WebException)
 

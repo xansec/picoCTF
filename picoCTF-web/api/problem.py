@@ -14,7 +14,7 @@ import api.db
 import api.shell_servers
 import api.stats
 import api.team
-from api.annotations import log_action
+from api.logger import log_action
 from api.cache import memoize
 from api.common import (InternalException, SevereInternalException,
                         WebException, check, safe_fail, validate)

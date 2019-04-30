@@ -4,8 +4,7 @@ import logging
 from datetime import datetime
 from functools import wraps
 
-from bson import json_util
-from flask import request, session, current_app
+from flask import request, session
 
 import api.auth
 import api.config
@@ -13,29 +12,6 @@ import api.user
 from api.common import InternalException, WebError, WebException
 
 log = logging.getLogger(__name__)
-
-
-def log_action(f):
-    """Log a function invocation and its result."""
-    @wraps(f)
-    def wrapper(*args, **kwds):
-        """Provide contextual information to the logger."""
-        log_information = {
-            "name": "{}.{}".format(f.__module__, f.__name__),
-            "args": args,
-            "kwargs": kwds,
-            "result": None,
-        }
-        try:
-            log_information["result"] = f(*args, **kwds)
-        except WebException as error:
-            log_information["exception"] = error.args[0]
-            raise
-        finally:
-            log.info(log_information)
-        return log_information["result"]
-
-    return wrapper
 
 
 def require_login(f):

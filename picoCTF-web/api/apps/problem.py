@@ -9,8 +9,8 @@ import api.problem
 import api.problem_feedback
 import api.user
 from api.annotations import (block_after_competition, block_before_competition,
-                             check_csrf, log_action, require_admin,
-                             require_login, require_teacher)
+                             check_csrf, require_admin, require_login,
+                             require_teacher)
 from api.common import WebError, WebSuccess
 
 blueprint = Blueprint("problem_api", __name__)

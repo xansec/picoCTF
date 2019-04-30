@@ -4,6 +4,7 @@ import logging
 import logging.handlers
 import time
 from datetime import datetime
+from functools import wraps
 
 from flask import has_request_context
 from flask import logging as flask_logging
@@ -14,6 +15,7 @@ import api.config
 import api.db
 import api.team
 import api.user
+from api.common import WebException
 
 critical_error_timeout = 600
 log = logging.getLogger(__name__)
@@ -253,3 +255,26 @@ def setup_logs(args):
     stats_log.setLevel(logging.INFO)
 
     log.root.addHandler(stats_log)
+
+
+def log_action(f):
+    """Log a function invocation and its result."""
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        """Provide contextual information to the logger."""
+        log_information = {
+            "name": "{}.{}".format(f.__module__, f.__name__),
+            "args": args,
+            "kwargs": kwds,
+            "result": None,
+        }
+        try:
+            log_information["result"] = f(*args, **kwds)
+        except WebException as error:
+            log_information["exception"] = error.args[0]
+            raise
+        finally:
+            log.info(log_information)
+        return log_information["result"]
+
+    return wrapper

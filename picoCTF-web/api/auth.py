@@ -8,7 +8,7 @@ from voluptuous import Length, Required, Schema
 
 import api.email
 import api.user
-from api.annotations import log_action
+from api.logger import log_action
 from api.common import check, safe_fail, validate, WebException
 
 log = logging.getLogger(__name__)

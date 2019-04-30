@@ -8,7 +8,7 @@ import api.achievement
 import api.db
 import api.problem
 import api.user
-from api.annotations import log_action
+from api.logger import log_action
 from api.common import check, validate
 
 feedback_schema = Schema({
