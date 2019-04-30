@@ -137,7 +137,7 @@ class ExceptionHandler(logging.StreamHandler):
         information = get_request_information()
 
         information.update({
-            "event": "exception",
+            "id": api.common.token(),
             "time": datetime.now(),
             "trace": record.msg,
             "visible": True
@@ -270,28 +270,53 @@ def log_action(f):
     return wrapper
 
 
-def get_api_exceptions(result_limit=50, sort_direction=pymongo.DESCENDING):
+def get_api_exceptions(result_limit=50):
     """
-    Retrieve api exceptions.
+    Retrieve the most recent logged exceptions.
 
     Args:
         result_limit: the maximum number of exceptions to return.
-        sort_direction: pymongo.ASCENDING or pymongo.DESCENDING
+
+    Returns:
+        list of exception dicts
+
     """
     db = api.db.get_conn()
-
-    results = db.exceptions.find({
-        "visible": True
-    }).sort([("time", sort_direction)]).limit(result_limit)
+    results = db.exceptions.find({'visible': True}, {'_id': 0}).sort(
+        [("time", pymongo.DESCENDING)]).limit(result_limit)
     return list(results)
 
 
-def dismiss_api_exceptions(trace):
+def get_api_exception(exception_id):
     """
-    Remove exceptions from the management tab.
+    Retrieve a specific exception.
 
     Args:
-        trace: the exception trace
+        exception_id: ID of the exception to retrieve.
+
+    Returns:
+        the specified exception dict, or None if not found
+
     """
     db = api.db.get_conn()
-    db.exceptions.remove({"trace": trace})
+    return db.exceptions.find_one({'id': exception_id}, {'_id': 0})
+
+
+def dismiss_api_exceptions(exception_id=None):
+    """
+    Dismiss logged exceptions.
+
+    Args:
+        id (optional): ID of the exception to dismiss. If not provided,
+                       dismisses all logged exceptions.
+
+    Returns:
+        the number of dismissed exceptions
+
+    """
+    db = api.db.get_conn()
+    match = {}
+    if exception_id:
+        match['id'] = exception_id
+    res = db.exceptions.update_many(match, {'$set': {'visible': False}})
+    return res.modified_count

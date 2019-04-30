@@ -105,3 +105,10 @@ shell_server_reassignment_req.add_argument(
     help="Whether to update the assignments of teams that already have " +
          "an assigned shell server."
 )
+
+# Exception request schema
+exception_req = reqparse.RequestParser()
+exception_req.add_argument(
+    'result_limit', required=False, type=inputs.positive, default=50,
+    location='args', help='Maximum number of exceptions to return'
+)
