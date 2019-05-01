@@ -35,21 +35,6 @@ def get_problem():
     return WebSuccess(data=submission_data), 200
 
 
-@blueprint.route("/problems/availability", methods=["POST"])
-@require_admin
-def change_problem_availability_hook():
-    pid = request.form.get("pid", None)
-    desired_state = request.form.get("state", None)
-
-    if desired_state is None:
-        return WebError("Problems are either enabled or disabled."), 500
-    else:
-        state = json_util.loads(desired_state)
-
-    api.problem.set_problem_availability(pid, state)
-    return WebSuccess(data="Problem state changed successfully."), 200
-
-
 @blueprint.route("/bundle/dependencies_active", methods=["POST"])
 @require_admin
 def bundle_dependencies():

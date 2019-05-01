@@ -3,7 +3,7 @@
 import datetime
 
 import api.db
-from api.common import WebException, PicoException
+from api.common import PicoException
 """
 Default Settings
 
@@ -170,6 +170,7 @@ def change_settings(changes):
     Raises:
         PicoException: if an updated key did not previously exist in settings,
                        or the updated value is of a different type
+
     """
     db = api.db.get_conn()
     settings = db.settings.find_one({})

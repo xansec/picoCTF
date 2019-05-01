@@ -16,8 +16,8 @@ import api.stats
 import api.team
 import api.logger
 from api.cache import memoize
-from api.common import (InternalException, SevereInternalException,
-                        WebException, check, safe_fail, validate)
+from api.common import (InternalException, WebException, check, safe_fail,
+                        validate)
 
 submission_schema = Schema({
     Required("tid"):
@@ -142,10 +142,32 @@ def get_all_categories(show_disabled=False):
     return db.problems.find(match).distinct("category")
 
 
-def set_instance_ids(problem, sid):
-    """Generate the instance ids for a set of problems."""
-    server_number = api.shell_servers.get_server(sid)['server_number']
+def upsert_problem(problem, sid):
+    """
+    Add or update a problem.
 
+    Args:
+        problem dict,
+        shell server ID
+    Returns:
+        The created/updated problem ID.
+    """
+    db = api.db.get_conn()
+
+    # Validate the problem object
+    # @TODO it may make more sense to do this with e.g. Marshmallow at the
+    #       routing level
+    validate(problem_schema, problem)
+    for instance in problem["instances"]:
+        validate(instance_schema, instance)
+
+    problem["pid"] = api.common.hash("{}-{}".format(problem["name"],
+                                                    problem["author"]))
+    # Initially disable problems
+    problem["disabled"] = True
+
+    # Assign instance IDs and server numbers
+    server_number = api.shell_servers.get_server(sid)['server_number']
     for instance in problem["instances"]:
         instance["iid"] = api.common.hash(
             str(instance["instance_number"]) + sid + problem["pid"])
@@ -153,67 +175,24 @@ def set_instance_ids(problem, sid):
         if server_number is not None:
             instance["server_number"] = server_number
 
+    # If the problem already exists, update it instead
+    existing = db.problems.find_one({'pid': problem['pid']}, {'_id': 0})
+    if existing is not None:
+        # Copy over instances on other shell servers from the existing version
+        other_server_instances = [i for i in existing['instances']
+                                  if i['sid'] != sid]
+        problem['instances'].extend(other_server_instances)
 
-def insert_problem(problem, sid):
-    """
-    Insert a problem into the database.
+        # Copy over the disabled state from the old problem, or
+        # set to true if there are no instances
+        problem["disabled"] = (existing["disabled"] or
+                               len(problem["instances"]) == 0)
 
-    Does sane validation.
-
-    Args:
-        problem dict,
-        shell server ID
-
-        Optional:
-        version: version of the problem
-        tags: list of problem tags.
-        hints: hints for completing the problem.
-        organization: Organization that author is associated with
-    Returns:
-        The newly created problem id.
-    """
-
-    db = api.db.get_conn()
-    validate(problem_schema, problem)
-
-    # initially disable problems
-    problem["disabled"] = True
-    problem["pid"] = api.common.hash("{}-{}".format(problem["name"],
-                                                    problem["author"]))
-
-    for instance in problem["instances"]:
-        validate(instance_schema, instance)
-
-    set_instance_ids(problem, sid)
-
-    if safe_fail(get_problem, pid=problem["pid"]) is not None:
-        # problem is already inserted, so update instead
-        old_problem = copy(get_problem(pid=problem["pid"]))
-
-        # leave all instances from different shell server
-        instances = list(
-            filter(lambda i: i["sid"] != sid, old_problem["instances"]))
-
-        # add instances from this shell server
-        instances.extend(problem["instances"])
-        problem["instances"] = instances
-
-        # disable problems with zero instances
-        problem["disabled"] = old_problem["disabled"] or len(
-            problem["instances"]) == 0
-
-        # run the update
-        update_problem(problem["pid"], problem)
-        return
-
-    if safe_fail(get_problem, name=problem["name"]) is not None:
-        raise WebException(
-            "Problem with identical name \"{}\" already exists.".format(
-                problem["name"]))
+        db.problems.update({'pid': problem['pid']}, problem)
+        return problem['pid']
 
     db.problems.insert(problem)
-
-    return problem["pid"]
+    return problem['pid']
 
 
 def remove_problem(pid):
@@ -230,36 +209,6 @@ def remove_problem(pid):
     problem = get_problem(pid=pid)
 
     db.problems.remove({"pid": pid})
-
-    return problem
-
-
-def update_problem(pid, updated_problem):
-    """
-    Update a problem with new properties.
-
-    Args:
-        pid: the pid of the problem to update.
-        updated_problem: an updated problem object.
-    Returns:
-        The updated problem object.
-
-    """
-    db = api.db.get_conn()
-
-    problem = get_problem(pid=pid).copy()
-
-    problem.update(updated_problem)
-
-    # pass validation by removing/re-adding pid
-    # TODO: add in-database problem schema
-    """
-    problem.pop("pid", None)
-    validate(problem_schema, problem)
-    problem["pid"] = pid
-    """
-
-    db.problems.update({"pid": pid}, problem)
 
     return problem
 
@@ -643,17 +592,17 @@ def reevaluate_all_submissions():
 
 
 # @memoize
-def get_problem(pid=None, name=None, tid=None, show_disabled=True):
+def get_problem(pid=None, name=None, tid=None):
     """
     Get a single problem.
 
     Args:
         pid: The problem id
         name: The name of the problem
-        show_disabled: Whether or not to show disabled problems.
-                       Defaults to True
+
     Returns:
-        The problem dictionary from the database
+        The problem dictionary from the database or None if problem not found
+
     """
     db = api.db.get_conn()
 
@@ -669,17 +618,8 @@ def get_problem(pid=None, name=None, tid=None, show_disabled=True):
     if tid is not None and pid not in get_unlocked_pids(tid):
         raise InternalException("You cannot get this problem")
 
-    if not show_disabled:
-        match.update({"disabled": False})
-
     db = api.db.get_conn()
-    problem = db.problems.find_one(match, {"_id": 0})
-
-    if problem is None:
-        raise SevereInternalException("Could not find problem! You gave " +
-                                      str(match))
-
-    return problem
+    return db.problems.find_one(match, {"_id": 0})
 
 
 def get_all_problems(category=None, show_disabled=False, basic_only=False):
@@ -967,7 +907,7 @@ def load_published(data):
         data: The output of "shell_manager publish"
     """
     for problem in data["problems"]:
-        insert_problem(problem, sid=data["sid"])
+        upsert_problem(problem, sid=data["sid"])
 
     if "bundles" in data:
         for bundle in data["bundles"]:
@@ -1056,14 +996,14 @@ def set_problem_availability(pid, disabled):
         pid: the problem's pid
         disabled: whether or not the problem should be disabled.
     Returns:
-        The updated problem object.
+        The pid of the updated problem, or None if it could not be found.
 
     """
-    problem = get_problem(pid=pid)
-    if len(problem['instances']) < 1:
-        raise WebException(
-            "You cannot change the availability of \"{}\".".format(
-                problem["name"]))
-    result = update_problem(pid, {"disabled": disabled})
-    api.cache.clear()
-    return result
+    db = api.db.get_conn()
+    success = db.problems.find_one_and_update(
+        {'pid': pid}, {'$set': {'disabled': disabled}})
+    if not success:
+        return None
+    else:
+        api.cache.clear()
+        return pid

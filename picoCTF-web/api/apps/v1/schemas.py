@@ -63,9 +63,9 @@ shell_server_out.add_argument(
 # ("disabled" is the only mutable field as the others are controlled by the
 #  shell manager.)
 problem_patch_req = reqparse.RequestParser()
-# @TODO: finish after shell server part is in place
 problem_patch_req.add_argument(
-    ''
+    'disabled', required=True, type=inputs.boolean,
+    help='Whether the problem is disabled.'
 )
 
 # Shell server request schema

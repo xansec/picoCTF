@@ -25,7 +25,7 @@ from flask_restplus import Namespace, Resource
 import api.problem
 from api.common import PicoException
 
-from .schemas import shell_server_out
+from .schemas import shell_server_out, problem_patch_req
 
 ns = Namespace('problems', description='Problem management')
 
@@ -56,6 +56,11 @@ class ProblemList(Resource):
         If `shell_manager publish` output is not provided as a payload,
         will attempt to automatically request it from the provided
         shell server.
+
+        Note that this will only add new / update existing problems – if a
+        problem has been removed from the shell server, it should be
+        disabled using the PATCH /<problem_id> endpoint or manually
+        removed from the database.
         """
         req = {
             k: v for k, v in
@@ -85,3 +90,42 @@ class ProblemList(Resource):
             })
         res.response_code = 200
         return res
+
+
+@ns.response(200, 'Success')
+@ns.response(404, 'Problem not found')
+@ns.route('/<string:problem_id>')
+class Problem(Resource):
+    """Get or update the availability of a specific problem."""
+
+    # @TODO: -restrict availability to unlocked if not admin
+    #        -strip out instance information if not admin
+    def get(self, problem_id):
+        """Retrieve a specific problem."""
+        problem = api.problem.get_problem(problem_id)
+        if not problem:
+            raise PicoException('Problem not found', status_code=404)
+        else:
+            return problem, 200
+
+    # @require_admin
+    @ns.response(400, 'Error parsing request')
+    @ns.expect(problem_patch_req)
+    def patch(self, problem_id):
+        """
+        Update a specific problem.
+
+        The only valid field for this method is "disabled".
+        Other fields are pulled from the shell server, and
+        can be updated via the PATCH /problems endpoint.
+        """
+        req = problem_patch_req.parse_args(strict=True)
+        pid = api.problem.set_problem_availability(problem_id, req['disabled'])
+        if not pid:
+            raise PicoException('Problem not found', status_code=404)
+        else:
+            res = jsonify({
+                "success": True
+            })
+            res.status_code = 200
+            return res
