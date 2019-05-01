@@ -3,7 +3,7 @@
 import datetime
 
 import api.db
-from api.common import WebException
+from api.common import WebException, PicoException
 """
 Default Settings
 
@@ -148,7 +148,6 @@ default_settings = {
         "country": "US"
     }
 }
-""" Helper functions to get settings. Do not change these """
 
 
 def get_settings():
@@ -161,12 +160,17 @@ def get_settings():
         # Initialize indexes, runonce
         api.db.index_mongo()
         return default_settings
-
     return settings
 
 
 def change_settings(changes):
-    """Update settings in the database."""
+    """
+    Update settings in the database.
+
+    Raises:
+        PicoException: if an updated key did not previously exist in settings,
+                       or the updated value is of a different type
+    """
     db = api.db.get_conn()
     settings = db.settings.find_one({})
 
@@ -174,11 +178,15 @@ def change_settings(changes):
         keys = list(changed.keys())
         for key in keys:
             if key not in real:
-                raise WebException(
-                    "Cannot update setting for '{}'".format(key))
+                raise PicoException(
+                    "Cannot update setting for '{}'".format(key) +
+                    " (setting not found)",
+                    status_code=400)
             elif type(real[key]) != type(changed[key]):  # noqa:E721
-                raise WebException(
-                    "Cannot update setting for '{}'".format(key))
+                raise PicoException(
+                    "Cannot update setting for '{}'".format(key) +
+                    " (incorrect type)",
+                    status_code=400)
             elif isinstance(real[key], dict):
                 check_keys(real[key], changed[key])
                 # change the key so mongo $set works correctly

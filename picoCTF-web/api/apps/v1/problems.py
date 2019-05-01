@@ -68,8 +68,8 @@ class ProblemList(Resource):
             raise PicoException('Shell server not found', status_code=404)
         if 'problems' in req:
             api.problem.load_published({
-                'problems': req['problems'][0],
-                'bundles': req['bundles'][0],
+                'problems': req['problems'],
+                'bundles': req['bundles'],
                 'sid': req['sid']
             })
         else:

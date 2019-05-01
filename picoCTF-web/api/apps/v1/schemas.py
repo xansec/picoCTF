@@ -55,11 +55,9 @@ shell_server_out.add_argument(
     'sid', required=True, type=str, location='args',
     help="Shell server ID.")
 shell_server_out.add_argument(
-    'problems', required=False, type=object_type, action='append',
-    location='json')
+    'problems', required=False, type=list, location='json')
 shell_server_out.add_argument(
-    'bundles', required=False, type=object_type, action='append',
-    location='json')
+    'bundles', required=False, type=list, location='json')
 
 # Problem PATCH request schema
 # ("disabled" is the only mutable field as the others are controlled by the
@@ -111,4 +109,55 @@ exception_req = reqparse.RequestParser()
 exception_req.add_argument(
     'result_limit', required=False, type=inputs.positive, default=50,
     location='args', help='Maximum number of exceptions to return'
+)
+
+# Settings update schema
+# @TODO: this is very basic - config.py:change_settings() does the brunt of
+# the validation work for now because of RequestParser's limitations
+# regarding nested fields. Revisit this when upgrading to a
+# better validation library.
+settings_patch_req = reqparse.RequestParser()
+settings_patch_req.add_argument(
+    'enable_feedback', required=False, type=inputs.boolean, location='json'
+)
+settings_patch_req.add_argument(
+    'start_time', required=False, type=inputs.datetime_from_rfc822,
+    location='json'
+)
+settings_patch_req.add_argument(
+    'end_time', required=False, type=inputs.datetime_from_rfc822,
+    location='json'
+)
+settings_patch_req.add_argument(
+    'competition_name', required=False, type=str, location='json'
+)
+settings_patch_req.add_argument(
+    'competition_url', required=False, type=str, location='json'
+)
+settings_patch_req.add_argument(
+    'email_filter', required=False, type=list, location='json'
+)
+settings_patch_req.add_argument(
+    'max_team_size', required=False, type=inputs.natural, location='json'
+)
+settings_patch_req.add_argument(
+    'achievements', required=False, type=object_type, location='json'
+)
+settings_patch_req.add_argument(
+    'username_blacklist', required=False, type=list, location='json'
+)
+settings_patch_req.add_argument(
+    'email', required=False, type=object_type, location='json'
+)
+settings_patch_req.add_argument(
+    'captcha', required=False, type=object_type, location='json'
+)
+settings_patch_req.add_argument(
+    'logging', required=False, type=object_type, location='json'
+)
+settings_patch_req.add_argument(
+    'shell_servers', required=False, type=object_type, location='json'
+)
+settings_patch_req.add_argument(
+    'eligibility', required=False, type=object_type, location='json'
 )

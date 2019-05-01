@@ -7,7 +7,6 @@
 
 import sys
 
-import api.admin
 import api.problem
 import api.shell_servers
 
@@ -23,7 +22,7 @@ def main(name):
 
                 # Set problems to disabled
                 for p in api.problem.get_all_problems(show_disabled=True):
-                    api.admin.set_problem_availability(p["pid"], False)
+                    api.problem.set_problem_availability(p["pid"], False)
 
                 # Set bundles to enabled to set correct unlock behavior
                 for b in api.problem.get_all_bundles():

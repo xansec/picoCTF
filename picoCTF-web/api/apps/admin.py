@@ -1,6 +1,6 @@
 """Routing functions for /api/admin."""
 from bson import json_util
-from flask import Blueprint, current_app, request
+from flask import Blueprint, request
 
 import api.common
 import api.config
@@ -69,20 +69,3 @@ def bundle_dependencies():
     return WebSuccess(
         "Dependencies are now {}."
         .format("enabled" if state else "disabled")), 200
-
-
-@blueprint.route("/settings", methods=["GET"])
-@require_admin
-def get_settings():
-    return WebSuccess(data=api.config.get_settings()), 200
-
-
-@blueprint.route("/settings/change", methods=["POST"])
-@require_admin
-def change_settings():
-    data = json_util.loads(request.form["json"])
-    api.config.change_settings(data)
-    # May need to recreate the Flask-Mail object if mail settings changed
-    api.update_mail_config(current_app)
-    api.logger.setup_logs({"verbose": 2})
-    return WebSuccess("Settings updated"), 200
