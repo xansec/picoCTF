@@ -12,6 +12,7 @@ import api.group
 import api.problem
 import api.problem_feedback
 import api.stats
+import api.submissions
 import api.team
 from api.cache import memoize
 from api.common import InternalException
@@ -240,10 +241,10 @@ def get_problem_submission_stats(pid=None, name=None):
 
     return {
         "valid":
-        len(api.problem.get_submissions(pid=problem["pid"], correctness=True)),
+        len(api.submissions.get_submissions(pid=problem["pid"], correctness=True)),
         "invalid":
         len(
-            api.problem.get_submissions(pid=problem["pid"], correctness=False))
+            api.submissions.get_submissions(pid=problem["pid"], correctness=False))
     }
 
 
@@ -371,7 +372,7 @@ def check_invalid_instance_submissions(gid=None):
         for submission in incorrect_submissions:
             if submission['key'] in valid_keys:
                 # make sure that the key is still invalid
-                if not api.problem.grade_problem(
+                if not api.submissions.grade_problem(
                         submission['pid'], submission['key'],
                         tid=submission['tid']):
                     if group is None or submission['tid'] in group['members']:

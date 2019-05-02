@@ -19,9 +19,10 @@ from flask import Blueprint, request
 import api.auth
 import api.config
 import api.db
-import api.user
 import api.problem
 import api.stats
+import api.submissions
+import api.user
 from api.annotations import (block_after_competition, block_before_competition,
                              check_csrf, require_login)
 from api.common import flat_multi
@@ -153,7 +154,7 @@ def submit_key_hook():
     ip = request.remote_addr
 
     (correct, previously_solved_by_user,
-     previously_solved_by_team) = api.problem.submit_key(
+     previously_solved_by_team) = api.submissions.submit_key(
             tid, pid, key, method, uid, ip)
 
     if correct and not previously_solved_by_team:

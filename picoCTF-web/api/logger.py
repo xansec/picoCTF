@@ -64,7 +64,7 @@ class StatsHandler(logging.StreamHandler):
             },
 
         # @TODO fix this
-        "api.problem.submit_key":
+        "api.submissions.submit_key":
             lambda tid, pid, key, method, uid=None, ip=None, result=None: {
                 "pid": pid,
                 "key": key,

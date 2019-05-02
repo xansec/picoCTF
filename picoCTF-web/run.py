@@ -3,7 +3,7 @@
 
 from argparse import ArgumentParser
 import api
-import api.problem
+import api.submissions
 
 
 def main():
@@ -42,7 +42,7 @@ def main():
     args = parser.parse_args()
 
     if args.debug:
-        api.problem.DEBUG_KEY = args.debug_key
+        api.submissions.DEBUG_KEY = args.debug_key
 
     api.create_app().run(
         host=args.listen,

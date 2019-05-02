@@ -1,32 +1,22 @@
 """Module for interacting with the problems."""
 
-from copy import copy, deepcopy
-from datetime import datetime
 from random import randint
 
 import pymongo
-from voluptuous import ALLOW_EXTRA, Length, Range, Required, Schema
+from voluptuous import ALLOW_EXTRA, Range, Required, Schema
 
 import api.achievement
 import api.bundles
 import api.cache
 import api.common
 import api.db
+import api.logger
 import api.shell_servers
 import api.stats
+import api.submissions
 import api.team
-import api.logger
 from api.cache import memoize
-from api.common import (InternalException, check, validate)
-
-submission_schema = Schema({
-    Required("tid"):
-    check(("This does not look like a valid tid.", [str, Length(max=100)])),
-    Required("pid"):
-    check(("This does not look like a valid pid.", [str, Length(max=100)])),
-    Required("key"):
-    check(("This does not look like a valid key.", [str, Length(max=100)]))
-})
+from api.common import InternalException, check, validate
 
 problem_schema = Schema({
     Required("name"):
@@ -81,8 +71,6 @@ instance_schema = Schema({
     check(("The server must be a string.", [str]))
 },
                          extra=True)
-
-DEBUG_KEY = None
 
 
 def get_all_categories():
@@ -253,155 +241,6 @@ def filter_problem_instances(problem, tid):
     return problem
 
 
-def grade_problem(pid, key, tid=None):
-    """
-    Grade the problem with its associated flag.
-
-    Args:
-        tid: tid if provided
-        pid: problem's pid
-        key: user's submission
-
-    Returns:
-        bool: whether the key is correct
-
-    """
-    if tid is None:
-        tid = api.user.get_user()["tid"]
-
-    instance = get_instance_data(pid, tid)
-
-    correct = instance['flag'] in key
-    if not correct and DEBUG_KEY is not None:
-        correct = DEBUG_KEY in key
-
-    return correct
-
-
-@api.logger.log_action
-def submit_key(tid, pid, key, method, uid=None, ip=None):
-    """
-    User problem submission.
-
-    Args:
-        tid: user's team id
-        pid: problem's pid
-        key: answer text
-        method: submission method (e.g. 'game')
-        uid: user's uid
-        ip: user's ip
-    Returns:
-        tuple: (correct, previously_solved_by_user,
-                previously_solved_by_team)
-    """
-    db = api.db.get_conn()
-    validate(submission_schema, {"tid": tid, "pid": pid, "key": key})
-
-    if pid not in get_unlocked_pids(tid):
-        raise InternalException(
-            "You can't submit flags to problems you haven't unlocked.")
-
-    user = api.user.get_user(uid=uid)
-    if user is None:
-        raise InternalException("User submitting flag does not exist.")
-    uid = user["uid"]
-
-    previously_solved_by_user = db.submissions.find_one(
-        filter={
-            'uid': uid,
-            'correct': True
-        }) is not None
-
-    previously_solved_by_team = db.submissions.find_one(
-        filter={
-            'tid': tid,
-            'correct': True
-        }) is not None
-
-    correct = grade_problem(pid, key, tid)
-
-    if not previously_solved_by_user:
-        db.submissions.insert({
-            'uid': uid,
-            'tid': tid,
-            'timestamp': datetime.utcnow(),
-            'pid': pid,
-            'ip': ip,
-            'key': key,
-            'method': method,
-            'category': get_problem(pid=pid)['category'],
-            'correct': correct,
-        })
-
-    if correct and not previously_solved_by_user:
-        # Immediately invalidate some caches
-        api.stats.get_score(tid=tid, uid=uid)
-        # api.stats.get_unlocked_pids(tid) # @TODO fix this
-        get_solved_problems(tid=tid, uid=uid)
-        api.stats.get_score_progression(tid=tid, uid=uid)
-
-        # Process achievements
-        api.achievement.process_achievements("submit", {
-            "uid": uid,
-            "tid": tid,
-            "pid": pid
-        })
-
-    return (correct, previously_solved_by_user, previously_solved_by_team)
-
-
-def get_submissions(pid=None,
-                    uid=None,
-                    tid=None,
-                    category=None,
-                    correctness=None,
-                    ):
-    """
-    Get the submissions from a team or user.
-
-    Optional filters of pid or category.
-
-    Args:
-        uid: the user id
-        tid: the team id
-
-        category: category filter.
-        pid: problem filter.
-        correctness: correct filter
-    Returns:
-        A list of submissions from the given entity.
-    """
-    db = api.db.get_conn()
-
-    match = {}
-
-    if uid is not None:
-        match.update({"uid": uid})
-    elif tid is not None:
-        match.update({"tid": tid})
-
-    if pid is not None:
-        match.update({"pid": pid})
-
-    if category is not None:
-        match.update({"category": category})
-
-    if correctness is not None:
-        match.update({"correct": correctness})
-
-    return list(db.submissions.find(match, {"_id": 0}))
-
-
-def clear_all_submissions():
-    """Remove all submissions from the database."""
-    if DEBUG_KEY is not None:
-        db = api.db.get_conn()
-        db.submissions.remove()
-        api.cache.clear()
-    else:
-        raise InternalException("DEBUG Mode must be enabled")
-
-
 # @memoize
 def get_problem(pid=None, name=None, tid=None):
     """
@@ -482,11 +321,11 @@ def get_solved_problems(tid=None, uid=None, category=None,
 
     members = api.team.get_team_uids(tid=team["tid"])
 
-    submissions = get_submissions(
+    submissions = api.submissions.get_submissions(
         tid=tid, uid=uid, category=category, correctness=True)
 
     for uid in members:
-        submissions += get_submissions(
+        submissions += api.submissions.get_submissions(
             uid=uid, category=category, correctness=True)
 
     pids = []
