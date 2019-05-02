@@ -60,7 +60,7 @@ shell_server_out.add_argument(
     'bundles', required=False, type=list, location='json')
 
 # Problem PATCH request schema
-# ("disabled" is the only mutable field as the others are controlled by the
+# ("disabled" is the only mutable field as the others are managed by the
 #  shell manager.)
 problem_patch_req = reqparse.RequestParser()
 problem_patch_req.add_argument(
@@ -160,4 +160,14 @@ settings_patch_req.add_argument(
 )
 settings_patch_req.add_argument(
     'eligibility', required=False, type=object_type, location='json'
+)
+
+# Bundle PATCH request schema
+# ("dependencies_enabled" is the only mutable field as the others are managed
+#  by the shell manager.)
+bundle_patch_req = reqparse.RequestParser()
+bundle_patch_req.add_argument(
+    'dependencies_enabled', required=True, type=inputs.boolean,
+    help="Whether to consider this bundle's dependencies when determining " +
+         "unlocked problems."
 )

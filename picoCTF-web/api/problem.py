@@ -8,6 +8,7 @@ import pymongo
 from voluptuous import ALLOW_EXTRA, Length, Range, Required, Schema
 
 import api.achievement
+import api.bundles
 import api.cache
 import api.common
 import api.db
@@ -16,8 +17,7 @@ import api.stats
 import api.team
 import api.logger
 from api.cache import memoize
-from api.common import (InternalException, WebException, check, safe_fail,
-                        validate)
+from api.common import (InternalException, check, validate)
 
 submission_schema = Schema({
     Required("tid"):
@@ -82,28 +82,6 @@ instance_schema = Schema({
 },
                          extra=True)
 
-bundle_schema = Schema({
-    Required("name"):
-    check(("The bundle name must be a string.", [str])),
-    Required("author"):
-    check(("The bundle author must be a string.", [str])),
-    Required("categories"):
-    check(("The bundle categories must be a list.", [list])),
-    Required("problems"):
-    check(("The bundle problems must be a list.", [list])),
-    Required("description"):
-    check(("The bundle description must be a string.", [str])),
-    "organization":
-    check(("The bundle organization must be a string.", [str])),
-    "dependencies":
-    check(("The bundle dependencies must be a dict.", [dict])),
-    "dependencies_enabled":
-    check(("The dependencies enabled state must be a bool.",
-           [lambda x: type(x) == bool])),
-    "pkg_dependencies":
-    check(("The package dependencies must be a list.",
-           [lambda x: type(x) == list]))
-})
 
 SANITATION_KEYS = [
     "deployment_directory",
@@ -147,8 +125,8 @@ def upsert_problem(problem, sid):
     Add or update a problem.
 
     Args:
-        problem dict,
-        shell server ID
+        problem: problem dict
+        sid: shell server ID
     Returns:
         The created/updated problem ID.
     """
@@ -188,7 +166,9 @@ def upsert_problem(problem, sid):
         problem["disabled"] = (existing["disabled"] or
                                len(problem["instances"]) == 0)
 
-        db.problems.update({'pid': problem['pid']}, problem)
+        db.problems.find_one_and_update(
+            {'pid': problem['pid']},
+            {'$set': problem})
         return problem['pid']
 
     db.problems.insert(problem)
@@ -725,7 +705,7 @@ def is_problem_unlocked(problem, solved):
     """
     unlocked = True
 
-    for bundle in get_all_bundles():
+    for bundle in api.bundles.get_all_bundles():
         if problem["sanitized_name"] in bundle["problems"]:
             if "dependencies" in bundle and bundle["dependencies_enabled"]:
                 if problem["sanitized_name"] in bundle["dependencies"]:
@@ -881,24 +861,6 @@ def get_unlocked_problems(tid, category=None):
     ]
 
 
-def insert_bundle(bundle):
-    """Insert a bundle into the database."""
-    db = api.db.get_conn()
-    validate(bundle_schema, bundle)
-
-    bid = api.common.hash("{}-{}".format(bundle["name"], bundle["author"]))
-
-    if safe_fail(get_bundle, bid) is not None:
-        # bundle already exists, update it instead
-        update_bundle(bid, bundle)
-        return
-
-    bundle["bid"] = bid
-    bundle["dependencies_enabled"] = False
-
-    db.bundles.insert(bundle)
-
-
 def load_published(data):
     """
     Load in the problems from the shell_manager publish blob.
@@ -911,57 +873,8 @@ def load_published(data):
 
     if "bundles" in data:
         for bundle in data["bundles"]:
-            insert_bundle(bundle)
+            api.bundles.upsert_bundle(bundle)
 
-    api.cache.clear()
-
-
-def get_bundle(bid):
-    """Return the bundle object corresponding to the given bid."""
-    db = api.db.get_conn()
-
-    bundle = db.bundles.find_one({"bid": bid})
-
-    if bundle is None:
-        raise WebException("Bundle with bid {} does not exist".format(bid))
-
-    return bundle
-
-
-def update_bundle(bid, updates):
-    """Update a bundle."""
-    db = api.db.get_conn()
-
-    bundle = db.bundles.find_one({"bid": bid}, {"_id": 0})
-    if bundle is None:
-        raise WebException("Bundle with bid {} does not exist".format(bid))
-
-    # pop the bid temporarily to check with schema
-    bid = bundle.pop("bid")
-    bundle.update(updates)
-    validate(bundle_schema, bundle)
-    bundle["bid"] = bid
-
-    db.bundles.update({"bid": bid}, {"$set": bundle})
-
-
-def get_all_bundles():
-    """Get all bundles."""
-    db = api.db.get_conn()
-    return list(db.bundles.find({}, {"_id": 0}))
-
-
-def set_bundle_dependencies_enabled(bid, enabled):
-    """
-    Set a bundle's dependencies_enabled field.
-
-    This will affect the unlocked problems.
-
-    Args:
-        bid: the bundle id to update
-        enabled:
-    """
-    update_bundle(bid, {"dependencies_enabled": enabled})
     api.cache.clear()
 
 

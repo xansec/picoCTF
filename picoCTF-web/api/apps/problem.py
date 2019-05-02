@@ -112,18 +112,6 @@ def submit_key_hook():
         ), 200
 
 
-@blueprint.route('/<path:pid>', methods=['GET'])
-@require_login
-@block_before_competition()
-@block_after_competition()
-def get_single_problem_hook(pid):
-    problem_info = api.problem.get_problem(pid, tid=api.user.get_user()['tid'])
-    if not api.user.is_admin():
-        problem_info.pop("instances")
-    return WebSuccess(
-        data=api.problem.sanitize_problem_data(problem_info)), 200
-
-
 @blueprint.route('/feedback', methods=['POST'])
 @check_csrf
 @require_login

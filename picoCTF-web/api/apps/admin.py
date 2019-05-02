@@ -1,6 +1,5 @@
 """Routing functions for /api/admin."""
-from bson import json_util
-from flask import Blueprint, request
+from flask import Blueprint
 
 import api.common
 import api.config
@@ -34,23 +33,3 @@ def get_problem():
     }
     return WebSuccess(data=submission_data), 200
 
-
-@blueprint.route("/bundle/dependencies_active", methods=["POST"])
-@require_admin
-def bundle_dependencies():
-    bid = request.form.get("bid", None)
-    state = request.form.get("state", None)
-
-    if bid is None:
-        return WebError("Must provide bid to load from."), 400
-
-    if state is None:
-        return WebError("Must provide a state to set."), 400
-
-    state = json_util.loads(state)
-
-    api.problem.set_bundle_dependencies_enabled(bid, state)
-
-    return WebSuccess(
-        "Dependencies are now {}."
-        .format("enabled" if state else "disabled")), 200
