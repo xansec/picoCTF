@@ -117,8 +117,23 @@ def update_extdata_hook():
 @require_login
 @block_before_competition()
 def get_visible_problems_hook():
-    visible_problems = api.problem.get_visible_problems(
-        api.user.get_user()['tid'], category=None)
+    tid = api.user.get_user()['tid']
+    all_problems = api.problem.get_all_problems(show_disabled=False)
+    unlocked_pids = api.problem.get_unlocked_pids(tid)
+    solved_pids = api.problem.get_solved_pids(tid=tid)
+
+    visible_problems = []
+    for problem in all_problems:
+        if problem["pid"] in unlocked_pids:
+            problem = api.problem.filter_problem_instances(problem, tid)
+            problem.pop('flag', None)
+            problem.pop('tags', None)
+            problem.pop('files', None)
+            problem['solved'] = problem["pid"] in solved_pids
+            problem['unlocked'] = True
+            visible_problems.append(problem)
+    for problem in visible_problems:
+        problem['solves'] = api.stats.get_problem_solves(problem['pid'])
     return WebSuccess(
         data=api.problem.sanitize_problem_data(visible_problems)), 200
 

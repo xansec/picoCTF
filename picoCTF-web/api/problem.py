@@ -82,41 +82,20 @@ instance_schema = Schema({
 },
                          extra=True)
 
-
-SANITATION_KEYS = [
-    "deployment_directory",
-    "flag",
-    "flag_sha1",
-    "iid",
-    "instance_number",
-    "pip_python_version",
-    "pip_requirements",
-    "pkg_dependencies",
-    "service",
-    "should_symlink",
-    "sid",
-    "user",
-]
-
 DEBUG_KEY = None
 
 
-def get_all_categories(show_disabled=False):
+def get_all_categories():
     """
     Get the set of distinct problem categories.
 
-    Args:
-        show_disabled: Whether to include categories
-                       that are only on disabled problems
     Returns:
         The set of distinct problem categories.
+
     """
     db = api.db.get_conn()
-
-    match = {}
-    if not show_disabled:
-        match.update({"disabled": False})
-
+    # Do not return categories that only appear on disabled problems
+    match = {"disabled": False}
     return db.problems.find(match).distinct("category")
 
 
@@ -173,39 +152,6 @@ def upsert_problem(problem, sid):
 
     db.problems.insert(problem)
     return problem['pid']
-
-
-def remove_problem(pid):
-    """
-    Remove a problem from the given database.
-
-    Args:
-        pid: the pid of the problem to remove.
-    Returns:
-        The removed problem object.
-
-    """
-    db = api.db.get_conn()
-    problem = get_problem(pid=pid)
-
-    db.problems.remove({"pid": pid})
-
-    return problem
-
-
-def search_problems(*conditions):
-    """
-    Aggregate all problems that match all of the provided conditions.
-
-    Args:
-        conditions: multiple mongo queries to search.
-    Returns:
-        The list of matching problems.
-
-    """
-    db = api.db.get_conn()
-
-    return list(db.problems.find({"$or": list(conditions)}, {"_id": 0}))
 
 
 def assign_instance_to_team(pid, tid=None, reassign=False):
@@ -287,23 +233,21 @@ def get_instance_data(pid, tid):
     return get_instance_data(pid, tid)
 
 
-def get_problem_instance(pid, tid):
+def filter_problem_instances(problem, tid):
     """
-    Return the problem instance dictionary that can be displayed to the user.
+    Replace problem fields with those in a team's assigned instance.
+
+    Also removes the original 'instances' field.
 
     Args:
-        pid: the problem id
+        problem: the problem dict
         tid: the team id
 
     Returns:
-        The problem instance
+        The filtered problem dict
 
     """
-    problem = deepcopy(get_problem(pid=pid, tid=tid))
-    instance = get_instance_data(pid, tid)
-
-    problem['solves'] = api.stats.get_problem_solves(pid=pid)
-
+    instance = get_instance_data(problem['pid'], tid)
     problem.pop("instances")
     problem.update(instance)
     return problem
@@ -406,31 +350,6 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
     return (correct, previously_solved_by_user, previously_solved_by_team)
 
 
-def count_submissions(pid=None,
-                      uid=None,
-                      tid=None,
-                      category=None,
-                      correctness=None):
-    """Count the problem submissions matching the given criteria."""
-    db = api.db.get_conn()
-    match = {}
-    if uid is not None:
-        match.update({"uid": uid})
-    elif tid is not None:
-        match.update({"tid": tid})
-
-    if pid is not None:
-        match.update({"pid": pid})
-
-    if category is not None:
-        match.update({"category": category})
-
-    if correctness is not None:
-        match.update({"correct": correctness})
-
-    return db.submissions.find(match, {"_id": 0}).count()
-
-
 def get_submissions(pid=None,
                     uid=None,
                     tid=None,
@@ -483,94 +402,6 @@ def clear_all_submissions():
         raise InternalException("DEBUG Mode must be enabled")
 
 
-def clear_submissions(uid=None, tid=None, pid=None):
-    """
-    Clear submissions for a given team, user, or problems.
-
-    Args:
-        uid: the user's uid to clear from.
-        tid: the team's tid to clear from.
-        pid: the pid to clear from.
-    """
-    db = api.db.get_conn()
-
-    match = {}
-
-    if pid is not None:
-        match.update({"pid", pid})
-    elif uid is not None:
-        match.update({"uid": uid})
-    elif tid is not None:
-        match.update({"tid": tid})
-    else:
-        raise InternalException("You must supply either a tid, uid, or pid")
-
-    return db.submissions.remove(match)
-
-
-def invalidate_submissions(pid=None, uid=None, tid=None):
-    """
-    Invalidates the submissions for a given problem.
-
-    Can be filtered by uid or tid.
-    Passing no arguments will invalidate all submissions.
-
-    Args:
-        pid: the pid of the problem.
-        uid: the user's uid that will his submissions invalidated.
-        tid: the team's tid that will have their submissions invalidated.
-    """
-    db = api.db.get_conn()
-
-    match = {}
-
-    if pid is not None:
-        match.update({"pid": pid})
-
-    if uid is not None:
-        match.update({"uid": uid})
-    elif tid is not None:
-        match.update({"tid": tid})
-
-    db.submissions.update(match, {"correct": False})
-
-
-def reevaluate_submissions_for_problem(pid):
-    """
-    Reevaluate submissions for an updated problem.
-
-    Args:
-        pid: the pid of the problem to be reevaluated.
-    """
-    db = api.db.get_conn()
-
-    get_problem(pid=pid)
-
-    keys = {}
-    for submission in get_submissions(pid=pid):
-        key = submission["key"]
-        if key not in keys:
-            result = grade_problem(pid, key, submission["tid"])
-            if result != submission["correct"]:
-                keys[key] = result
-            else:
-                keys[key] = None
-
-    for key, change in keys.items():
-        if change is not None:
-            db.submissions.update({"key": key}, {"$set": {
-                "correct": change
-            }},
-                                  multi=True)
-
-
-def reevaluate_all_submissions():
-    """Reevaluate all submissions for all problems."""
-    api.cache.clear()
-    for problem in get_all_problems(show_disabled=True):
-        reevaluate_submissions_for_problem(problem["pid"])
-
-
 # @memoize
 def get_problem(pid=None, name=None, tid=None):
     """
@@ -602,16 +433,17 @@ def get_problem(pid=None, name=None, tid=None):
     return db.problems.find_one(match, {"_id": 0})
 
 
-def get_all_problems(category=None, show_disabled=False, basic_only=False):
+def get_all_problems(category=None, show_disabled=False):
     """
-    Get all of the problems in the database.
+    Get all of the problems, with optional filtering.
 
     Args:
-        category: Optional parameter to restrict which problems are returned
-        show_disabled: Whether or not to show disabled problems.
-        basic_only: Only return name, cat, score. Used for progression tracking
+        category (optional): Return only problems from this category
+        show_disabled (optional): Include disabled problems
+
     Returns:
         List of problem dicts
+
     """
     db = api.db.get_conn()
 
@@ -624,10 +456,6 @@ def get_all_problems(category=None, show_disabled=False, basic_only=False):
 
     # Return all except objectID
     projection = {"_id": 0}
-
-    # Return only name, category, score
-    if basic_only:
-        projection.update({"name": 1, "category": 1, "score": 1})
 
     return list(
         db.problems.find(match, projection).sort([('score', pymongo.ASCENDING),
@@ -669,7 +497,12 @@ def get_solved_problems(tid=None, uid=None, category=None,
     for submission in submissions:
         if submission["pid"] not in pids:
             pids.append(submission["pid"])
-            problem = unlocked_filter(get_problem(pid=submission["pid"]), True)
+            problem = get_problem(pid=submission['pid'])
+            problem.pop('flag', None)
+            problem.pop('tags', None)
+            problem.pop('files', None)
+            problem['solved'] = True
+            problem['unlocked'] = True
             problem["solve_time"] = submission["timestamp"]
             if not problem["disabled"] or show_disabled:
                 result.append(problem)
@@ -721,22 +554,25 @@ def is_problem_unlocked(problem, solved):
 
 
 # @memoize
-def get_unlocked_pids(tid, category=None):
+def get_unlocked_pids(tid):
     """
     Get the unlocked pids for a given team.
 
+    Also assigns instances of unlocked problems to the team, if not present.
+
     Args:
         tid: The team id
-        category: Optional parameter to restrict which problems are returned
+
     Returns:
         List of unlocked problem ids
+
     """
     # Note: Do NOT limit solved problems to category for proper weight count
-    solved = get_solved_problems(tid=tid, category=None)
-    team = api.team.get_team(tid=tid)
+    solved = get_solved_problems(tid)
+    team = api.team.get_team(tid)
 
     unlocked = []
-    for problem in get_all_problems(category=category):
+    for problem in get_all_problems():
         if is_problem_unlocked(problem, solved):
             unlocked.append(problem["pid"])
 
@@ -744,121 +580,6 @@ def get_unlocked_pids(tid, category=None):
         if pid not in team["instances"]:
             assign_instance_to_team(pid, tid)
     return unlocked
-
-
-def filter_problem(problem, remove_list, set_dict):
-    """Remove all keys in the remove_list and set all keys in the set_dict."""
-    problem = copy(problem)
-
-    for key in remove_list:
-        if key in problem:
-            problem.pop(key)
-
-    problem.update(set_dict)
-
-    return problem
-
-
-def unlocked_filter(problem, solved):
-    """
-    Return a filtered version of a problem in an unlocked state.
-
-    Args:
-        problem: the problem object
-        solved: boolean indicating if this problem is also solved
-
-    Returns:
-        A filtered problem object
-
-    """
-    return filter_problem(problem, ["flag", "tags", "files"], {
-        "solved": solved,
-        "unlocked": True
-    })
-
-
-def locked_filter(problem):
-    """
-    Return a filtered version of a problem in a locked state.
-
-    Args:
-        problem: the problem object
-
-    Returns:
-        A filtered problem object
-
-    """
-    return filter_problem(problem,
-                          ["description", "instances", "hints", "tags"], {
-                              "solved": False,
-                              "unlocked": False
-                          })
-
-
-def count_all_problems(category=None):
-    """
-    Return all (enabled) category names and their number of (enabled) problems.
-
-    Includes both visible and non-visible categories.
-
-    Args:
-        category: Optional parameter to restrict to only one category
-    Returns:
-        A dict.
-        category: category name
-        count: number of problems in that category
-    """
-    if category is None:
-        categories = get_all_categories(show_disabled=False)
-    else:
-        categories = [category]
-    result = {}
-
-    for cat in categories:
-        result[cat] = len(get_all_problems(cat))
-
-    return result
-
-
-def get_visible_problems(tid, category=None):
-    """
-    Return all of the unlocked problems.
-
-    Args:
-        tid: The team id
-        category: Optional parameter to restrict which problems are returned
-    Returns:
-        List of visible problem dictionaries
-    """
-    all_problems = get_all_problems(category=category, show_disabled=False)
-    unlocked_pids = get_unlocked_pids(tid, category=category)
-    solved_pids = get_solved_pids(tid=tid)
-
-    result = []
-
-    for problem in all_problems:
-        if problem["pid"] in unlocked_pids:
-            result.append(
-                unlocked_filter(
-                    get_problem_instance(problem["pid"], tid),
-                    problem["pid"] in solved_pids))
-    return result
-
-
-def get_unlocked_problems(tid, category=None):
-    """
-    Get the unlocked problems for a given team.
-
-    Args:
-        tid: The team id
-        category: Optional parameter to restrict which problems are returned
-    Returns:
-        List of unlocked problem dictionaries
-    """
-    return [
-        problem for problem in get_visible_problems(tid, category=category)
-        if problem['unlocked']
-    ]
 
 
 def load_published(data):
@@ -887,6 +608,23 @@ def sanitize_problem_data(data):
     Args:
         data: dict or list of problems
     """
+    SANITATION_KEYS = [
+        "deployment_directory",
+        "flag",
+        "flag_sha1",
+        "files",
+        "iid",
+        "instance_number",
+        "pip_python_version",
+        "pip_requirements",
+        "pkg_dependencies",
+        "service",
+        "should_symlink",
+        "sid",
+        "tags",
+        "user",
+    ]
+
     def pop_keys(problem_dict):
         for key in SANITATION_KEYS:
             problem_dict.pop(key, None)

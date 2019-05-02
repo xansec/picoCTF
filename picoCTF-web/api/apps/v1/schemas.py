@@ -171,3 +171,32 @@ bundle_patch_req.add_argument(
     help="Whether to consider this bundle's dependencies when determining " +
          "unlocked problems."
 )
+
+# Optional parameters for problems request
+problems_req = reqparse.RequestParser()
+problems_req.add_argument(
+    'unlocked_only', required=False, location='args', default=True,
+    help='Whether to display only problems unlocked for your team or ' +
+         'all matching problems. Must be teacher/admin to disable. ' +
+         'If disabled as a teacher account, will only return name, ' +
+         'category, and score for each problem.',
+    type=inputs.boolean
+)
+problems_req.add_argument(
+    'solved_only', required=False, location='args', default=False,
+    help='Restrict results to problems solved by your team.',
+    type=inputs.boolean
+)
+problems_req.add_argument(
+    'count_only', required=False, location='args', default=False,
+    help='Whether to return only the count of matching problems.',
+    type=inputs.boolean
+)
+problems_req.add_argument(
+    'category', required=False, location='args', default=None,
+    help='Restrict results to a specific category.', type=str
+)
+problems_req.add_argument(
+    'include_disabled', required=False, location='args', default=False,
+    help='Whether to include disabled problems.', type=inputs.boolean
+)

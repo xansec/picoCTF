@@ -206,26 +206,6 @@ def get_problems_by_category():
     return result
 
 
-@api.cache.memoize(timeout=120)
-def get_pids_by_category():
-    """Return a dict of {category: [problems]}."""
-    result = {
-        cat: [x['pid'] for x in api.problem.get_all_problems(category=cat)
-             ] for cat in api.problem.get_all_categories()
-    }
-    return result
-
-
-@api.cache.memoize(timeout=120)
-def get_pid_categories():
-    """Return a dict of {pid: category}."""
-    pid_map = {}
-    for cat in api.problem.get_all_categories():
-        for p in api.problem.get_all_problems(category=cat):
-            pid_map[p['pid']] = cat
-    return pid_map
-
-
 def get_team_member_stats(tid):
     """
     Get the solved problems for each member of a given team.
@@ -328,26 +308,17 @@ def get_top_teams(gid=None, country=None, include_ineligible=False):
 
 # Stored by the cache_stats daemon
 # @memoize
-def get_problem_solves(name=None, pid=None):
+def get_problem_solves(pid):
     """
     Return the number of solves for a particular problem.
 
-    Must supply either pid or name.
-
     Args:
-        name: name of the problem
         pid: pid of the problem
     """
-    if not name and not pid:
-        raise InternalException(
-            "You must supply either a pid or name of the problem.")
-
     db = api.db.get_conn()
 
-    problem = api.problem.get_problem(name=name, pid=pid)
-
     return db.submissions.find({
-        'pid': problem["pid"],
+        'pid': pid,
         'correct': True
     }).count()
 

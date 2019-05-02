@@ -91,9 +91,12 @@ def run():
                     continue
 
                 data = {}
+                all_problems = api.problem.get_all_problems()
                 for team in teams:
-                    unlocked_problems = api.problem.get_unlocked_problems(
-                        tid=team["tid"])
+                    unlocked_problems = [
+                        p for p in all_problems if p['pid'] in
+                        api.problem.get_unlocked_pids(team)
+                        ]
                     correct_symlinks = {
                         p["name"]: p["deployment_directory"]
                         for p in unlocked_problems

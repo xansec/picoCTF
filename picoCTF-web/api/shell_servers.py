@@ -345,6 +345,6 @@ def reassign_teams(include_assigned=False):
                     'instances': {}
                 }})
             # Re-assign instances
-            safe_fail(api.problem.get_visible_problems, team["tid"])
+            api.problem.get_unlocked_pids(team['tid'])
 
     return len(teams)

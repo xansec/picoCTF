@@ -16,58 +16,6 @@ from api.common import WebError, WebSuccess
 blueprint = Blueprint("problem_api", __name__)
 
 
-@blueprint.route('', defaults={'category': None}, methods=['GET'])
-@blueprint.route('/category/<category>', methods=['GET'])
-@require_login
-@block_before_competition()
-def get_visible_problems_hook(category):
-    visible_problems = api.problem.get_visible_problems(
-        api.user.get_user()['tid'], category=category)
-    return WebSuccess(
-        data=api.problem.sanitize_problem_data(visible_problems)), 200
-
-
-@blueprint.route('/all', defaults={'category': None}, methods=['GET'])
-@blueprint.route('/all/category/<category>', methods=['GET'])
-@require_login
-@require_teacher
-@block_before_competition()
-def get_all_problems_hook(category):
-    all_problems = api.problem.get_all_problems(
-        category=category, basic_only=True)
-    return WebSuccess(
-        data=api.problem.sanitize_problem_data(all_problems)), 200
-
-
-@blueprint.route('/count', defaults={'category': None}, methods=['GET'])
-@blueprint.route('/count/<category>', methods=['GET'])
-@require_login
-@block_before_competition()
-def get_all_problems_count_hook(category):
-    return WebSuccess(
-        data=api.problem.count_all_problems(category=category)), 200
-
-
-@blueprint.route('/unlocked', methods=['GET'])
-@require_login
-@block_before_competition()
-def get_unlocked_problems_hook():
-    unlocked_problems = api.problem.get_unlocked_problems(
-        api.user.get_user()['tid'])
-    return WebSuccess(
-        data=api.problem.sanitize_problem_data(unlocked_problems)), 200
-
-
-@blueprint.route('/solved', methods=['GET'])
-@require_login
-@block_before_competition()
-def get_solved_problems_hook():
-    solved_problems = api.problem.get_solved_problems(
-        tid=api.user.get_user()['tid'])
-    return WebSuccess(
-        data=api.problem.sanitize_problem_data(solved_problems)), 200
-
-
 @blueprint.route('/submit', methods=['POST'])
 @check_csrf
 @require_login
@@ -154,7 +102,7 @@ def request_problem_hint_hook():
         return WebError("You have to supply the source of the hint."), 400
 
     tid = api.user.get_team()["tid"]
-    if pid not in api.problem.get_unlocked_pids(tid, category=None):
+    if pid not in api.problem.get_unlocked_pids(tid):
         return WebError("Your team hasn't unlocked this problem yet!"), 403
 
     return WebSuccess("Hint noted."), 200
