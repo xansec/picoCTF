@@ -35,5 +35,5 @@ api.add_namespace(feedback_ns)
 def handle_pico_exception(e):
     """Handle exceptions."""
     response = jsonify(e.to_dict())
-    response.status_code = 203
+    response.status_code = e.status_code
     return response
