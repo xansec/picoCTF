@@ -66,7 +66,7 @@ def upsert_feedback(pid, feedback):
     uid = api.auth.get_uid()
 
     # Make sure the problem actually exists.
-    if not api.problem.get_problem(pid=pid):
+    if not api.problem.get_problem(pid):
         raise PicoException('Problem not found', 404)
 
     team = api.user.get_team(uid=uid)

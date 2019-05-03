@@ -156,7 +156,7 @@ def assign_instance_to_team(pid, tid=None, reassign=False):
 
     """
     team = api.team.get_team(tid=tid)
-    problem = get_problem(pid=pid)
+    problem = get_problem(pid)
 
     available_instances = problem["instances"]
 
@@ -205,7 +205,7 @@ def get_instance_data(pid, tid):
 
     """
     instance_map = api.team.get_team(tid=tid)["instances"]
-    problem = get_problem(pid=pid)
+    problem = get_problem(pid)
 
     if pid not in instance_map:
         iid = assign_instance_to_team(pid, tid)
@@ -242,7 +242,7 @@ def filter_problem_instances(problem, tid):
 
 
 # @memoize
-def get_problem(pid=None, name=None, tid=None):
+def get_problem(pid):
     """
     Get a single problem.
 
@@ -336,7 +336,7 @@ def get_solved_problems(tid=None, uid=None, category=None,
     for submission in submissions:
         if submission["pid"] not in pids:
             pids.append(submission["pid"])
-            problem = get_problem(pid=submission['pid'])
+            problem = get_problem(submission['pid'])
             problem.pop('flag', None)
             problem.pop('tags', None)
             problem.pop('files', None)

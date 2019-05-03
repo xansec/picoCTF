@@ -226,7 +226,7 @@ def get_team_member_stats(tid):
     }
 
 
-def get_problem_submission_stats(pid=None, name=None):
+def get_problem_submission_stats(pid=None):
     """
     Retrieve the number of valid and invalid submissions for a given problem.
 
@@ -236,14 +236,13 @@ def get_problem_submission_stats(pid=None, name=None):
     Returns:
         Dict of {valid: #, invalid: #}
     """
-    problem = api.problem.get_problem(pid=pid, name=name)
 
     return {
         "valid":
-        len(api.submissions.get_submissions(pid=problem["pid"], correctness=True)),
+        len(api.submissions.get_submissions(pid, correctness=True)),
         "invalid":
         len(
-            api.submissions.get_submissions(pid=problem["pid"], correctness=False))
+            api.submissions.get_submissions(pid, correctness=False))
     }
 
 
