@@ -8,7 +8,7 @@ import api.email
 import api.shell_servers
 import api.stats
 import api.user
-from api.annotations import check_csrf, require_login
+from api.annotations import check_csrf, require_login, require_admin
 from api.common import safe_fail, WebError, WebSuccess
 
 blueprint = Blueprint("user_api", __name__)
@@ -182,3 +182,13 @@ def update_extdata_hook():
     """
     api.user.update_extdata(api.common.flat_multi(request.form))
     return WebSuccess("Your Extdata has been successfully updated."), 200
+
+
+@blueprint.route('/users', methods=['GET'])
+@require_admin
+def get_all_users_hook():
+    users = api.user.get_all_users()
+    if users is None:
+        return WebError("There was an error query users from the database.")
+    return WebSuccess(data=users), 200
+
