@@ -134,7 +134,7 @@ class ShellServerAssignment(Resource):
         """Update teams' shell server assignments."""
         if not api.config.get_settings()["shell_servers"]["enable_sharding"]:
             raise PicoException(
-                "Sharding must be enabled to update server assignments.")
+                "Sharding must be enabled to update server assignments.", 500)
         # replace with req parser
         req = shell_server_reassignment_req.parse_args(strict=True)
         include_assigned = req['include_assigned'] is True

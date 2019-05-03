@@ -3,7 +3,7 @@
 from voluptuous import Length, Required, Schema
 
 from datetime import datetime
-from api.common import check, validate, InternalException
+from api.common import check, validate, InternalException, PicoException
 import api.user
 import api.problem
 
@@ -45,7 +45,7 @@ def grade_problem(pid, key, tid=None):
 
 
 @api.logger.log_action
-def submit_key(tid, pid, key, method, uid=None, ip=None):
+def submit_key(tid, pid, key, method, uid, ip=None):
     """
     User problem submission.
 
@@ -66,11 +66,6 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
     if pid not in api.problem.get_unlocked_pids(tid):
         raise InternalException(
             "You can't submit flags to problems you haven't unlocked.")
-
-    user = api.user.get_user(uid=uid)
-    if user is None:
-        raise InternalException("User submitting flag does not exist.")
-    uid = user["uid"]
 
     previously_solved_by_user = db.submissions.find_one(
         filter={
@@ -95,14 +90,15 @@ def submit_key(tid, pid, key, method, uid=None, ip=None):
             'ip': ip,
             'key': key,
             'method': method,
-            'category': api.problem.get_problem(pid=pid)['category'],
+            'category': api.problem.get_problem(pid)['category'],
             'correct': correct,
         })
 
     if correct and not previously_solved_by_user:
         # Immediately invalidate some caches
+        # @TODO fix these (without cache=True kwarg)
         api.stats.get_score(tid=tid, uid=uid)
-        # api.stats.get_unlocked_pids(tid) # @TODO fix this
+        # api.stats.get_unlocked_pids(tid)
         api.problem.get_solved_problems(tid=tid, uid=uid)
         api.stats.get_score_progression(tid=tid, uid=uid)
 
@@ -165,4 +161,4 @@ def clear_all_submissions():
         db.submissions.remove()
         api.cache.clear()
     else:
-        raise InternalException("DEBUG Mode must be enabled")
+        raise PicoException("Debug mode must be enabled", 500)

@@ -200,3 +200,18 @@ problems_req.add_argument(
     'include_disabled', required=False, location='args', default=False,
     help='Whether to include disabled problems.', type=inputs.boolean
 )
+
+# Submission request
+submission_req = reqparse.RequestParser()
+submission_req.add_argument(
+    'pid', required=True, type=str,
+    help='ID of the attempted problem'
+)
+submission_req.add_argument(
+    'key', required=True, type=str,
+    help='Flag for the problem'
+)
+submission_req.add_argument(
+    'method', required=True, type=str,
+    help='Submission method, e.g. "game"'
+)

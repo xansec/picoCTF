@@ -17,50 +17,6 @@ from api.common import WebError, WebSuccess
 blueprint = Blueprint("problem_api", __name__)
 
 
-@blueprint.route('/submit', methods=['POST'])
-@check_csrf
-@require_login
-@block_before_competition()
-@block_after_competition()
-def submit_key_hook():
-    user_account = api.user.get_user()
-    tid = user_account['tid']
-    uid = user_account['uid']
-    pid = request.form.get('pid', '')
-    key = request.form.get('key', '')
-    method = request.form.get('method', '')
-    ip = request.remote_addr
-
-    (correct, previously_solved_by_user,
-     previously_solved_by_team) = api.submissions.submit_key(
-            tid, pid, key, method, uid, ip)
-
-    if correct and not previously_solved_by_team:
-        return WebSuccess("That is correct!"), 200
-    elif not correct and not previously_solved_by_team:
-        return WebError("That is incorrect!"), 200
-    elif correct and previously_solved_by_user:
-        return WebSuccess(
-            'Flag correct: however, you have already solved ' +
-            'this problem.'
-        ), 200
-    elif correct and previously_solved_by_team:
-        return WebSuccess(
-            'Flag correct: however, your team has already received points ' +
-            'for this flag.'
-        ), 200
-    elif not correct and previously_solved_by_user:
-        return WebError(
-            'Flag incorrect: please note that you have ' +
-            'already solved this problem.'
-        ), 200
-    elif not correct and previously_solved_by_team:
-        return WebError(
-            'Flag incorrect: please note that someone on your team has ' +
-            'already solved this problem.'
-        ), 200
-
-
 @blueprint.route('/feedback', methods=['POST'])
 @check_csrf
 @require_login
@@ -107,11 +63,3 @@ def request_problem_hint_hook():
         return WebError("Your team hasn't unlocked this problem yet!"), 403
 
     return WebSuccess("Hint noted."), 200
-
-
-@blueprint.route('/clear_submissions', methods=['GET'])
-@require_login
-@require_admin
-def clear_all_submissions_hook():
-    api.submissions.clear_all_submissions()
-    return WebSuccess("All submissions reset."), 200
