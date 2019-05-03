@@ -11,7 +11,6 @@ from werkzeug.contrib.fixers import ProxyFix
 
 # import api.apps.admin
 import api.apps.group
-import api.apps.problem
 import api.apps.stats
 import api.apps.team
 import api.apps.user
@@ -85,8 +84,6 @@ def create_app(test_config=None):
     app.register_blueprint(api.apps.stats.blueprint, url_prefix="/api/stats")
     # app.register_blueprint(api.apps.admin.blueprint, url_prefix="/api/admin")
     app.register_blueprint(api.apps.group.blueprint, url_prefix="/api/group")
-    app.register_blueprint(
-        api.apps.problem.blueprint, url_prefix="/api/problems")
     app.register_blueprint(
         v0_blueprint, url_prefix="/api/v0"
     )

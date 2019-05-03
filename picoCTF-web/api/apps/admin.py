@@ -1,13 +1,6 @@
 """Routing functions for /api/admin."""
 from flask import Blueprint
 
-import api.common
-import api.config
-import api.logger
-import api.problem
-import api.problem_feedback
-import api.shell_servers
-import api.stats
 import api.user
 from api.annotations import require_admin
 from api.common import WebError, WebSuccess

@@ -15,7 +15,6 @@ import api.stats
 import api.submissions
 import api.team
 from api.cache import memoize
-from api.common import InternalException
 
 top_teams = 5
 

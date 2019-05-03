@@ -5,11 +5,12 @@ from datetime import datetime
 from voluptuous import Length, Required, Schema
 
 import api.achievement
+import api.auth
 import api.db
+import api.logger
 import api.problem
 import api.user
-import api.logger
-from api.common import check, validate
+from api.common import check, validate, PicoException
 
 feedback_schema = Schema({
     Required("liked"):
@@ -49,35 +50,25 @@ def get_problem_feedback(pid=None, tid=None, uid=None):
     return list(db.problem_feedback.find(match, {"_id": 0}))
 
 
-def get_reviewed_pids(uid=None):
-    """
-    Get the list of pids reviewed by the user.
-
-    Args:
-        uid: the user id
-    Returns:
-        A list of pids
-    """
-    if uid is None:
-        uid = api.user.get_user()['uid']
-
-    return [entry["pid"] for entry in get_problem_feedback(uid=uid)]
-
-
 @api.logger.log_action
-def add_problem_feedback(pid, uid, feedback):
+def upsert_feedback(pid, feedback):
     """
-    Add user problem feedback to the database.
+    Add or update problem feedback in the database.
 
     Args:
         pid: the problem id
-        uid: the user id
         feedback: the problem feedback.
+    Raises:
+        PicoException if provided pid does not exist
     """
     db = api.db.get_conn()
 
+    uid = api.auth.get_uid()
+
     # Make sure the problem actually exists.
-    api.problem.get_problem(pid=pid)
+    if not api.problem.get_problem(pid=pid):
+        raise PicoException('Problem not found', 404)
+
     team = api.user.get_team(uid=uid)
     solved = pid in api.problem.get_solved_pids(tid=team["tid"])
 

@@ -11,7 +11,6 @@ import api.team
 from api.common import (
   InternalException,
   PicoException,
-  safe_fail
 )
 
 

@@ -215,3 +215,28 @@ submission_req.add_argument(
     'method', required=True, type=str,
     help='Submission method, e.g. "game"'
 )
+
+# Feedback list request
+feedback_list_req = reqparse.RequestParser()
+feedback_list_req.add_argument(
+    'pid', required=False, type=str, location='args',
+    help='Filter feedback by this problem ID only'
+)
+feedback_list_req.add_argument(
+    'uid', required=False, type=str, location='args',
+    help='Filter feedback by this user ID only'
+)
+feedback_list_req.add_argument(
+    'tid', required=False, type=str, location='args',
+    help='Filter feedback by this team ID only'
+)
+
+# Feedback submission request
+feedback_submission_req = reqparse.RequestParser()
+feedback_submission_req.add_argument(
+    'pid', required=True, type=str, help='Reviewed problem ID'
+)
+# @TODO validate this at request time - for now see problem_feedback.py
+feedback_submission_req.add_argument(
+    'feedback', required=True, type=object_type, help='Problem feedback'
+)
