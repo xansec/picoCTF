@@ -20,5 +20,8 @@ matrix:
   include:
     - python: 3.7
       env: TOXENV=flake8
+    - python: 3.7
+      env: TOXENV=bandit
   allow_failures:
     - env: TOXENV=flake8
+    - env: TOXENV=bandit
