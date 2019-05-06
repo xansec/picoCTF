@@ -22,15 +22,6 @@ def update_password_hook():
     return WebSuccess("Your password has been successfully updated!"), 200
 
 
-@blueprint.route('/disable_account', methods=['POST'])
-@check_csrf
-@require_login
-def disable_account_hook():
-    api.user.disable_account_request(
-        api.common.flat_multi(request.form), check_current=True)
-    return WebSuccess("You have successfully disabled your account!"), 200
-
-
 @blueprint.route('/reset_password', methods=['POST'])
 def reset_password_hook():
     username = request.form.get("username", None)

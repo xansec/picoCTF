@@ -6,7 +6,7 @@ import api.auth
 import api.user
 from api.common import PicoException
 
-from .schemas import login_req, user_extdata_req
+from .schemas import login_req, user_extdata_req, disable_account_req
 
 ns = Namespace('user', description='Authentication and information about ' +
                                    'current user')
@@ -110,3 +110,31 @@ class AuthorizationResponse(Resource):
         res = jsonify(authorizations)
         res.status_code = status_code
         return res
+
+
+@ns.route('/disable_account')
+class DisableAccountResponse(Resource):
+    """Disable your user account. Requires password confirmation."""
+
+    # @require_login
+    # @check_csrf
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
+    @ns.response(500, 'Provided password is not correct')
+    @ns.expect(disable_account_req)
+    def post(self):
+        """
+        Disable your user account. Requires password confirmation.
+
+        Note that this is an irreversable action.
+        """
+        user = api.user.get_user(include_pw_hash=True)
+        req = disable_account_req.parse_args(strict=True)
+
+        if not api.auth.confirm_password(
+                req['password'], user['password_hash']):
+            raise PicoException('The provided password is not correct.')
+        api.user.disable_account(user['uid'])
+        return jsonify({
+            'success': True
+            })

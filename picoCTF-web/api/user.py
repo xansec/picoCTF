@@ -365,59 +365,33 @@ def update_password(uid, password):
         }})
 
 
+@api.logger.log_action
 def disable_account(uid):
     """
-    Disable a user account.
+    Disables a user account.
 
-    They will no longer be able to login and no longer count towards their
-    team's maximum size limit.
+    Disabled user accounts can't login or consume space on a team.
 
     Args:
-        uid: user's uid
+        uid: ID of the user to disable
     """
     db = api.db.get_conn()
-    result = db.users.update({
+    db.users.find_one_and_update({
         "uid": uid,
-        "disabled": False
     }, {"$set": {
         "disabled": True
     }})
 
-    tid = api.user.get_team(uid=uid)["tid"]
-
-    # Making certain that we have actually made a change.
-    # result["n"] refers to how many documents have been updated.
-    if result["n"] == 1:
-        db.teams.find_and_modify(
-            query={
-                "tid": tid,
-                "size": {
-                    "$gt": 0
-                }
-            },
-            update={"$inc": {
-                "size": -1
-            }},
-            new=True)
-
-
-@api.logger.log_action
-def disable_account_request(params, uid=None, check_current=False):
-    """
-    Disable user account so they can't login or consume space on a team.
-
-    Args:
-        uid: uid to reset
-        check_current: whether to ensure that current-password is correct
-        params (dict):
-            current-password: the users current password
-    """
-    user = get_user(uid=uid)
-
-    if check_current and not api.auth.confirm_password(
-            params["current-password"], user['password_hash']):
-        raise WebException("Your current password is incorrect.")
-    disable_account(user['uid'])
+    db.teams.find_one_and_update(
+        {
+            "tid": api.user.get_team(uid=uid)["tid"],
+            "size": {
+                "$gt": 0
+            }
+        },
+        {"$inc": {
+            "size": -1
+        }})
 
     api.auth.logout()
 

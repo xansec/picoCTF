@@ -317,5 +317,12 @@ login_req.add_argument(
 user_extdata_req = reqparse.RequestParser()
 user_extdata_req.add_argument(
     'extdata', required=True, type=object_type, location='json',
-    help='Arbitrary object to set as extdata.'
+    help='Arbitrary object to set as extdata'
+)
+
+# Disable account request
+disable_account_req = reqparse.RequestParser()
+disable_account_req.add_argument(
+    'password', required=True, type=str,
+    help='Current password required for confirmation'
 )
