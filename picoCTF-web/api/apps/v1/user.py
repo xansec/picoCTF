@@ -21,9 +21,7 @@ class User(Resource):
     @ns.response(401, 'Not logged in')
     def get(self):
         """Get information about the current user."""
-        res = jsonify(api.user.get_user())
-        res.response_code = 200
-        return res
+        return jsonify(api.user.get_user())
 
 
 @ns.route('/login')
@@ -40,12 +38,10 @@ class LoginResponse(Resource):
         """Log in."""
         req = login_req.parse_args(strict=True)
         api.auth.login(req['username'], req['password'])
-        res = jsonify({
+        return jsonify({
             "success": True,
             "username": req['username']
         })
-        res.status_code = 200
-        return res
 
 
 @ns.route('/logout')
@@ -62,11 +58,9 @@ class LogoutResponse(Resource):
             )
         else:
             api.auth.logout()
-        res = jsonify({
+        return jsonify({
             'success': True
         })
-        res.status_code = 200
-        return res
 
 
 @ns.route('/authorize/<string:requested_role>')

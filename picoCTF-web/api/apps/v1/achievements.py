@@ -30,7 +30,7 @@ class AchievementList(Resource):
             'success': True,
             'aid': aid
             })
-        res.response_code = 201
+        res.status_code = 201
         return res
 
 
@@ -56,12 +56,10 @@ class Achievement(Resource):
         aid = api.achievement.update_achievement(achievement_id, req)
         if aid is None:
             raise PicoException('Achievement not found', status_code=404)
-        res = jsonify({
+        return jsonify({
             'success': True,
             'aid': aid
             })
-        res.response_code = 200
-        return res
 
     @ns.expect(achievement_patch_req)
     @ns.response(400, 'Error parsing request')
@@ -74,9 +72,7 @@ class Achievement(Resource):
         aid = api.achievement.update_achievement(achievement_id, req)
         if aid is None:
             raise PicoException('Achievement not found', status_code=404)
-        res = jsonify({
+        return jsonify({
             'success': True,
             'aid': aid
             })
-        res.response_code = 200
-        return res

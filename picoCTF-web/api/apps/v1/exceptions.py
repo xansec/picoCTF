@@ -32,12 +32,10 @@ class ExceptionsList(Resource):
     def delete(self):
         """Dismiss all exceptions. Retains the exceptions in the database."""
         count = api.logger.dismiss_api_exceptions()
-        res = jsonify({
+        return jsonify({
             'success': True,
             'dismissed_count': count
         })
-        res.status_code = 200
-        return res
 
 
 @ns.response(200, 'Success')
@@ -53,17 +51,13 @@ class Exception(Resource):
         if not exception:
             raise PicoException('Exception not found', status_code=404)
         else:
-            res = jsonify(exception)
-            res.response_code = 200
-            return res
+            return jsonify(exception)
 
     # @require_admin
     def delete(self, exception_id):
         """Dismiss a specific exception."""
         count = api.logger.dismiss_api_exceptions(exception_id)
-        res = jsonify({
+        return jsonify({
             'success': True,
             'dismissed_count': count
         })
-        res.status_code = 200
-        return res

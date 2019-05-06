@@ -34,7 +34,7 @@ class ShellServerList(Resource):
             'success': True,
             'sid': sid
             })
-        res.response_code = 201
+        res.status_code = 201
         return res
 
 
@@ -63,12 +63,10 @@ class ShellServer(Resource):
         sid = api.shell_servers.update_server(server_id, req)
         if sid is None:
             raise PicoException('Shell server not found', status_code=404)
-        res = jsonify({
+        return jsonify({
             'success': True,
             'sid': sid
         })
-        res.response_code = 200
-        return res
 
     # @require_admin
     @ns.expect(shell_server_patch_req)
@@ -83,12 +81,10 @@ class ShellServer(Resource):
         sid = api.shell_servers.update_server(server_id, req)
         if sid is None:
             raise PicoException('Shell server not found', status_code=404)
-        res = jsonify({
+        return jsonify({
             'success': True,
             'sid': sid
         })
-        res.response_code = 200
-        return res
 
     # @require_admin
     def delete(self, server_id):
@@ -96,11 +92,9 @@ class ShellServer(Resource):
         sid = api.shell_servers.remove_server(server_id)
         if sid is None:
             raise PicoException('Shell server not found', status_code=404)
-        res = jsonify({
+        return jsonify({
             'success': True,
         })
-        res.response_code = 200
-        return res
 
 
 @ns.response(200, 'Success')
@@ -114,12 +108,10 @@ class ShellServerStatus(Resource):
         """Get the problem status on a specific shell server."""
         all_online, data = \
             api.shell_servers.get_problem_status_from_server(server_id)
-        res = jsonify({
+        return jsonify({
             'all_problems_online': all_online,
             'status': data
         })
-        res.response_code = 200
-        return res
 
 
 @ns.route('/update_assignments')
@@ -140,9 +132,7 @@ class ShellServerAssignment(Resource):
         include_assigned = req['include_assigned'] is True
         assigned_count = api.shell_servers.reassign_teams(
             include_assigned=include_assigned)
-        res = jsonify({
+        return jsonify({
             'success': True,
             'teams_reassigned': assigned_count
         })
-        res.response_code = 200
-        return res

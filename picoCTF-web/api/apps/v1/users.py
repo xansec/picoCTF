@@ -20,9 +20,7 @@ class UserList(Resource):
     # @require_admin
     def get(self):
         """Get the full list of users."""
-        res = jsonify(api.user.get_all_users())
-        res.response_code = 200
-        return res
+        return jsonify(api.user.get_all_users())
 
     @ns.expect(user_req)
     @ns.response(201, 'Successfully created user')
@@ -62,7 +60,7 @@ class UserList(Resource):
             'success': True,
             'uid': uid
         })
-        res.response_code = 201
+        res.status_code = 201
         return res
 
 

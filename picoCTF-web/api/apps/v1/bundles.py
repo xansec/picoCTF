@@ -60,8 +60,6 @@ class Bundle(Resource):
         if not bid:
             raise PicoException('Bundle not found', status_code=404)
         else:
-            res = jsonify({
+            return jsonify({
                 "success": True
             })
-            res.status_code = 200
-            return res

@@ -57,12 +57,10 @@ class SubmissionList(Resource):
             message = 'Flag incorrect: please note that someone on your ' + \
                       'team has already solved this problem.'
 
-        res = jsonify({
+        return jsonify({
             'correct': correct,
             'message': message
         })
-        res.response_code = 200
-        return res
 
     # @require_admin
     @ns.response(200, 'Success')
@@ -72,11 +70,9 @@ class SubmissionList(Resource):
     def delete(self):
         """Clear all submissions (debug mode only)."""
         api.submissions.clear_all_submissions()
-        res = jsonify({
+        return jsonify({
             'success': True
         })
-        res.response_code = 200
-        return res
 
 
 @ns.route('/statistics')
@@ -86,9 +82,7 @@ class SubmissionStatistics(Resource):
     # @require_admin
     def get(self):
         """Get submission statistics, broken down by problem name."""
-        res = jsonify({
+        return jsonify({
             p['name']: api.stats.get_problem_submission_stats(p['pid'])
             for p in api.problem.get_all_problems(show_disabled=True)
         })
-        res.response_code = 200
-        return res

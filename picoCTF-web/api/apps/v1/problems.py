@@ -102,15 +102,11 @@ class ProblemList(Resource):
 
         # Handle the count_only param
         if req['count_only']:
-            res = jsonify({
+            return jsonify({
                 'count': len(problems)
             })
-            res.status_code = 200
-            return res
         else:
-            res = jsonify(problems)
-            res.status_code = 200
-            return res
+            return jsonify(problems)
 
     # @require_admin
     @ns.expect(shell_server_out)
@@ -152,11 +148,9 @@ class ProblemList(Resource):
                 'sid': req['sid']
             })
 
-        res = jsonify({
+        return jsonify({
             'success': True,
             })
-        res.response_code = 200
-        return res
 
 
 @ns.response(200, 'Success')
@@ -191,8 +185,6 @@ class Problem(Resource):
         if not pid:
             raise PicoException('Problem not found', status_code=404)
         else:
-            res = jsonify({
+            return jsonify({
                 "success": True
             })
-            res.status_code = 200
-            return res

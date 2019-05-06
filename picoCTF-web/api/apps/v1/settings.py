@@ -32,8 +32,6 @@ class Settings(Resource):
             v is not None
         }
         api.config.change_settings(req)
-        res = jsonify({
+        return jsonify({
             'success': True
         })
-        res.response_code = 200
-        return res

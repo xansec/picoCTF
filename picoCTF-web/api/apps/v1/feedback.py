@@ -33,11 +33,9 @@ class FeedbackList(Resource):
             if req[arg] == '':
                 req[arg] = None
 
-        res = jsonify(api.problem_feedback.get_problem_feedback(
+        return jsonify(api.problem_feedback.get_problem_feedback(
             pid=req['pid'], tid=req['tid'], uid=req['uid']
         ))
-        res.response_code = 200
-        return res
 
     @ns.response(201, 'Feedback accepted')
     @ns.response(400, 'Error parsing request')
@@ -63,5 +61,5 @@ class FeedbackList(Resource):
         res = jsonify({
             "success": True
         })
-        res.response_code = 201
+        res.status_code = 201
         return res
