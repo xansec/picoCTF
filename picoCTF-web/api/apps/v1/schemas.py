@@ -334,3 +334,18 @@ disable_account_req.add_argument(
     'password', required=True, type=str,
     help='Current password required for confirmation'
 )
+
+# Update password request
+update_password_req = reqparse.RequestParser()
+update_password_req.add_argument(
+    'current_password', required=True, type=str, location=['json', 'form'],
+    help='Current password'
+)
+update_password_req.add_argument(
+    'new_password', required=True, type=str, location=['json', 'form'],
+    help='New password'
+)
+update_password_req.add_argument(
+    'new_password_confirmation', required=True, type=str,
+    location=['json', 'form'], help='Must match new_password'
+)

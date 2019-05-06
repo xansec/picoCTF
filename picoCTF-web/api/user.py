@@ -334,7 +334,7 @@ def update_password_request(params, uid=None, check_current=False):
             new-password: the new password
             new-password-confirmation: confirmation of password
     """
-    user = get_user(uid=uid)
+    user = get_user(uid=uid, include_pw_hash=True)
 
     if check_current and not api.auth.confirm_password(
             params["current-password"], user['password_hash']):
@@ -346,22 +346,11 @@ def update_password_request(params, uid=None, check_current=False):
     if len(params["new-password"]) == 0:
         raise WebException("Your password cannot be empty.")
 
-    update_password(user['uid'], params["new-password"])
-
-
-def update_password(uid, password):
-    """
-    Update an account's password.
-
-    Args:
-        uid: user's uid.
-        password: the new user unhashed password.
-    """
     db = api.db.get_conn()
     db.users.update(
-        {'uid': uid},
+        {'uid': user['uid']},
         {'$set': {
-            'password_hash': api.common.hash_password(password)
+            'password_hash': api.common.hash_password(params["new-password"])
         }})
 
 

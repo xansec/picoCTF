@@ -13,14 +13,6 @@ from api.common import safe_fail, WebError, WebSuccess
 
 blueprint = Blueprint("user_api", __name__)
 
-@blueprint.route('/update_password', methods=['POST'])
-@check_csrf
-@require_login
-def update_password_hook():
-    api.user.update_password_request(
-        api.common.flat_multi(request.form), check_current=True)
-    return WebSuccess("Your password has been successfully updated!"), 200
-
 
 @blueprint.route('/reset_password', methods=['POST'])
 def reset_password_hook():

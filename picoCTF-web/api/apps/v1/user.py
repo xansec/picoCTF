@@ -6,7 +6,8 @@ import api.auth
 import api.user
 from api.common import PicoException
 
-from .schemas import login_req, user_extdata_req, disable_account_req
+from .schemas import (disable_account_req, login_req, update_password_req,
+                      user_extdata_req)
 
 ns = Namespace('user', description='Authentication and information about ' +
                                    'current user')
@@ -138,3 +139,30 @@ class DisableAccountResponse(Resource):
         return jsonify({
             'success': True
             })
+
+
+@ns.route('/update_password')
+class UpdatePasswordResponse(Resource):
+    """Update your account password."""
+
+    # @require_login
+    # @check_csrf
+    @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing request')
+    @ns.response(401, 'Not logged in')
+    @ns.expect(update_password_req)
+    def post(self):
+        """Update your account password."""
+        req = update_password_req.parse_args(strict=True)
+        # @TODO refactor update_password_request()
+        api.user.update_password_request(
+            {
+                'current-password': req['current_password'],
+                'new-password': req['new_password'],
+                'new-password-confirmation':
+                    req['new_password_confirmation']
+            }, check_current=True
+        )
+        return jsonify({
+            'success': True
+        })
