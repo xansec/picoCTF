@@ -15,12 +15,21 @@ import api.config
 import api.db
 import api.email
 import api.group
+import api.logger
 import api.team
 import api.token
 import api.user
-import api.logger
-from api.common import (InternalException, safe_fail, validate,
-                        WebException, PicoException)
+from api.common import (InternalException, PicoException, WebException, check,
+                        validate)
+
+password_reset_schema = Schema({
+    Required("token"):
+    check(("This does not look like a valid token.", [str,
+                                                      Length(max=100)])),
+    Required('password'):
+    check(("Passwords must be between 3 and 20 characters.",
+           [str, Length(min=3, max=20)]))
+})
 
 
 def check_blacklisted_usernames(username):
@@ -399,3 +408,31 @@ def update_extdata(params):
     db = api.db.get_conn()
     params.pop('token', None)
     db.users.update_one({'uid': user['uid']}, {'$set': {'extdata': params}})
+
+
+def reset_password(token_value, password, confirm_password):
+    """
+    Perform the password update operation.
+
+    Gets a token and new password from a submitted form, if the token is found
+    in a team object in the database the new password is hashed and set,
+    the token is then removed and an appropriate response is returned.
+
+    Args:
+        token_value: the password reset token
+        password: the password to set
+        confirm_password: the same password again
+    """
+    validate(password_reset_schema, {
+        "token": token_value,
+        "password": password
+    })
+    uid = api.token.find_key_by_token("password_reset", token_value)["uid"]
+    api.user.update_password_request(
+        {
+            "new-password": password,
+            "new-password-confirmation": confirm_password
+        },
+        uid=uid)
+
+    api.token.delete_token({"uid": uid}, "password_reset")

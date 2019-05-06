@@ -30,7 +30,7 @@ def confirm_password_reset_hook():
     confirm = request.form.get("new-password-confirmation")
     token_value = request.form.get("reset-token")
 
-    api.email.reset_password(token_value, password, confirm)
+    api.user.reset_password(token_value, password, confirm)
     return WebSuccess("Your password has been reset."), 200
 
 
