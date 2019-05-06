@@ -67,3 +67,42 @@ class LogoutResponse(Resource):
         })
         res.status_code = 200
         return res
+
+
+@ns.route('/authorize/<string:requested_role>')
+class AuthorizationResponse(Resource):
+    """
+    Determine whether the current user has certain roles.
+
+    Used to handle authorization in nginx.
+    """
+
+    @ns.response(200, 'User is authorized for the given role')
+    @ns.response(401, 'User is not authorized for the given role')
+    def get(self, requested_role):
+        """Get the authorization status for the current user."""
+        # Determine authorizations
+        authorizations = {
+            'anonymous': True,
+            'user': False,
+            'teacher': False,
+            'admin': False
+        }
+        if requested_role not in authorizations:
+            raise PicoException('Invalid role', 401)
+        try:
+            user = api.user.get_user()
+        except PicoException:
+            user = None
+        if user:
+            for role in ['teacher', 'admin']:
+                authorizations['role'] = user['role']
+
+        if authorizations[requested_role] is True:
+            status_code = 200
+        else:
+            status_code = 401
+
+        res = jsonify(authorizations)
+        res.status_code = status_code
+        return res

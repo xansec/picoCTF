@@ -13,22 +13,6 @@ from api.common import safe_fail, WebError, WebSuccess
 
 blueprint = Blueprint("user_api", __name__)
 
-
-@blueprint.route("/authorize/<role>")
-def authorize_role(role=None):
-    """Verify the role of the logged in user."""
-    if role == "user" and safe_fail(api.user.get_user):
-        return "Client is logged in.", 200
-    elif role == "teacher" and safe_fail(api.user.is_teacher):
-        return "Client is a teacher.", 200
-    elif role == "admin" and safe_fail(api.user.is_admin):
-        return "Client is an administrator.", 200
-    elif role == "anonymous":
-        return "Client is authorized.", 200
-    else:
-        return "Client is not authorized.", 401
-
-
 @blueprint.route('/update_password', methods=['POST'])
 @check_csrf
 @require_login
