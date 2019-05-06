@@ -71,19 +71,25 @@ def get_team(uid=None):
     return api.team.get_team(tid=user["tid"])
 
 
-def get_user(name=None, uid=None):
+def get_user(name=None, uid=None, include_pw_hash=False):
     """
     Retrieve a user based on a property, or the current user, if logged in.
 
-    Args:
+    Kwargs:
         name: the user's username
         uid: the user's uid
+        include_pw_hash: include password hash in the dict
     Returns:
         Returns the corresponding user object or None if it could not be found
     """
     db = api.db.get_conn()
 
     match = {}
+    projection = {
+        '_id': 0
+    }
+    if not include_pw_hash:
+        projection['password_hash'] = 0
 
     if uid is not None:
         match.update({'uid': uid})
@@ -92,14 +98,10 @@ def get_user(name=None, uid=None):
     elif api.auth.is_logged_in():
         match.update({'uid': api.auth.get_uid()})
     else:
-        raise InternalException("uid or name must be specified for get_user")
+        raise PicoException(
+            'Could not retrieve user - not logged in', 401)
 
-    user = db.users.find_one(match)
-
-    if user is None:
-        raise InternalException("User does not exist")
-
-    return user
+    return db.users.find_one(match, projection)
 
 
 def get_all_users():
@@ -111,7 +113,10 @@ def get_all_users():
 
     """
     db = api.db.get_conn()
-    return list(db.users.find({}, {'_id': 0}))
+    return list(db.users.find({}, {
+        '_id': 0,
+        'password_hash': 0
+        }))
 
 
 def _validate_captcha(data):

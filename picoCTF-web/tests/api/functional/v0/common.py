@@ -10,6 +10,7 @@ import pytest
 import api
 import api.problem
 import api.shell_servers
+import api.user
 
 TESTING_DB_NAME = 'ctf_test'
 db = None
@@ -74,8 +75,10 @@ ADMIN_DEMOGRAPHICS = {
                         'country': 'US',
                         'affiliation': 'Admin School',
                         'usertype': 'other',
-                        'demo[parentemail]': 'admin@example.com',
-                        'demo[age]': '18+',
+                        'demo': {
+                            'parentemail': 'admin@example.com',
+                            'age': '18+'
+                        },
                         'gid': None,
                         'rid': None
                       }
@@ -90,8 +93,10 @@ TEACHER_DEMOGRAPHICS = {
                         'country': 'US',
                         'affiliation': 'Sample School',
                         'usertype': 'teacher',
-                        'demo[parentemail]': 'teacher@example.com',
-                        'demo[age]': '18+',
+                        'demo': {
+                            'parentemail': 'teacher@example.com',
+                            'age': '18+'
+                        },
                         'gid': None,
                         'rid': None
                       }
@@ -106,8 +111,10 @@ USER_DEMOGRAPHICS = {
                         'country': 'US',
                         'affiliation': 'Sample School',
                         'usertype': 'student',
-                        'demo[parentemail]': 'student@example.com',
-                        'demo[age]': '13-17',
+                        'demo': {
+                            'parentemail': 'student@example.com',
+                            'age': '13-17'
+                        },
                         'gid': None,
                         'rid': None
                       }
@@ -120,13 +127,10 @@ def register_test_accounts():
     Intended to be used, if needed, in conjunction with clear_db()
     to set up a clean environment for each test.
     """
-    flask_client = client()
-    flask_client.post('/api/user/create_simple',
-                      data=ADMIN_DEMOGRAPHICS)
-    flask_client.post('/api/user/create_simple',
-                      data=TEACHER_DEMOGRAPHICS)
-    flask_client.post('/api/user/create_simple',
-                      data=USER_DEMOGRAPHICS)
+    with app().app_context():
+        api.user.add_user(ADMIN_DEMOGRAPHICS)
+        api.user.add_user(TEACHER_DEMOGRAPHICS)
+        api.user.add_user(USER_DEMOGRAPHICS)
 
 
 sample_shellserver_publish_output = r'''

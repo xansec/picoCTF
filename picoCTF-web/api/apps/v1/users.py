@@ -37,16 +37,16 @@ class UserList(Resource):
         if ('age' not in req['demo'] or
                 req['demo']['age'] not in ['13-17', '18+']):
             raise PicoException(
-                '"age" must be specified in the "demo" object. Valid values ' +
-                'are: ["13-17", "18+"]', response_code=400
+                "'age' must be specified in the 'demo' object. Valid values " +
+                "are: ['13-17', '18+']", status_code=400
             )
         if (api.config.get_settings()['email']['parent_verification_email'] and
             req['demo']['age'] != '18+' and (
                 'parentemail' not in req['demo'] or not
                 re.match(r".+@.+\..{2,}", req['demo']['parentemail']))):
             raise PicoException(
-                'Must provide a valid parent email address under the key ' +
-                '"demo.parentemail".', response_code=400
+                "Must provide a valid parent email address under the key " +
+                "'demo.parentemail'.", status_code=400
             )
         if not all([
                 c in string.digits + string.ascii_lowercase for
@@ -64,3 +64,18 @@ class UserList(Resource):
         })
         res.response_code = 201
         return res
+
+
+@ns.response(200, 'Success')
+@ns.response(404, 'User not found')
+@ns.route('/<string:user_id>')
+class User(Resource):
+    """Get a specific user."""
+
+    # @require_admin
+    def get(self, user_id):
+        """Retrieve a specific user."""
+        res = api.user.get_user(uid=user_id)
+        if not res:
+            raise PicoException('User not found', status_code=404)
+        return res, 200

@@ -45,6 +45,7 @@ def get_earned_achievement_instances(tid=None, uid=None):
         uid / tid: Optional filters (exclusive, uid takes precedence)
     Returns:
         List of solved achievements
+
     """
     db = api.db.get_conn()
 

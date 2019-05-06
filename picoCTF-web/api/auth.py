@@ -41,7 +41,7 @@ def login(username, password):
     # Read in submitted username and password
     validate(user_login_schema, {"username": username, "password": password})
 
-    user = safe_fail(api.user.get_user, name=username)
+    user = safe_fail(api.user.get_user, name=username, include_pw_hash=True)
     if user is None:
         raise WebException("Incorrect username.")
 
