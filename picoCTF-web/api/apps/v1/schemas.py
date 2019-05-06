@@ -82,6 +82,14 @@ problem_patch_req.add_argument(
     help='Whether the problem is disabled.'
 )
 
+# Shell server list request schema
+shell_server_list_req = reqparse.RequestParser()
+shell_server_list_req.add_argument(
+    'assigned_only', required=False, type=inputs.boolean, default=True,
+    help='Whether to include only shell servers assigned to the' +
+         ' current user. Must be admin to disable.'
+)
+
 # Shell server request schema
 shell_server_req = reqparse.RequestParser()
 shell_server_req.add_argument(

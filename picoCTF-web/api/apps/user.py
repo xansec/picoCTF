@@ -56,12 +56,3 @@ def verify_user_hook():
     else:
         return redirect("/")
 
-
-@blueprint.route('/shell_servers', methods=['GET'])
-@require_login
-def shell_servers_hook():
-    servers = [{
-        "host": server['host'],
-        "protocol": server['protocol']
-    } for server in api.shell_servers.get_assigned_server()]
-    return WebSuccess(data=servers), 200

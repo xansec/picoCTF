@@ -7,19 +7,42 @@ import api.shell_servers
 from api.common import PicoException
 
 from .schemas import (shell_server_reassignment_req, shell_server_patch_req,
-                      shell_server_req)
+                      shell_server_req, shell_server_list_req)
 
 ns = Namespace('shell_servers', description='Shell server management')
 
 
 @ns.route('/')
 class ShellServerList(Resource):
-    """Get the full list of shell servers, or add a new server."""
+    """Get the list of shell servers, or add a new server."""
 
-    # @require_admin
+    @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing request')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Unauthorized')
+    @ns.expect(shell_server_list_req)
     def get(self):
-        """Get the full list of shell servers."""
-        return api.shell_servers.get_all_servers(), 200
+        """
+        Get the list of shell servers.
+
+        By default, returns only your assigned shell servers.
+        Admins can override this by specifying '?assigned_only=false'.
+        """
+        req = shell_server_list_req.parse_args(strict=True)
+        if req['assigned_only'] is False:
+            if api.user.is_admin():
+                return api.shell_servers.get_all_servers(), 200
+            else:
+                raise PicoException(
+                    'You must be an admin to use ?assigned_only=false.',
+                    status_code=403
+                )
+        else:
+            # Get assigned shell servers
+            return jsonify([{
+                "host": server['host'],
+                "protocol": server['protocol']
+            } for server in api.shell_servers.get_assigned_server()])
 
     # @require_admin
     @ns.expect(shell_server_req)

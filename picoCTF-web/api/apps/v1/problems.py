@@ -41,6 +41,8 @@ class ProblemList(Resource):
 
     # @require_admin
     @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Unauthorized')
     @ns.expect(problems_req)
     def get(self):
         """
