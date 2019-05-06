@@ -1,4 +1,4 @@
-"""User related endpoints."""
+"""User management endpoints."""
 import re
 import string
 
