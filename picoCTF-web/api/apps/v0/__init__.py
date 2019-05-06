@@ -4,6 +4,7 @@ Legacy API shim to support 2019 game.
 Provides legacy behavior for:
 
 /user/login
+/user/logout
 /user/status
 /user/minigame @TODO: merge in gamedev branch
 /user/extdata
@@ -25,7 +26,7 @@ import api.submissions
 import api.user
 from api.annotations import (block_after_competition, block_before_competition,
                              check_csrf, require_login)
-from api.common import flat_multi
+from api.common import flat_multi, PicoException
 
 blueprint = Blueprint('v0_api', __name__)
 
@@ -50,13 +51,28 @@ def WebError(message=None, data=None):
 def login_hook():
     username = request.form.get('username')
     password = request.form.get('password')
-    api.auth.login(username, password)
+    try:
+        api.auth.login(username, password)
+    except PicoException as e:
+        if e.status_code == 401:
+            return WebError(
+                message='Incorrect password'
+            )
     return WebSuccess(
         message="Successfully logged in as " + username,
         data={
             'teacher': api.user.is_teacher(),
             'admin': api.user.is_admin()
         }), 200
+
+
+@blueprint.route('/user/logout', methods=['GET'])
+def logout_hook():
+    if api.auth.is_logged_in():
+        api.auth.logout()
+        return WebSuccess("Successfully logged out."), 200
+    else:
+        return WebError("You do not appear to be logged in."), 400
 
 
 @blueprint.route('/user/status', methods=['GET'])

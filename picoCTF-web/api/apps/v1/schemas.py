@@ -297,9 +297,18 @@ user_req.add_argument(
 )
 user_req.add_argument(
     'gid', required=False, type=str, location='json',
-    help='Group ID (optional, to force affiliation to that of the group)'
+    help='Group ID (optional, to automatically enroll in group)'
 )
 user_req.add_argument(
     'rid', required=False, type=str, location='json',
     help='Registration ID (optional, to automatically enroll in group)'
+)
+
+# Login request
+login_req = reqparse.RequestParser()
+login_req.add_argument(
+    'username', required=True, type=str, help='Username'
+)
+login_req.add_argument(
+    'password', required=True, type=str, help='Password'
 )

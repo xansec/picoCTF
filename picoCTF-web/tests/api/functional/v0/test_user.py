@@ -17,7 +17,7 @@ def test_login(client):
     register_test_accounts()
 
     # Test logging out without being logged in
-    res = client.get('/api/user/logout')
+    res = client.get('/api/v0/user/logout')
     status, message, data = decode_response(res)
     assert status == 0
     assert message == 'You do not appear to be logged in.'
@@ -50,8 +50,9 @@ def test_login(client):
     assert message == 'Successfully logged in as sampleuser'
 
     # Test logging out
-    res = client.get('/api/user/logout')
+    res = client.get('/api/v0/user/logout')
     status, message, data = decode_response(res)
+    print('{}{}{}'.format(status, message, data))
     assert status == 1
     assert message == 'Successfully logged out.'
 

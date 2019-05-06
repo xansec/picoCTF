@@ -9,7 +9,7 @@ from voluptuous import Length, Required, Schema
 import api.email
 import api.user
 import api.logger
-from api.common import check, safe_fail, validate, WebException
+from api.common import check, safe_fail, validate, WebException, PicoException
 
 log = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def login(username, password):
         session['uid'] = user['uid']
         session.permanent = True
     else:
-        raise WebException("Incorrect password")
+        raise PicoException('Incorrect password', 401)
 
 
 @api.logger.log_action

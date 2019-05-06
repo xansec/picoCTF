@@ -82,28 +82,6 @@ def verify_user_hook():
         return redirect("/")
 
 
-@blueprint.route('/login', methods=['POST'])
-def login_hook():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    api.auth.login(username, password)
-    return WebSuccess(
-        message="Successfully logged in as " + username,
-        data={
-            'teacher': api.user.is_teacher(),
-            'admin': api.user.is_admin()
-        }), 200
-
-
-@blueprint.route('/logout', methods=['GET'])
-def logout_hook():
-    if api.auth.is_logged_in():
-        api.auth.logout()
-        return WebSuccess("Successfully logged out."), 200
-    else:
-        return WebError("You do not appear to be logged in."), 400
-
-
 @blueprint.route('/status', methods=['GET'])
 def status_hook():
     settings = api.config.get_settings()
