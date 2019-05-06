@@ -194,11 +194,11 @@ def create_team(params):
     Assumes all fields have been validated.
 
     Args:
-        team_name: Name of the team
-        school: Name of the school
-        password: Team's hashed password
-        country: primary country of team
-        creator: uid of creating user
+        params:
+            team_name: Name of the team
+            password: team's hashed password
+            affiliation: team's affiliation
+            country: primary country of team
     Returns:
         The newly created team id.
     """

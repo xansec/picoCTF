@@ -4,6 +4,7 @@ from flask_restplus import reqparse, inputs
 
 def object_type(value):
     """To make the openAPI object type show up in the docs."""
+
     return value
 object_type.__schema__ = {'type': 'object'} # noqa
 
@@ -13,6 +14,19 @@ def protocol_type(value):
         raise ValueError('Invalid protocol (must be HTTP or HTTPS)')
     return value
 protocol_type.__schema__ = {'type': 'string'} # noqa
+
+
+def length_restricted(min_length, max_length, base_type):
+    def validate(s):
+        if len(s) < min_length:
+            raise ValueError(
+                "Must be at least %i characters long" % min_length)
+        if len(s) > max_length:
+            raise ValueError(
+                "Must be at most %i characters long" % max_length)
+        return s
+    return validate
+
 
 # Achievement request schema
 achievement_req = reqparse.RequestParser()
@@ -86,8 +100,8 @@ shell_server_req.add_argument(
     'password', required=True, type=str,
     help='Password.')
 shell_server_req.add_argument(
-    'protocol', required=True, type=protocol_type,
-    help='Protocol (HTTP/HTTPS).'
+    'protocol', required=True, type=str, choices=['HTTP', 'HTTPS'],
+    help='Protocol used to serve web resources.'
 )
 shell_server_req.add_argument(
     'server_number', required=False, type=inputs.positive,
@@ -239,4 +253,53 @@ feedback_submission_req.add_argument(
 # @TODO validate this at request time - for now see problem_feedback.py
 feedback_submission_req.add_argument(
     'feedback', required=True, type=object_type, help='Problem feedback'
+)
+
+# New user request
+user_req = reqparse.RequestParser()
+user_req.add_argument(
+    'email', required=True, type=inputs.regex(r".+@.+\..{2,}"),
+    location='json', help='Email address'
+)
+user_req.add_argument(
+    'firstname', required=True, type=length_restricted(1, 50, str),
+    location='json', help='Given name'
+)
+user_req.add_argument(
+    'lastname', required=True, type=length_restricted(1, 50, str),
+    location='json', help='Family name'
+)
+user_req.add_argument(
+    'username', required=True, type=length_restricted(3, 20, str),
+    location='json', help='Username'
+)
+user_req.add_argument(
+    'password', required=True, type=length_restricted(3, 20, str),
+    location='json', help='Password'
+)
+user_req.add_argument(
+    'affiliation', required=True, type=length_restricted(3, 50, str),
+    location='json', help='e.g. school or organization'
+)
+user_req.add_argument(
+    'usertype', required=True, type=str,
+    choices=['student', 'college', 'teacher', 'other'],
+    location='json', help='User type'
+)
+user_req.add_argument(
+    'country', required=True, type=length_restricted(2, 2, str),
+    location='json', help='2-letter country code'
+)
+# @TODO validate nested fields
+user_req.add_argument(
+    'demo', required=True, type=object_type,
+    location='json', help='Demographic information (parentemail, age)'
+)
+user_req.add_argument(
+    'gid', required=False, type=str, location='json',
+    help='Group ID (optional, to force affiliation to that of the group)'
+)
+user_req.add_argument(
+    'rid', required=False, type=str, location='json',
+    help='Registration ID (optional, to automatically enroll in group)'
 )

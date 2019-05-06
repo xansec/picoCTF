@@ -60,6 +60,7 @@ def upsert_feedback(pid, feedback):
         feedback: the problem feedback.
     Raises:
         PicoException if provided pid does not exist
+
     """
     db = api.db.get_conn()
 

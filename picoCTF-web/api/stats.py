@@ -76,7 +76,7 @@ def get_group_scores(gid=None, name=None):
     """
     members = [
         api.team.get_team(tid=tid)
-        for tid in api.group.get_group(gid=gid, name=name)['members']
+        for tid in api.group.get_group(gid=gid)['members']
     ]
 
     result = []

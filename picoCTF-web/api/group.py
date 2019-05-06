@@ -66,7 +66,7 @@ def get_group(gid=None, name=None, owner_tid=None):
         gid: the gid of the group
         owner_tid: the tid of the group owner
     Returns:
-        The group object.
+        The group dict, or None if not found.
     """
     db = api.db.get_conn()
 
@@ -81,11 +81,7 @@ def get_group(gid=None, name=None, owner_tid=None):
             "Classroom name and owner or gid must be specified" +
             " to look up a classroom.")
 
-    group = db.groups.find_one(match, {"_id": 0})
-    if group is None:
-        raise InternalException("Could not find that classroom!")
-
-    return group
+    return db.groups.find_one(match, {"_id": 0})
 
 
 def get_teacher_information(gid):
@@ -205,7 +201,7 @@ def join_group(gid, tid, teacher=False):
     if teacher:
         uids = api.team.get_team_uids(tid=tid)
         for uid in uids:
-            api.user.give_teacher_role(uid=uid)
+            db.users.update({"uid": uid}, {"$set": {"teacher": True}})
 
     db.groups.update({'gid': gid}, {'$push': {role_group: tid}})
 

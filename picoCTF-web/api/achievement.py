@@ -37,13 +37,12 @@ def get_all_achievements():
         db.achievements.find({}, {"_id": 0}))
 
 
-def get_earned_achievement_instances(tid=None, uid=None, aid=None):
+def get_earned_achievement_instances(tid=None, uid=None):
     """
     Get the solved achievements for a given team or user.
 
     Args:
-        tid: The team id
-        event: Optional parameter to restrict which achievements are returned
+        uid / tid: Optional filters (exclusive, uid takes precedence)
     Returns:
         List of solved achievements
     """
@@ -56,26 +55,7 @@ def get_earned_achievement_instances(tid=None, uid=None, aid=None):
     elif tid is not None:
         match.update({"tid": tid})
 
-    if aid is not None:
-        match.update({"aid": aid})
-
     return list(db.earned_achievements.find(match, {"_id": 0}))
-
-
-def get_earned_aids(tid=None, uid=None, aid=None):
-    """
-    Get the solved aids for a given team or user.
-
-    Args:
-        tid: The team id
-        event: Optional parameter to restrict which achievements are returned
-    Returns:
-        List of solved achievement ids
-    """
-    return set([
-        a["aid"]
-        for a in get_earned_achievement_instances(tid=tid, uid=uid, aid=aid)
-    ])
 
 
 def set_earned_achievements_seen(tid=None, uid=None):
@@ -233,10 +213,12 @@ def process_achievements(event, data):
         data["tid"] = api.user.get_user(uid=data["uid"])["tid"]
 
     eligible_achievements = [
-        # @TODO fix achievement processing (no longer by event)
+        # @TODO clean this up
         achievement for achievement in get_all_achievements()
-        if achievement["aid"] not in get_earned_aids(
-            tid=data["tid"]) or achievement.get("multiple", False)
+        if achievement["aid"] not in [
+            earned_a['aid'] for earned_a in get_earned_achievements(
+                data['tid'])]
+        or achievement.get("multiple", False)
     ]
 
     for achievement in eligible_achievements:

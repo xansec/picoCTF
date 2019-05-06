@@ -13,6 +13,7 @@ from .settings import ns as settings_ns
 from .bundles import ns as bundles_ns
 from .submissions import ns as submissions_ns
 from .feedback import ns as feedback_ns
+from .users import ns as users_ns
 
 blueprint = Blueprint('v1_api', __name__)
 api = Api(
@@ -29,6 +30,7 @@ api.add_namespace(settings_ns)
 api.add_namespace(bundles_ns)
 api.add_namespace(submissions_ns)
 api.add_namespace(feedback_ns)
+api.add_namespace(users_ns)
 
 
 @api.errorhandler(PicoException)

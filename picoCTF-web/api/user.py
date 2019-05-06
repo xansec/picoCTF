@@ -19,18 +19,8 @@ import api.team
 import api.token
 import api.user
 import api.logger
-from api.common import (check, InternalException, safe_fail, validate,
-                        WebException)
-
-
-def _check_email_format(email):
-    return re.match(r".+@.+\..{2,}", email) is not None
-
-
-def _check_username(username):
-    return all([
-        c in string.digits + string.ascii_lowercase for c in username.lower()
-    ])
+from api.common import (InternalException, safe_fail, validate,
+                        WebException, PicoException)
 
 
 def check_blacklisted_usernames(username):
@@ -66,61 +56,6 @@ def verify_email_in_whitelist(email, whitelist=None):
             return True
 
     return False
-
-
-user_schema = Schema({
-    Required('email'):
-    check(
-        ("Email must be between 5 and 50 characters.",
-         [str, Length(min=5, max=50)]),
-        ("Your email does not look like an email address.",
-         [_check_email_format]),
-    ),
-    Required('firstname'):
-    check(("First Name must be between 1 and 50 characters.",
-           [str, Length(min=1, max=50)])),
-    Required('lastname'):
-    check(("Last Name must be between 1 and 50 characters.",
-           [str, Length(min=1, max=50)])),
-    Required('username'):
-    check(("Usernames must be between 3 and 20 characters.",
-           [str, Length(min=3, max=20)]),
-          ("Usernames must be alphanumeric.", [_check_username]),
-          ("This username already exists.",
-           [lambda name: safe_fail(get_user, name=name) is None]),
-          ("This username conflicts with an existing team.",
-           [lambda name: safe_fail(api.team.get_team, name=name) is None]),
-          ("This username is reserved. Please choose another one.",
-           [check_blacklisted_usernames])),
-    Required('password'):
-    check(("Passwords must be between 3 and 20 characters.",
-           [str, Length(min=3, max=20)])),
-    Required('affiliation'):
-    check(("You must specify a school or organization.",
-           [str, Length(min=3, max=50)])),
-    Required('usertype'):
-    check(("You must specify a status", [
-        str, lambda status: status in
-        ["student", "college", "teacher", "other"]
-    ])),
-    Required('country'):
-    check(("Please select a country", [str, Length(min=2, max=2)])),
-    Required("demo"):
-    Schema({
-        "parentemail":
-        check(
-            ("Parent Email must be between 5 and 50 characters.",
-             [str, Length(min=5, max=50)]),
-            ("Your parent's email does not look like an email address.",
-             [_check_email_format]),
-        ),
-        Required("age"):
-        check(("You must specify your age",
-               [lambda age: age in ["13-17", "18+"]])),
-    },
-           extra=True),
-},
-                     extra=True)
 
 
 def get_team(uid=None):
@@ -167,112 +102,16 @@ def get_user(name=None, uid=None):
     return user
 
 
-def create_user(username,
-                firstname,
-                lastname,
-                email,
-                password_hash,
-                tid,
-                usertype,
-                country,
-                demo,
-                teacher=False,
-                admin=False,
-                verified=False):
-    """
-    Insert a user directly into the database.
-
-    Assumes all data is valid.
-
-    Args:
-        username: user's username
-        firstname: user's first name
-        lastname: user's last name
-        email: user's email
-        password_hash: a hash of the user's password
-        tid: the team id to join
-        usertype: category of user (student, teacher, etc)
-        country: primary country (dependent on usertype)
-        demo: dict of demographic data
-        teacher: whether this account is a teacher
-    Returns:
-        Returns the uid of the newly created user
-
-    """
-    db = api.db.get_conn()
-    settings = api.config.get_settings()
-    uid = api.common.token()
-
-    if safe_fail(get_user, name=username) is not None:
-        raise InternalException("User already exists!")
-
-    max_team_size = api.config.get_settings()["max_team_size"]
-
-    updated_team = db.teams.find_and_modify(
-        query={
-            "tid": tid,
-            "size": {
-                "$lt": max_team_size
-            }
-        },
-        update={"$inc": {
-            "size": 1
-        }},
-        new=True)
-
-    if not updated_team:
-        raise InternalException("There are too many users on this team!")
-
-    # All teachers are admins.
-    if admin or db.users.count() == 0:
-        admin = True
-        teacher = True
-
-    user = {
-        'uid': uid,
-        'firstname': firstname,
-        'lastname': lastname,
-        'username': username,
-        'email': email,
-        'password_hash': password_hash,
-        'tid': tid,
-        'usertype': usertype,
-        'country': country,
-        'demo': demo,
-        'teacher': teacher,
-        'admin': admin,
-        'disabled': False,
-        'verified': not settings["email"]["email_verification"] or verified,
-        'extdata': {},
-    }
-
-    db.users.insert(user)
-
-    if settings["email"]["email_verification"] and not user["verified"]:
-        api.email.send_user_verification_email(username)
-
-    return uid
-
-
-def get_all_users(show_teachers=False):
+def get_all_users():
     """
     Find all users in the database.
 
-    Args:
-        show_teachers: whether or not to include teachers in the response
     Returns:
-        Returns the uid, username, and email of all users.
+        Returns all user dicts.
+
     """
     db = api.db.get_conn()
-
-    match = {}
-    projection = {"uid": 1, "username": 1, "email": 1, "tid": 1}
-
-    if not show_teachers:
-        match.update({"teacher": False})
-        projection.update({"teacher": 1})
-
-    return list(db.users.find(match, projection))
+    return list(db.users.find({}, {'_id': 0}))
 
 
 def _validate_captcha(data):
@@ -301,11 +140,10 @@ def _validate_captcha(data):
 
 
 @api.logger.log_action
-def create_simple_user_request(params):
+def add_user(params):
     """
     Register a new user and creates a team for them automatically.
 
-    Validates all fields.
     Assume arguments to be specified in a dict.
 
     Args:
@@ -319,89 +157,106 @@ def create_simple_user_request(params):
             affiliation: user's affiliation
             usertype: "student", "teacher" or other
             demo: arbitrary dict of demographic data
-            gid: group registration
-            rid: registration id
+            gid (optional): group registration
+            rid (optional): registration id
     """
-    validate(user_schema, params)
+    # Make sure the username is unique
+    db = api.db.get_conn()
+    if db.users.find_one({'username': params['username']}):
+        raise PicoException(
+            'There is already a user with this username.', 409)
+    if db.teams.find_one({'team_name': params['username']}):
+        raise PicoException(
+            'There is already a team with this username.', 409)
 
-    if (api.config.get_settings()["email"]["parent_verification_email"] and
-            params["demo"]["age"] != "18+" and
-            not params["demo"].get("parentemail", None)):
-        raise WebException("You must include your parent's email address")
-
-    whitelist = None
-
+    # If gid is specified, force affiliation to that team's name
+    email_whitelist = None
     if params.get("gid", None):
         group = api.group.get_group(gid=params["gid"])
         group_settings = api.group.get_group_settings(gid=group["gid"])
-
-        # Force affiliation
         params["affiliation"] = group["name"]
+        email_whitelist = group_settings["email_filter"]
 
-        whitelist = group_settings["email_filter"]
-
+    # If rid is specified and gid and email match,
+    # get teacher status from registration token.
+    # Additionally, invited users are automatically validated.
     user_is_teacher = params["usertype"] == "teacher"
     user_was_invited = False
-
     if params.get("rid", None):
         key = api.token.find_key_by_token("registration_token", params["rid"])
-
         if params.get("gid") != key["gid"]:
-            raise WebException(
+            raise PicoException(
                 "Registration token group and supplied gid do not match.")
-
         if params["email"] != key["email"]:
-            raise WebException(
+            raise PicoException(
                 "Registration token email does not match the supplied one.")
-
         user_is_teacher = key["teacher"]
         user_was_invited = True
-
         api.token.delete_token(key, "registration_token")
+
+    # If not invited, validate the user's email against the whitelist
     else:
-        if not verify_email_in_whitelist(params["email"], whitelist):
-            raise WebException(
+        if not verify_email_in_whitelist(params["email"], email_whitelist):
+            raise PicoException(
                 "Your email does not belong to the whitelist. " +
                 "Please see the registration form for details.")
 
-    if api.config.get_settings(
-    )["captcha"]["enable_captcha"] and not _validate_captcha(params):
-        raise WebException("Incorrect captcha!")
+    # If CAPTCHAs are enabled, validate the submission
+    if (api.config.get_settings()["captcha"]["enable_captcha"] and not
+            _validate_captcha(params)):
+        raise PicoException("Incorrect captcha!")
 
-    team_params = {
+    # Create a team for the new user and set its count to 1
+    tid = api.team.create_team({
         "team_name": params["username"],
         "password": api.common.token(),
         "affiliation": params["affiliation"],
         "country": params["country"]
-    }
-    tid = api.team.create_team(team_params)
+    })
+    db.teams.update_one(
+        {'tid': tid},
+        {'$set': {
+            'size': 1
+        }}
+    )
 
-    if tid is None:
-        raise InternalException("Failed to create new team")
+    # The first registered user automatically becomes an admin
+    user_is_admin = False
+    if db.users.count() == 0:
+        user_is_admin = True
+        user_is_teacher = True
 
-    team = api.team.get_team(tid=tid)
+    # Insert the new user in the DB
+    uid = api.common.token()
+    settings = api.config.get_settings()
+    db.users.insert_one({
+        'uid': uid,
+        'firstname': params['firstname'],
+        'lastname': params['lastname'],
+        'username': params['username'],
+        'email': params['email'],
+        'password_hash': api.common.hash_password(params["password"]),
+        'tid': tid,
+        'usertype': params['usertype'],
+        'country': params['country'],
+        'demo': params['demo'],
+        'teacher': user_is_teacher,
+        'admin': user_is_admin,
+        'disabled': False,
+        'verified': (not settings["email"]["email_verification"] or
+                     user_was_invited),
+        'extdata': {},
+    })
 
-    # Create new user
-    uid = create_user(
-        params["username"],
-        params["firstname"],
-        params["lastname"],
-        params["email"],
-        api.common.hash_password(params["password"]),
-        team["tid"],
-        params["usertype"],
-        params["country"],
-        params["demo"],
-        teacher=user_is_teacher,
-        verified=user_was_invited)
-
-    if uid is None:
-        raise InternalException("There was an error during registration.")
-
-    # Join group after everything else has succeeded
+    # If gid was specified, add the newly created team to the group
     if params.get("gid", None):
         api.group.join_group(
-            params["gid"], team["tid"], teacher=user_is_teacher)
+            params["gid"], tid, teacher=user_is_teacher)
+
+    # If email verification is enabled and user wasn't invited, send
+    # validation email
+    if settings["email"]["email_verification"] and not user_was_invited:
+        api.email.send_user_verification_email(params['username'])
 
     return uid
 
@@ -576,17 +431,3 @@ def update_extdata(params):
     db = api.db.get_conn()
     params.pop('token', None)
     db.users.update_one({'uid': user['uid']}, {'$set': {'extdata': params}})
-
-
-def give_teacher_role(name=None, uid=None):
-    """
-    Grant a particular user teacher privileges.
-
-    Args:
-        name: the user's name
-        uid: the user's id
-    """
-    db = api.db.get_conn()
-
-    user = get_user(name=name, uid=uid)
-    db.users.update({"uid": user["uid"]}, {"$set": {"teacher": True}})

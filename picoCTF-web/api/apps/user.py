@@ -29,21 +29,6 @@ def authorize_role(role=None):
         return "Client is not authorized.", 401
 
 
-@blueprint.route('/create_simple', methods=['POST'])
-def create_simple_user_hook():
-    new_uid = api.user.create_simple_user_request(
-        api.common.parse_multi_form(request.form))
-
-    # Only automatically login if we don't have to verify
-    if api.user.get_user(uid=new_uid)["verified"]:
-        session['uid'] = new_uid
-
-    return WebSuccess(
-        message="User '{}' registered successfully!".format(
-            request.form["username"]),
-        data={'teacher': api.user.is_teacher(new_uid)}), 201
-
-
 @blueprint.route('/update_password', methods=['POST'])
 @check_csrf
 @require_login
@@ -182,13 +167,3 @@ def update_extdata_hook():
     """
     api.user.update_extdata(api.common.flat_multi(request.form))
     return WebSuccess("Your Extdata has been successfully updated."), 200
-
-
-@blueprint.route('/users', methods=['GET'])
-@require_admin
-def get_all_users_hook():
-    users = api.user.get_all_users()
-    if users is None:
-        return WebError("There was an error query users from the database.")
-    return WebSuccess(data=users), 200
-

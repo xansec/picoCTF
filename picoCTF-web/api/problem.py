@@ -248,28 +248,13 @@ def get_problem(pid):
 
     Args:
         pid: The problem id
-        name: The name of the problem
 
     Returns:
         The problem dictionary from the database or None if problem not found
 
     """
     db = api.db.get_conn()
-
-    match = {}
-
-    if pid is not None:
-        match.update({'pid': pid})
-    elif name is not None:
-        match.update({'name': name})
-    else:
-        raise InternalException("Must supply pid or display name")
-
-    if tid is not None and pid not in get_unlocked_pids(tid):
-        raise InternalException("You cannot get this problem")
-
-    db = api.db.get_conn()
-    return db.problems.find_one(match, {"_id": 0})
+    return db.problems.find_one({'pid': pid}, {'_id': 0})
 
 
 def get_all_problems(category=None, show_disabled=False):

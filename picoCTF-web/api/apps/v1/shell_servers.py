@@ -14,7 +14,7 @@ ns = Namespace('shell_servers', description='Shell server management')
 
 @ns.route('/')
 class ShellServerList(Resource):
-    """Get the full list of shell servers, or add a new one."""
+    """Get the full list of shell servers, or add a new server."""
 
     # @require_admin
     def get(self):
