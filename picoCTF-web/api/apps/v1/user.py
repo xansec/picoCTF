@@ -6,22 +6,32 @@ import api.auth
 import api.user
 from api.common import PicoException
 
-from .schemas import login_req
+from .schemas import login_req, user_extdata_req
 
 ns = Namespace('user', description='Authentication and information about ' +
                                    'current user')
 
 
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
 @ns.route('/')
 class User(Resource):
-    """Get the current user."""
+    """Get the current user or update their extdata."""
 
     # @require_login
-    @ns.response(200, 'Success')
-    @ns.response(401, 'Not logged in')
     def get(self):
         """Get information about the current user."""
         return jsonify(api.user.get_user())
+
+    # @require_login
+    @ns.expect(user_extdata_req)
+    def patch(self):
+        """Update the current user's extdata (other fields not supported)."""
+        req = user_extdata_req.parse_args(strict=True)
+        api.user.update_extdata(req['extdata'])
+        return jsonify({
+            'success': True
+        })
 
 
 @ns.route('/login')

@@ -312,3 +312,10 @@ login_req.add_argument(
 login_req.add_argument(
     'password', required=True, type=str, help='Password'
 )
+
+# User extdata update request
+user_extdata_req = reqparse.RequestParser()
+user_extdata_req.add_argument(
+    'extdata', required=True, type=object_type, location='json',
+    help='Arbitrary object to set as extdata.'
+)
