@@ -121,9 +121,9 @@ config_schema = Schema(
 
 port_range_schema = Schema({
     Required("start"):
-    All(int, Range(min=0, max=66635)),
+    All(int, Range(min=0, max=65535)),
     Required("end"):
-    All(int, Range(min=0, max=66635))
+    All(int, Range(min=0, max=65535))
 })
 
 
