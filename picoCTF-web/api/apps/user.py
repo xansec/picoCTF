@@ -66,40 +66,6 @@ def verify_user_hook():
         return redirect("/")
 
 
-@blueprint.route('/status', methods=['GET'])
-def status_hook():
-    settings = api.config.get_settings()
-    status = {
-        "logged_in":
-        api.auth.is_logged_in(),
-        "admin":
-        api.auth.is_logged_in() and api.user.is_admin(),
-        "teacher":
-        api.auth.is_logged_in() and api.user.is_teacher(),
-        "enable_feedback":
-        settings["enable_feedback"],
-        "enable_captcha":
-        settings["captcha"]["enable_captcha"],
-        "reCAPTCHA_public_key":
-        settings["captcha"]["reCAPTCHA_public_key"],
-        "competition_active":
-        api.common.check_competition_active(),
-        "username":
-        api.user.get_user()['username'] if api.auth.is_logged_in() else "",
-        "tid":
-        api.user.get_user()["tid"] if api.auth.is_logged_in() else "",
-        "email_verification":
-        settings["email"]["email_verification"]
-    }
-
-    if api.auth.is_logged_in():
-        team = api.user.get_team()
-        status["team_name"] = team["team_name"]
-        status["score"] = api.stats.get_score(tid=team["tid"])
-
-    return WebSuccess(data=status), 200
-
-
 @blueprint.route('/shell_servers', methods=['GET'])
 @require_login
 def shell_servers_hook():
