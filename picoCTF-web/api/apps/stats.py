@@ -14,18 +14,6 @@ from api.common import WebError, WebSuccess
 blueprint = Blueprint("stats_api", __name__)
 scoreboard_page_len = 50
 
-@blueprint.route('/team/score_progression', methods=['GET'])
-@require_login
-@block_before_competition()
-def get_team_score_progression():
-    category = request.args.get("category", None)
-
-    tid = api.user.get_team()["tid"]
-
-    return WebSuccess(
-        data=api.stats.get_score_progression(tid=tid, category=category)), 200
-
-
 @blueprint.route(
     '/scoreboard', defaults={
         'board': None,

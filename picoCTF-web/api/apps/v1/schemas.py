@@ -392,3 +392,10 @@ update_team_password_req.add_argument(
     type=length_restricted(3, 20, str), location='json',
     help='Must match new_password'
 )
+
+# Score progression request
+score_progression_req = reqparse.RequestParser()
+score_progression_req.add_argument(
+    'category', required=False, type=str, location='args',
+    help='Restrict score progression to this problem category'
+)
