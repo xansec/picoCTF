@@ -11,19 +11,12 @@ from api.common import WebSuccess
 
 blueprint = Blueprint("team_api", __name__)
 
+# @TODO move to /teams, GET /teams should only show teams you belong to unless admin
 @blueprint.route('/create', methods=['POST'])
 @require_login
 def create_new_team_hook():
     api.team.create_new_team_request(api.common.flat_multi(request.form))
     return WebSuccess("You now belong to your newly created team."), 201
-
-
-@blueprint.route('/update_password', methods=['POST'])
-@check_csrf
-@require_login
-def update_team_password_hook():
-    api.team.update_password_request(api.common.flat_multi(request.form))
-    return WebSuccess("Your team password has been successfully updated!"), 200
 
 
 @blueprint.route('/join', methods=['POST'])

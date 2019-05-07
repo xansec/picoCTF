@@ -37,6 +37,9 @@ class PicoException(Exception):
 
     Allows specification of a message and response code to display to the
     client, as well as an optional field for arbitrary data.
+
+    The 'data' field will not be displayed to clients but will be stored
+    in the database, making it ideal for storing stack traces, etc.
     """
 
     def __init__(self, message, status_code=500, data=None):
@@ -50,8 +53,6 @@ class PicoException(Exception):
         """Convert a PicoException to a dict for serialization."""
         rv = dict()
         rv['message'] = self.message
-        if self.data:
-            rv['data'] = self.data
         return rv
 
 

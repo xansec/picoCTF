@@ -19,7 +19,7 @@ from api.common import (
   InternalException,
   safe_fail,
   validate,
-  WebException
+  PicoException
 )
 
 new_team_schema = Schema({
@@ -51,13 +51,6 @@ join_team_schema = Schema({
            [str, Length(min=3, max=20)]))
 },
                           extra=True)
-
-update_team_schema = Schema({
-    Required("new-password"):
-    check(("Passwords must be between 3 and 20 characters.",
-           [str, Length(min=3, max=20)]))
-},
-                            extra=True)
 
 
 def get_team(tid=None, name=None):
@@ -499,34 +492,26 @@ def update_password_request(params):
             new-password: the new password
             new-password-confirmation: confirmation of password
     """
-    validate(update_team_schema, params)
     user = api.user.get_user()
     current_team = api.team.get_team(tid=user["tid"])
+    # @TODO maybe a is_self_team function or team property?
     if current_team["team_name"] == user["username"]:
-        raise WebException("You have not created a team yet.")
+        raise PicoException("You have not created a team yet.", 422)
 
     if params["new-password"] != params["new-password-confirmation"]:
-        raise WebException("Your team passwords do not match.")
+        raise PicoException("Your team passwords do not match.", 422)
 
+    # @TODO is this possible?
     if len(params["new-password"]) == 0:
-        raise WebException("Your team password cannot be empty.")
+        raise PicoException("Your team password cannot be empty.", 422)
 
-    update_password(user["tid"], params["new-password"])
-
-
-def update_password(tid, password):
-    """
-    Update a team's password.
-
-    Args:
-        tid: teams's uid.
-        password: the new user password.
-    """
     db = api.db.get_conn()
-    db.teams.update({'tid': tid},
-                    {'$set': {
-                        'password': api.common.hash_password(password)
-                    }})
+    db.teams.update(
+        {'tid': user['tid']},
+        {'$set': {
+            'password': api.common.hash_password(
+                params["new-password"])
+        }})
 
 
 def is_teacher_team(tid):

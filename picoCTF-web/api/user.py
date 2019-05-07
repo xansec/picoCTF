@@ -339,13 +339,14 @@ def update_password_request(params, uid=None, check_current=False):
 
     if check_current and not api.auth.confirm_password(
             params["current-password"], user['password_hash']):
-        raise WebException("Your current password is incorrect.")
+        raise PicoException("Your current password is incorrect.", 422)
 
     if params["new-password"] != params["new-password-confirmation"]:
-        raise WebException("Your passwords do not match.")
+        raise PicoException("Your passwords do not match.", 422)
 
+    # @TODO is this even possible?
     if len(params["new-password"]) == 0:
-        raise WebException("Your password cannot be empty.")
+        raise PicoException("Your password cannot be empty.", 400)
 
     db = api.db.get_conn()
     db.users.update(

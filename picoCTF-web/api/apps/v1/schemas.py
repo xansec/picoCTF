@@ -380,3 +380,15 @@ reset_password_req.add_argument(
     'token', required=True, type=str, location='args',
     help='Password reset token'
 )
+
+# Team password update request
+update_team_password_req = reqparse.RequestParser()
+update_team_password_req.add_argument(
+    'new_password', required=True, type=length_restricted(3, 20, str),
+    location='json', help='New password'
+)
+update_team_password_req.add_argument(
+    'new_password_confirmation', required=True,
+    type=length_restricted(3, 20, str), location='json',
+    help='Must match new_password'
+)

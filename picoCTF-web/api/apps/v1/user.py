@@ -153,6 +153,7 @@ class UpdatePasswordResponse(Resource):
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
+    @ns.response(422, 'Provided password does not match')
     @ns.expect(update_password_req)
     def post(self):
         """Update your account password."""
