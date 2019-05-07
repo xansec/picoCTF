@@ -7,7 +7,8 @@ import api.email
 import api.user
 from api.common import PicoException
 
-from .schemas import (disable_account_req, login_req, reset_password_req,
+from .schemas import (disable_account_req, login_req,
+                      reset_password_confirmation_req, reset_password_req,
                       update_password_req, user_extdata_req)
 
 ns = Namespace('user', description='Authentication and information about ' +
@@ -171,6 +172,24 @@ class UpdatePasswordResponse(Resource):
 
 @ns.route('/reset_password')
 class ResetPasswordResponse(Resource):
+    """Reset a user's password. Requires a password reset token."""
+
+    @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing request')
+    @ns.response(404, 'Invalid token')
+    @ns.expect(reset_password_confirmation_req)
+    def post(self):
+        """Reset a user's password. Requires a password reset token."""
+        req = reset_password_confirmation_req.parse_args(strict=True)
+        api.user.reset_password(req['reset_token', req['new_password'],
+                                req['new_password_confirmation']])
+        return jsonify({
+            'success': True
+        })
+
+
+@ns.route('/reset_password/request')
+class ResetPasswordRequestResponse(Resource):
     """Request a password reset. Does not require authentication."""
 
     @ns.response(200, 'Success')

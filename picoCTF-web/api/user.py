@@ -6,7 +6,6 @@ import urllib.parse
 import urllib.request
 
 import flask
-from voluptuous import Length, Required, Schema
 
 import api.auth
 import api.common
@@ -18,17 +17,7 @@ import api.logger
 import api.team
 import api.token
 import api.user
-from api.common import (InternalException, PicoException, WebException, check,
-                        validate)
-
-password_reset_schema = Schema({
-    Required("token"):
-    check(("This does not look like a valid token.", [str,
-                                                      Length(max=100)])),
-    Required('password'):
-    check(("Passwords must be between 3 and 20 characters.",
-           [str, Length(min=3, max=20)]))
-})
+from api.common import InternalException, PicoException, WebException
 
 
 def check_blacklisted_usernames(username):
@@ -422,10 +411,6 @@ def reset_password(token_value, password, confirm_password):
         password: the password to set
         confirm_password: the same password again
     """
-    validate(password_reset_schema, {
-        "token": token_value,
-        "password": password
-    })
     uid = api.token.find_key_by_token("password_reset", token_value)["uid"]
     api.user.update_password_request(
         {

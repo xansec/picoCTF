@@ -342,12 +342,29 @@ update_password_req.add_argument(
     help='Current password'
 )
 update_password_req.add_argument(
-    'new_password', required=True, type=str, location='json',
-    help='New password'
+    'new_password', required=True, type=length_restricted(3, 20, str),
+    location='json', help='New password'
 )
 update_password_req.add_argument(
-    'new_password_confirmation', required=True, type=str,
-    location='json', help='Must match new_password'
+    'new_password_confirmation', required=True,
+    type=length_restricted(3, 20, str), location='json',
+    help='Must match new_password'
+)
+
+# Reset password confirmation request
+reset_password_confirmation_req = reqparse.RequestParser()
+reset_password_confirmation_req.add_argument(
+    'reset_token', required=True, type=str, location='json',
+    help='Password reset token'
+)
+reset_password_confirmation_req.add_argument(
+    'new_password', required=True, type=length_restricted(3, 20, str),
+    location='json', help='New password'
+)
+reset_password_confirmation_req.add_argument(
+    'new_password_confirmation', required=True,
+    type=length_restricted(3, 20, str), location='json',
+    help='Must match new_password'
 )
 
 # Reset password request
