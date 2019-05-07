@@ -267,7 +267,7 @@ def get_team_uids(tid=None, name=None, show_disabled=True):
     ]
 
 
-def get_team_information(tid=None, gid=None):
+def get_team_information(tid):
     """
     Retrieve the information of a team.
 
@@ -279,13 +279,14 @@ def get_team_information(tid=None, gid=None):
             members
     """
     team_info = get_team(tid=tid)
+
     # Sanitize
     team_info.pop("password", None)
     team_info.pop("instances", None)
 
-    if tid is None:
-        tid = team_info["tid"]
-
+    # @TODO there is a LOT of stuff being added here - expensive. all needed?
+    #       ideally combine/replace this w/ get_team()
+    # Add additional information
     team_info["score"] = api.stats.get_score(tid=tid)
     team_info["members"] = [{
         "username": member["username"],

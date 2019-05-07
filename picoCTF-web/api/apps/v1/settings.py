@@ -5,7 +5,6 @@ from flask_restplus import Namespace, Resource
 
 import api.config
 import api.logger
-from api.common import PicoException
 
 from .schemas import settings_patch_req
 
@@ -17,6 +16,8 @@ class Settings(Resource):
     """Get or modify the current settings."""
 
     # @require_admin
+    # @TODO anyone should be able to see max_team_size, email_filter
+    #       to replace the dedicated /team/settings call
     @ns.response(200, 'Success')
     def get(self):
         """Get the current settings."""

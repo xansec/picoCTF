@@ -1,4 +1,4 @@
-"""Endpoint for the current user."""
+"""Endpoints related to authorization and the current user."""
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 

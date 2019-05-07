@@ -16,6 +16,7 @@ from .feedback import ns as feedback_ns
 from .users import ns as users_ns
 from .user import ns as user_ns
 from .status import ns as status_ns
+from .team import ns as team_ns
 
 blueprint = Blueprint('v1_api', __name__)
 api = Api(
@@ -35,6 +36,7 @@ api.add_namespace(feedback_ns)
 api.add_namespace(users_ns)
 api.add_namespace(user_ns)
 api.add_namespace(status_ns)
+api.add_namespace(team_ns)
 
 
 @api.errorhandler(PicoException)
