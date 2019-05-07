@@ -2,7 +2,6 @@
 
 import json
 import re
-import string
 import urllib.parse
 import urllib.request
 

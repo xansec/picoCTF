@@ -1,50 +1,34 @@
 """Module for email related functionality."""
 
 from flask_mail import Message
-from voluptuous import Length, Required, Schema
 
 import api.config
 import api.group
 import api.token
 import api.user
-from api.common import (check, InternalException, safe_fail, validate,
-                        WebException)
+from api.common import InternalException, PicoException, safe_fail, WebException
 
 # The Flask-Mail object. Should be initialized during app startup.
 mail = None
 
-password_reset_request_schema = Schema({
-    Required('username'):
-    check(("Usernames must be between 3 and 20 characters.",
-           [str, Length(min=3, max=20)]),)
-})
-
 
 def request_password_reset(username):
     """
-    Emails a user a link to reset their password.
-
-    Checks that a username was submitted to the function and grabs the
-    relevant team info from the db.
-
-    Generates a secure token and inserts it into the team's document
-    as 'password_reset_token'.
-
-    A link is emailed to the registered email address with
-    the random token in the url.  The user can go to this link to submit
-    a new password, if the token submitted with the new password matches
-    the db token the password is hashed and updated in the db.
+    Email a user a link to reset their password.
 
     Args:
         username: the username of the account
+
+    Raises:
+        PicoException: if provided username not found
+
     """
-    validate(password_reset_request_schema, {"username": username})
-    user = safe_fail(api.user.get_user, name=username)
+    user = api.user.get_user(name=username)
     if user is None:
-        raise WebException("No registration found for '{}'.".format(username))
+        raise PicoException(
+            'Username not found', 404)
 
     token_value = api.token.set_token({"uid": user['uid']}, "password_reset")
-    print('setting token in db: {}'.format(str(token_value)))
 
     settings = api.config.get_settings()
 

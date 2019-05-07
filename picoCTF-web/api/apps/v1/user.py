@@ -3,11 +3,12 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api.auth
+import api.email
 import api.user
 from api.common import PicoException
 
-from .schemas import (disable_account_req, login_req, update_password_req,
-                      user_extdata_req)
+from .schemas import (disable_account_req, login_req, reset_password_req,
+                      update_password_req, user_extdata_req)
 
 ns = Namespace('user', description='Authentication and information about ' +
                                    'current user')
@@ -163,6 +164,23 @@ class UpdatePasswordResponse(Resource):
                     req['new_password_confirmation']
             }, check_current=True
         )
+        return jsonify({
+            'success': True
+        })
+
+
+@ns.route('/reset_password')
+class ResetPasswordResponse(Resource):
+    """Request a password reset. Does not require authentication."""
+
+    @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing request')
+    @ns.response(404, 'Username not found')
+    @ns.expect(reset_password_req)
+    def post(self):
+        """Request a password reset. Does not require authentication."""
+        req = reset_password_req.parse_args(strict=True)
+        api.email.request_password_reset(req['username'])
         return jsonify({
             'success': True
         })

@@ -1,5 +1,5 @@
 """Routing functions for /api/user."""
-from flask import Blueprint, redirect, request, session
+from flask import Blueprint, redirect, request
 
 import api.auth
 import api.common
@@ -8,20 +8,9 @@ import api.email
 import api.shell_servers
 import api.stats
 import api.user
-from api.annotations import check_csrf, require_login, require_admin
-from api.common import safe_fail, WebError, WebSuccess
+from api.common import WebSuccess
 
 blueprint = Blueprint("user_api", __name__)
-
-
-@blueprint.route('/reset_password', methods=['POST'])
-def reset_password_hook():
-    username = request.form.get("username", None)
-
-    api.email.request_password_reset(username)
-    return WebSuccess(
-        "A password reset link has been sent to the email address provided " +
-        "during registration."), 200
 
 
 @blueprint.route('/confirm_password_reset', methods=['POST'])

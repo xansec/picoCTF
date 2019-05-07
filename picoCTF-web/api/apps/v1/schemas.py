@@ -338,14 +338,21 @@ disable_account_req.add_argument(
 # Update password request
 update_password_req = reqparse.RequestParser()
 update_password_req.add_argument(
-    'current_password', required=True, type=str, location=['json', 'form'],
+    'current_password', required=True, type=str, location='json',
     help='Current password'
 )
 update_password_req.add_argument(
-    'new_password', required=True, type=str, location=['json', 'form'],
+    'new_password', required=True, type=str, location='json',
     help='New password'
 )
 update_password_req.add_argument(
     'new_password_confirmation', required=True, type=str,
-    location=['json', 'form'], help='Must match new_password'
+    location='json', help='Must match new_password'
+)
+
+# Reset password request
+reset_password_req = reqparse.RequestParser()
+reset_password_req.add_argument(
+    'username', required=True, type=str,
+    help='Send a password reset email to this user.'
 )
