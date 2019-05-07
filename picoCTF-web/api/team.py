@@ -38,20 +38,6 @@ new_team_schema = Schema({
 },
                          extra=True)
 
-join_team_schema = Schema({
-    Required("team_name"):
-    check(
-        ("The team name must be between 3 and 40 characters.",
-         [str, Length(min=3, max=40)]),
-        ("This team name conflicts with an existing user name.",
-         [lambda name: safe_fail(api.user.get_user, name=name) is None]),
-    ),
-    Required("team_password"):
-    check(("Passwords must be between 3 and 20 characters.",
-           [str, Length(min=3, max=20)]))
-},
-                          extra=True)
-
 
 def get_team(tid=None, name=None):
     """
@@ -361,123 +347,90 @@ def get_all_teams(include_ineligible=False, country=None):
     return teams
 
 
-def join_team_request(params):
-    """
-    Validate and process a join_team request.
-
-    Args:
-        team_name
-        team_password
-    """
-    user = api.user.get_user()
-    if user["teacher"]:
-        raise InternalException("Teachers may not join teams!")
-
-    validate(join_team_schema, params)
-
-    return join_team(params["team_name"], params["team_password"])
-
-
-def join_team(team_name, password, uid=None):
+def join_team(team_name, password, user):
     """
     Switch a user from their individual team to a proper team.
 
     You can not use this to freely switch between teams.
 
     Args:
-        team_name: The name of the team to join.
-        password: The team's password.
-        uid: The user's id.
+        team_name: The name of the team to join
+        password: The new team's password
+        user: The user
+    Returns:
+        ID of the new team
     """
-    user = api.user.get_user(uid=uid)
     current_team = api.user.get_team(uid=user["uid"])
-
     desired_team = api.team.get_team(name=team_name)
 
     if current_team["team_name"] != user["username"]:
-        raise InternalException(
-            "You can not switch teams once you have joined one.")
+        raise PicoException(
+            "You can not switch teams once you have joined one.", 403)
 
-    db = api.db.get_conn()
+    # Make sure the password is correct and there is room on the team
     max_team_size = api.config.get_settings()["max_team_size"]
+    if desired_team['size'] >= max_team_size:
+        raise PicoException(
+            'That team is already at maximum capacity.', 403)
+    if not api.auth.confirm_password(password, desired_team["password"]):
+        raise PicoException(
+            'That is not the correct password to join that team.', 403)
 
-    if (api.auth.confirm_password(password, desired_team["password"]) and
-            desired_team["size"] < max_team_size):
-        user_team_update = db.users.find_and_modify(
-            query={
-                "uid": user["uid"],
-                "tid": current_team["tid"]
-            },
-            update={"$set": {
-                "tid": desired_team["tid"]
-            }},
-            new=True)
+    # Join the new team
+    db = api.db.get_conn()
+    user_team_update = db.users.find_and_modify(
+        query={
+            "uid": user["uid"],
+            "tid": current_team["tid"]
+        },
+        update={"$set": {
+            "tid": desired_team["tid"]
+        }},
+        new=True)
 
-        if not user_team_update:
-            raise InternalException("There was an issue switching your team!")
+    if not user_team_update:
+        raise InternalException("There was an issue switching your team!")
 
-        desired_team_size_update = db.teams.find_and_modify(
-            query={
-                "tid": desired_team["tid"],
-                "size": {
-                    "$lt": max_team_size
-                }
-            },
-            update={"$inc": {
-                "size": 1
-            }},
-            new=True)
+    # Update the sizes of the old and new teams
+    db.teams.find_one_and_update(
+        {"tid": desired_team["tid"]},
+        {"$inc": {
+            "size": 1
+        }})
 
-        current_team_size_update = db.teams.find_and_modify(
-            query={
-                "tid": current_team["tid"],
-                "size": {
-                    "$gt": 0
-                }
-            },
-            update={"$inc": {
-                "size": -1
-            }},
-            new=True)
+    db.teams.find_one_and_update(
+        {"tid": current_team["tid"]},
+        {"$inc": {
+            "size": -1
+        }})
 
-        # Team country is no longer consistent amongst members - set as mixed
-        if user["country"] != desired_team["country"]:
-            db.teams.update({"tid": desired_team["tid"]},
-                            {
-                                "$set": {
-                                    "country": "??",
-                                }
-                            })
+    # If country is no longer consistent amongst members, set as mixed
+    if user["country"] != desired_team["country"]:
+        db.teams.update(
+            {"tid": desired_team["tid"]}, {"$set": {"country": "??"}})
 
-        if not desired_team_size_update or not current_team_size_update:
-            raise InternalException("There was an issue switching your team!" +
-                                    "Please contact an administrator.")
+    # Remove old team from any groups and attempt to add new team
+    previous_groups = get_groups(tid=current_team["tid"])
+    for group in previous_groups:
+        api.group.leave_group(gid=group["gid"], tid=current_team["tid"])
+        # Rejoin with new tid if not already member, and classroom
+        # email filter is not enabled.
+        roles = api.group.get_roles_in_group(
+            group["gid"], tid=desired_team["tid"])
+        if not roles["teacher"] and not roles["member"]:
+            group_settings = api.group.get_group_settings(gid=group["gid"])
+            if not group_settings["email_filter"]:
+                api.group.join_group(
+                    gid=group["gid"], tid=desired_team["tid"])
 
-        # Remove membership of empty self-team.
-        previous_groups = get_groups(tid=current_team["tid"])
-        for group in previous_groups:
-            api.group.leave_group(gid=group["gid"], tid=current_team["tid"])
-            # Rejoin with new tid if not already member, and classroom
-            # email filter is not enabled.
-            roles = api.group.get_roles_in_group(
-                group["gid"], tid=desired_team["tid"])
-            if not roles["teacher"] and not roles["member"]:
-                group_settings = api.group.get_group_settings(gid=group["gid"])
-                if not group_settings["email_filter"]:
-                    api.group.join_group(
-                        gid=group["gid"], tid=desired_team["tid"])
+    # @TODO Immediately invalidate some caches
+    # api.problem.get_unlocked_pids(desired_team['tid'])
+    # api.problem.get_solved_problems(tid=desired_team['tid'],
+    #                                 uid=user['uid'])
+    # api.stats.get_score(tid=desired_team['tid'])
+    # api.stats.get_score_progression(tid=desired_team['tid'])
 
-        # Immediately invalidate some caches
-        api.problem.get_unlocked_pids(desired_team['tid'])
-        api.problem.get_solved_problems(tid=desired_team['tid'],
-                                        uid=user['uid'])
-        api.stats.get_score(tid=desired_team['tid'])
-        api.stats.get_score_progression(tid=desired_team['tid'])
-
-        return True
-    else:
-        raise InternalException(
-            "That is not the correct password to join that team.")
+    return desired_team['tid']
 
 
 @api.logger.log_action

@@ -399,3 +399,14 @@ score_progression_req.add_argument(
     'category', required=False, type=str, location='args',
     help='Restrict score progression to this problem category'
 )
+
+# Team change request
+team_change_req = reqparse.RequestParser()
+team_change_req.add_argument(
+    'team_name', required=True, type=str, location='json',
+    help='Name of the team to join.'
+)
+team_change_req.add_argument(
+    'team_password', required=True, type=str, location='json',
+    help='Password of the team to join.'
+)

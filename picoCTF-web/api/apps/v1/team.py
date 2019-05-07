@@ -4,8 +4,10 @@ from flask_restplus import Namespace, Resource
 
 import api.team
 import api.user
+from api.common import PicoException
 
-from .schemas import update_team_password_req, score_progression_req
+from .schemas import (score_progression_req, team_change_req,
+                      update_team_password_req)
 
 ns = Namespace('team', description="Information about the current user's team")
 
@@ -82,3 +84,26 @@ class ScoreProgression(Resource):
             api.stats.get_score_progression(
                 tid=current_tid, category=req['category'])
         )
+
+
+@ns.route('/join')
+class TeamJoinResponse(Resource):
+    """Join a team."""
+
+    # @require_login
+    @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing request')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Ineligible to join team')
+    @ns.expect(team_change_req)
+    def post(self):
+        """Join a team by providing its name and password."""
+        current_user = api.user.get_user()
+        if current_user['teacher']:
+            raise PicoException('Teachers may not join teams!', 403)
+        req = team_change_req.parse_args(strict=True)
+        api.team.join_team(
+            req['team_name'], req['team_password'], current_user)
+        return jsonify({
+            'success': True
+        })
