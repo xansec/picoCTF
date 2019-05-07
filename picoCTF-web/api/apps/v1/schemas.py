@@ -376,3 +376,7 @@ reset_password_req.add_argument(
 
 # Email verification request
 email_verification_req = reqparse.RequestParser()
+reset_password_req.add_argument(
+    'token', required=True, type=str, location='args',
+    help='Password reset token'
+)
