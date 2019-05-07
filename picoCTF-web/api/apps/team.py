@@ -18,7 +18,6 @@ def create_new_team_hook():
     api.team.create_new_team_request(api.common.flat_multi(request.form))
     return WebSuccess("You now belong to your newly created team."), 201
 
-
 @blueprint.route('/join', methods=['POST'])
 @require_login
 def join_team_hook():
