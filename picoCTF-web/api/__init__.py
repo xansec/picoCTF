@@ -12,7 +12,6 @@ from werkzeug.contrib.fixers import ProxyFix
 import api.apps.group
 import api.apps.stats
 import api.apps.team
-import api.apps.user
 import api.auth
 import api.config
 import api.logger
@@ -78,7 +77,6 @@ def create_app(test_config=None):
     update_mail_config(app)
 
     # Register routes
-    app.register_blueprint(api.apps.user.blueprint, url_prefix="/api/user")
     app.register_blueprint(api.apps.team.blueprint, url_prefix="/api/team")
     app.register_blueprint(api.apps.stats.blueprint, url_prefix="/api/stats")
     app.register_blueprint(api.apps.group.blueprint, url_prefix="/api/group")

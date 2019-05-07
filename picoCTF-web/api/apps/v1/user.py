@@ -9,7 +9,8 @@ from api.common import PicoException
 
 from .schemas import (disable_account_req, login_req,
                       reset_password_confirmation_req, reset_password_req,
-                      update_password_req, user_extdata_req)
+                      update_password_req, user_extdata_req,
+                      email_verification_req)
 
 ns = Namespace('user', description='Authentication and information about ' +
                                    'current user')
@@ -176,7 +177,7 @@ class ResetPasswordResponse(Resource):
 
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
-    @ns.response(404, 'Invalid token')
+    @ns.response(422, 'Invalid token')
     @ns.expect(reset_password_confirmation_req)
     def post(self):
         """Reset a user's password. Requires a password reset token."""
@@ -200,6 +201,34 @@ class ResetPasswordRequestResponse(Resource):
         """Request a password reset. Does not require authentication."""
         req = reset_password_req.parse_args(strict=True)
         api.email.request_password_reset(req['username'])
+        return jsonify({
+            'success': True
+        })
+
+
+@ns.route('/verify')
+class UserVerificationResponse(Resource):
+    """Verify a user's email address."""
+
+    # @TODO
+    # previously redirected to /#team-builder : /#status=verified ?
+    #   max_team_size > 1
+    # or / if invalid... either frontend or this will need to change
+
+
+    # @require_login
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
+    @ns.response(422, 'Invalid token')
+    @ns.expect(email_verification_req)
+    def get(self):
+        """Verify a user's email address."""
+        req = email_verification_req.parse_args(strict=True)
+        success = api.user.verify_user(req['token'])
+        if not success:
+            raise PicoException(
+                'Invalid verification token.', 422
+            )
         return jsonify({
             'success': True
         })

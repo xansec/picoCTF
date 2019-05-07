@@ -289,31 +289,35 @@ def is_admin(uid=None):
     return user.get('admin', False)
 
 
-def verify_user(uid, token_value):
+def verify_user(token_value):
     """
-    Verify an unverified user account.
+    Verify the current user's account.
 
     Link should have been sent to the user's email.
 
     Args:
-        uid: the user id
         token_value: the verification token value
     Returns:
         True if successful verification based on the (uid, token_value)
+        False if token is not valid for the current user
+    Raises:
+        PicoException if user is not logged in
     """
     db = api.db.get_conn()
 
-    if uid is None:
-        raise InternalException("You must specify a uid.")
+    token_user = api.token.find_key_by_token(
+        "email_verification", token_value)
+    current_user = api.user.get_user()
 
-    token_user = api.token.find_key_by_token("email_verification", token_value)
-
-    if token_user["uid"] == uid:
-        db.users.find_and_modify({"uid": uid}, {"$set": {"verified": True}})
-        api.token.delete_token({"uid": uid}, "email_verification")
+    if token_user["uid"] == current_user['uid']:
+        db.users.find_one_and_update(
+            {"uid": current_user['uid']},
+            {"$set": {"verified": True}})
+        api.token.delete_token(
+            {"uid": current_user['uid']}, "email_verification")
         return True
     else:
-        raise InternalException("This is not a valid token for your user.")
+        return False
 
 
 @api.logger.log_action

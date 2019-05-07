@@ -373,3 +373,6 @@ reset_password_req.add_argument(
     'username', required=True, type=str,
     help='Send a password reset email to this user.'
 )
+
+# Email verification request
+email_verification_req = reqparse.RequestParser()
