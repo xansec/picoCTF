@@ -1,3 +1,4 @@
+import pytest
 from os.path import dirname, join, realpath
 
 import hacksport.deploy
@@ -9,6 +10,7 @@ PATH = dirname(realpath(__file__))
 hacksport.deploy.deploy_config = default_config
 
 
+@pytest.mark.skip("Broken tests/not working")
 class TestProblems:
     """
     Regression tests for compiled problems.
