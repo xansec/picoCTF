@@ -1,6 +1,7 @@
 """Module for calculating gameplay statistics."""
 
 import datetime
+import math
 
 import pymongo
 
@@ -15,6 +16,8 @@ import api.stats
 import api.submissions
 import api.team
 from api.cache import memoize
+
+scoreboard_page_len = 50
 
 
 def _get_problem_names(problems):
@@ -385,3 +388,106 @@ def get_registration_count():
     stats["teamed_users"] = teamed_users
 
     return stats
+
+
+def get_initial_scoreboard():
+    """
+    Retrieve the initial scoreboard (first pages of global and student views).
+
+    If a user is logged in, the initial pages will instead be those on which
+    that user appears, and their group scoreboards will also be returned.
+
+    Returns: dict of scoreboard information
+    """
+    def get_user_pos(scoreboard, tid):
+        for pos, team in enumerate(scoreboard):
+            if team["tid"] == tid:
+                return pos
+        return 1
+
+        user = None
+        if api.auth.is_logged_in():
+            user = api.user.get_user()
+
+        result = {'tid': 0, 'groups': []}
+        global_board = api.stats.get_all_team_scores(include_ineligible=True)
+        result['global'] = {
+            'name': 'global',
+            'pages': math.ceil(len(global_board) / scoreboard_page_len),
+            'start_page': 1
+        }
+        if user is None:
+            result['global']['scoreboard'] = global_board[:scoreboard_page_len]
+        else:
+            result['tid'] = user['tid']
+            global_pos = get_user_pos(global_board, user["tid"])
+            start_slice = math.floor(global_pos / 50) * 50
+            result['global']['scoreboard'] = global_board[start_slice:
+                                                          start_slice + 50]
+            result['global']['start_page'] = math.ceil((global_pos + 1) / 50)
+
+            result['country'] = user["country"]
+            student_board = api.stats.get_all_team_scores()
+            student_pos = get_user_pos(student_board, user["tid"])
+            start_slice = math.floor(student_pos / 50) * 50
+            result['student'] = {
+                'name': 'student',
+                'pages': math.ceil(len(student_board) / scoreboard_page_len),
+                'scoreboard': student_board[start_slice:start_slice + 50],
+                'start_page': math.ceil((student_pos + 1) / 50),
+            }
+
+            for group in api.team.get_groups(uid=user["uid"]):
+                # this is called on every scoreboard pageload and should be
+                # cached to support large groups
+                group_board = api.stats.get_group_scores(gid=group['gid'])
+                group_pos = get_user_pos(group_board, user["tid"])
+                start_slice = math.floor(group_pos / 50) * 50
+                result['groups'].append({
+                    'gid':
+                    group['gid'],
+                    'name':
+                    group['name'],
+                    'scoreboard':
+                    group_board[start_slice:start_slice + 50],
+                    'pages':
+                    math.ceil(len(group_board) / scoreboard_page_len),
+                    'start_page':
+                    math.ceil((group_pos + 1) / 50),
+                })
+        return result
+
+
+def get_scorepage_page(board, page_number):
+    """
+    Retrieve a specific scoreboard page.
+
+    Must be logged in to retrieve a page from the 'groups' board.
+
+    Args:
+        board: scoreboard to retrieve a page from (global, student, groups)
+        page_number: page number to retrieve
+
+    Raises:
+        PicoException: if the 'groups' board is selected but no user is
+                       logged in
+
+    """
+    start = scoreboard_page_len * (page_number - 1)
+    end = start + scoreboard_page_len
+    result = []
+    if board == "groups":
+        user = api.user.get_user()
+        for group in api.team.get_groups(uid=user.get("uid")):
+            group_board = api.stats.get_group_scores(gid=group['gid'])
+            result.append({
+                'gid': group['gid'],
+                'name': group['name'],
+                'scoreboard': group_board[start:end]
+            })
+    elif board == "global":
+        result = api.stats.get_all_team_scores(
+            include_ineligible=True)[start:end]
+    elif board == "student":
+        result = api.stats.get_all_team_scores()[start:end]
+    return result

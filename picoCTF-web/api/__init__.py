@@ -10,7 +10,6 @@ from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
 
 import api.apps.group
-import api.apps.stats
 import api.auth
 import api.config
 import api.logger
@@ -76,7 +75,6 @@ def create_app(test_config=None):
     update_mail_config(app)
 
     # Register blueprints
-    app.register_blueprint(api.apps.stats.blueprint, url_prefix="/api/stats")
     app.register_blueprint(api.apps.group.blueprint, url_prefix="/api/group")
     app.register_blueprint(
         v0_blueprint, url_prefix="/api/v0"

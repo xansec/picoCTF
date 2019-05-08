@@ -35,6 +35,7 @@ def confirm_password(attempt, password_hash):
                          password_hash) == password_hash
 
 
+# @TODO clean up these exceptions
 @api.logger.log_action
 def login(username, password):
     """Authenticate a user."""

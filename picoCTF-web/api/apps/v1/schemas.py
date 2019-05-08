@@ -423,12 +423,12 @@ team_change_req.add_argument(
 )
 
 # Scoreboard request @TODO rework
-scoreboard_req = reqparse.RequestParser()
-scoreboard_req.add_argument(
+scoreboard_page_req = reqparse.RequestParser()
+scoreboard_page_req.add_argument(
     'board', required=False, choices=['groups', 'global', 'student'],
     type=str, location='args', help='Choose which scoreboard to return'
 )
-scoreboard_req.add_argument(
+scoreboard_page_req.add_argument(
     'page', required=False, default=1, type=inputs.positive, location='args',
     help='Scoreboard page to return'
 )

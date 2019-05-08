@@ -98,10 +98,11 @@ class AuthorizationResponse(Resource):
         }
         if requested_role not in authorizations:
             raise PicoException('Invalid role', 401)
-        try:
+
+        user = None
+        if api.auth.is_logged_in:
             user = api.user.get_user()
-        except PicoException:
-            user = None
+
         if user:
             for role in ['teacher', 'admin']:
                 authorizations['role'] = user['role']
