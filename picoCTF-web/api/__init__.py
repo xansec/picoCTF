@@ -85,7 +85,7 @@ def create_app(test_config=None):
         v1_blueprint, url_prefix="/api/v1"
     )
 
-    # Report all validation errors
+    # Report all validation errors (RequestParser-specific setting)
     app.config['BUNDLE_ERRORS'] = True
 
     # Register error handlers

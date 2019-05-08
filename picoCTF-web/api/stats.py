@@ -408,3 +408,10 @@ def get_registration_count():
     stats["teamed_users"] = teamed_users
 
     return stats
+
+
+def generate_legacy_scoreboard(page):
+    pass
+
+def generate_scoreboard(page):
+    pass

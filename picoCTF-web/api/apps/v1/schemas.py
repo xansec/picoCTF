@@ -421,3 +421,14 @@ team_change_req.add_argument(
     'team_password', required=True, type=length_restricted(3, 20, str),
     location='json', help='Password for the new team'
 )
+
+# Scoreboard request
+scoreboard_req = reqparse.RequestParser()
+scoreboard_req.add_argument(
+    'board', required=False, choices=['groups', 'global', 'student'],
+    type=str, location='args', help='Choose which scoreboard to return.'
+)
+scoreboard_req.add_argument(
+    'page', required=False, default=1, type=inputs.positive, location='args',
+    help='Scoreboard page to return.'
+)
