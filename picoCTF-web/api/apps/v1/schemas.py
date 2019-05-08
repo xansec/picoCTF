@@ -410,3 +410,14 @@ team_change_req.add_argument(
     'team_password', required=True, type=str, location='json',
     help='Password of the team to join.'
 )
+
+# Team request
+team_req = reqparse.RequestParser()
+team_change_req.add_argument(
+    'team_name', required=True, type=str, location='json',
+    help='Name of the new team'
+)
+team_change_req.add_argument(
+    'team_password', required=True, type=length_restricted(3, 20, str),
+    location='json', help='Password for the new team'
+)

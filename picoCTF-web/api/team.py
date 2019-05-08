@@ -131,39 +131,55 @@ def get_groups(tid=None, uid=None):
     return groups
 
 
-def create_new_team_request(params, uid=None):
+def create_and_join_new_team(team_name, team_password, user):
     """
     Fulfill new team requests for users who have already registered.
+
+    Seperate from create_team() as we need to do additional logic:
+    - Check that the new team name doesn't conflict with a team or user
+    - Check that the user creating the team is on their initial
+      1-person "username team"
 
     Args:
         team_name: The desired name for the team.
                    Must be unique across users and teams.
         team_password: The team's password.
+        user: The user
+
     Returns:
-        True if successful, exception thrown otherwise.
+        The tid of the new team
+
+    Raises:
+        PicoException if a team or user with name team_name already exists,
+                      or if user has already created a team
 
     """
-    user = api.user.get_user(uid=uid)
-    if user["teacher"]:
-        raise InternalException("Teachers may not create teams!")
+    # Ensure name does not conflict with existing user or team
+    db = api.db.get_conn()
+    if db.users.find_one({'username': team_name}):
+        raise PicoException(
+            'There is already a user with this name.', 409)
+    if db.teams.find_one({'team_name': team_name}):
+        raise PicoException(
+            'There is already a team with this name.', 409)
 
-    validate(new_team_schema, params)
+    # Make sure the creating user has not already created a team
+    current_team = api.team.get_team(tid=user['tid'])
+    if current_team['team_name'] != user['username']:
+        raise PicoException(
+            "You can only create one new team per user account!", 422)
 
-    current_team = api.team.get_team(tid=user["tid"])
-
-    if current_team["team_name"] != user["username"]:
-        raise InternalException(
-            "You can only create one new team per user account!")
-
-    create_team({
-        "team_name": params["team_name"],
-        "password": api.common.hash_password(params["team_password"]),
+    # Create the team and join it
+    new_tid = create_team({
+        "team_name": team_name,
+        "password": api.common.hash_password(team_password),
         "affiliation": current_team["affiliation"],
         "creator": user["uid"],
         "country": user["country"],
     })
+    join_team(team_name, team_password, user)
 
-    return join_team(params["team_name"], params["team_password"], user["uid"])
+    return new_tid
 
 
 def create_team(params):
