@@ -19,6 +19,7 @@ from .status import ns as status_ns
 from .team import ns as team_ns
 from .stats import ns as stats_ns
 from .teams import ns as teams_ns
+from .groups import ns as groups_ns
 
 blueprint = Blueprint('v1_api', __name__)
 api = Api(
@@ -42,6 +43,7 @@ for ns in [
     team_ns,
     stats_ns,
     teams_ns,
+    groups_ns,
         ]:
     api.add_namespace(ns)
 

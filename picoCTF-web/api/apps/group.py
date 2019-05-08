@@ -57,28 +57,6 @@ delete_group_schema = Schema({
 blueprint = Blueprint("group_api", __name__)
 
 
-@blueprint.route('', methods=['GET'])
-@require_login
-def get_group_hook():
-    name = request.form.get("group-name")
-    owner = request.form.get("group-owner")
-    gid = request.form.get("gid")
-
-    owner_tid = None
-    if not gid or len(gid) == 0:
-        owner_tid = api.team.get_team(name=owner)["tid"]
-
-    group = api.group.get_group(gid=gid, name=name, owner_tid=owner_tid)
-
-    user = api.user.get_user()
-    roles = api.group.get_roles_in_group(gid=group["gid"], uid=user["uid"])
-
-    if not roles["member"] and not roles["teacher"]:
-        return WebError("You are not a member of this classroom."), 400
-
-    return WebSuccess(data=group), 200
-
-
 @blueprint.route('/settings', methods=['GET'])
 def get_group_settings_hook():
     gid = request.args.get("gid")

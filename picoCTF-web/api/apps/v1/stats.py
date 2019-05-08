@@ -1,10 +1,11 @@
 """Endpoints for getting statistical reports."""
 from flask import jsonify
 from flask_restplus import Namespace, Resource
+
+import api.stats
 from api.common import PicoException
 
 from .schemas import scoreboard_page_req, top_teams_score_progression_req
-import api.stats
 
 ns = Namespace('stats', 'Statistical aggregations and reports')
 

@@ -1,4 +1,4 @@
-"""Achievement related endpoints."""
+"""Achievement management."""
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
@@ -14,7 +14,6 @@ ns = Namespace('achievements', description='Achievement management')
 class AchievementList(Resource):
     """Get the full list of achievements, or add a new achievement."""
 
-    @ns.response(200, 'Success')
     def get(self):
         """Get the full list of achievements."""
         return api.achievement.get_all_achievements(), 200
