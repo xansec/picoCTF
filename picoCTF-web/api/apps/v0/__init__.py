@@ -41,6 +41,7 @@ user_login_schema = Schema({
 
 
 def WebSuccess(message=None, data=None):
+    """Legacy successful response wrapper."""
     return json_util.dumps({
             'status': 1,
             'message': message,
@@ -49,6 +50,7 @@ def WebSuccess(message=None, data=None):
 
 
 def WebError(message=None, data=None):
+    """Legacy failure response wrapper."""
     return json_util.dumps({
             'status': 0,
             'message': message,
@@ -58,6 +60,7 @@ def WebError(message=None, data=None):
 
 @blueprint.route('/user/login', methods=['POST'])
 def login_hook():
+    """Legacy login route."""
     username = request.form.get('username')
     password = request.form.get('password')
     validate(user_login_schema, {"username": username, "password": password})
@@ -77,6 +80,7 @@ def login_hook():
 
 @blueprint.route('/user/logout', methods=['GET'])
 def logout_hook():
+    """Legacy logout route."""
     if api.user.is_logged_in():
         api.user.logout()
         return WebSuccess("Successfully logged out."), 200
@@ -86,6 +90,7 @@ def logout_hook():
 
 @blueprint.route('/user/status', methods=['GET'])
 def status_hook():
+    """Legacy status route."""
     settings = api.config.get_settings()
     status = {
         "logged_in":
@@ -121,9 +126,7 @@ def status_hook():
 @blueprint.route('/user/extdata', methods=['GET'])
 @require_login
 def get_extdata_hook():
-    """
-    Return user extdata, or empty JSON object if unset.
-    """
+    """Return user extdata, or empty JSON object if unset."""
     user = api.user.get_user(uid=None)
     return WebSuccess(data=user['extdata']), 200
 
@@ -132,9 +135,7 @@ def get_extdata_hook():
 @check_csrf
 @require_login
 def update_extdata_hook():
-    """
-    Sets user extdata via HTTP form. Takes in any key-value pairs.
-    """
+    """Set user extdata via HTTP form. Takes in any key-value pairs."""
     api.user.update_extdata(flat_multi(request.form))
     return WebSuccess("Your Extdata has been successfully updated."), 200
 
@@ -143,6 +144,7 @@ def update_extdata_hook():
 @require_login
 @block_before_competition()
 def get_visible_problems_hook():
+    """Legacy problems endpoint."""
     tid = api.user.get_user()['tid']
     all_problems = api.problem.get_all_problems(show_disabled=False)
     unlocked_pids = api.problem.get_unlocked_pids(tid)
@@ -170,6 +172,7 @@ def get_visible_problems_hook():
 @block_before_competition()
 @block_after_competition()
 def submit_key_hook():
+    """Legacy solution submission endpoint."""
     user_account = api.user.get_user()
     tid = user_account['tid']
     uid = user_account['uid']
@@ -211,6 +214,7 @@ def submit_key_hook():
 @blueprint.route('/team/score', methods=['GET'])
 @require_login
 def get_team_score_hook():
+    """Legacy score endpoint."""
     score = api.stats.get_score(tid=api.user.get_user()['tid'])
     if score is not None:
         return WebSuccess(data={'score': score})

@@ -6,7 +6,7 @@ import api.config
 import api.group
 import api.token
 import api.user
-from api.common import InternalException, PicoException, safe_fail, WebException
+from api.common import InternalException, PicoException
 
 # The Flask-Mail object. Should be initialized during app startup.
 mail = None
@@ -102,7 +102,7 @@ Verification link: {1}
 
 Good luck and have fun!
 The {0} Team.
-    """.format(settings["competition_name"], verification_link)
+    """.format(settings["competition_name"], verification_link) # noqa (79char)
 
     subject = "{} Account Verification".format(settings["competition_name"])
 
@@ -127,7 +127,7 @@ Competition Rules for {0} can be found at {1}.
 If you received this email in error because you did not authorize your child's
 registration for {0}, you are not the child's parent or legal guardian,
 or your child is under age 13, please email us immediately at {2}.
-        """.format(settings["competition_name"], "https://url",
+        """.format(settings["competition_name"], "https://url", # noqa (79char)
                    "admin@email.com")
 
         subject = "{} Parent Account Verification".format(
@@ -171,7 +171,7 @@ Registration link: {2}
 
 Good luck!
   The {0} Team.
-    """.format(settings["competition_name"], group["name"], registration_link)
+    """.format(settings["competition_name"], group["name"], registration_link) # noqa (79char)
 
     subject = "{} Registration".format(settings["competition_name"])
 

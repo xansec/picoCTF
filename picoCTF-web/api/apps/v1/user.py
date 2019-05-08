@@ -216,7 +216,6 @@ class UserVerificationResponse(Resource):
     #   max_team_size > 1
     # or / if invalid... either frontend or this will need to change
 
-
     # @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')

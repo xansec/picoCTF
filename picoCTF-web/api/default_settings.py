@@ -1,3 +1,9 @@
+"""
+Default Flask app startup settings.
+
+Overridable by specifying APP_SETTINGS_FILE.
+"""
+
 MONGO_DB_NAME = "ctf"
 MONGO_ADDR = "127.0.0.1"
 MONGO_PORT = 27017

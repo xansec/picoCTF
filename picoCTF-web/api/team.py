@@ -17,7 +17,6 @@ from api.common import (
   check,
   InternalException,
   safe_fail,
-  validate,
   PicoException
 )
 

@@ -48,20 +48,6 @@ for ns in [
     api.add_namespace(ns)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @api.errorhandler(PicoException)
 def handle_pico_exception(e):
     """Handle exceptions."""

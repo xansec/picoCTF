@@ -81,6 +81,7 @@ class SevereInternalException(InternalException):
 
 
 def WebSuccess(message=None, data=None):
+    """Legacy successful response wrapper."""
     return json_util.dumps({
             'status': 1,
             'message': message,
@@ -89,6 +90,7 @@ def WebSuccess(message=None, data=None):
 
 
 def WebError(message=None, data=None):
+    """Legacy failure response wrapper."""
     return json_util.dumps({
             'status': 0,
             'message': message,

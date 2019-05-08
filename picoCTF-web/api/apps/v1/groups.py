@@ -25,4 +25,5 @@ class GroupList(Resource):
 @ns.route('/<string:group_id>')
 class Group(Resource):
     """Get a specific group."""
+
     pass

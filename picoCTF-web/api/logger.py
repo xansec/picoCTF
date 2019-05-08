@@ -218,8 +218,8 @@ def setup_logs(args):
     Args:
         args: dict containing the configuration options.
     """
-    flask_logging.create_logger = lambda app: logging.getLogger(app.logger_name
-                                                               )
+    flask_logging.create_logger = lambda app: logging.getLogger(
+        app.logger_name)
 
     if not args.get("debug", True):
         logger = logging.getLogger("werkzeug")

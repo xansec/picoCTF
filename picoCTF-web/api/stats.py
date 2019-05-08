@@ -237,7 +237,6 @@ def get_problem_submission_stats(pid=None):
     Returns:
         Dict of {valid: #, invalid: #}
     """
-
     return {
         "valid":
         len(api.submissions.get_submissions(pid, correctness=True)),

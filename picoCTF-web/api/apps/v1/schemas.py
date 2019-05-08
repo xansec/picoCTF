@@ -4,19 +4,12 @@ from flask_restplus import reqparse, inputs
 
 def object_type(value):
     """To make the openAPI object type show up in the docs."""
-
     return value
 object_type.__schema__ = {'type': 'object'} # noqa
 
 
-def protocol_type(value):
-    if value not in ['HTTP', 'HTTPS']:
-        raise ValueError('Invalid protocol (must be HTTP or HTTPS)')
-    return value
-protocol_type.__schema__ = {'type': 'string'} # noqa
-
-
 def length_restricted(min_length, max_length, base_type):
+    """Type to restrict string length."""
     def validate(s):
         if len(s) < min_length:
             raise ValueError(
