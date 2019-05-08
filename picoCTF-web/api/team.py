@@ -3,7 +3,6 @@
 from voluptuous import Length, Required, Schema
 
 import api.achievement
-import api.auth
 import api.cache
 import api.common
 import api.config
@@ -56,7 +55,7 @@ def get_team(tid=None, name=None):
         match.update({'tid': tid})
     elif name is not None:
         match.update({'team_name': name})
-    elif api.auth.is_logged_in():
+    elif api.user.is_logged_in():
         match.update({"tid": api.user.get_user()["tid"]})
     else:
         raise InternalException("Must supply tid or team name to get_team")
@@ -80,7 +79,7 @@ def get_groups(tid):
     """
     # Get all groups associated with the given team
     db = api.db.get_conn()
-    associated_groups = list(db.groups.find_many(
+    associated_groups = list(db.groups.find(
         {"$or": [
             {'owner': tid},
             {"teachers": tid},
@@ -360,7 +359,7 @@ def join_team(team_name, password, user):
     if desired_team['size'] >= max_team_size:
         raise PicoException(
             'That team is already at maximum capacity.', 403)
-    if not api.auth.confirm_password(password, desired_team["password"]):
+    if not api.user.confirm_password(password, desired_team["password"]):
         raise PicoException(
             'That is not the correct password to join that team.', 403)
 

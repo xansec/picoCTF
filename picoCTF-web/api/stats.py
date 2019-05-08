@@ -406,7 +406,7 @@ def get_initial_scoreboard():
         return 1
 
         user = None
-        if api.auth.is_logged_in():
+        if api.user.is_logged_in():
             user = api.user.get_user()
 
         result = {'tid': 0, 'groups': []}

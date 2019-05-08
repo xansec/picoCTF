@@ -5,9 +5,10 @@ import re
 import urllib.parse
 import urllib.request
 
+import bcrypt
 import flask
+from flask import session
 
-import api.auth
 import api.common
 import api.config
 import api.db
@@ -17,7 +18,7 @@ import api.logger
 import api.team
 import api.token
 import api.user
-from api.common import InternalException, PicoException, WebException
+from api.common import PicoException
 
 
 def check_blacklisted_usernames(username):
@@ -92,8 +93,8 @@ def get_user(name=None, uid=None, include_pw_hash=False):
         match.update({'uid': uid})
     elif name is not None:
         match.update({'username': name})
-    elif api.auth.is_logged_in():
-        match.update({'uid': api.auth.get_uid()})
+    elif api.user.is_logged_in():
+        match.update({'uid': session['uid']})
     else:
         raise PicoException(
             'Could not retrieve user - not logged in', 401)
@@ -337,7 +338,7 @@ def update_password_request(params, uid=None, check_current=False):
     """
     user = get_user(uid=uid, include_pw_hash=True)
 
-    if check_current and not api.auth.confirm_password(
+    if check_current and not api.user.confirm_password(
             params["current-password"], user['password_hash']):
         raise PicoException("Your current password is incorrect.", 422)
 
@@ -384,7 +385,7 @@ def disable_account(uid):
             "size": -1
         }})
 
-    api.auth.logout()
+    api.user.logout()
 
 
 def update_extdata(params):
@@ -425,3 +426,58 @@ def reset_password(token_value, password, confirm_password):
         uid=uid)
 
     api.token.delete_token({"uid": uid}, "password_reset")
+
+
+def confirm_password(attempt, password_hash):
+    """
+    Verify the password attempt.
+
+    Args:
+        attempt: the password attempt
+        password_hash: the real password hash
+    """
+    return bcrypt.hashpw(attempt.encode('utf-8'),
+                         password_hash) == password_hash
+
+
+@api.logger.log_action
+def login(username, password):
+    """Authenticate a user."""
+    user = get_user(name=username, include_pw_hash=True)
+    if user is None:
+        raise PicoException('Incorrect username.', 401)
+
+    if user['disabled']:
+        raise PicoException('This account has been disabled.', 403)
+
+    if not user['verified']:
+        raise PicoException('This account has not been verified yet.', 403)
+
+    if confirm_password(password, user['password_hash']):
+        session['uid'] = user['uid']
+        session.permanent = True
+    else:
+        raise PicoException('Incorrect password', 401)
+
+
+@api.logger.log_action
+def logout():
+    """Clear the session."""
+    session.clear()
+
+
+def is_logged_in():
+    """
+    Check if the user is currently logged in.
+
+    Returns:
+        True if the user is logged in, false otherwise.
+
+    """
+    logged_in = 'uid' in session
+    if logged_in:
+        user = api.user.get_user(uid=session['uid'])
+        if not user or user["disabled"]:
+            logout()
+            return False
+    return logged_in

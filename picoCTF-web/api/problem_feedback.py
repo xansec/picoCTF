@@ -5,7 +5,6 @@ from datetime import datetime
 from voluptuous import Length, Required, Schema
 
 import api.achievement
-import api.auth
 import api.db
 import api.logger
 import api.problem
@@ -64,7 +63,7 @@ def upsert_feedback(pid, feedback):
     """
     db = api.db.get_conn()
 
-    uid = api.auth.get_uid()
+    uid = api.user.get_user()['uid']
 
     # Make sure the problem actually exists.
     if not api.problem.get_problem(pid):

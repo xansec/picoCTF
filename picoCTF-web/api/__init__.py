@@ -10,7 +10,6 @@ from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
 
 import api.apps.group
-import api.auth
 import api.config
 import api.logger
 from api.apps.v0 import blueprint as v0_blueprint
@@ -131,7 +130,7 @@ def create_app(test_config=None):
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type, *')
         response.headers.add('Cache-Control', 'no-cache')
         response.headers.add('Cache-Control', 'no-store')
-        if api.auth.is_logged_in():
+        if api.user.is_logged_in():
             # Flask 1.0+ bug loads config SESSION_COOKIE_DOMAIN
             # correctly as None but later converts it to bool false.
             domain = app.config['SESSION_COOKIE_DOMAIN']

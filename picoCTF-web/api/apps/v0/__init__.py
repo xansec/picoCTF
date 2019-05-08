@@ -16,8 +16,8 @@ Provides legacy behavior for:
 """
 from bson import json_util
 from flask import Blueprint, request
+from voluptuous import Length, Required, Schema
 
-import api.auth
 import api.config
 import api.db
 import api.problem
@@ -26,9 +26,18 @@ import api.submissions
 import api.user
 from api.annotations import (block_after_competition, block_before_competition,
                              check_csrf, require_login)
-from api.common import flat_multi, PicoException
+from api.common import check, flat_multi, PicoException, validate
 
 blueprint = Blueprint('v0_api', __name__)
+
+user_login_schema = Schema({
+    Required('username'):
+    check(("Usernames must be between 3 and 50 characters.",
+           [str, Length(min=3, max=50)]),),
+    Required('password'):
+    check(("Passwords must be between 3 and 50 characters.",
+           [str, Length(min=3, max=50)]))
+})
 
 
 def WebSuccess(message=None, data=None):
@@ -51,13 +60,13 @@ def WebError(message=None, data=None):
 def login_hook():
     username = request.form.get('username')
     password = request.form.get('password')
+    validate(user_login_schema, {"username": username, "password": password})
     try:
-        api.auth.login(username, password)
+        api.user.login(username, password)
     except PicoException as e:
-        if e.status_code == 401:
-            return WebError(
-                message='Incorrect password'
-            )
+        return WebError(
+            message=e.message
+        )
     return WebSuccess(
         message="Successfully logged in as " + username,
         data={
@@ -68,8 +77,8 @@ def login_hook():
 
 @blueprint.route('/user/logout', methods=['GET'])
 def logout_hook():
-    if api.auth.is_logged_in():
-        api.auth.logout()
+    if api.user.is_logged_in():
+        api.user.logout()
         return WebSuccess("Successfully logged out."), 200
     else:
         return WebError("You do not appear to be logged in."), 400
@@ -80,11 +89,11 @@ def status_hook():
     settings = api.config.get_settings()
     status = {
         "logged_in":
-        api.auth.is_logged_in(),
+        api.user.is_logged_in(),
         "admin":
-        api.auth.is_logged_in() and api.user.is_admin(),
+        api.user.is_logged_in() and api.user.is_admin(),
         "teacher":
-        api.auth.is_logged_in() and api.user.is_teacher(),
+        api.user.is_logged_in() and api.user.is_teacher(),
         "enable_feedback":
         settings["enable_feedback"],
         "enable_captcha":
@@ -94,14 +103,14 @@ def status_hook():
         "competition_active":
         api.config.check_competition_active(),
         "username":
-        api.user.get_user()['username'] if api.auth.is_logged_in() else "",
+        api.user.get_user()['username'] if api.user.is_logged_in() else "",
         "tid":
-        api.user.get_user()["tid"] if api.auth.is_logged_in() else "",
+        api.user.get_user()["tid"] if api.user.is_logged_in() else "",
         "email_verification":
         settings["email"]["email_verification"]
     }
 
-    if api.auth.is_logged_in():
+    if api.user.is_logged_in():
         team = api.user.get_team()
         status["team_name"] = team["team_name"]
         status["score"] = api.stats.get_score(tid=team["tid"])

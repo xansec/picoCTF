@@ -2,7 +2,6 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.auth
 import api.email
 import api.user
 from api.common import PicoException
@@ -45,13 +44,13 @@ class LoginResponse(Resource):
     # @require_login
     @ns.response(200, 'Sucess')
     @ns.response(400, 'Error parsing request')
-    @ns.response(401, 'Incorrect password')
+    @ns.response(401, 'Incorrect username or password')
     @ns.response(403, 'Account disabled or not yet verified')
     @ns.expect(login_req)
     def post(self):
         """Log in."""
         req = login_req.parse_args(strict=True)
-        api.auth.login(req['username'], req['password'])
+        api.user.login(req['username'], req['password'])
         return jsonify({
             "success": True,
             "username": req['username']
@@ -66,12 +65,12 @@ class LogoutResponse(Resource):
     @ns.response(401, 'Not logged in')
     def get(self):
         """Log out."""
-        if not api.auth.is_logged_in():
+        if not api.user.is_logged_in():
             raise PicoException(
                 'There is no user currently logged in.', 401
             )
         else:
-            api.auth.logout()
+            api.user.logout()
         return jsonify({
             'success': True
         })
@@ -100,7 +99,7 @@ class AuthorizationResponse(Resource):
             raise PicoException('Invalid role', 401)
 
         user = None
-        if api.auth.is_logged_in:
+        if api.user.is_logged_in():
             user = api.user.get_user()
 
         if user:
@@ -136,7 +135,7 @@ class DisableAccountResponse(Resource):
         user = api.user.get_user(include_pw_hash=True)
         req = disable_account_req.parse_args(strict=True)
 
-        if not api.auth.confirm_password(
+        if not api.user.confirm_password(
                 req['password'], user['password_hash']):
             raise PicoException('The provided password is not correct.')
         api.user.disable_account(user['uid'])

@@ -43,7 +43,7 @@ class ScoreboardPage(Resource):
     def get(self):
         """Retrieve a page of a specific scoreboard."""
         req = scoreboard_page_req.parse_args(strict=True)
-        if req['board'] == 'groups' and not api.auth.is_logged_in():
+        if req['board'] == 'groups' and not api.user.is_logged_in():
             raise PicoException(
                 'You must be logged in to retrieve pages from the ' +
                 'groups scoreboard.', 401

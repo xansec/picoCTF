@@ -6,7 +6,6 @@ from functools import wraps
 
 from flask import request, session
 
-import api.auth
 import api.config
 import api.user
 from api.common import InternalException, WebError, WebException
@@ -18,7 +17,7 @@ def require_login(f):
     """Wrap routing functions that require a user to be logged in."""
     @wraps(f)
     def wrapper(*args, **kwds):
-        if not api.auth.is_logged_in():
+        if not api.user.is_logged_in():
             raise WebException("You must be logged in")
         return f(*args, **kwds)
 

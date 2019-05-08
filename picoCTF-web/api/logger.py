@@ -11,7 +11,6 @@ from flask import has_request_context
 from flask import logging as flask_logging
 from flask import request
 
-import api.auth
 import api.config
 import api.db
 import api.team
@@ -196,7 +195,7 @@ def get_request_information():
             "user_agent": request.user_agent.string
         }
 
-        if api.auth.is_logged_in():
+        if api.user.is_logged_in():
 
             user = api.user.get_user()
             team = api.user.get_team()
