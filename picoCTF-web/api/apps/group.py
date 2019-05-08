@@ -118,14 +118,6 @@ def invite_email_to_group_hook():
         return WebError(
             message="You do not have sufficient privilege to do that."), 401
 
-
-@blueprint.route('/list')
-@require_login
-def get_group_list_hook():
-    user = api.user.get_user()
-    return WebSuccess(data=api.team.get_groups(uid=user["uid"])), 200
-
-
 @blueprint.route('/teacher_information', methods=['GET'])
 @require_teacher
 def get_teacher_information_hook(gid=None):
