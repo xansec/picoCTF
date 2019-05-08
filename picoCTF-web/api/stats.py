@@ -16,8 +16,6 @@ import api.submissions
 import api.team
 from api.cache import memoize
 
-top_teams = 5
-
 
 def _get_problem_names(problems):
     """Extract the names from a list of problems."""
@@ -281,30 +279,6 @@ def get_score_progression(tid=None, uid=None, category=None):
     return result
 
 
-def get_top_teams(gid=None, country=None, include_ineligible=False):
-    """
-    Find the top teams.
-
-    Args:
-        gid: if specified, return the top teams from this group only.
-             overrides country and include_ineligible.
-
-        country: if specified, return the top teams from the country only
-        include_ineligible: include ineligible teams in result
-
-    Returns:
-        The top teams and their scores
-
-    """
-    if gid is None:
-        all_teams = api.stats.get_all_team_scores(
-            country=country,
-            include_ineligible=include_ineligible)
-    else:
-        all_teams = api.stats.get_group_scores(gid=gid)
-    return all_teams if len(all_teams) < top_teams else all_teams[:top_teams]
-
-
 # Stored by the cache_stats daemon
 # @memoize
 def get_problem_solves(pid):
@@ -324,16 +298,15 @@ def get_problem_solves(pid):
 
 # Stored by the cache_stats daemon
 # @memoize
-def get_top_teams_score_progressions(gid=None, country=None,
-                                     include_ineligible=False):
+def get_top_teams_score_progressions(
+        limit, include_ineligible=False, gid=None):
     """
     Get the score progressions for the top teams.
 
     Args:
+        limit: Number of teams to include
         gid: If specified, compute the progressions for the top teams
-             from this group only. Overrides country and include_ineligible.
-
-        country: If specified, limit teams by country
+             from this group only. Overrides include_ineligible.
         include_ineligible: if specified, include ineligible teams in result
 
     Returns:
@@ -341,14 +314,18 @@ def get_top_teams_score_progressions(gid=None, country=None,
         A dict of {name: name, score_progression: score_progression}
 
     """
+    if gid is None:
+        teams = api.stats.get_all_team_scores(
+            include_ineligible=include_ineligible)
+    else:
+        teams = api.stats.get_group_scores(gid=gid)
+    return teams[:limit]
+
     return [{
         "name": team["name"],
         "affiliation": team["affiliation"],
         "score_progression": get_score_progression(tid=team["tid"]),
-    } for team in get_top_teams(
-        gid=gid,
-        country=country,
-        include_ineligible=include_ineligible)]
+    } for team in teams]
 
 
 # @memoize(timeout=300)
@@ -408,10 +385,3 @@ def get_registration_count():
     stats["teamed_users"] = teamed_users
 
     return stats
-
-
-def generate_legacy_scoreboard(page):
-    pass
-
-def generate_scoreboard(page):
-    pass

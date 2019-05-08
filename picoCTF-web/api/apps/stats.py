@@ -29,6 +29,8 @@ def get_scoreboard_hook(board, page):
         return 1
 
     user = None
+    # @TODO is there somewhere we catch a 401 where we could just use
+    #       is_logged_in()?
     if api.auth.is_logged_in():
         user = api.user.get_user()
 
@@ -108,21 +110,3 @@ def get_scoreboard_hook(board, page):
             return WebSuccess(data=result), 200
         else:
             return WebError("A valid board must be specified"), 404
-
-
-@blueprint.route('/top_teams/score_progression', methods=['GET'])
-def get_top_teams_score_progressions_hook():
-    include_ineligible = request.args.get("include_ineligible", "false")
-    include_ineligible = json_util.loads(include_ineligible)
-
-    return WebSuccess(
-        data=api.stats.get_top_teams_score_progressions(
-            include_ineligible=include_ineligible)), 200
-
-
-@blueprint.route('/group/score_progression', methods=['GET'])
-def get_group_top_teams_score_progressions_hook():
-    gid = request.args.get("gid", None)
-    return WebSuccess(
-        data=api.stats.get_top_teams_score_progressions(
-            gid=gid, include_ineligible=True)), 200

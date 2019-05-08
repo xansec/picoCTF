@@ -422,13 +422,29 @@ team_change_req.add_argument(
     location='json', help='Password for the new team'
 )
 
-# Scoreboard request
+# Scoreboard request @TODO rework
 scoreboard_req = reqparse.RequestParser()
 scoreboard_req.add_argument(
     'board', required=False, choices=['groups', 'global', 'student'],
-    type=str, location='args', help='Choose which scoreboard to return.'
+    type=str, location='args', help='Choose which scoreboard to return'
 )
 scoreboard_req.add_argument(
     'page', required=False, default=1, type=inputs.positive, location='args',
-    help='Scoreboard page to return.'
+    help='Scoreboard page to return'
+)
+
+# Top teams score progression request
+top_teams_score_progression_req = reqparse.RequestParser()
+top_teams_score_progression_req.add_argument(
+    'limit', required=False, default=5, type=inputs.positive,
+    location='args', help='Number of top teams to retrieve'
+)
+top_teams_score_progression_req.add_argument(
+    'include_ineligible', required=False, default=False, type=inputs.boolean,
+    location='args', help='Whether to include teams that are ineligible ' +
+                          'for the current competition'
+)
+top_teams_score_progression_req.add_argument(
+    'gid', required=False, type=str, default=None, location='args',
+    help='If specified, restrict to top teams from this group'
 )
