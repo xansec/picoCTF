@@ -437,7 +437,7 @@ def get_initial_scoreboard():
                 'start_page': math.ceil((student_pos + 1) / 50),
             }
 
-            for group in api.team.get_groups(uid=user["uid"]):
+            for group in api.team.get_groups(user['tid']):
                 # this is called on every scoreboard pageload and should be
                 # cached to support large groups
                 group_board = api.stats.get_group_scores(gid=group['gid'])
@@ -478,7 +478,7 @@ def get_scorepage_page(board, page_number):
     result = []
     if board == "groups":
         user = api.user.get_user()
-        for group in api.team.get_groups(uid=user.get("uid")):
+        for group in api.team.get_groups(user['tid']):
             group_board = api.stats.get_group_scores(gid=group['gid'])
             result.append({
                 'gid': group['gid'],

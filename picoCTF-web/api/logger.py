@@ -200,7 +200,7 @@ def get_request_information():
 
             user = api.user.get_user()
             team = api.user.get_team()
-            groups = api.team.get_groups()
+            groups = api.team.get_groups(user['tid'])
 
             information["user"] = {
                 "username": user["username"],

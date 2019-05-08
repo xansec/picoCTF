@@ -19,7 +19,7 @@ class GroupList(Resource):
     def get(self):
         """Get the groups of which you are a member."""
         curr_tid = api.user.get_user()['tid']
-        return jsonify(api.team.get_groups(tid=curr_tid))
+        return jsonify(api.team.get_groups(curr_tid))
 
 
 @ns.route('/<string:group_id>')

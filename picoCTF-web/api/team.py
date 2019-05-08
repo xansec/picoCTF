@@ -69,66 +69,38 @@ def get_team(tid=None, name=None):
     return team
 
 
-def get_groups(tid=None, uid=None):
+def get_groups(tid):
     """
     Get the group membership for a team.
 
     Args:
         tid: The team id
-        uid: The user id
     Returns:
         List of group objects the team is a member of.
     """
+    # Get all groups associated with the given team
     db = api.db.get_conn()
+    associated_groups = list(db.groups.find_many(
+        {"$or": [
+            {'owner': tid},
+            {"teachers": tid},
+            {"members": tid}]},
+        {
+            'name': 1,
+            'gid': 1,
+            'owner': 1,
+            'members': 1,
+            '_id': 0
+        }))
 
-    groups = []
+    for group in associated_groups:
+        # Replace the owner tid with the team's name
+        group['owner'] = api.team.get_team(tid=group['owner'])['team_name']
 
-    group_projection = {
-        'name': 1,
-        'gid': 1,
-        'owner': 1,
-        'members': 1,
-        '_id': 0
-    }
+        # Add the group's average score
+        group['score'] = api.stats.get_group_average_score(gid=group['gid'])
 
-    admin = False
-
-    if uid is not None:
-        user = api.user.get_user(uid=uid)
-        # Given potential scale of *all* classrooms, DISABLED
-        # admin = api.user.is_admin(uid=user["uid"])
-        tid = user["tid"]
-    else:
-        tid = api.team.get_team(tid=tid)["tid"]
-
-    # (DISABLED) Admins should be able to view all groups.
-    group_query = {
-        "$or": [{
-            'owner': tid
-        }, {
-            "teachers": tid
-        }, {
-            "members": tid
-        }]
-    } if not admin else {}
-    associated_groups = db.groups.find(group_query, group_projection)
-
-    for group in list(associated_groups):
-        owner = api.team.get_team(tid=group['owner'])['team_name']
-        groups.append({
-            'name':
-            group['name'],
-            'gid':
-            group['gid'],
-            'members':
-            group['members'],
-            'owner':
-            owner,
-            'score':
-            api.stats.get_group_average_score(gid=group['gid'])
-        })
-
-    return groups
+    return associated_groups
 
 
 def create_and_join_new_team(team_name, team_password, user):
@@ -426,7 +398,7 @@ def join_team(team_name, password, user):
             {"tid": desired_team["tid"]}, {"$set": {"country": "??"}})
 
     # Remove old team from any groups and attempt to add new team
-    previous_groups = get_groups(tid=current_team["tid"])
+    previous_groups = get_groups(current_team['tid'])
     for group in previous_groups:
         api.group.leave_group(gid=group["gid"], tid=current_team["tid"])
         # Rejoin with new tid if not already member, and classroom
