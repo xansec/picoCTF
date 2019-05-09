@@ -2,7 +2,6 @@
 
 import logging
 import logging.handlers
-import time
 from datetime import datetime
 from functools import wraps
 
@@ -15,15 +14,14 @@ import api.config
 import api.db
 import api.team
 import api.user
-from api.common import WebException
 
 critical_error_timeout = 600
 log = logging.getLogger(__name__)
 
 
-class StatsHandler(logging.StreamHandler):
+class FunctionLoggingHandler(logging.StreamHandler):
     """
-    Logs statistical information into the database.
+    Logs function invocations into the database.
 
     Used by the @log_action decorator.
     """
@@ -57,7 +55,7 @@ class StatsHandler(logging.StreamHandler):
 
 
 class ExceptionHandler(logging.StreamHandler):
-    """Logs exceptions into mongodb."""
+    """Logs exceptions into the database."""
 
     def __init__(self):
         """Initialize the logger."""
@@ -73,37 +71,7 @@ class ExceptionHandler(logging.StreamHandler):
             "trace": record.msg,
             "visible": True
         })
-
         api.db.get_conn().exceptions.insert(information)
-
-
-class SevereHandler(logging.handlers.SMTPHandler):
-    """An email logger for severe exceptions."""
-
-    messages = {}
-
-    def __init__(self):
-        """Initialize the logger."""
-        settings = api.config.get_settings()
-        logging.handlers.SMTPHandler.__init__(
-            self,
-            mailhost=settings["email"]["smtp_url"],
-            fromaddr=settings["email"]["from_addr"],
-            toaddrs=settings["logging"]["admin_emails"],
-            subject="Critical Error in {}".format(
-                settings["competition_name"]),
-            credentials=(settings["email"]["email_username"],
-                         settings["email"]["email_password"]),
-            secure=())
-
-    def emit(self, record):
-        """Store record into the db."""
-        # Don't excessively emit the same message.
-        last_time = self.messages.get(record.msg, None)
-        if last_time is None or time.time(
-        ) - last_time > api.config.get_settings()["critical_error_timeout"]:
-            super(SevereHandler, self).emit(record)
-            self.messages[record.msg] = time.time()
 
 
 def get_request_information():
@@ -128,7 +96,6 @@ def get_request_information():
         }
 
         if api.user.is_logged_in():
-
             user = api.user.get_user()
             team = api.user.get_team()
             groups = api.team.get_groups(user['tid'])
@@ -139,7 +106,6 @@ def get_request_information():
                 "team_name": team["team_name"],
                 "groups": [group["name"] for group in groups]
             }
-
     return information
 
 
@@ -153,28 +119,22 @@ def setup_logs(args):
     flask_logging.create_logger = lambda app: logging.getLogger(
         app.logger_name)
 
-    if not args.get("debug", True):
-        logger = logging.getLogger("werkzeug")
-        if logger:
-            logger.setLevel(logging.ERROR)
+    logger = logging.getLogger("werkzeug")
+    if logger:
+        logger.setLevel(logging.ERROR)
 
     level = [logging.WARNING, logging.INFO, logging.DEBUG][min(
         args.get("verbose", 1), 2)]
 
+    # Handle ERROR level with ExceptionHandler
     internal_error_log = ExceptionHandler()
     internal_error_log.setLevel(logging.ERROR)
-
     log.root.setLevel(level)
     log.root.addHandler(internal_error_log)
 
-    if api.config.get_settings()["email"]["enable_email"]:
-        severe_error_log = SevereHandler()
-        severe_error_log.setLevel(logging.CRITICAL)
-        log.root.addHandler(severe_error_log)
-
-    stats_log = StatsHandler()
+    # Handle INFO level with FunctionLoggingHandler
+    stats_log = FunctionLoggingHandler()
     stats_log.setLevel(logging.INFO)
-
     log.root.addHandler(stats_log)
 
 
