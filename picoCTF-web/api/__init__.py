@@ -19,7 +19,6 @@ from api.common import (
   PicoException,
   SevereInternalException,
   WebError,
-  WebException,
   WebSuccess
 )
 
@@ -102,10 +101,6 @@ def create_app(config={}):
         return response
 
     if not app.debug:
-        @app.errorhandler(WebException)
-        def handle_web_exception(e):
-            return WebError(e.args[0], e.data), 500
-
         @app.errorhandler(InternalException)
         def handle_internal_exception(e):
             get_origin_logger(e).error(traceback.format_exc())

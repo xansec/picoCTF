@@ -46,10 +46,10 @@ class FunctionLoggingHandler(logging.StreamHandler):
 
             if "exception" in result:
                 information["success"] = False
-                information["exception"] = result["exception"]
+                information["exception"] = repr(result["exception"])
             elif "result" in result:
                 information["success"] = True
-                information["result"] = result["result"]
+                information["result"] = repr(result["result"])
 
             api.db.get_conn().statistics.insert(information)
 

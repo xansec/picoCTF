@@ -10,7 +10,7 @@ import api.group
 import api.stats
 import api.team
 import api.user
-from api.common import (check, safe_fail, validate, WebError, WebException,
+from api.common import (check, safe_fail, validate, WebError, PicoException,
                         WebSuccess)
 from api.user import require_login, require_teacher, check_csrf
 
@@ -198,13 +198,13 @@ def join_group_hook():
     owner_team = safe_fail(api.team.get_team, name=params["group-owner"])
 
     if not owner_team:
-        raise WebException("No teacher exists with that name!")
+        raise PicoException("No teacher exists with that name!", 404)
 
     if safe_fail(
             api.group.get_group,
             name=params["group-name"],
             owner_tid=owner_team["tid"]) is None:
-        raise WebException("No classroom exists with that name!")
+        raise PicoException("No classroom exists with that name!", 404)
 
     group = api.group.get_group(
         name=params["group-name"], owner_tid=owner_team["tid"])
@@ -218,14 +218,15 @@ def join_group_hook():
             member = api.user.get_user(uid=member_uid)
             if not api.user.verify_email_in_whitelist(
                     member["email"], group_settings["email_filter"]):
-                raise WebException(
+                raise PicoException(
                     "{}'s email does not belong to the whitelist " +
                     "for that classroom. Your team may not join this " +
-                    "classroom at this time.".format(member["username"]))
+                    "classroom at this time.".format(member["username"]), 403)
 
     roles = api.group.get_roles_in_group(group["gid"], tid=team["tid"])
     if roles["teacher"] or roles["member"]:
-        raise WebException("Your team is already a member of that classroom!")
+        raise PicoException("Your team is already a member of that classroom!",
+                            422)
 
     api.group.join_group(group["gid"], team["tid"])
 
@@ -253,7 +254,8 @@ def leave_group_hook():
     roles = api.group.get_roles_in_group(group["gid"], tid=team["tid"])
 
     if not roles["member"] and not roles["teacher"]:
-        raise WebException("Your team is not a member of that classroom!")
+        raise PicoException("Your team is not a member of that classroom!",
+                            403)
 
     api.group.leave_group(group["gid"], team["tid"])
 
@@ -287,7 +289,8 @@ def delete_group_hook():
     if roles["owner"]:
         api.group.delete_group(group["gid"])
     else:
-        raise WebException("Only the owner of a classroom can delete it!")
+        raise PicoException("Only the owner of a classroom can delete it!",
+                            403)
 
     return WebSuccess("Successfully deleted classroom"), 200
 

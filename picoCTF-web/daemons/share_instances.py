@@ -86,7 +86,7 @@ def run():
             for server in api.shell_servers.get_all_servers():
                 try:
                     shell = api.shell_servers.get_connection(server["sid"])
-                except api.common.WebException as e:
+                except api.common.PicoException as e:
                     print("Can't connect to server \"%s\"" % server["name"])
                     continue
 
@@ -116,7 +116,7 @@ def run():
                     try:
                         shell.run(["mkdir", full_path])
                         return full_path
-                    except api.common.WebException as e:
+                    except api.common.PicoException as e:
                         return None
 
                 temp_dir = make_temp_dir(shell)
@@ -141,13 +141,13 @@ def run():
                         print("Everything up to date")
                     else:
                         print(output)
-                except api.common.WebException as e:
+                except api.common.PicoException as e:
                     print("Couldn't run script to create symlinks")
 
                 try:
                     with shell:
                         shell.run(["sudo", "rm", "-r", temp_dir])
-                except api.common.WebException as e:
+                except api.common.PicoException as e:
                     print("Couldn't remove temporary directory on shell server")
                 except Exception as e:
                     print("Unknown error.")

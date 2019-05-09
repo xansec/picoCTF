@@ -62,11 +62,6 @@ class APIException(Exception):
     data = {}
 
 
-class WebException(APIException):
-    """Errors that need to be displayed to the end user."""
-
-    pass
-
 
 class InternalException(APIException):
     """Exceptions thrown by the API constituting mild errors."""
