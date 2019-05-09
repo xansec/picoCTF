@@ -17,7 +17,6 @@ from api.apps.v1 import blueprint as v1_blueprint
 from api.common import (
   InternalException,
   PicoException,
-  SevereInternalException,
   WebError,
   WebSuccess
 )
@@ -105,14 +104,6 @@ def create_app(config={}):
         def handle_internal_exception(e):
             get_origin_logger(e).error(traceback.format_exc())
             return WebError(e.args[0]), 500
-
-        @app.errorhandler(SevereInternalException)
-        def handle_severe_internal_exception(e):
-            get_origin_logger(e).critical(traceback.format_exc())
-            return WebError(
-                    "There was a critical internal error. " +
-                    "Contact an administrator."
-                ), 500
 
         @app.errorhandler(Exception)
         def handle_generic_exception(e):
