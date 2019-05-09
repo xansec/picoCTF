@@ -219,7 +219,9 @@ class UserVerificationResponse(Resource):
     # @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
-    @ns.response(422, 'Invalid token')
+    @ns.response(
+        422,
+        'Invalid token, or user has requested max number of verificiations')
     @ns.expect(email_verification_req)
     def get(self):
         """Verify a user's email address."""

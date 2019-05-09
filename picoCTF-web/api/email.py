@@ -6,7 +6,7 @@ import api.config
 import api.group
 import api.token
 import api.user
-from api.common import InternalException, PicoException
+from api.common import PicoException
 
 # The Flask-Mail object. Should be initialized during app startup.
 mail = None
@@ -82,9 +82,9 @@ def send_user_verification_email(username):
                 'email_verification_count': previous_count + 1
             }, 'email_verification')
         else:
-            raise InternalException(
+            raise PicoException(
                 "User has been sent the maximum number of verification " +
-                "emails.")
+                "emails.", 422)
 
     verification_link = "{}/api/user/verify?uid={}&token={}".\
         format(settings["competition_url"], user["uid"], token_value)
@@ -111,6 +111,7 @@ The {0} Team.
 
     bulk = [verification_message]
 
+    # Also send parent verification email if neccessary
     if (settings["email"]["parent_verification_email"] and
             previous_key is None and user['demo']['age'] == "13-17"):
         body = """
