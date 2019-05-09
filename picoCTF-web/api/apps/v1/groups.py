@@ -2,8 +2,10 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
+import api.group
 import api.team
 import api.user
+from api.common import PicoException
 
 ns = Namespace('groups', description='Group management')
 
@@ -22,8 +24,24 @@ class GroupList(Resource):
         return jsonify(api.team.get_groups(curr_tid))
 
 
+@ns.response(200, 'Success')
+@ns.response(403, 'You do not have permission to view this group.')
+@ns.response(404, 'Group not found')
+# @require_login
 @ns.route('/<string:group_id>')
 class Group(Resource):
     """Get a specific group."""
 
-    pass
+    def get(self, group_id):
+        """Get a specific group."""
+        group = api.group.get_group(gid=group_id)
+        if not group:
+            raise PicoException('Group not found', 404)
+
+        group_members = [group['owner']] + group['members'] + group['teachers']
+        curr_user = api.user.get_user()
+        if curr_user['tid'] not in group_members and not curr_user['admin']:
+            raise PicoException(
+                'You do not have permission to view this group.', 403
+            )
+        return jsonify(group)
