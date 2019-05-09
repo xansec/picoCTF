@@ -32,6 +32,7 @@ class GroupList(Resource):
 class Group(Resource):
     """Get a specific group."""
 
+    # @require_login
     def get(self, group_id):
         """Get a specific group."""
         group = api.group.get_group(gid=group_id)
@@ -45,3 +46,25 @@ class Group(Resource):
                 'You do not have permission to view this group.', 403
             )
         return jsonify(group)
+
+
+@ns.route('/<string:group_id>/flag_sharing')
+class FlagSharingInfo(Resource):
+    """Get flag sharing statistics for a specific group."""
+
+    # @require_teacher
+    def get(self, group_id):
+        """Get flag sharing statistics for a specific group."""
+        group = api.group.get_group(gid=group_id)
+        if not group:
+            raise PicoException('Group not found', 404)
+
+        curr_user = api.user.get_user()
+        if (curr_user['tid'] not in group['teachers']
+                and not curr_user['admin']):
+            raise PicoException(
+                'You do not have permission to view this group.', 403
+            )
+
+        return jsonify(
+            api.stats.check_invalid_instance_submissions(group['gid']))
