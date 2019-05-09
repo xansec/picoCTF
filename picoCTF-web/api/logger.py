@@ -22,70 +22,11 @@ log = logging.getLogger(__name__)
 
 
 class StatsHandler(logging.StreamHandler):
-    """Logs statistical information into the mongodb."""
+    """
+    Logs statistical information into the database.
 
-    time_format = "%H:%M:%S %Y-%m-%d"
-
-    action_parsers = {
-        "api.user.create_user_request":
-            lambda params, result=None: {
-                "username": params["username"]
-            },
-        "api.achievement.process_achievement":
-            lambda aid, data, result=None: {
-                "aid": aid,
-                "success": result[0]
-            },
-        "api.autogen.grade_problem_instance":
-            lambda pid, tid, key, result=None: {
-                "pid": pid,
-                "key": key,
-                "correct": result["correct"]
-            },
-        "api.group.create_group":
-            lambda uid, group_name, result=None: {
-                "name": group_name,
-                "owner": uid
-            },
-        "api.group.join_group":
-            lambda gid, tid, teacher=False, result=None: {
-                "gid": gid,
-                "tid": tid
-            },
-        "api.group.leave_group":
-            lambda gid, tid, result=None: {
-                "gid": gid,
-                "tid": tid
-            },
-        "api.group.delete_group":
-            lambda gid, result=None: {
-                "gid": gid
-            },
-
-        # @TODO fix this
-        "api.submissions.submit_key":
-            lambda tid, pid, key, method, uid=None, ip=None, result=None: {
-                "pid": pid,
-                "key": key,
-                "method": method,
-                "success": result,
-            },
-        "api.problem_feedback.add_problem_feedback":
-            lambda pid, uid, feedback, result=None: {
-                "pid": pid,
-                "feedback": feedback
-            },
-        "api.user.update_password_request":
-            lambda params, uid=None, check_current=False, result=None: {},
-        "api.team.update_password_request":
-            lambda params, result=None: {},
-        "api.email.request_password_reset":
-            lambda username, result=None: {},
-        "api.team.create_team":
-            lambda params, result=None: params,
-        "api.app.hint":
-            lambda pid, source, result=None: {"pid": pid, "source": source}
-    }
+    Used by the @log_action decorator.
+    """
 
     def __init__(self):
         """Initialize the logger."""
@@ -94,32 +35,23 @@ class StatsHandler(logging.StreamHandler):
     def emit(self, record):
         """Store record into the db."""
         information = get_request_information()
-
         result = record.msg
 
         if type(result) == dict:
 
             information.update({
                 "event": result["name"],
+                "args": result["args"],
+                "kwargs": result["kwargs"],
                 "time": datetime.now()
             })
 
-            information["pass"] = True
-            information["action"] = {}
-
             if "exception" in result:
-
-                information["action"]["exception"] = result["exception"]
-                information["pass"] = False
-
-            elif result["name"] in self.action_parsers:
-                action_parser = self.action_parsers[result["name"]]
-
-                result["kwargs"]["result"] = result["result"]
-                action_result = action_parser(*result["args"],
-                                              **result["kwargs"])
-
-                information["action"].update(action_result)
+                information["success"] = False
+                information["exception"] = result["exception"]
+            elif "result" in result:
+                information["success"] = True
+                information["result"] = result["result"]
 
             api.db.get_conn().statistics.insert(information)
 
@@ -249,23 +181,22 @@ def setup_logs(args):
 def log_action(f):
     """Log a function invocation and its result."""
     @wraps(f)
-    def wrapper(*args, **kwds):
+    def wrapper(*args, **kwargs):
         """Provide contextual information to the logger."""
         log_information = {
             "name": "{}.{}".format(f.__module__, f.__name__),
             "args": args,
-            "kwargs": kwds,
+            "kwargs": kwargs,
             "result": None,
         }
         try:
-            log_information["result"] = f(*args, **kwds)
-        except WebException as error:
-            log_information["exception"] = error.args[0]
-            raise
+            log_information["result"] = f(*args, **kwargs)
+        except Exception as error:
+            log_information["exception"] = error
+            raise error
         finally:
             log.info(log_information)
         return log_information["result"]
-
     return wrapper
 
 
