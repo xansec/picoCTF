@@ -4,10 +4,11 @@ import json
 import re
 import urllib.parse
 import urllib.request
+from functools import wraps
 
 import bcrypt
 import flask
-from flask import session
+from flask import session, request
 
 import api.common
 import api.config
@@ -481,3 +482,55 @@ def is_logged_in():
             logout()
             return False
     return logged_in
+
+
+def require_login(f):
+    """Wrap routing functions that require a user to be logged in."""
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if not api.user.is_logged_in():
+            raise PicoException('You must be logged in', 401)
+        return f(*args, **kwds)
+    return wrapper
+
+
+def require_teacher(f):
+    """Wrap routing functions that require a user to be a teacher."""
+    @require_login
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if not api.user.is_teacher():
+            raise PicoException(
+                'You do not have permission to access this resource', 403)
+        return f(*args, **kwds)
+    return wrapper
+
+
+def require_admin(f):
+    """Wrap routing functions that require a user to be an admin."""
+    @require_login
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if not api.user.is_admin():
+            raise PicoException(
+                'You do not have permission to access this resource', 403)
+        return f(*args, **kwds)
+    return wrapper
+
+
+def check_csrf(f):
+    """Wrap routing functions that require a CSRF token."""
+    @wraps(f)
+    @require_login
+    def wrapper(*args, **kwds):
+        if 'token' not in session:
+            raise PicoException(
+                'Internal server error',
+                data={'debug': 'CSRF token not found in session'})
+        # @TODO move csrf token into headers/cookies?
+        if 'token' not in request.form:
+            raise PicoException('CSRF token not in form', 403)
+        if session['token'] != request.form['token']:
+            raise PicoException('CSRF token is not correct', 403)
+        return f(*args, **kwds)
+    return wrapper

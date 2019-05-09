@@ -10,15 +10,9 @@ import api.group
 import api.stats
 import api.team
 import api.user
-from api.annotations import check_csrf, require_login, require_teacher
-from api.common import (
-  check,
-  safe_fail,
-  validate,
-  WebError,
-  WebException,
-  WebSuccess
-)
+from api.common import (check, safe_fail, validate, WebError, WebException,
+                        WebSuccess)
+from api.user import require_login, require_teacher, check_csrf
 
 register_group_schema = Schema({
     Required("group-name"):

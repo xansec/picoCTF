@@ -1,9 +1,11 @@
 """Stores and retrieves runtime settings from the database."""
 
 import datetime
+from functools import wraps
 
 import api.db
 from api.common import PicoException
+
 """
 Default Settings
 
@@ -206,3 +208,27 @@ def check_competition_active():
     return (settings["start_time"].timestamp() <
             datetime.datetime.utcnow().timestamp() <
             settings["end_time"].timestamp())
+
+
+def block_before_competition(f):
+    """Wrap routing functions that are blocked prior to the competition."""
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if (datetime.utcnow().timestamp()
+                <= get_settings()['start_time'].timestamp()):
+            raise PicoException(
+                'The competition has not begun yet!', 422)
+        return f(*args, **kwds)
+    return wrapper
+
+
+def block_after_competition(f):
+    """Wrap routing functions that are blocked after the competition."""
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if (datetime.utcnow().timestamp()
+                >= get_settings()['end_time'].timestamp()):
+            raise PicoException(
+                'The competition has ended!', 422)
+        return f(*args, **kwds)
+    return wrapper

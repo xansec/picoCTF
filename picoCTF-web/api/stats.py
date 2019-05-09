@@ -6,7 +6,6 @@ import math
 import pymongo
 
 import api.achievement
-import api.annotations
 import api.cache
 import api.db
 import api.group

@@ -14,8 +14,11 @@ Provides legacy behavior for:
 /problems/walkthrough?pid=<pid> @TODO: merge in gamedev branch
 /team/score
 """
+from datetime import datetime
+from functools import wraps
+
 from bson import json_util
-from flask import Blueprint, request
+from flask import Blueprint, request, session
 from voluptuous import Length, Required, Schema
 
 import api.config
@@ -24,8 +27,6 @@ import api.problem
 import api.stats
 import api.submissions
 import api.user
-from api.annotations import (block_after_competition, block_before_competition,
-                             check_csrf, require_login)
 from api.common import check, flat_multi, PicoException, validate
 
 blueprint = Blueprint('v0_api', __name__)
@@ -56,6 +57,85 @@ def WebError(message=None, data=None):
             'message': message,
             'data': data
         })
+
+
+def require_login(f):
+    """Wrap routing functions that require a user to be logged in."""
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if not api.user.is_logged_in():
+            return WebError("You must be logged in")
+        return f(*args, **kwds)
+
+    return wrapper
+
+
+def require_teacher(f):
+    """Wrap routing functions that require a user to be a teacher."""
+    @require_login
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if not api.user.is_teacher():
+            return WebError("You do not have permission to view this page.")
+        return f(*args, **kwds)
+
+    return wrapper
+
+
+def require_admin(f):
+    """Wrap routing functions that require a user to be an admin."""
+    @require_login
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if not api.user.is_admin():
+            return WebError("You do not have permission to view this page.")
+        return f(*args, **kwds)
+    return wrapper
+
+
+def check_csrf(f):
+    """Wrap routing functions that require a CSRF token."""
+    @wraps(f)
+    @require_login
+    def wrapper(*args, **kwds):
+        if 'token' not in session:
+            return WebError("CSRF token not in session")
+        if 'token' not in request.form:
+            return WebError("CSRF token not in form")
+        if session['token'] != request.form['token']:
+            return WebError("CSRF token is not correct")
+        return f(*args, **kwds)
+    return wrapper
+
+
+def block_before_competition():
+    """Wrap routing functions that are blocked prior to the competition."""
+    def decorator(f):
+        """Inner decorator."""
+        @wraps(f)
+        def wrapper(*args, **kwds):
+            if datetime.utcnow().timestamp() > api.config.get_settings(
+            )["start_time"].timestamp():
+                return f(*args, **kwds)
+            else:
+                return WebError("The competition has not begun yet!")
+        return wrapper
+    return decorator
+
+
+def block_after_competition():
+    """Wrap routing functions that are blocked after the competition."""
+    def decorator(f):
+        """Inner decorator."""
+        @wraps(f)
+        def wrapper(*args, **kwds):
+            if datetime.utcnow().timestamp() < api.config.get_settings(
+            )["end_time"].timestamp():
+                return f(*args, **kwds)
+            else:
+                return WebError("The competition is over!")
+        return wrapper
+    return decorator
 
 
 @blueprint.route('/user/login', methods=['POST'])

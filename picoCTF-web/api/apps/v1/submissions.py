@@ -18,8 +18,8 @@ class SubmissionList(Resource):
 
     # @require_login
     # @check_csrf
-    # @block_before_competition()
-    # @block_after_competition()
+    # @block_before_competition
+    # @block_after_competition
     @ns.response(200, 'Submission successful')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
