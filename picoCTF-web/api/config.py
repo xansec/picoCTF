@@ -13,27 +13,21 @@ These are the default settings that will be loaded
 into the database if no settings are already loaded.
 """
 default_settings = {
-    "enable_feedback":
-    True,
+    "enable_feedback": True,
 
     # TIME WINDOW
-    "start_time":
-    datetime.datetime.utcnow(),
-    "end_time":
-    datetime.datetime.utcnow(),
+    "start_time": datetime.datetime.utcnow(),
+    "end_time": datetime.datetime.utcnow(),
 
     # COMPETITION INFORMATION
-    "competition_name":
-    "",
-    "competition_url":
-    "",
+    "competition_name": "",
+    "competition_url": "",
 
     # EMAIL WHITELIST
     "email_filter": [],
 
     # TEAMS
-    "max_team_size":
-    1,
+    "max_team_size": 1,
 
     # ACHIEVEMENTS
     "achievements": {
@@ -177,6 +171,7 @@ def change_settings(changes):
     db = api.db.get_conn()
     settings = db.settings.find_one({})
 
+    # @TODO validate incoming settings at the request level
     def check_keys(real, changed):
         keys = list(changed.keys())
         for key in keys:

@@ -21,7 +21,7 @@ class BundleList(Resource):
 
     def get(self):
         """Get the full list of bundles."""
-        return api.bundles.get_all_bundles(), 200
+        return jsonify(api.bundles.get_all_bundles())
 
     @ns.response(501, 'Use the /problems endpoint')
     def patch(self):

@@ -50,18 +50,20 @@ def clear_db():
 @pytest.fixture
 def client():
     """Create a test client of the Flask app."""
-    app = api.create_app()
-    app.config['TESTING'] = True
-    app.config['MONGO_DB_NAME'] = TESTING_DB_NAME
+    app = api.create_app({
+        'TESTING': True,
+        'MONGO_DB_NAME': TESTING_DB_NAME
+    })
     return app.test_client()
 
 
 @pytest.fixture
 def app():
     """Create an instance of the Flask app for testing."""
-    app = api.create_app()
-    app.config['TESTING'] = True
-    app.config['MONGO_DB_NAME'] = TESTING_DB_NAME
+    app = api.create_app({
+        'TESTING': True,
+        'MONGO_DB_NAME': TESTING_DB_NAME
+    })
     return app
 
 

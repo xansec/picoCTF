@@ -273,7 +273,7 @@ def get_team_information(tid):
 
     if api.config.get_settings()["achievements"]["enable_achievements"]:
         team_info["achievements"] = api.achievement.get_earned_achievements(
-            tid=tid)
+            tid)
 
     team_info["solved_problems"] = []
     for solved_problem in api.problem.get_solved_problems(tid=tid):

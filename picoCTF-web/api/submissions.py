@@ -102,12 +102,12 @@ def submit_key(tid, pid, key, method, uid, ip=None):
         api.problem.get_solved_problems(tid=tid, uid=uid)
         api.stats.get_score_progression(tid=tid, uid=uid)
 
-        # Process achievements
-        api.achievement.process_achievements("submit", {
-            "uid": uid,
-            "tid": tid,
-            "pid": pid
-        })
+        # @TODO achievement processing needs to be fixed/reviewed
+        # api.achievement.process_achievements("submit", {
+        #     "uid": uid,
+        #     "tid": tid,
+        #     "pid": pid
+        # })
 
     return (correct, previously_solved_by_user, previously_solved_by_team)
 

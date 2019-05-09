@@ -60,8 +60,13 @@ def update_mail_config(app):
             api.email.mail = Mail(app)
 
 
-def create_app(test_config=None):
-    """Configure and create the Flask app via factory function."""
+def create_app(config={}):
+    """
+    Configure and create the Flask app via factory function.
+
+    Args:
+        config (optional): dict of app.config settings to override
+    """
     app = Flask(__name__, static_url_path="/")
     app.wsgi_app = ProxyFix(app.wsgi_app)
 
@@ -69,6 +74,9 @@ def create_app(test_config=None):
     app.config.from_pyfile('default_settings.py')
     # Override defaults with settings file passed in environment variable
     app.config.from_envvar('APP_SETTINGS_FILE', silent=True)
+    # If any config settings specified, set them
+    for k, v in config.items():
+        app.config[k] = v
 
     # Configure Mail object based on runtime settings
     update_mail_config(app)
@@ -144,10 +152,5 @@ def create_app(test_config=None):
 
         # response.mimetype = 'application/json'
         return response
-
-    # Add a route for getting the time
-    @app.route('/api/time', methods=['GET'])
-    def get_time():
-        return WebSuccess(data=int(datetime.utcnow().timestamp())), 200
 
     return app

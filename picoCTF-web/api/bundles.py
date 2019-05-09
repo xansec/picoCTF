@@ -61,12 +61,10 @@ def upsert_bundle(bundle):
         The created/updated bundle ID.
 
     """
-    db = api.db.get_conn()
-
-    # Validate the bundle object
-    # @TODO validate this at the routing level instead
+    # Validate the bundle object @TODO validate this at the routing level
     validate(bundle_schema, bundle)
 
+    db = api.db.get_conn()
     bid = api.common.hash("{}-{}".format(bundle["name"], bundle["author"]))
 
     # If the bundle already exists, update it instead
@@ -80,7 +78,6 @@ def upsert_bundle(bundle):
 
     bundle["bid"] = bid
     bundle["dependencies_enabled"] = False
-
     db.bundles.insert(bundle)
     return bid
 

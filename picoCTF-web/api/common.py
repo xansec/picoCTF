@@ -190,9 +190,8 @@ def check(*callback_tuples):
                     if not result and type(result) == bool:
                         raise Invalid()
                 except Exception:
-                    raise WebException(msg)
+                    raise PicoException(msg, 400)
         return value
-
     return v
 
 
@@ -211,7 +210,7 @@ def validate(schema, data):
     try:
         schema(data)
     except MultipleInvalid as error:
-        raise APIException(0, None, error.msg)
+        raise PicoException(error.msg, 400)
 
 
 def safe_fail(f, *args, **kwargs):

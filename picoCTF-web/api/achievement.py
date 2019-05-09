@@ -8,7 +8,7 @@ import api.config
 import api.db
 import api.user
 import api.logger
-from api.common import InternalException
+from api.common import PicoException
 
 
 def get_achievement(aid):
@@ -64,8 +64,7 @@ def set_earned_achievements_seen(tid=None, uid=None):
     Set all earned achievements from a team or user seen.
 
     Args:
-        tid: the team id
-        uid: the user id
+        uid / tid: Optional filters (exclusive, uid takes precedence)
     """
     db = api.db.get_conn()
 
@@ -75,54 +74,21 @@ def set_earned_achievements_seen(tid=None, uid=None):
         match.update({"tid": tid})
     elif uid is not None:
         match.update({"uid": uid})
-    else:
-        raise InternalException("You must specify either a tid or uid")
 
-    db.earned_achievements.update(match, {"$set": {"seen": True}}, multi=True)
+    db.earned_achievements.update_many(match, {"$set": {"seen": True}})
 
 
-def get_earned_achievements_display(tid=None, uid=None):
+def get_earned_achievements(tid):
     """
-    Get the achievement display for a given user/team.
-
-    Includes instance specific information.
+    Get the solved achievements for a given team.
 
     Args:
         tid: The team id
-        tid: The user id
-    Returns:
-        A list of enabled achievements the team has earned.
-    """
-    instance_achievements = get_earned_achievement_instances(tid=tid, uid=uid)
-    set_earned_achievements_seen(tid=tid, uid=uid)
-
-    for instance_achievement in instance_achievements:
-        achievement = get_achievement(instance_achievement["aid"])
-
-        # Make sure not to override name or description.
-        achievement.pop("name")
-        achievement.pop("description")
-
-        instance_achievement.update(achievement)
-
-        # Make sure to remove sensitive data
-        instance_achievement.pop("data", None)
-
-    return instance_achievements
-
-
-def get_earned_achievements(tid=None, uid=None):
-    """
-    Get the solved achievements for a given team or user.
-
-    Args:
-        tid: The team id
-        tid: The user id
     Returns:
         List of solved achievement dictionaries
     """
-    achievements = get_earned_achievement_instances(tid=tid, uid=uid)
-    set_earned_achievements_seen(tid=tid, uid=uid)
+    achievements = get_earned_achievement_instances(tid=tid)
+    set_earned_achievements_seen(tid=tid)
 
     for achievement in achievements:
         achievement.update(get_achievement(achievement["aid"]))
@@ -147,7 +113,7 @@ def get_processor(aid):
         )["achievements"]["processor_base_path"]
         return SourceFileLoader(path[:-3], join(base_path, path)).load_module()
     except FileNotFoundError:
-        raise InternalException("Achievement processor is offline.")
+        raise PicoException("Achievement processor is offline.")
 
 
 @api.logger.log_action
@@ -161,16 +127,14 @@ def process_achievement(aid, data):
         aid: the achievement id
         data: additional data dictionary
     """
-    if data.get("uid", None) is None:
-        data["uid"] = api.user.get_user()["uid"]
+    # If there is a logged in user, forward their uid and tid to
+    # the achievement processor
+    if api.user.is_logged_in():
+        curr_user = api.user.get_user()
+        data['uid'] = curr_user['uid']
+        data['tid'] = curr_user['tid']
 
-    if data.get("tid", None) is None:
-        data["tid"] = api.user.get_user(uid=data["uid"])["tid"]
-
-    get_achievement(aid=aid)
-    processor = get_processor(aid)
-
-    return processor.process(api, data)
+    return get_processor(aid).process(api, data)
 
 
 def insert_earned_achievement(aid, data):

@@ -2,18 +2,28 @@
 
 import logging
 
-from flask import current_app, g
+from flask import current_app
 from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure, InvalidName
+from pymongo.errors import PyMongoError
 
-from api.common import SevereInternalException
+from api.common import PicoException
 
 log = logging.getLogger(__name__)
 
+__connection = None
+__client = None
+
 
 def get_conn():
-    """Get a database connection, reusing one if it exists."""
-    if 'db' not in g:
+    """
+    Get a database connection, reusing one if it exists.
+
+    Raises:
+        PicoException if a successful connection cannot be established
+
+    """
+    global __client, __connection
+    if not __connection:
         conf = current_app.config
         if conf["MONGO_USER"] and conf["MONGO_PW"]:
             uri = "mongodb://{}:{}@{}:{}/{}?authMechanism=SCRAM-SHA-1".format(
@@ -23,17 +33,13 @@ def get_conn():
             uri = "mongodb://{}:{}/{}".format(
                 conf["MONGO_ADDR"], conf["MONGO_PORT"], conf["MONGO_DB_NAME"])
         try:
-            client = MongoClient(uri)
-            connection = client[conf["MONGO_DB_NAME"]]
-        except InvalidName as error:
-            raise SevereInternalException(
-                "Database {} is invalid! - {}".format(conf["MONGO_DB_NAME"],
-                                                      error))
-        except ConnectionFailure:
-            raise SevereInternalException(
-                "Could not connect to mongo database at {}".format(uri))
-        g.db = connection
-    return g.db
+            __client = MongoClient(uri)
+            __connection = __client[conf["MONGO_DB_NAME"]]
+        except PyMongoError as error:
+            raise PicoException(
+                'Internal server error. Please contact a system adminstrator.',
+                data={'original_error': error})
+    return __connection
 
 
 def index_mongo():
@@ -42,28 +48,28 @@ def index_mongo():
 
     log.debug("Ensuring mongo is indexed.")
 
-    db.users.ensure_index("uid", unique=True, name="unique uid")
-    db.users.ensure_index("username", unique=True, name="unique username")
-    db.users.ensure_index("tid")
+    db.users.create_index("uid", unique=True, name="unique uid")
+    db.users.create_index("username", unique=True, name="unique username")
+    db.users.create_index("tid")
 
-    db.groups.ensure_index("gid", unique=True, name="unique gid")
+    db.groups.create_index("gid", unique=True, name="unique gid")
 
-    db.problems.ensure_index("pid", unique=True, name="unique pid")
+    db.problems.create_index("pid", unique=True, name="unique pid")
 
-    db.submissions.ensure_index([("tid", 1), ("uid", 1), ("correct", 1)])
-    db.submissions.ensure_index([("uid", 1), ("correct", 1)])
-    db.submissions.ensure_index([("tid", 1), ("correct", 1)])
-    db.submissions.ensure_index([("pid", 1), ("correct", 1)])
-    db.submissions.ensure_index("uid")
-    db.submissions.ensure_index("tid")
+    db.submissions.create_index([("tid", 1), ("uid", 1), ("correct", 1)])
+    db.submissions.create_index([("uid", 1), ("correct", 1)])
+    db.submissions.create_index([("tid", 1), ("correct", 1)])
+    db.submissions.create_index([("pid", 1), ("correct", 1)])
+    db.submissions.create_index("uid")
+    db.submissions.create_index("tid")
 
-    db.teams.ensure_index("team_name", unique=True, name="unique team names")
-    db.teams.ensure_index("country")
+    db.teams.create_index("team_name", unique=True, name="unique team names")
+    db.teams.create_index("country")
 
-    db.shell_servers.ensure_index("sid", unique=True, name="unique shell sid")
+    db.shell_servers.create_index("sid", unique=True, name="unique shell sid")
 
-    db.cache.ensure_index("expireAt", expireAfterSeconds=0)
-    db.cache.ensure_index("key")
+    db.cache.create_index("expireAt", expireAfterSeconds=0)
+    db.cache.create_index("key")
 
-    db.shell_servers.ensure_index(
+    db.shell_servers.create_index(
         "sid", unique=True, name="unique shell server id")

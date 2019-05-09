@@ -93,8 +93,9 @@ def upsert_feedback(pid, feedback):
             "feedback": feedback
         })
 
-        api.achievement.process_achievements("review", {
-            "uid": uid,
-            "tid": team['tid'],
-            "pid": pid
-        })
+        # @TODO achievement processing needs to be fixed/reviewed
+        # api.achievement.process_achievements("review", {
+        #     "uid": uid,
+        #     "tid": team['tid'],
+        #     "pid": pid
+        # })
