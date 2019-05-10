@@ -448,3 +448,12 @@ group_req.add_argument(
     'name', required=True, type=length_restricted(3, 100, str),
     location='json', help='Name for the new group.'
 )
+
+# Group patch request
+# @TODO because of RequestParser's limitations with nested fields,
+# voluptous handles actually checking the settings fields within group.py.
+group_patch_req = reqparse.RequestParser()
+group_patch_req.add_argument(
+    'settings', required=False, type=object_type, location='json',
+    help='Updated settings object.'
+)

@@ -45,26 +45,6 @@ delete_group_schema = Schema({
 blueprint = Blueprint("group_api", __name__)
 
 
-@blueprint.route('/settings', methods=['POST'])
-@require_teacher
-def change_group_settings_hook():
-    gid = request.form.get("gid")
-    settings = json.loads(request.form.get("settings"))
-
-    user = api.user.get_user()
-    group = api.group.get_group(gid=gid)
-
-    roles = api.group.get_roles_in_group(gid=group["gid"], uid=user["uid"])
-
-    if roles["teacher"]:
-        api.group.change_group_settings(group["gid"], settings)
-        return WebSuccess(
-            message="Classroom settings changed successfully."), 200
-    else:
-        return WebError(
-            message="You do not have sufficient privilege to do that."), 401
-
-
 @blueprint.route('/invite', methods=['POST'])
 @require_teacher
 def invite_email_to_group_hook():

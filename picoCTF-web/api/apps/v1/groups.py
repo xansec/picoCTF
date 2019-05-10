@@ -7,7 +7,7 @@ import api.team
 import api.user
 from api.common import PicoException
 
-from .schemas import group_req
+from .schemas import group_req, group_patch_req
 
 ns = Namespace('groups', description='Group management')
 
@@ -70,7 +70,7 @@ class Group(Resource):
         curr_user = api.user.get_user()
         if curr_user['tid'] not in group_members and not curr_user['admin']:
             raise PicoException(
-                'You do not have permission to view this group.', 403
+                'You do not have permission to access this group.', 403
             )
 
         # Replace the team ids with full team objects
@@ -84,6 +84,28 @@ class Group(Resource):
         group['members'] = full_members
 
         return jsonify(group)
+
+    # @require_teacher
+    @ns.response(400, 'Error parsing request')
+    @ns.expect(group_patch_req)
+    def patch(self, group_id):
+        """Modify a group's settings (other fields are not available)."""
+        req = group_patch_req.parse_args(strict=True)
+
+        group = api.group.get_group(gid=group_id)
+        if not group:
+            raise PicoException('Group not found', 404)
+
+        curr_user = api.user.get_user()
+        if (curr_user['tid'] not in group['teachers']
+                and not curr_user['admin']):
+            raise PicoException(
+                'You do not have permission to access this group.', 403
+            )
+        api.group.change_group_settings(group_id, req['settings'])
+        return jsonify({
+            'success': True
+        })
 
 
 @ns.route('/<string:group_id>/flag_sharing')
@@ -101,7 +123,7 @@ class FlagSharingInfo(Resource):
         if (curr_user['tid'] not in group['teachers']
                 and not curr_user['admin']):
             raise PicoException(
-                'You do not have permission to view this group.', 403
+                'You do not have permission to access this group.', 403
             )
 
         return jsonify(
