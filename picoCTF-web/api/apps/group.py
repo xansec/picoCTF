@@ -51,19 +51,6 @@ delete_group_schema = Schema({
 blueprint = Blueprint("group_api", __name__)
 
 
-@blueprint.route('/settings', methods=['GET'])
-def get_group_settings_hook():
-    gid = request.args.get("gid")
-    group = api.group.get_group(gid=gid)
-
-    prepared_data = {
-        "name": group["name"],
-        "settings": api.group.get_group_settings(gid=group["gid"])
-    }
-
-    return WebSuccess(data=prepared_data), 200
-
-
 @blueprint.route('/settings', methods=['POST'])
 @require_teacher
 def change_group_settings_hook():
