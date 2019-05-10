@@ -35,13 +35,6 @@ leave_group_schema = Schema({
 },
                             extra=True)
 
-delete_group_schema = Schema({
-    Required("group-name"):
-    check(("Classroom name must be between 3 and 50 characters.",
-           [str, Length(min=3, max=100)]),)
-},
-                             extra=True)
-
 blueprint = Blueprint("group_api", __name__)
 
 
@@ -152,38 +145,6 @@ def leave_group_hook():
 
     return WebSuccess("Successfully left classroom."), 200
 
-
-@blueprint.route('/delete', methods=['POST'])
-@check_csrf
-@require_teacher
-def delete_group_hook():
-    """
-    Try to delete a group.
-
-    Validates forms. All required arguments are assumed to be keys in params.
-    """
-    params = api.common.flat_multi(request.form)
-
-    validate(delete_group_schema, params)
-
-    if params.get("group-owner"):
-        owner_team = api.team.get_team(name=params["group-owner"])
-    else:
-        owner_team = api.team.get_team()
-
-    group = api.group.get_group(
-        name=params["group-name"], owner_tid=owner_team["tid"])
-
-    user = api.user.get_user()
-    roles = api.group.get_roles_in_group(group["gid"], uid=user["uid"])
-
-    if roles["owner"]:
-        api.group.delete_group(group["gid"])
-    else:
-        raise PicoException("Only the owner of a classroom can delete it!",
-                            403)
-
-    return WebSuccess("Successfully deleted classroom"), 200
 
 
 @blueprint.route('/teacher/leave', methods=['POST'])

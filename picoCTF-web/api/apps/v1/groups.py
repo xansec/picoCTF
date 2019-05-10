@@ -52,7 +52,7 @@ class GroupList(Resource):
 
 
 @ns.response(200, 'Success')
-@ns.response(403, 'You do not have permission to view this group.')
+@ns.response(403, 'Permission denied')
 @ns.response(404, 'Group not found')
 # @require_login
 @ns.route('/<string:group_id>')
@@ -70,7 +70,7 @@ class Group(Resource):
         curr_user = api.user.get_user()
         if curr_user['tid'] not in group_members and not curr_user['admin']:
             raise PicoException(
-                'You do not have permission to access this group.', 403
+                'You do not have permission to view this group.', 403
             )
 
         # Replace the team ids with full team objects
@@ -100,9 +100,30 @@ class Group(Resource):
         if (curr_user['tid'] not in group['teachers']
                 and not curr_user['admin']):
             raise PicoException(
-                'You do not have permission to access this group.', 403
+                'You do not have permission to modify this group.', 403
             )
+
         api.group.change_group_settings(group_id, req['settings'])
+        return jsonify({
+            'success': True
+        })
+
+    # @check_csrf
+    # @require_teacher
+    def delete(self, group_id):
+        """Delete a group. Must be the owner of the group."""
+        group = api.group.get_group(gid=group_id)
+        if not group:
+            raise PicoException('Group not found', 404)
+
+        curr_user = api.user.get_user()
+        if (curr_user['tid'] != group['owner']
+                and not curr_user['admin']):
+            raise PicoException(
+                'You do not have permission to delete this group.', 403
+            )
+
+        api.group.delete_group(group_id)
         return jsonify({
             'success': True
         })
@@ -123,7 +144,7 @@ class FlagSharingInfo(Resource):
         if (curr_user['tid'] not in group['teachers']
                 and not curr_user['admin']):
             raise PicoException(
-                'You do not have permission to access this group.', 403
+                'You do not have permission to view these statistics.', 403
             )
 
         return jsonify(
