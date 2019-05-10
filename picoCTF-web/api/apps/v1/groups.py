@@ -134,6 +134,7 @@ class Group(Resource):
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Permission denied')
 @ns.response(404, 'Group not found')
+@ns.response(422, 'Specified team is not a member of the group')
 # @require_login
 @ns.route('/<string:group_id>/remove_team')
 class RemoveTeamResponse(Resource):
@@ -146,39 +147,56 @@ class RemoveTeamResponse(Resource):
 
     # @require_login
     # @check_csrf
-    @ns.response(422, 'Specified team is not a member of the group')
+    def get(self, group_id):
+        """Remove your own team from this group."""
+        group = api.group.get_group(group_id)
+        if not group:
+            raise PicoException('Group not found', 404)
+        eligible_for_removal = group['members'] + group['teachers']
+        curr_tid = api.user_get_user['tid']
+
+        if curr_tid not in eligible_for_removal:
+            raise PicoException(
+                'Specified team is not eligible for removal from this group',
+                status_code=422
+            )
+        api.group.leave_group(group_id, curr_tid)
+        return jsonify({
+            'success': True
+        })
+
+    # @require_login
+    # @check_csrf
     @ns.expect(group_remove_team_req)
     def post(self, group_id):
         """
-        Remove a team from a group.
+        Remove a specified team from a group.
 
-        If the specified team is not your own, requires teacher role within
-        the group.
+        Requires teacher role within the group.
         """
         req = group_remove_team_req.parse_args(strict=True)
         group = api.group.get_group(group_id)
+        if not group:
+            raise PicoException('Group not found', 404)
         group_teachers = [group['owner']] + group['teachers']
         eligible_for_removal = group['members'] + group['teachers']
         curr_tid = api.user_get_user['tid']
 
-        # Get the tid to remove (must be a teacher to remove another team)
-        if req['team_id']:
-            if curr_tid not in group_teachers and req['tid'] != curr_tid:
-                raise PicoException(
-                    'You must be a teacher in this group to remove a team.',
-                    status_code=403
-                )
-            tid_to_remove = req['team_id']
-        else:
-            tid_to_remove = api.user.get_user()['tid']
-
-        # Ensure the specified tid is a member of the group
-        if tid_to_remove not in eligible_for_removal:
+        # Ensure the user has a teacher role within the group
+        if curr_tid not in group_teachers:
             raise PicoException(
-                'Specified team is not a member of this group', 422
+                'You must be a teacher in this group to remove a team.',
+                status_code=403
             )
 
-        api.group.leave_group(group_id, tid_to_remove)
+        # Ensure the specified tid is a member of the group
+        if req['team_id'] not in eligible_for_removal:
+            raise PicoException(
+                'Specified team is not eligible for removal from this group',
+                status_code=422
+            )
+
+        api.group.leave_group(group_id, req['team_id'])
         return jsonify({
             'success': True
         })

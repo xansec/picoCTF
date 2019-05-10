@@ -462,5 +462,5 @@ group_patch_req.add_argument(
 group_remove_team_req = reqparse.RequestParser()
 group_remove_team_req.add_argument(
     'team_id', required=True, location='json', type=str,
-    help='ID of the team to remove.'
+    help="ID of the team to remove."
 )
