@@ -113,25 +113,6 @@ def invite_email_to_group_hook():
             message="You do not have sufficient privilege to do that."), 401
 
 
-@blueprint.route('/score', methods=['GET'])
-@require_teacher
-def get_group_score_hook():
-    name = request.args.get("group-name")
-
-    user = api.user.get_user()
-    roles = api.group.get_roles_in_group(gid, uid=user["uid"])
-
-    if not roles["teacher"]:
-        return WebError("You are not a teacher for this classroom."), 401
-
-    score = api.stats.get_group_scores(name=name)
-    if score is None:
-        return WebError(
-            "There was an error retrieving the classroom's score."), 500
-
-    return WebSuccess(data={'score': score}), 200
-
-
 @blueprint.route('/create', methods=['POST'])
 @check_csrf
 @require_teacher
