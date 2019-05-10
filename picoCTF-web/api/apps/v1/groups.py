@@ -7,6 +7,8 @@ import api.team
 import api.user
 from api.common import PicoException
 
+from .schemas import group_req
+
 ns = Namespace('groups', description='Group management')
 
 
@@ -22,6 +24,31 @@ class GroupList(Resource):
         """Get the groups of which you are a member."""
         curr_tid = api.user.get_user()['tid']
         return jsonify(api.team.get_groups(curr_tid))
+
+    # @require_teacher @TODO throw 403 in this
+    # @check_csrf
+    @ns.response(400, 'Error parsing request')
+    @ns.response(403, 'You do not have permission to create a group')
+    @ns.response(409, 'You already have a group with that name')
+    @ns.expect(group_req)
+    def post(self):
+        """Add a new group."""
+        req = group_req.parse_args(strict=True)
+        curr_tid = api.user.get_user('tid')
+
+        # Don't create group if teacher already has one with same name
+        if api.group.get_group(
+                name=req['name'], owner_tid=curr_tid) is not None:
+            raise PicoException(
+                'You already have a classroom with that name', 409)
+
+        gid = api.group.create_group(curr_tid, req['name'])
+        res = jsonify({
+            'success': True,
+            'gid': gid
+        })
+        res.status_code = 201
+        return res
 
 
 @ns.response(200, 'Success')

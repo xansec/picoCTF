@@ -14,12 +14,6 @@ from api.common import (check, safe_fail, validate, WebError, PicoException,
                         WebSuccess)
 from api.user import require_login, require_teacher, check_csrf
 
-register_group_schema = Schema({
-    Required("group-name"):
-    check(("Classroom name must be between 3 and 50 characters.",
-           [str, Length(min=3, max=100)]),)
-},
-                               extra=True)
 
 join_group_schema = Schema({
     Required("group-name"):
@@ -98,30 +92,6 @@ def invite_email_to_group_hook():
     else:
         return WebError(
             message="You do not have sufficient privilege to do that."), 401
-
-
-@blueprint.route('/create', methods=['POST'])
-@check_csrf
-@require_teacher
-def create_group_hook():
-    """
-    Create a new group. Validates forms.
-
-    All required arguments are assumed to be keys in params.
-    """
-    params = api.common.flat_multi(request.form)
-    validate(register_group_schema, params)
-
-    # Current user is the prospective owner.
-    team = api.user.get_team()
-
-    if safe_fail(
-            api.group.get_group, name=params["group-name"],
-            owner_tid=team["tid"]) is not None:
-        return WebError("A classroom with that name already exists!"), 409
-
-    gid = api.group.create_group(team["tid"], params["group-name"])
-    return WebSuccess("Successfully created classroom.", data=gid), 201
 
 
 @blueprint.route('/join', methods=['POST'])

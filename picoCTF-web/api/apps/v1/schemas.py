@@ -441,3 +441,10 @@ top_teams_score_progression_req.add_argument(
     'gid', required=False, type=str, default=None, location='args',
     help='If specified, restrict to top teams from this group'
 )
+
+# Group request
+group_req = reqparse.RequestParser()
+group_req.add_argument(
+    'name', required=True, type=length_restricted(3, 100, str),
+    location='json', help='Name for the new group.'
+)
