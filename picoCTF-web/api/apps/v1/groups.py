@@ -7,11 +7,12 @@ import api.team
 import api.user
 from api.common import PicoException
 
-from .schemas import group_req, group_patch_req
+from .schemas import group_req, group_patch_req, group_remove_team_req
 
 ns = Namespace('groups', description='Group management')
 
 
+@ns.response(401, 'Not logged in')
 @ns.route('/')
 class GroupList(Resource):
     """Get the list of groups, or add a new group."""
@@ -19,7 +20,6 @@ class GroupList(Resource):
     # @TODO allow admins to see all groups with querystring parameter
     # @require_login
     @ns.response(200, 'Success')
-    @ns.response(401, 'Not logged in')
     def get(self):
         """Get the groups of which you are a member."""
         curr_tid = api.user.get_user()['tid']
@@ -27,6 +27,7 @@ class GroupList(Resource):
 
     # @require_teacher @TODO throw 403 in this
     # @check_csrf
+    @ns.response(201, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(403, 'You do not have permission to create a group')
     @ns.response(409, 'You already have a group with that name')
@@ -52,9 +53,9 @@ class GroupList(Resource):
 
 
 @ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
 @ns.response(403, 'Permission denied')
 @ns.response(404, 'Group not found')
-# @require_login
 @ns.route('/<string:group_id>')
 class Group(Resource):
     """Get a specific group."""
@@ -129,6 +130,64 @@ class Group(Resource):
         })
 
 
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Permission denied')
+@ns.response(404, 'Group not found')
+# @require_login
+@ns.route('/<string:group_id>/remove_team')
+class RemoveTeamResponse(Resource):
+    """
+    Remove a team from a group.
+
+    If the specified team is not your own, requires teacher role within
+    the group.
+    """
+
+    # @require_login
+    # @check_csrf
+    @ns.response(422, 'Specified team is not a member of the group')
+    @ns.expect(group_remove_team_req)
+    def post(self, group_id):
+        """
+        Remove a team from a group.
+
+        If the specified team is not your own, requires teacher role within
+        the group.
+        """
+        req = group_remove_team_req.parse_args(strict=True)
+        group = api.group.get_group(group_id)
+        group_teachers = [group['owner']] + group['teachers']
+        eligible_for_removal = group['members'] + group['teachers']
+        curr_tid = api.user_get_user['tid']
+
+        # Get the tid to remove (must be a teacher to remove another team)
+        if req['team_id']:
+            if curr_tid not in group_teachers and req['tid'] != curr_tid:
+                raise PicoException(
+                    'You must be a teacher in this group to remove a team.',
+                    status_code=403
+                )
+            tid_to_remove = req['team_id']
+        else:
+            tid_to_remove = api.user.get_user()['tid']
+
+        # Ensure the specified tid is a member of the group
+        if tid_to_remove not in eligible_for_removal:
+            raise PicoException(
+                'Specified team is not a member of this group', 422
+            )
+
+        api.group.leave_group(group_id, tid_to_remove)
+        return jsonify({
+            'success': True
+        })
+
+
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Permission denied')
+@ns.response(404, 'Group not found')
 @ns.route('/<string:group_id>/flag_sharing')
 class FlagSharingInfo(Resource):
     """Get flag sharing statistics for a specific group."""

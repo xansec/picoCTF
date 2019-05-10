@@ -236,12 +236,10 @@ def leave_group(gid, tid):
     team = api.team.get_team(tid=tid)
     roles = get_roles_in_group(gid, tid=team["tid"])
 
-    if roles["owner"]:
-        raise InternalException("Owners can not leave their own classroom!")
-    elif roles["teacher"]:
+    if roles["teacher"]:
         db.groups.update({'gid': gid}, {'$pull': {"teachers": tid}})
 
-    if roles["member"]:
+    elif roles["member"]:
         db.groups.update({'gid': gid}, {'$pull': {"members": tid}})
 
 

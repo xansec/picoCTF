@@ -117,57 +117,6 @@ def join_group_hook():
     return WebSuccess("Successfully joined classroom"), 200
 
 
-@blueprint.route('/leave', methods=['POST'])
-@check_csrf
-@require_login
-def leave_group_hook():
-    """
-    Try to remove a team from a group.
-
-    Validates forms. All required arguments are assumed to be keys in params.
-    """
-    params = api.common.flat_multi(request.form)
-
-    validate(leave_group_schema, params)
-    owner_team = api.team.get_team(name=params["group-owner"])
-
-    group = api.group.get_group(
-        name=params["group-name"], owner_tid=owner_team["tid"])
-
-    team = api.user.get_team()
-    roles = api.group.get_roles_in_group(group["gid"], tid=team["tid"])
-
-    if not roles["member"] and not roles["teacher"]:
-        raise PicoException("Your team is not a member of that classroom!",
-                            403)
-
-    api.group.leave_group(group["gid"], team["tid"])
-
-    return WebSuccess("Successfully left classroom."), 200
-
-
-
-@blueprint.route('/teacher/leave', methods=['POST'])
-@check_csrf
-@require_teacher
-def force_leave_group_hook():
-    gid = request.form.get("gid")
-    tid = request.form.get("tid")
-
-    if gid is None or tid is None:
-        return WebError("You must specify a gid and tid."), 400
-
-    user = api.user.get_user()
-    roles = api.group.get_roles_in_group(gid, uid=user["uid"])
-    if not roles["teacher"]:
-        return WebError("You must be a teacher of a classroom " +
-                        "to remove a team."), 401
-
-    api.group.leave_group(gid, tid)
-
-    return WebSuccess("Team has successfully left the classroom."), 200
-
-
 @blueprint.route('/teacher/role_switch', methods=['POST'])
 @require_teacher
 def switch_user_role_group_hook():

@@ -457,3 +457,10 @@ group_patch_req.add_argument(
     'settings', required=False, type=object_type, location='json',
     help='Updated settings object.'
 )
+
+# Group team removal request
+group_remove_team_req = reqparse.RequestParser()
+group_remove_team_req.add_argument(
+    'team_id', required=True, location='json', type=str,
+    help='ID of the team to remove.'
+)
