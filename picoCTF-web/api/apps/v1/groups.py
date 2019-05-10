@@ -45,6 +45,17 @@ class Group(Resource):
             raise PicoException(
                 'You do not have permission to view this group.', 403
             )
+
+        # Replace the team ids with full team objects
+        full_teachers = []
+        for tid in group['teachers']:
+            full_teachers.append(api.team.get_team_information(tid))
+        group['teachers'] = full_teachers
+        full_members = []
+        for tid in group['members']:
+            full_members.append(api.team.get_team_information(tid))
+        group['members'] = full_members
+
         return jsonify(group)
 
 

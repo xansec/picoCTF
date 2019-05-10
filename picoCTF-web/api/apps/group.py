@@ -112,33 +112,6 @@ def invite_email_to_group_hook():
         return WebError(
             message="You do not have sufficient privilege to do that."), 401
 
-@blueprint.route('/teacher_information', methods=['GET'])
-@require_teacher
-def get_teacher_information_hook(gid=None):
-    gid = request.args.get("gid")
-
-    user = api.user.get_user()
-    roles = api.group.get_roles_in_group(gid, uid=user["uid"])
-
-    if not roles["teacher"]:
-        return WebError("You are not a teacher for this classroom."), 401
-
-    return WebSuccess(data=api.group.get_teacher_information(gid=gid)), 200
-
-
-@blueprint.route('/member_information', methods=['GET'])
-@require_teacher
-def get_member_information_hook(gid=None):
-    gid = request.args.get("gid")
-
-    user = api.user.get_user()
-    roles = api.group.get_roles_in_group(gid, uid=user["uid"])
-
-    if not roles["teacher"]:
-        return WebError("You are not a teacher for this classroom."), 401
-
-    return WebSuccess(data=api.group.get_member_information(gid=gid)), 200
-
 
 @blueprint.route('/score', methods=['GET'])
 @require_teacher
@@ -293,26 +266,6 @@ def delete_group_hook():
                             403)
 
     return WebSuccess("Successfully deleted classroom"), 200
-
-
-@blueprint.route('/flag_sharing', methods=['GET'])
-@require_teacher
-def get_flag_shares():
-    gid = request.args.get("gid", None)
-
-    if gid is None:
-        return WebError(
-            "You must specify a gid when looking at " +
-            "flag sharing statistics."), 400
-
-    user = api.user.get_user()
-    roles = api.group.get_roles_in_group(gid, uid=user["uid"])
-    if not roles["teacher"]:
-        return WebError("You must be a teacher of a classroom to see its " +
-                        "flag sharing statistics."), 401
-
-    return WebSuccess(
-        data=api.stats.check_invalid_instance_submissions(gid=gid)), 200
 
 
 @blueprint.route('/teacher/leave', methods=['POST'])
