@@ -59,12 +59,7 @@ def get_team(tid=None, name=None):
     else:
         raise InternalException("Must supply tid or team name to get_team")
 
-    team = db.teams.find_one(match, {"_id": 0})
-
-    if team is None:
-        raise InternalException("Team does not exist.")
-
-    return team
+    return db.teams.find_one(match, {"_id": 0})
 
 
 def get_groups(tid):

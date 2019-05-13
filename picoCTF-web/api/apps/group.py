@@ -38,56 +38,6 @@ leave_group_schema = Schema({
 blueprint = Blueprint("group_api", __name__)
 
 
-@blueprint.route('/join', methods=['POST'])
-@check_csrf
-@require_login
-def join_group_hook():
-    """
-    Try to place a team into a group.
-
-    Validates forms. All required arguments are assumed to be keys in params.
-    """
-    params = api.common.flat_multi(request.form)
-    validate(join_group_schema, params)
-
-    owner_team = safe_fail(api.team.get_team, name=params["group-owner"])
-
-    if not owner_team:
-        raise PicoException("No teacher exists with that name!", 404)
-
-    if safe_fail(
-            api.group.get_group,
-            name=params["group-name"],
-            owner_tid=owner_team["tid"]) is None:
-        raise PicoException("No classroom exists with that name!", 404)
-
-    group = api.group.get_group(
-        name=params["group-name"], owner_tid=owner_team["tid"])
-
-    group_settings = api.group.get_group_settings(gid=group["gid"])
-
-    team = api.team.get_team()
-
-    if group_settings["email_filter"]:
-        for member_uid in api.team.get_team_uids(tid=team["tid"]):
-            member = api.user.get_user(uid=member_uid)
-            if not api.user.verify_email_in_whitelist(
-                    member["email"], group_settings["email_filter"]):
-                raise PicoException(
-                    "{}'s email does not belong to the whitelist " +
-                    "for that classroom. Your team may not join this " +
-                    "classroom at this time.".format(member["username"]), 403)
-
-    roles = api.group.get_roles_in_group(group["gid"], tid=team["tid"])
-    if roles["teacher"] or roles["member"]:
-        raise PicoException("Your team is already a member of that classroom!",
-                            422)
-
-    api.group.join_group(group["gid"], team["tid"])
-
-    return WebSuccess("Successfully joined classroom"), 200
-
-
 @blueprint.route('/teacher/role_switch', methods=['POST'])
 @require_teacher
 def switch_user_role_group_hook():

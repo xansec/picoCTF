@@ -6,7 +6,7 @@ import api.team
 import api.user
 from api.common import PicoException
 
-from .schemas import (score_progression_req, team_change_req,
+from .schemas import (join_group_req, score_progression_req, team_change_req,
                       update_team_password_req)
 
 ns = Namespace('team', description="Information about the current user's team")
@@ -104,6 +104,61 @@ class TeamJoinResponse(Resource):
         req = team_change_req.parse_args(strict=True)
         api.team.join_team(
             req['team_name'], req['team_password'], current_user)
+        return jsonify({
+            'success': True
+        })
+
+
+# @require_login
+# @check_csrf
+@ns.response(200, 'Success')
+@ns.response(400, 'Error parsing request')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Ineligible to join this group')
+@ns.response(404, 'Group or group owner not found')
+@ns.response(409, 'Already a member of this group')
+@ns.expect(join_group_req)
+@ns.route('/join_group')
+class GroupJoinResponse(Resource):
+    """Add your current team to a group."""
+
+    @ns.expect(join_group_req)
+    def post(self):
+        """Add your current team to a group."""
+        req = join_group_req.parse_args(strict=True)
+        curr_user = api.user.get_user()
+
+        # Make sure the specified group and owner exist
+        owner_team = api.team.get_team(name=req['group_owner'])
+        if owner_team is None:
+            raise PicoException('Group owner not found', 404)
+
+        group = api.group.get_group(
+            name=req['group_name'],
+            owner_tid=owner_team['tid']
+        )
+        if group is None:
+            raise PicoException('Group not found', 404)
+
+        # Make sure the current user's team is not already in the group
+        group_members = [group['owner']] + group['members'] + group['teachers']
+        if curr_user['tid'] in group_members:
+            raise PicoException(
+                'Your team is already a member of this group.', 409
+            )
+
+        # Make sure each member of the current user's team passes the group's
+        # email whitelist if present
+        members = api.team.get_team_members(tid=curr_user['tid'])
+        for member in members:
+            if not api.user.verify_email_in_whitelist(
+                    member["email"], group['settings']['email_filter']):
+                raise PicoException(
+                    "{}'s email does not belong to the whitelist " +
+                    "for that classroom. Your team may not join this " +
+                    "classroom at this time.".format(member["username"]), 403)
+
+        api.group.join_group(group['gid'], curr_user['tid'], req['as_teacher'])
         return jsonify({
             'success': True
         })

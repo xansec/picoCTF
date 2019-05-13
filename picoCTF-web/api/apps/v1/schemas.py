@@ -476,3 +476,14 @@ group_invite_req.add_argument(
     default=False, help='Invite this user to be a teacher in the group, ' +
                         'rather than a regular member.'
 )
+
+# Join group request
+join_group_req = reqparse.RequestParser()
+join_group_req.add_argument(
+    'group_name', required=True, type=length_restricted(3, 100, str),
+    location='json', help='Name of the group to join.'
+)
+join_group_req.add_argument(
+    'group_owner', required=True, type=length_restricted(3, 40, str),
+    location='json', help='Name of the teacher who owns the group.'
+)
