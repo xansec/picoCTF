@@ -242,6 +242,9 @@ def add_user(params):
         'verified': (not settings["email"]["email_verification"] or
                      user_was_invited),
         'extdata': {},
+        'completed_minigames': [],
+        'unlocked_walkthroughs': [],
+        'tokens': 0,
     })
 
     # If gid was specified, add the newly created team to the group
@@ -393,7 +396,6 @@ def update_extdata(params):
     """
     user = get_user(uid=None)
     db = api.db.get_conn()
-    params.pop('token', None)
     db.users.update_one({'uid': user['uid']}, {'$set': {'extdata': params}})
 
 

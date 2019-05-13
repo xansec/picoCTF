@@ -6,14 +6,17 @@ Provides legacy behavior for:
 /user/login
 /user/logout
 /user/status
-/user/minigame @TODO: merge in gamedev branch
+/user/minigame
+/user/clear_minigames
 /user/extdata
 /problems
 /problems/submit
-/problems/unlock_walkthrough @TODO: merge in gamedev branch
-/problems/walkthrough?pid=<pid> @TODO: merge in gamedev branch
+/problems/unlock_walkthrough
+/problems/walkthrough?pid=<pid>
+/problems/clear_walkthroughs
 /team/score
 """
+import hashlib
 from datetime import datetime
 from functools import wraps
 
@@ -22,7 +25,7 @@ from flask import Blueprint, request, session
 from voluptuous import Length, Required, Schema
 
 import api
-from api import check, PicoException, validate, flat_multi
+from api import PicoException, check, validate
 
 blueprint = Blueprint('v0_api', __name__)
 
@@ -167,13 +170,17 @@ def logout_hook():
 def status_hook():
     """Legacy status route."""
     settings = api.config.get_settings()
+    user = None
+    is_logged_in = api.user.is_logged_in()
+    if is_logged_in:
+        user = api.user.get_user()
     status = {
         "logged_in":
-        api.user.is_logged_in(),
+        is_logged_in,
         "admin":
-        api.user.is_logged_in() and api.user.is_admin(),
+        is_logged_in and user.get('admin', False),
         "teacher":
-        api.user.is_logged_in() and api.user.is_teacher(),
+        is_logged_in and user.get('teacher', False),
         "enable_feedback":
         settings["enable_feedback"],
         "enable_captcha":
@@ -183,17 +190,20 @@ def status_hook():
         "competition_active":
         api.config.check_competition_active(),
         "username":
-        api.user.get_user()['username'] if api.user.is_logged_in() else "",
+        user['username'] if is_logged_in else "",
         "tid":
-        api.user.get_user()["tid"] if api.user.is_logged_in() else "",
+        user["tid"] if is_logged_in else "",
         "email_verification":
-        settings["email"]["email_verification"]
+        settings["email"]["email_verification"],
     }
 
-    if api.user.is_logged_in():
+    if is_logged_in:
         team = api.user.get_team()
         status["team_name"] = team["team_name"]
         status["score"] = api.stats.get_score(tid=team["tid"])
+        status["unlocked_walkthroughs"] = user.get("unlocked_walkthroughs", [])
+        status["completed_minigames"] = user.get("completed_minigames", [])
+        status["tokens"] = user.get("tokens", 0)
 
     return WebSuccess(data=status), 200
 
@@ -210,9 +220,96 @@ def get_extdata_hook():
 @check_csrf
 @require_login
 def update_extdata_hook():
-    """Set user extdata via HTTP form. Takes in any key-value pairs."""
-    api.user.update_extdata(flat_multi(request.form))
-    return WebSuccess("Your Extdata has been successfully updated."), 200
+    """
+    Sets user extdata via HTTP form. Takes in any key-value pairs.
+    An optional nonce may be included in payload, which will then
+    be evaluated against the previous nonce, if it exists.
+
+    If no nonce is included, default behavior is to over-write.
+    """
+    data = api.common.flat_multi(request.form)
+    prev_nonce = int(api.user.get_user()["extdata"].get("nonce", 0))
+    nonce = data.get("nonce")
+    if nonce is not None and int(nonce) < prev_nonce:
+        return WebError("Session expired. Please reload your client.")
+    else:
+        data.pop("token", None)
+        api.user.update_extdata(data)
+        return WebSuccess("Your extdata has been successfully updated.")
+
+
+@blueprint.route("/user/minigame", methods=['POST'])
+@check_csrf
+@require_login
+@block_before_competition()
+def request_minigame_completion_hook():
+    minigame_id = request.form.get('mid')
+    validation = request.form.get('v')
+
+    if minigame_id is None or validation is None:
+        return WebError("Invalid input!")
+
+    settings = api.config.get_settings()
+    minigame_config = settings.get("minigame", {}).get("token_values", 0)
+
+    if minigame_id not in minigame_config:
+        return WebError("Invalid input!")
+
+    user = api.user.get_user()
+
+    hashstring = minigame_id + user["username"] + \
+        settings.get("minigame", {}).get("secret")
+
+    if hashlib.md5(hashstring.encode('utf-8')).hexdigest() != validation:
+        return WebError("Invalid input!")
+
+    if minigame_id not in user.get("completed_minigames"):
+        tokens_earned = minigame_config[minigame_id]
+        db = api.common.get_conn()
+
+        db.users.update_one({
+            'uid': user["uid"],
+            'completed_minigames': {
+                '$ne': minigame_id
+            }
+        }, {
+            '$push': {
+                'completed_minigames': minigame_id
+            },
+            '$inc': {
+                'tokens': tokens_earned
+            }
+        })
+        token_count = api.user.get_user()["tokens"]
+        return WebSuccess(
+            message="You win! You have earned " + str(tokens_earned) +
+                    " tokens.",
+            data={"tokens": token_count}
+        )
+    else:
+        return WebError(
+            message="You win! You have already completed this minigame, " +
+                    "so you have not earned additional tokens.",
+            data={"tokens": user["tokens"]},
+        )
+
+
+@blueprint.route("/user/clear_minigames", methods=['POST'])
+@check_csrf
+@require_login
+@block_before_competition()
+def request_minigame_clear_hook():
+    # if DEBUG_KEY is not None:
+
+    db = api.common.get_conn()
+    db.users.update_one({
+        'uid': api.user.get_user()["uid"],
+    }, {
+        '$set': {
+            'completed_minigames': []
+        },
+    })
+    return WebSuccess("Minigame progress cleared.")
 
 
 @blueprint.route('/problems', methods=['GET'])
@@ -294,3 +391,72 @@ def get_team_score_hook():
     if score is not None:
         return WebSuccess(data={'score': score})
     return WebError("There was an error retrieving your score."), 500
+
+
+@blueprint.route("/problems/walkthrough", methods=['GET'])
+@require_login
+@block_before_competition()
+def request_problem_walkthrough_hook():
+
+    pid = request.args.get("pid")
+
+    if pid is None:
+        return WebError("Please supply a pid.")
+
+    uid = api.user.get_user()["uid"]
+
+    problem = api.problem.get_problem(pid=pid)
+    if problem.get("walkthrough") is None:
+        return WebError("This problem does not have a walkthrough!")
+    else:
+        if pid not in api.problem.get_unlocked_walkthroughs(uid):
+            return WebError("You haven't unlocked this walkthrough yet!")
+        else:
+            return WebSuccess(problem["walkthrough"])
+
+
+@blueprint.route("/problems/unlock_walkthrough", methods=['POST'])
+@check_csrf
+@require_login
+@block_before_competition()
+def request_walkthrough_unlock_hook():
+
+    pid = request.form.get('pid')
+
+    if pid is None:
+        return WebError("Please supply a pid.")
+
+    user = api.user.get_user()
+
+    uid = user["uid"]
+    if pid in api.problem.get_unlocked_walkthroughs(uid):
+        return WebError("You have already unlocked this walkthrough!")
+
+    problem = api.problem.get_problem(pid=pid)
+    if problem.get("walkthrough") is None:
+        return WebError("This problem does not have a walkthrough!")
+    else:
+        if user.get("tokens", 0) >= problem["score"]:
+            api.problem.unlock_walkthrough(uid, pid, problem["score"])
+            return WebSuccess("Walkthrough unlocked.")
+        else:
+            return WebError(
+                "You do not have enough tokens to unlock this walkthrough!")
+
+
+@blueprint.route("/problems/clear_walkthroughs", methods=['POST'])
+@check_csrf
+@require_login
+@block_before_competition()
+def request_clear_walkthroughs_hook():
+    # if DEBUG_KEY is not None:
+
+    db = api.common.get_conn()
+    db.users.update_one({
+        'uid': api.user.get_user()["uid"]
+    }, {
+        '$set': {
+            'unlocked_walkthroughs': []
+        },
+    })
+    return WebSuccess("Walkthroughs cleared.")

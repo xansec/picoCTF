@@ -151,7 +151,7 @@ def test_extdata(client):
     })
     status, message, data = decode_response(res)
     assert status == 1
-    assert message == 'Your Extdata has been successfully updated.'
+    assert message == 'Your extdata has been successfully updated.'
     # Retrieve extdata
     res = client.get('/api/v0/user/extdata')
     status, message, data = decode_response(res)

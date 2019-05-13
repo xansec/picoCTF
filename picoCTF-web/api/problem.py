@@ -23,6 +23,8 @@ problem_schema = Schema({
     check(("The instances must be a list.", [list])),
     Required("hints"):
     check(("Hints must be a list.", [list])),
+    "walkthrough":
+    check(("The problem walkthrough must be a string.", [str])),
     "description":
     check(("The problem description must be a string.", [str])),
     "version":
@@ -109,6 +111,11 @@ def upsert_problem(problem, sid):
         instance["sid"] = sid
         if server_number is not None:
             instance["server_number"] = server_number
+
+    if problem.get("walkthrough"):  # Falsy for None and empty string
+        problem["has_walkthrough"] = True
+    else:
+        problem["has_walkthrough"] = False
 
     # If the problem already exists, update it instead
     existing = db.problems.find_one({'pid': problem['pid']}, {'_id': 0})
@@ -437,11 +444,20 @@ def sanitize_problem_data(data):
         "sid",
         "tags",
         "user",
+        "walkthrough",
     ]
+
+    uid = api.user.get_user()["uid"]
+    unlocked_walkthroughs = get_unlocked_walkthroughs(uid)
 
     def pop_keys(problem_dict):
         for key in SANITATION_KEYS:
-            problem_dict.pop(key, None)
+            if key == "walkthrough":
+                if (problem_dict["has_walkthrough"] and
+                        problem_dict["pid"] not in unlocked_walkthroughs):
+                    problem_dict["walkthrough"] = ""
+            else:
+                problem_dict.pop(key, None)
 
     if isinstance(data, list):
         for problem in data:
@@ -472,3 +488,45 @@ def set_problem_availability(pid, disabled):
     else:
         api.cache.clear()
         return pid
+
+
+def get_unlocked_walkthroughs(uid):
+    """
+    Returns list of unlocked walkthroughs, either as result of problem
+    solved by team, or token spend to unlock.
+
+    Args:
+        uid: user id to look up
+    """
+    return get_solved_pids(uid=uid) + \
+        api.user.get_user(uid=uid).get("unlocked_walkthroughs", [])
+
+
+def unlock_walkthrough(uid, pid, cost):
+    """
+    Unlocks a problem at cost of tokens. Performed as atomic update to
+    decrement tokens while also unlocking, also ensures against race
+    conditions by validating token count and already-unlocked walkthroughs.
+
+    Args:
+        uid: user id
+        pid: problem id
+        cpst: token cost of unlock
+    """
+    db = api.common.get_conn()
+    db.users.update_one({
+        'uid': uid,
+        'tokens': {
+            '$gte': cost
+        },
+        'unlocked_walkthroughs': {
+            '$ne': pid
+        }
+    }, {
+        '$push': {
+            'unlocked_walkthroughs': pid
+        },
+        '$inc': {
+            'tokens': (cost * -1)
+        }
+    })

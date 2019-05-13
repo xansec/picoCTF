@@ -142,6 +142,20 @@ default_settings = {
     "eligibility": {
         "usertype": "student",
         "country": "US"
+    },
+
+    # MINIGAME TOKEN VALUES
+    "minigame": {
+        "secret": "foo",
+        "token_values": {
+            "a1": 10,
+            "a2": 20,
+            "a3": 30,
+            "b1": 15,
+            "b2": 30,
+            "b3": 45,
+            "c3": 20,
+        },
     }
 }
 
