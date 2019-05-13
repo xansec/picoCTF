@@ -1,5 +1,8 @@
 # picoCTF
 
+[![Build Status](https://travis-ci.com/picoCTF/picoCTF.svg?branch=master)](https://travis-ci.com/picoCTF/picoCTF)
+[![codecov](https://codecov.io/gh/picoCTF/picoCTF/branch/master/graph/badge.svg)](https://codecov.io/gh/picoCTF/picoCTF)
+
 The picoCTF platform is the infrastructure which is used to run
 [picoCTF](https://picoctf.com/).
 
