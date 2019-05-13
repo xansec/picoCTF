@@ -158,7 +158,10 @@ class GroupJoinResponse(Resource):
                     "for that classroom. Your team may not join this " +
                     "classroom at this time.".format(member["username"]), 403)
 
-        api.group.join_group(group['gid'], curr_user['tid'], req['as_teacher'])
+        # Join the group as a teacher if the current user's account has
+        # teacher permissions
+        api.group.join_group(group['gid'], curr_user['tid'],
+                             teacher=(curr_user.get('teacher', False)))
         return jsonify({
             'success': True
         })

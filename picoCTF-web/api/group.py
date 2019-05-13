@@ -206,23 +206,6 @@ def join_group(gid, tid, teacher=False):
     db.groups.update({'gid': gid}, {'$push': {role_group: tid}})
 
 
-def sync_teacher_status(tid, uid):
-    """Determine if the given user is still a teacher and update his status."""
-    db = api.db.get_conn()
-
-    active_teacher_roles = db.groups.find({
-        "$or": [{
-            "teachers": tid
-        }, {
-            "owner": uid
-        }]
-    }).count()
-    db.users.update({"uid": uid},
-                    {"$set": {
-                        "teacher": active_teacher_roles > 0
-                    }})
-
-
 @api.logger.log_action
 def leave_group(gid, tid):
     """
@@ -241,55 +224,6 @@ def leave_group(gid, tid):
 
     elif roles["member"]:
         db.groups.update({'gid': gid}, {'$pull': {"members": tid}})
-
-
-def switch_role(gid, tid, role):
-    """
-    Switch a user's given role in his group.
-
-    Cannot switch to/from owner.
-    """
-    db = api.db.get_conn()
-    team = api.team.get_team(tid=tid)
-
-    roles = get_roles_in_group(gid, tid=team["tid"])
-    if role == "member":
-        if roles["teacher"] and not roles["member"]:
-            db.groups.update({"gid": gid}, {
-                "$pull": {
-                    "teachers": tid
-                },
-                "$push": {
-                    "members": tid
-                }
-            })
-        else:
-            raise InternalException("Team is already a member of " +
-                                    "that classroom.")
-
-    elif role == "teacher":
-        if api.team.is_teacher_team(tid):
-            if roles["member"] and not roles["teacher"]:
-                db.groups.update({"gid": gid}, {
-                    "$push": {
-                        "teachers": tid
-                    },
-                    "$pull": {
-                        "members": tid
-                    }
-                })
-            else:
-                raise InternalException("User is already a teacher of " +
-                                        "that classroom.")
-        else:
-            raise InternalException("Only teacher users may become " +
-                                    "classroom teachers.")
-
-    else:
-        raise InternalException("Only supported roles are member and teacher.")
-
-    for uid in api.team.get_team_uids(tid=team["tid"]):
-        sync_teacher_status(tid, uid)
 
 
 @api.logger.log_action

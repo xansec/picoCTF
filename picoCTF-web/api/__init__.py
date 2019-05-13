@@ -3,13 +3,11 @@
 import inspect
 import logging
 import traceback
-from datetime import datetime
 
 from flask import Flask, jsonify, session
 from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
 
-import api.apps.group
 import api.config
 import api.logger
 from api.apps.v0 import blueprint as v0_blueprint
@@ -18,7 +16,6 @@ from api.common import (
   InternalException,
   PicoException,
   WebError,
-  WebSuccess
 )
 
 log = logging.getLogger(__name__)
@@ -80,7 +77,6 @@ def create_app(config={}):
     update_mail_config(app)
 
     # Register blueprints
-    app.register_blueprint(api.apps.group.blueprint, url_prefix="/api/group")
     app.register_blueprint(
         v0_blueprint, url_prefix="/api/v0"
     )
