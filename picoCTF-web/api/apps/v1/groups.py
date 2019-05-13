@@ -7,7 +7,8 @@ import api.team
 import api.user
 from api.common import PicoException
 
-from .schemas import group_req, group_patch_req, group_remove_team_req
+from .schemas import (group_invite_req, group_patch_req, group_remove_team_req,
+                      group_req)
 
 ns = Namespace('groups', description='Group management')
 
@@ -226,3 +227,35 @@ class FlagSharingInfo(Resource):
 
         return jsonify(
             api.stats.check_invalid_instance_submissions(group['gid']))
+
+
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Permission denied')
+@ns.response(404, 'Group not found')
+@ns.route('/<string:group_id>/invite')
+class InviteResponse(Resource):
+    """Send an email invite to join this team."""
+
+    # @require_teacher
+    @ns.expect(group_invite_req)
+    def post(self, group_id):
+        """Send an email invite to join this team."""
+        req = group_invite_req.parse_args(strict=True)
+        group = api.group.get_group(gid=group_id)
+        if not group:
+            raise PicoException('Group not found', 404)
+
+        curr_user = api.user.get_user()
+        if (curr_user['tid'] not in group['teachers']
+                and not curr_user['admin']):
+            raise PicoException(
+                'You do not have permission to invite members to this group.',
+                status_code=403
+            )
+
+        api.email.send_email_invite(group_id, req['email'],
+                                    req['as_teacher'])
+        return jsonify({
+            'success': True
+            })

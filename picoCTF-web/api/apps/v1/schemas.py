@@ -464,3 +464,15 @@ group_remove_team_req.add_argument(
     'team_id', required=True, location='json', type=str,
     help="ID of the team to remove."
 )
+
+# Group invite request
+group_invite_req = reqparse.RequestParser()
+group_invite_req.add_argument(
+    'email', required=True, type=inputs.email(), location='json',
+    help='Email address to invite to the group.'
+)
+group_invite_req.add_argument(
+    'as_teacher', required=True, type=inputs.boolean, location='json',
+    default=False, help='Invite this user to be a teacher in the group, ' +
+                        'rather than a regular member.'
+)

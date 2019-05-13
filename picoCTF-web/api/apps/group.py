@@ -38,35 +38,6 @@ leave_group_schema = Schema({
 blueprint = Blueprint("group_api", __name__)
 
 
-@blueprint.route('/invite', methods=['POST'])
-@require_teacher
-def invite_email_to_group_hook():
-    gid = request.form.get("gid")
-    email = request.form.get("email")
-    role = request.form.get("role")
-
-    user = api.user.get_user()
-
-    if gid is None or email is None or len(email) == 0:
-        return WebError(
-            message="You must specify a gid and email address to invite."), 400
-
-    if role not in ["member", "teacher"]:
-        return WebError(
-            message="A user's role is either a member or teacher."), 400
-
-    group = api.group.get_group(gid=gid)
-    roles = api.group.get_roles_in_group(group["gid"], uid=user["uid"])
-
-    if roles["teacher"]:
-        api.email.send_email_invite(
-            group["gid"], email, teacher=(role == "teacher"))
-        return WebSuccess(message="Email invitation has been sent."), 200
-    else:
-        return WebError(
-            message="You do not have sufficient privilege to do that."), 401
-
-
 @blueprint.route('/join', methods=['POST'])
 @check_csrf
 @require_login
