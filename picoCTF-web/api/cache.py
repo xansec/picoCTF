@@ -5,7 +5,7 @@ from functools import wraps
 
 from bson import datetime
 
-import api.db
+import api
 
 log = logging.getLogger(__name__)
 

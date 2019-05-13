@@ -2,9 +2,8 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.email
-import api.user
-from api.common import PicoException
+import api
+from api import PicoException
 
 from .schemas import (disable_account_req, login_req,
                       reset_password_confirmation_req, reset_password_req,

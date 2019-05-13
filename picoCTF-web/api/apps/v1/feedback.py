@@ -2,8 +2,8 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.config
-from api.common import PicoException
+import api
+from api import PicoException
 
 from .schemas import feedback_list_req, feedback_submission_req
 

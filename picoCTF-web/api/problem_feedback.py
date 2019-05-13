@@ -4,12 +4,8 @@ from datetime import datetime
 
 from voluptuous import Length, Required, Schema
 
-import api.achievement
-import api.db
-import api.logger
-import api.problem
-import api.user
-from api.common import check, validate, PicoException
+import api
+from api import check, validate, PicoException
 
 feedback_schema = Schema({
     Required("liked"):

@@ -10,16 +10,8 @@ import bcrypt
 import flask
 from flask import session, request
 
-import api.common
-import api.config
-import api.db
-import api.email
-import api.group
-import api.logger
-import api.team
-import api.token
-import api.user
-from api.common import PicoException
+import api
+from api import PicoException
 
 
 def check_blacklisted_usernames(username):

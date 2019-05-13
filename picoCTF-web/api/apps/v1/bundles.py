@@ -7,8 +7,8 @@ their properties is the shell server(s). See ./problems.py for more info.
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.bundles
-from api.common import PicoException
+import api
+from api import PicoException
 
 from .schemas import bundle_patch_req
 

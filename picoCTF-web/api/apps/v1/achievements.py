@@ -2,8 +2,8 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.achievement
-from api.common import PicoException
+import api
+from api import PicoException
 
 from .schemas import achievement_patch_req, achievement_req
 

@@ -3,7 +3,7 @@
 from flask import Blueprint, jsonify
 from flask_restplus import Api
 
-from api.common import PicoException
+from api import PicoException
 
 from .achievements import ns as achievements_ns
 from .bundles import ns as bundles_ns

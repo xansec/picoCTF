@@ -10,11 +10,7 @@ from flask import has_request_context
 from flask import logging as flask_logging
 from flask import request
 
-import api.config
-import api.db
-import api.team
-import api.user
-
+import api
 critical_error_timeout = 600
 log = logging.getLogger(__name__)
 

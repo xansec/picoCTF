@@ -9,8 +9,8 @@ from .common import (
   TEACHER_DEMOGRAPHICS,
   USER_DEMOGRAPHICS
 )
+import api
 from api.config import default_settings
-import api.email
 from bson import json_util
 
 # /admin blueprint route tests

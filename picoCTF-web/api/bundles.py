@@ -2,8 +2,8 @@
 
 from voluptuous import Required, Schema
 
-import api.db
-from api.common import check, validate
+import api
+from api import check, validate
 
 bundle_schema = Schema({
     Required("name"):

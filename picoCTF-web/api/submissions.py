@@ -3,9 +3,8 @@
 from voluptuous import Length, Required, Schema
 
 from datetime import datetime
-from api.common import check, validate, InternalException, PicoException
-import api.user
-import api.problem
+import api
+from api import check, validate, InternalException, PicoException
 
 submission_schema = Schema({
     Required("tid"):

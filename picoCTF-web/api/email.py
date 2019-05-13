@@ -2,11 +2,8 @@
 
 from flask_mail import Message
 
-import api.config
-import api.group
-import api.token
-import api.user
-from api.common import PicoException
+import api
+from api import PicoException
 
 # The Flask-Mail object. Should be initialized during app startup.
 mail = None

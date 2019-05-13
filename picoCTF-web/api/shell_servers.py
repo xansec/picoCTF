@@ -3,12 +3,8 @@ import json
 
 import spur
 
-import api.common
-import api.config
-import api.db
-import api.problem
-import api.team
-from api.common import (
+import api
+from api import (
   InternalException,
   PicoException,
 )

@@ -21,13 +21,8 @@ from bson import json_util
 from flask import Blueprint, request, session
 from voluptuous import Length, Required, Schema
 
-import api.config
-import api.db
-import api.problem
-import api.stats
-import api.submissions
-import api.user
-from api.common import check, flat_multi, PicoException, validate
+import api
+from api import check, PicoException, validate, flat_multi
 
 blueprint = Blueprint('v0_api', __name__)
 

@@ -5,18 +5,8 @@ from random import randint
 import pymongo
 from voluptuous import ALLOW_EXTRA, Range, Required, Schema
 
-import api.achievement
-import api.bundles
-import api.cache
-import api.common
-import api.db
-import api.logger
-import api.shell_servers
-import api.stats
-import api.submissions
-import api.team
-from api.cache import memoize
-from api.common import InternalException, check, validate
+import api
+from api import InternalException, check, validate, memoize
 
 problem_schema = Schema({
     Required("name"):

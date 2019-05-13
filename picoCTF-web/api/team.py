@@ -2,18 +2,8 @@
 
 from voluptuous import Length, Required, Schema
 
-import api.achievement
-import api.cache
-import api.common
-import api.config
-import api.db
-import api.group
-import api.problem
-import api.stats
-import api.team
-import api.user
-import api.logger
-from api.common import (
+import api
+from api import (
   check,
   InternalException,
   safe_fail,

@@ -2,12 +2,8 @@
 
 from voluptuous import Required, Schema
 
-import api.common
-import api.db
-import api.team
-import api.user
-import api.logger
-from api.common import check, InternalException, validate
+import api
+from api import check, InternalException, validate
 
 group_settings_schema = Schema({
     Required("email_filter"):

@@ -5,8 +5,8 @@ import string
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.user
-from api.common import PicoException
+import api
+from api import PicoException
 
 from .schemas import user_req
 

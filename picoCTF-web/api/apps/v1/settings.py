@@ -3,8 +3,7 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.config
-import api.logger
+import api
 
 from .schemas import settings_patch_req
 

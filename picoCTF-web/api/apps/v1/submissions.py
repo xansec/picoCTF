@@ -2,9 +2,7 @@
 from flask import jsonify, request
 from flask_restplus import Namespace, Resource
 
-import api.problem
-import api.stats
-import api.user
+import api
 
 from .schemas import submission_req
 

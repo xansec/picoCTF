@@ -8,9 +8,6 @@ import pymongo
 import pytest
 
 import api
-import api.problem
-import api.shell_servers
-import api.user
 
 TESTING_DB_NAME = 'ctf_test'
 db = None

@@ -2,9 +2,8 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.config
-import api.shell_servers
-from api.common import PicoException
+import api
+from api import PicoException
 
 from .schemas import (shell_server_reassignment_req, shell_server_patch_req,
                       shell_server_req, shell_server_list_req)

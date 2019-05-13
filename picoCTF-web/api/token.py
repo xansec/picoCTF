@@ -5,9 +5,8 @@ Tokens act as a registry for storing arbitrary values associated with a user,
 group, or other set of fields.
 """
 
-import api.common
-import api.db
-from api.common import InternalException
+import api
+from api import InternalException
 
 
 def get_token_path(token_name):

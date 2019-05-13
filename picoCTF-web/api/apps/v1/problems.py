@@ -22,10 +22,8 @@ unlock requirements for existing problems.
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.problem
-import api.user
-import api.team
-from api.common import PicoException
+import api
+from api import PicoException
 
 from .schemas import shell_server_out, problem_patch_req, problems_req
 

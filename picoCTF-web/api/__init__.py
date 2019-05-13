@@ -8,15 +8,31 @@ from flask import Flask, jsonify, session
 from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
 
+# these have to come first
+from api.cache import memoize
+from api.common import (check, flat_multi, InternalException, PicoException,
+                        safe_fail, validate, WebError)
+from api.logger import log_action
+
+import api.achievement
+import api.bundles
+import api.cache
+import api.common
 import api.config
+import api.db
+import api.email
+import api.group
 import api.logger
+import api.problem
+import api.problem_feedback
+import api.shell_servers
+import api.stats
+import api.submissions
+import api.team
+import api.token
+import api.user
 from api.apps.v0 import blueprint as v0_blueprint
 from api.apps.v1 import blueprint as v1_blueprint
-from api.common import (
-  InternalException,
-  PicoException,
-  WebError,
-)
 
 log = logging.getLogger(__name__)
 

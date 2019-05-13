@@ -3,8 +3,8 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.logger
-from api.common import PicoException
+import api
+from api import PicoException
 
 from .schemas import exception_req
 

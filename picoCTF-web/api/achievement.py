@@ -4,11 +4,8 @@ from datetime import datetime
 from importlib.machinery import SourceFileLoader
 from os.path import join
 
-import api.config
-import api.db
-import api.user
-import api.logger
-from api.common import PicoException
+import api
+from api import PicoException, log_action
 
 
 def get_achievement(aid):
@@ -116,7 +113,7 @@ def get_processor(aid):
         raise PicoException("Achievement processor is offline.")
 
 
-@api.logger.log_action
+@log_action
 def process_achievement(aid, data):
     """
     Determine whether or not an achievement has been earned.

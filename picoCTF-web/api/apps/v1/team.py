@@ -2,9 +2,8 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.team
-import api.user
-from api.common import PicoException
+import api
+from api import PicoException
 
 from .schemas import (join_group_req, score_progression_req, team_change_req,
                       update_team_password_req)

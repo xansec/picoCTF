@@ -6,7 +6,7 @@ from flask import current_app
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
-from api.common import PicoException
+from api import PicoException
 
 log = logging.getLogger(__name__)
 

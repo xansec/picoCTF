@@ -2,7 +2,7 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.config
+import api
 
 ns = Namespace('status', description='Information about the platform status')
 

@@ -2,10 +2,8 @@
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api.group
-import api.team
-import api.user
-from api.common import PicoException
+import api
+from api import PicoException
 
 from .schemas import (group_invite_req, group_patch_req, group_remove_team_req,
                       group_req)

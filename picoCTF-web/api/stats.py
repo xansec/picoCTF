@@ -5,16 +5,8 @@ import math
 
 import pymongo
 
-import api.achievement
-import api.cache
-import api.db
-import api.group
-import api.problem
-import api.problem_feedback
-import api.stats
-import api.submissions
-import api.team
-from api.cache import memoize
+import api
+from api import memoize
 
 scoreboard_page_len = 50
 
