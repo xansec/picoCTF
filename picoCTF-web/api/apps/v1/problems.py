@@ -161,6 +161,7 @@ class Problem(Resource):
 
     # @TODO: -restrict availability to unlocked if not admin
     #        -strip out instance information if not admin
+    #        -don't return if not unlocked (filtered?)
     def get(self, problem_id):
         """Retrieve a specific problem."""
         problem = api.problem.get_problem(problem_id)
@@ -188,3 +189,30 @@ class Problem(Resource):
             return jsonify({
                 "success": True
             })
+
+
+@ns.route('/<string:problem_id>/walkthrough')
+class ProblemWalkthrough(Resource):
+    """Get the walkthrough for a problem, if unlocked."""
+
+    # @require_login
+    # @block_before_competition
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Walkthrough not unlocked')
+    @ns.response(404, 'Problem or walkthrough not found')
+    def get(self, problem_id):
+        """Get the walkthrough for a problem, if unlocked."""
+        uid = api.user.get_user()['uid']
+        problem = api.problem.get_problem(problem_id)
+        if problem is None:
+            raise PicoException('Problem not found', 404)
+        if problem.get('walkthrough', None) is None:
+            raise PicoException('This problem does not have a walkthrough!',
+                                status_code=404)
+        if problem['pid'] not in api.problem.get_unlocked_walkthroughs(uid):
+            raise PicoException("You haven't unlocked this walkthrough yet!",
+                                status_code=403)
+        return jsonify({
+            'walkthrough': problem['walkthrough']
+        })
