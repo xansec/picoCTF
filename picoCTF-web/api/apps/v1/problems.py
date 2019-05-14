@@ -216,3 +216,33 @@ class ProblemWalkthrough(Resource):
         return jsonify({
             'walkthrough': problem['walkthrough']
         })
+
+
+@ns.route('/<string:problem_id>/walkthrough/unlock')
+class ProblemWalkthroughUnlockResponse(Resource):
+    """Spend tokens to unlock the walkthrough for a problem."""
+
+    # @require_login
+    # @block_before_competition
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
+    @ns.response(404, 'Problem or walkthrough not found')
+    @ns.response(422, 'Insufficient tokens to unlock walkthrough')
+    def get(self, problem_id):
+        curr_user = api.user.get_user()
+        problem = api.problem.get_problem(problem_id)
+        if problem is None:
+            raise PicoException('Problem not found', 404)
+        if problem.get('walkthrough', None) is None:
+            raise PicoException('This problem does not have a walkthrough!',
+                                status_code=404)
+        if curr_user.get("tokens", 0) >= problem["score"]:
+            api.problem.unlock_walkthrough(
+                curr_user['uid'], problem_id, problem["score"])
+            return jsonify({
+                'success': True
+            })
+        else:
+            raise PicoException(
+                "You do not have enough tokens to unlock this walkthrough!",
+                status_code=422)
