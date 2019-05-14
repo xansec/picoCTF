@@ -513,7 +513,7 @@ def unlock_walkthrough(uid, pid, cost):
         pid: problem id
         cpst: token cost of unlock
     """
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     db.users.update_one({
         'uid': uid,
         'tokens': {

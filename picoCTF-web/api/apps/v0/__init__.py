@@ -242,7 +242,7 @@ def request_minigame_completion_hook():
 
     if minigame_id not in user.get("completed_minigames"):
         tokens_earned = minigame_config[minigame_id]
-        db = api.common.get_conn()
+        db = api.db.get_conn()
 
         db.users.update_one({
             'uid': user["uid"],

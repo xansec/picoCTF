@@ -1,6 +1,6 @@
 """Tests for the /api/v0/problems/ routes."""
 
-from .common import (app, clear_db, client, decode_response,
+from .common import (app, clear_db, client, decode_response, # noqa (fixture)
                      enable_sample_problems, ensure_after_competition,
                      ensure_before_competition, ensure_within_competition,
                      get_conn, get_csrf_token, load_sample_problems,
@@ -8,7 +8,7 @@ from .common import (app, clear_db, client, decode_response,
                      USER_DEMOGRAPHICS)
 
 
-def test_problems(client):
+def test_problems(client): # noqa (fixture)
     """Tests the /problems endpoint."""
     clear_db()
     register_test_accounts()
@@ -53,7 +53,7 @@ def test_problems(client):
             assert data[i][field] == problems_endpoint_response[i][field]
 
 
-def test_submit(client):
+def test_submit(client): # noqa (fixture)
     """Test the /problems/submit endpoint."""
     clear_db()
     register_test_accounts()
@@ -184,13 +184,8 @@ def test_submit(client):
                       'already solved this problem.'
 
 
-def test_walkthroughs(client):
-    """
-    Tests the walkthrough-related endpoints:
-
-    - /problems/walkthrough
-    - /problems/unlock_walkthrough
-    """
+def test_walkthrough(client): # noqa (fixture)
+    """Tests the /problems/walkthrough endpoint."""
     clear_db()
     register_test_accounts()
     load_sample_problems()
@@ -201,7 +196,6 @@ def test_walkthroughs(client):
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password'],
         })
-    csrf_t = get_csrf_token(res)
 
     # Attempt to request a walkthrough without a pid
     res = client.get('/api/v0/problems/walkthrough')
@@ -210,13 +204,13 @@ def test_walkthroughs(client):
     assert message == 'Please supply a pid.'
 
     # Request a walkthrough for a problem without one
-    res = client.get('/api/v0/problems/walkthrough?pid=4508167aa0b219fd9d131551d10aa58e') # noqa
+    res = client.get('/api/v0/problems/walkthrough?pid=4508167aa0b219fd9d131551d10aa58e') # noqa (79char)
     status, message, data = decode_response(res)
     assert status == 0
     assert message == "This problem does not have a walkthrough!"
 
     # Request a walkthrough that the user has not unlocked yet
-    res = client.get('/api/v0/problems/walkthrough?pid=1bef644c399e10a3f35fecdbf590bd0c') # noqa
+    res = client.get('/api/v0/problems/walkthrough?pid=1bef644c399e10a3f35fecdbf590bd0c') # noqa (79char)
     status, message, data = decode_response(res)
     assert status == 0
     assert message == "You haven't unlocked this walkthrough yet!"
@@ -234,3 +228,71 @@ def test_walkthroughs(client):
     status, message, data = decode_response(res)
     assert status == 1
     assert message == "PROTIP: Find the correct answer to get the points."
+
+
+def test_unlock_walkthrough(client): # noqa (fixture)
+    """Tests the /problems/unlock_walkthrough endpoint."""
+    clear_db()
+    register_test_accounts()
+    load_sample_problems()
+    enable_sample_problems()
+    ensure_within_competition()
+
+    res = client.post('/api/v0/user/login', data={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password'],
+        })
+    csrf_t = get_csrf_token(res)
+
+    # Attempt to unlock a walkthrough without a pid
+    res = client.post('/api/v0/problems/unlock_walkthrough', data={
+        'token': csrf_t
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'Please supply a pid.'
+
+    # Attempt to unlock the walkthrough for a problem without one
+    res = client.post('/api/v0/problems/unlock_walkthrough', data={
+        'token': csrf_t,
+        'pid': '4508167aa0b219fd9d131551d10aa58e'
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'This problem does not have a walkthrough!'
+
+    # Attempt to unlock a walkthrough without enough tokens
+    res = client.post('/api/v0/problems/unlock_walkthrough', data={
+        'token': csrf_t,
+        'pid': '1bef644c399e10a3f35fecdbf590bd0c'
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'You do not have enough tokens to unlock this walkthrough!' # noqa
+
+    # Force-add enough tokens and unlock the walkthrough
+    db = get_conn()
+    unlock_cost = db.problems.find_one({
+        'pid': '1bef644c399e10a3f35fecdbf590bd0c'})['score']
+    db.users.find_one_and_update({
+        'username': USER_DEMOGRAPHICS['username']
+    }, {
+        '$set': {'tokens': unlock_cost}
+    })
+
+    res = client.post('/api/v0/problems/unlock_walkthrough', data={
+        'token': csrf_t,
+        'pid': '1bef644c399e10a3f35fecdbf590bd0c'
+    })
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert message == 'Walkthrough unlocked.' # noqa
+
+    # Attempt to unlock a previously unlocked walkthrough
+    res = client.post('/api/v0/problems/unlock_walkthrough', data={
+        'token': csrf_t,
+        'pid': '1bef644c399e10a3f35fecdbf590bd0c'
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'You have already unlocked this walkthrough!'
