@@ -10,6 +10,7 @@ from .bundles import ns as bundles_ns
 from .exceptions import ns as exceptions_ns
 from .feedback import ns as feedback_ns
 from .groups import ns as groups_ns
+from .minigames import ns as minigames_ns
 from .problems import ns as problems_ns
 from .settings import ns as settings_ns
 from .shell_servers import ns as shell_servers_ns
@@ -34,6 +35,7 @@ for ns in [
     exceptions_ns,
     feedback_ns,
     groups_ns,
+    minigames_ns,
     problems_ns,
     settings_ns,
     shell_servers_ns,

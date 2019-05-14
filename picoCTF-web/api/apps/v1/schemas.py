@@ -487,3 +487,14 @@ join_group_req.add_argument(
     'group_owner', required=True, type=length_restricted(3, 40, str),
     location='json', help='Name of the teacher who owns the group.'
 )
+
+# Minigame submission request
+minigame_submission_req = reqparse.RequestParser()
+minigame_submission_req.add_argument(
+    'minigame_id', required=True, type=str, location='json',
+    help='ID of the completed minigame'
+)
+minigame_submission_req.add_argument(
+    'verification_key', required=True, type=str, location='json',
+    help='Verification key for the minigame'
+)
