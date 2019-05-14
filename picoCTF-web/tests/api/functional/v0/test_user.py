@@ -143,15 +143,28 @@ def test_extdata(client):
         'password': USER_DEMOGRAPHICS['password'],
         })
     csrf_t = get_csrf_token(res)
+
     # Set some extdata
     res = client.put('/api/v0/user/extdata', data={
         'samplekey': 'samplevalue',
         'numerickey': 2,
-        'token': csrf_t
+        'token': csrf_t,
+        'nonce': 1
     })
     status, message, data = decode_response(res)
     assert status == 1
     assert message == 'Your extdata has been successfully updated.'
+
+    # Try to set some extdata with a lower nonce
+    res = client.put('/api/v0/user/extdata', data={
+        'invalid_nonce': 'true',
+        'token': csrf_t,
+        'nonce': 0
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'Session expired. Please reload your client.'
+
     # Retrieve extdata
     res = client.get('/api/v0/user/extdata')
     status, message, data = decode_response(res)

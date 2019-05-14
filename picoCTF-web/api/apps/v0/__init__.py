@@ -68,29 +68,6 @@ def require_login(f):
     return wrapper
 
 
-def require_teacher(f):
-    """Wrap routing functions that require a user to be a teacher."""
-    @require_login
-    @wraps(f)
-    def wrapper(*args, **kwds):
-        if not api.user.is_teacher():
-            return WebError("You do not have permission to view this page.")
-        return f(*args, **kwds)
-
-    return wrapper
-
-
-def require_admin(f):
-    """Wrap routing functions that require a user to be an admin."""
-    @require_login
-    @wraps(f)
-    def wrapper(*args, **kwds):
-        if not api.user.is_admin():
-            return WebError("You do not have permission to view this page.")
-        return f(*args, **kwds)
-    return wrapper
-
-
 def check_csrf(f):
     """Wrap routing functions that require a CSRF token."""
     @wraps(f)

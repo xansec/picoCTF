@@ -1,18 +1,11 @@
 """Tests for the /api/v0/problems/ routes."""
 
-from .common import (
-  clear_db,
-  client,
-  decode_response,
-  enable_sample_problems,
-  ensure_within_competition,
-  get_conn,
-  get_csrf_token,
-  load_sample_problems,
-  problems_endpoint_response,
-  register_test_accounts,
-  USER_DEMOGRAPHICS
-)
+from .common import (app, clear_db, client, decode_response,
+                     enable_sample_problems, ensure_after_competition,
+                     ensure_before_competition, ensure_within_competition,
+                     get_conn, get_csrf_token, load_sample_problems,
+                     problems_endpoint_response, register_test_accounts,
+                     USER_DEMOGRAPHICS)
 
 
 def test_problems(client):
@@ -85,6 +78,33 @@ def test_submit(client):
     assert status == 0
     assert message == 'CSRF token not in form'
     csrf_t = get_csrf_token(res)
+
+    # Test with an incorrect CSRF token
+    res = client.post('/api/v0/problems/submit', data={
+        'token': 'invalid_csrf_token'
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'CSRF token is not correct'
+
+    # Test outside of competition boundaries
+    ensure_before_competition()
+    res = client.post('/api/v0/problems/submit', data={
+        'token': csrf_t
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'The competition has not begun yet!'
+
+    ensure_after_competition()
+    res = client.post('/api/v0/problems/submit', data={
+        'token': csrf_t
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'The competition is over!'
+
+    ensure_within_competition()
 
     # Test submitting a solution to an invalid problem
     res = client.post('/api/v0/problems/submit', data={

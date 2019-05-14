@@ -490,3 +490,21 @@ def ensure_within_competition():
         'start_time': datetime.datetime.utcnow() - datetime.timedelta(1),
         'end_time': datetime.datetime.utcnow() + datetime.timedelta(1),
         }})
+
+
+def ensure_before_competition():
+    """Adjust the competition times so that @block_before_competition fails."""
+    db = get_conn()
+    db.settings.update_one({}, {'$set': {
+        'start_time': datetime.datetime.utcnow() + datetime.timedelta(11),
+        'end_time': datetime.datetime.utcnow() + datetime.timedelta(10),
+        }})
+
+
+def ensure_after_competition():
+    """Adjust the competition times so that @block_before_competition fails."""
+    db = get_conn()
+    db.settings.update_one({}, {'$set': {
+        'start_time': datetime.datetime.utcnow() - datetime.timedelta(11),
+        'end_time': datetime.datetime.utcnow() - datetime.timedelta(10),
+        }})
