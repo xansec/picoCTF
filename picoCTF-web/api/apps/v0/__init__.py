@@ -198,7 +198,8 @@ def get_extdata_hook():
 @require_login
 def update_extdata_hook():
     """
-    Sets user extdata via HTTP form. Takes in any key-value pairs.
+    Set user extdata via HTTP form. Takes in any key-value pairs.
+
     An optional nonce may be included in payload, which will then
     be evaluated against the previous nonce, if it exists.
 
@@ -220,6 +221,7 @@ def update_extdata_hook():
 @require_login
 @block_before_competition()
 def request_minigame_completion_hook():
+    """Mark a minigame as completed and award tokens to the user."""
     minigame_id = request.form.get('mid')
     validation = request.form.get('v')
 
@@ -276,6 +278,7 @@ def request_minigame_completion_hook():
 @require_login
 @block_before_competition()
 def request_minigame_clear_hook():
+    """Clear completed minigame progress."""
     # if DEBUG_KEY is not None:
 
     db = api.common.get_conn()
@@ -374,7 +377,7 @@ def get_team_score_hook():
 @require_login
 @block_before_competition()
 def request_problem_walkthrough_hook():
-
+    """Get the walkthrough for a problem, if the user has unlocked it."""
     pid = request.args.get("pid")
 
     if pid is None:
@@ -397,7 +400,7 @@ def request_problem_walkthrough_hook():
 @require_login
 @block_before_competition()
 def request_walkthrough_unlock_hook():
-
+    """Attempt to unlock the walkthrough for a problem by spending tokens."""
     pid = request.form.get('pid')
 
     if pid is None:
@@ -426,6 +429,7 @@ def request_walkthrough_unlock_hook():
 @require_login
 @block_before_competition()
 def request_clear_walkthroughs_hook():
+    """Clear the user's unlocked walkthroughs."""
     # if DEBUG_KEY is not None:
 
     db = api.common.get_conn()

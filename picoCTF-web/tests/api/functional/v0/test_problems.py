@@ -182,3 +182,56 @@ def test_submit(client):
     assert status == 0
     assert message == 'Flag incorrect: please note that you have ' + \
                       'already solved this problem.'
+
+
+def test_walkthroughs(client):
+    """
+    Tests the walkthrough-related endpoints:
+
+    - /problems/walkthrough
+    - /problems/unlock_walkthrough
+    - /problems/clear_walkthroughs
+    """
+    clear_db()
+    register_test_accounts()
+    load_sample_problems()
+    enable_sample_problems()
+    ensure_within_competition()
+
+    res = client.post('/api/v0/user/login', data={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password'],
+        })
+    csrf_t = get_csrf_token(res)
+
+    # Attempt to request a walkthrough without a pid
+    res = client.get('/api/v0/problems/walkthrough')
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'Please supply a pid.'
+
+    # Request a walkthrough for a problem without one
+    res = client.get('/api/v0/problems/walkthrough?pid=4508167aa0b219fd9d131551d10aa58e') # noqa
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == "This problem does not have a walkthrough!"
+
+    # Request a walkthrough that the user has not unlocked yet
+    res = client.get('/api/v0/problems/walkthrough?pid=1bef644c399e10a3f35fecdbf590bd0c') # noqa
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == "You haven't unlocked this walkthrough yet!"
+
+    # Force unlocked status and retrieve the walkthrough
+    db = get_conn()
+    db.users.update_one({
+        'username': USER_DEMOGRAPHICS['username']
+    }, {
+        '$set': {
+            'unlocked_walkthroughs': ['1bef644c399e10a3f35fecdbf590bd0c']
+        }
+    })
+    res = client.get('/api/v0/problems/walkthrough?pid=1bef644c399e10a3f35fecdbf590bd0c') # noqa
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert message == "PROTIP: Find the correct answer to get the points."

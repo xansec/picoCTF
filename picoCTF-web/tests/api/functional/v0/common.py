@@ -266,6 +266,7 @@ sample_shellserver_publish_output = r'''
       "hints": [
         "This is a classic buffer overflow with no modern protections."
       ],
+      "walkthrough": "PROTIP: Find the correct answer to get the points.",
       "author": "Tim Becker",
       "organization": "ForAllSecure",
       "instances": [
@@ -329,6 +330,7 @@ sample_shellserver_publish_output = r'''
       "category": "Cryptography",
       "description": "There is a crypto service running at {{server}}:{{port}}. We were able to recover the source code, which you can download at {{url_for(\"ecb.py\")}}.",
       "hints": [],
+      "walkthrough": "Let me google that for you.",
       "score": 70,
       "author": "Tim Becker",
       "organization": "ForAllSecure",
