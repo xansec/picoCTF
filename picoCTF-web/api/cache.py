@@ -9,6 +9,12 @@ import api
 
 log = logging.getLogger(__name__)
 
+"""
+@TODO
+Per internal discussion, caching (@memoize) is currently disabled
+pending a move towards per-function caches in Redis.
+"""
+
 
 def _get_hash_key(f, args, kwargs):
     """

@@ -9,7 +9,7 @@ from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
 
 # these have to come first
-from api.cache import memoize
+# from api.cache import memoize
 from api.common import (check, flat_multi, InternalException, PicoException,
                         safe_fail, validate, WebError)
 from api.logger import log_action

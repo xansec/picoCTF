@@ -6,7 +6,7 @@ import math
 import pymongo
 
 import api
-from api import memoize
+# from api import memoize
 
 scoreboard_page_len = 50
 
@@ -181,7 +181,7 @@ def get_all_user_scores():
     return sorted(result, key=lambda entry: entry['score'], reverse=True)
 
 
-@api.cache.memoize(timeout=120)
+# @memoize(timeout=120)
 def get_problems_by_category():
     """
     Get the list of all problems divided into categories.

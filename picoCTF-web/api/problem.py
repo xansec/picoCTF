@@ -6,7 +6,7 @@ import pymongo
 from voluptuous import ALLOW_EXTRA, Range, Required, Schema
 
 import api
-from api import InternalException, check, validate, memoize
+from api import InternalException, check, validate
 
 problem_schema = Schema({
     Required("name"):
