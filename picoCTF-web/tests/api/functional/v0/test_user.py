@@ -1,5 +1,6 @@
 """Tests for the /api/user/ routes."""
-from .common import (
+import hashlib
+from .common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
   client,
@@ -7,11 +8,12 @@ from .common import (
   get_csrf_token,
   register_test_accounts,
   TEACHER_DEMOGRAPHICS,
-  USER_DEMOGRAPHICS
+  USER_DEMOGRAPHICS,
+  get_conn
 )
 
 
-def test_login(client):
+def test_login(client): # noqa (fixture)
     """Tests the /user/login and /user/logout endpoints."""
     clear_db()
     register_test_accounts()
@@ -57,7 +59,7 @@ def test_login(client):
     assert message == 'Successfully logged out.'
 
 
-def test_status(client):
+def test_status(client): # noqa (fixture)
     """
     Tests the /user/status endpoint.
     """
@@ -134,7 +136,7 @@ def test_status(client):
     assert data['score'] == 0
 
 
-def test_extdata(client):
+def test_extdata(client): # noqa (fixture)
     """Tests the /user/extdata endpoint."""
     clear_db()
     register_test_accounts()
@@ -171,3 +173,80 @@ def test_extdata(client):
     assert status == 1
     assert data['samplekey'] == 'samplevalue'
     assert data['numerickey'] == '2'
+
+
+def test_minigame(client): # noqa (fixture)
+    """Tests the /user/minigame endpoint."""
+    clear_db()
+    register_test_accounts()
+
+    res = client.post('/api/v0/user/login', data={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password'],
+        })
+    csrf_t = get_csrf_token(res)
+
+    # Attempt to call without specifying a minigame ID
+    res = client.post('/api/v0/user/minigame', data={
+        'token': csrf_t,
+        'v': 'invalid'
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'Invalid input!'
+
+    # Attempt to call without specifying a validation key
+    res = client.post('/api/v0/user/minigame', data={
+        'token': csrf_t,
+        'mid': 'invalid'
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'Invalid input!'
+
+    # Attempt to specify an invalid minigame ID
+    res = client.post('/api/v0/user/minigame', data={
+        'token': csrf_t,
+        'mid': 'invalid',
+        'v': 'invalid'
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'Invalid input!'
+
+    # Attempt to specify a correct minigame but invalid key
+    res = client.post('/api/v0/user/minigame', data={
+        'token': csrf_t,
+        'mid': 'a1',
+        'v': 'invalid'
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'Invalid input!'
+
+    # Attempt to successfully record completion of the minigame
+    db = get_conn()
+    settings = db.settings.find_one()
+    hashstring = 'a1' + USER_DEMOGRAPHICS['username'] + \
+        settings['minigame']['secret']
+    v = hashlib.md5(hashstring.encode('utf-8')).hexdigest()
+    res = client.post('/api/v0/user/minigame', data={
+        'token': csrf_t,
+        'mid': 'a1',
+        'v': v
+    })
+    status, message, data = decode_response(res)
+    assert status == 1
+    assert message == 'You win! You have earned {} tokens.'.format(
+        str(settings['minigame']['token_values']['a1'])
+    )
+
+    # Attempt to record completion of the same minigame
+    res = client.post('/api/v0/user/minigame', data={
+        'token': csrf_t,
+        'mid': 'a1',
+        'v': v
+    })
+    status, message, data = decode_response(res)
+    assert status == 0
+    assert message == 'You win! You have already completed this minigame, so you have not earned additional tokens.' # noqa (79char)
