@@ -7,13 +7,11 @@ Provides legacy behavior for:
 /user/logout
 /user/status
 /user/minigame
-/user/clear_minigames
 /user/extdata
 /problems
 /problems/submit
 /problems/unlock_walkthrough
 /problems/walkthrough?pid=<pid>
-/problems/clear_walkthroughs
 /team/score
 """
 import hashlib
@@ -273,25 +271,6 @@ def request_minigame_completion_hook():
         )
 
 
-@blueprint.route("/user/clear_minigames", methods=['POST'])
-@check_csrf
-@require_login
-@block_before_competition()
-def request_minigame_clear_hook():
-    """Clear completed minigame progress."""
-    # if DEBUG_KEY is not None:
-
-    db = api.common.get_conn()
-    db.users.update_one({
-        'uid': api.user.get_user()["uid"],
-    }, {
-        '$set': {
-            'completed_minigames': []
-        },
-    })
-    return WebSuccess("Minigame progress cleared.")
-
-
 @blueprint.route('/problems', methods=['GET'])
 @require_login
 @block_before_competition()
@@ -422,22 +401,3 @@ def request_walkthrough_unlock_hook():
         else:
             return WebError(
                 "You do not have enough tokens to unlock this walkthrough!")
-
-
-@blueprint.route("/problems/clear_walkthroughs", methods=['POST'])
-@check_csrf
-@require_login
-@block_before_competition()
-def request_clear_walkthroughs_hook():
-    """Clear the user's unlocked walkthroughs."""
-    # if DEBUG_KEY is not None:
-
-    db = api.common.get_conn()
-    db.users.update_one({
-        'uid': api.user.get_user()["uid"]
-    }, {
-        '$set': {
-            'unlocked_walkthroughs': []
-        },
-    })
-    return WebSuccess("Walkthroughs cleared.")

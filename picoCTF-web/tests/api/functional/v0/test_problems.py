@@ -190,7 +190,6 @@ def test_walkthroughs(client):
 
     - /problems/walkthrough
     - /problems/unlock_walkthrough
-    - /problems/clear_walkthroughs
     """
     clear_db()
     register_test_accounts()
