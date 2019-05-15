@@ -67,21 +67,26 @@ class Group(Resource):
             raise PicoException('Group not found', 404)
 
         group_members = [group['owner']] + group['members'] + group['teachers']
+        group_teachers = [group['owner']] + group['teachers']
         curr_user = api.user.get_user()
         if curr_user['tid'] not in group_members and not curr_user['admin']:
             raise PicoException(
                 'You do not have permission to view this group.', 403
             )
 
-        # Replace the team ids with full team objects
-        full_teachers = []
-        for tid in group['teachers']:
-            full_teachers.append(api.team.get_team_information(tid))
-        group['teachers'] = full_teachers
-        full_members = []
-        for tid in group['members']:
-            full_members.append(api.team.get_team_information(tid))
-        group['members'] = full_members
+        # Replace the team ids with full team objects if teacher, else remove
+        if curr_user['tid'] in group_teachers:
+            full_teachers = []
+            for tid in group['teachers']:
+                full_teachers.append(api.team.get_team_information(tid))
+            group['teachers'] = full_teachers
+            full_members = []
+            for tid in group['members']:
+                full_members.append(api.team.get_team_information(tid))
+            group['members'] = full_members
+        else:
+            group.pop('teachers')
+            group.pop('members')
 
         return jsonify(group)
 
@@ -226,7 +231,7 @@ class FlagSharingInfo(Resource):
         return jsonify(
             api.stats.check_invalid_instance_submissions(group['gid']))
 
-
+# @require_teacher
 @ns.response(200, 'Success')
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Permission denied')

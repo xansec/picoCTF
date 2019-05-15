@@ -57,9 +57,7 @@ class ScoreboardPage(Resource):
 class TopTeamsScoreProgressions(Resource):
     """Get score progressions for the top n teams, optionally filtered."""
 
-    # @block_before_competition
     @ns.response(200, 'Success')
-    @ns.response(422, 'Competition has not started')
     @ns.expect(top_teams_score_progression_req)
     def get(self):
         """Get score progressions for the top n teams, optionally filtered."""

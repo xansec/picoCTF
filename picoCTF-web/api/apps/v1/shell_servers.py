@@ -15,6 +15,7 @@ ns = Namespace('shell_servers', description='Shell server management')
 class ShellServerList(Resource):
     """Get the list of shell servers, or add a new server."""
 
+    # @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
@@ -149,7 +150,6 @@ class ShellServerAssignment(Resource):
         if not api.config.get_settings()["shell_servers"]["enable_sharding"]:
             raise PicoException(
                 "Sharding must be enabled to update server assignments.", 500)
-        # replace with req parser
         req = shell_server_reassignment_req.parse_args(strict=True)
         include_assigned = req['include_assigned'] is True
         assigned_count = api.shell_servers.reassign_teams(

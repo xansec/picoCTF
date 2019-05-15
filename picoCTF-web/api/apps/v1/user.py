@@ -26,6 +26,7 @@ class User(Resource):
         return jsonify(api.user.get_user())
 
     # @require_login
+    # @check_csrf
     @ns.expect(user_extdata_req)
     def patch(self):
         """Update the current user's extdata (other fields not supported)."""

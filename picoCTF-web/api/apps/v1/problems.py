@@ -37,7 +37,8 @@ ns = Namespace('problems', description='Problem management')
 class ProblemList(Resource):
     """Get the list of problems, or update the problem/bundle state."""
 
-    # @require_admin
+    # @block_before_competition @TODO allow passthrough for admins
+    # @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Unauthorized')
@@ -70,10 +71,11 @@ class ProblemList(Resource):
                         )]
 
         # Handle the unlocked_only param, which depends on user role
+        # Unless just getting the count - then normal users allowed
         is_teacher = api.user.is_teacher()
         is_admin = api.user.is_admin()
         if req['unlocked_only'] is True:
-            if not is_teacher and not is_admin:
+            if req['count_only'] is False and not is_teacher and not is_admin:
                 raise PicoException(
                     'You must be a teacher or admin to use ' +
                     'unlocked_only=false.', status_code=403)

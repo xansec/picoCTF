@@ -22,8 +22,10 @@ class Settings(Resource):
         """Get the current settings."""
         return jsonify(api.config.get_settings())
 
+    # @require_admin
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
+    @ns.response(403, 'Unauthorized to change settings')
     @ns.expect(settings_patch_req)
     def patch(self):
         """Update settings."""

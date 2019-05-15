@@ -14,10 +14,12 @@ ns = Namespace('achievements', description='Achievement management')
 class AchievementList(Resource):
     """Get the full list of achievements, or add a new achievement."""
 
+    # @require_admin
     def get(self):
         """Get the full list of achievements."""
         return api.achievement.get_all_achievements(), 200
 
+    # @require_admin
     @ns.expect(achievement_req)
     @ns.response(201, 'Achievement added')
     @ns.response(400, 'Error parsing request')
@@ -39,6 +41,7 @@ class AchievementList(Resource):
 class Achievement(Resource):
     """Get or update a specific achievement."""
 
+    # @require_admin
     def get(self, achievement_id):
         """Retrieve a specific achievement."""
         res = api.achievement.get_achievement(achievement_id)
@@ -47,6 +50,7 @@ class Achievement(Resource):
         else:
             return res, 200
 
+    # @require_admin
     @ns.expect(achievement_req)
     @ns.response(400, 'Error parsing request')
     def put(self, achievement_id):
@@ -60,6 +64,7 @@ class Achievement(Resource):
             'aid': aid
             })
 
+    # @require_admin
     @ns.expect(achievement_patch_req)
     @ns.response(400, 'Error parsing request')
     def patch(self, achievement_id):

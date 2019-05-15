@@ -14,15 +14,17 @@ from .schemas import bundle_patch_req
 
 ns = Namespace('bundles', description='Bundle management')
 
-# @require_admin
+
 @ns.route('/')
 class BundleList(Resource):
     """Get the full list of bundles."""
 
+    # @require_admin
     def get(self):
         """Get the full list of bundles."""
         return jsonify(api.bundles.get_all_bundles())
 
+    # @require_admin
     @ns.response(501, 'Use the /problems endpoint')
     def patch(self):
         """Not implemented: use the /problems endpoint to update bundles."""
@@ -30,13 +32,14 @@ class BundleList(Resource):
             'Use the /problems endpoint to update bundles.',
             status_code=501)
 
-# @require_admin
+
 @ns.response(200, 'Success')
 @ns.response(404, 'Bundle not found')
 @ns.route('/<string:bundle_id>')
 class Bundle(Resource):
     """Get or update the dependencies_enabled property of a specific bundle."""
 
+    # @require_admin
     def get(self, bundle_id):
         """Retrieve a specific bundle."""
         bundle = api.bundles.get_bundle(bundle_id)
@@ -44,6 +47,7 @@ class Bundle(Resource):
             raise PicoException('Bundle not found', status_code=404)
         return bundle, 200
 
+    # @require_admin
     @ns.response(400, 'Error parsing request')
     @ns.expect(bundle_patch_req)
     def patch(self, bundle_id):

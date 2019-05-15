@@ -192,7 +192,8 @@ problems_req = reqparse.RequestParser()
 problems_req.add_argument(
     'unlocked_only', required=False, location='args', default=True,
     help='Whether to display only problems unlocked for your team or ' +
-         'all matching problems. Must be teacher/admin to disable. ' +
+         'all matching problems. Must be teacher/admin to disable, unless ' +
+         'count_only=True. ' +
          'If disabled as a teacher account, will only return name, ' +
          'category, and score for each problem.',
     type=inputs.boolean
