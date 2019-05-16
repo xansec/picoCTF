@@ -220,24 +220,36 @@ def check_competition_active():
 
 
 def block_before_competition(f):
-    """Wrap routing functions that are blocked prior to the competition."""
+    """
+    Wrap routing functions that are blocked prior to the competition.
+
+    Admins can bypass.
+    """
     @wraps(f)
-    def wrapper(*args, **kwds):
-        if (datetime.utcnow().timestamp()
+    def wrapper(*args, **kwargs):
+        if api.user.is_logged_in() and api.user.get_user().get('admin', False):
+            return f(*args, **kwargs)
+        elif (datetime.utcnow().timestamp()
                 <= get_settings()['start_time'].timestamp()):
             raise PicoException(
                 'The competition has not begun yet!', 422)
-        return f(*args, **kwds)
+        return f(*args, **kwargs)
     return wrapper
 
 
 def block_after_competition(f):
-    """Wrap routing functions that are blocked after the competition."""
+    """
+    Wrap routing functions that are blocked after the competition.
+
+    Admins can bypass.
+    """
     @wraps(f)
-    def wrapper(*args, **kwds):
-        if (datetime.utcnow().timestamp()
+    def wrapper(*args, **kwargs):
+        if api.user.is_logged_in() and api.user.get_user().get('admin', False):
+            return f(*args, **kwargs)
+        elif (datetime.utcnow().timestamp()
                 >= get_settings()['end_time'].timestamp()):
             raise PicoException(
                 'The competition has ended!', 422)
-        return f(*args, **kwds)
+        return f(*args, **kwargs)
     return wrapper
