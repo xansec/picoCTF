@@ -10,6 +10,7 @@ from .schemas import exception_req
 
 ns = Namespace('exceptions', description='View and dismiss logged exceptions')
 
+
 @ns.response(200, 'Success')
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Not authorized')

@@ -1,6 +1,6 @@
 """Tests for the /api/v0/team routes."""
 
-from .common import (
+from common import (
   ADMIN_DEMOGRAPHICS,
   clear_db,
   client,

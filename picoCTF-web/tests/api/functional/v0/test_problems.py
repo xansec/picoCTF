@@ -1,6 +1,6 @@
 """Tests for the /api/v0/problems/ routes."""
 
-from .common import (app, clear_db, client, decode_response, # noqa (fixture)
+from common import (app, clear_db, client, decode_response, # noqa (fixture)
                      enable_sample_problems, ensure_after_competition,
                      ensure_before_competition, ensure_within_competition,
                      get_conn, get_csrf_token, load_sample_problems,

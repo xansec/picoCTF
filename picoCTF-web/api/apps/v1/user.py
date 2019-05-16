@@ -97,11 +97,12 @@ class AuthorizationResponse(Resource):
 
         user = None
         if api.user.is_logged_in():
+            authorizations['user'] = True
             user = api.user.get_user()
 
         if user:
             for role in ['teacher', 'admin']:
-                authorizations['role'] = user['role']
+                authorizations[role] = user[role]
 
         if authorizations[requested_role] is True:
             status_code = 200

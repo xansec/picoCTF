@@ -130,7 +130,8 @@ def create_app(config={}):
     # Register a post-request function
     @app.after_request
     def after_request(response):
-        response.headers.add('Access-Control-Allow-Methods', 'GET, POST')
+        response.headers.add('Access-Control-Allow-Methods',
+                             'GET, POST, PUT, PATCH, DELETE')
         response.headers.add('Access-Control-Allow-Credentials', 'true')
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type, *')
         response.headers.add('Cache-Control', 'no-cache')
@@ -142,12 +143,12 @@ def create_app(config={}):
             if not domain:
                 domain = None
 
+            # Set the CSRF token cookie
             if 'token' not in session:
                 csrf_token = api.common.token()
                 session['token'] = csrf_token
             response.set_cookie('token', session['token'], domain=domain)
 
-        response.mimetype = 'application/json'
         return response
 
     return app

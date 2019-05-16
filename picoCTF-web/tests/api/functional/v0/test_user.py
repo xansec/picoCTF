@@ -1,6 +1,6 @@
 """Tests for the /api/user/ routes."""
 import hashlib
-from .common import ( # noqa (fixture)
+from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
   client,
