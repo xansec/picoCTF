@@ -1,9 +1,18 @@
 # {{ ansible_managed }}
 
 server {
-    listen 80;
-    server_name _;
+    server_name {{ shell_hostname }};
     root   /usr/share/nginx/html;
+    {% if enable_shell_ssl | bool -%}
+    listen       443;
+
+    ssl_certificate  /etc/ssl/certs/ssl-pico.chained.crt;
+    ssl_certificate_key /etc/ssl/private/ssl-pico.key;
+    ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+    {% else %}
+    listen       80;
+    {% endif %}
 
     location /shell {
         proxy_pass http://127.0.0.1:{{ wetty_port }}/shell;
@@ -22,3 +31,12 @@ server {
         default_type application/octet-stream;
     }
 }
+
+{% if enable_shell_ssl | bool -%}
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        server_name {{ shell_hostname }};
+        return 301 https://$server_name$request_uri;
+}
+{% endif %}

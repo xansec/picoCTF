@@ -33,3 +33,6 @@ bundles:
     name: "challenge-sampler",
     instances: 2
   }
+
+# SSL requires cert and vault-encrypted key
+enable_shell_ssl: False

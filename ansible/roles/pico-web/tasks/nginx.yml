@@ -1,6 +1,6 @@
 ---
 # Playbook that configures nginx for picoCTF-web
-# This is the base  picoCTF web nginx configuration
+# This is the base picoCTF web nginx configuration
 
 - name: Add picoCTF site configuration to nginx
   template: 
@@ -24,6 +24,25 @@
   no_log: True
   with_items: "{{ htpasswd_accounts }}"
   when: enable_basic_auth
+
+# Install SSL cert and key for nginx
+- name: Copy SSL cert
+  copy:
+    src: ssl-pico.chained.crt
+    dest: /etc/ssl/certs/ssl-pico.chained.crt
+    owner: root
+    group: root
+    mode: 0644
+  when: enable_web_ssl | bool
+
+- name: Copy SSL key
+  copy:
+    src: ssl-pico.key.vault_encrypted
+    dest: /etc/ssl/private/ssl-pico.key
+    owner: root
+    group: root
+    mode: 0644
+  when: enable_web_ssl | bool
 
 - name: Enable picoCTF site configuration
   file:

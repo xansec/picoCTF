@@ -24,3 +24,23 @@
   file:
     path: "/etc/nginx/sites-enabled/default"
     state: absent
+
+# Install SSL cert and key for nginx
+- name: Copy SSL cert
+  copy:
+    src: ssl-pico.chained.crt
+    dest: /etc/ssl/certs/ssl-pico.chained.crt
+    owner: root
+    group: root
+    mode: 0644
+  when: enable_shell_ssl | bool
+
+- name: Copy SSL key
+  copy:
+    src: ssl-pico.key.vault_encrypted
+    dest: /etc/ssl/private/ssl-pico.key
+    owner: root
+    group: root
+    mode: 0644
+  when: enable_shell_ssl | bool
+
