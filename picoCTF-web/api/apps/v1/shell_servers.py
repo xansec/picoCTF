@@ -11,7 +11,7 @@ from .schemas import (shell_server_reassignment_req, shell_server_patch_req,
 ns = Namespace('shell_servers', description='Shell server management')
 
 
-@ns.route('/')
+@ns.route('')
 class ShellServerList(Resource):
     """Get the list of shell servers, or add a new server."""
 

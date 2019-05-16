@@ -12,7 +12,7 @@ ns = Namespace('submissions', description='Submit flags and list ' +
                'submission attempts')
 
 
-@ns.route('/')
+@ns.route('')
 class SubmissionList(Resource):
     """Submit new solution attempts, or clear all existing submissions."""
 

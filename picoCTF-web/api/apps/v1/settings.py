@@ -11,7 +11,7 @@ from .schemas import settings_patch_req
 ns = Namespace('settings', description='View or modify runtime settings')
 
 
-@ns.route('/')
+@ns.route('')
 class Settings(Resource):
     """Get or modify the current settings."""
 

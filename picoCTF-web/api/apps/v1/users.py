@@ -13,7 +13,7 @@ from .schemas import user_req
 ns = Namespace('users', description='User management')
 
 
-@ns.route('/')
+@ns.route('')
 class UserList(Resource):
     """Get the full list of users, or add a new user."""
 

@@ -7,7 +7,7 @@ import api
 ns = Namespace('status', description='Information about the platform status')
 
 
-@ns.route('/')
+@ns.route('')
 class Status(Resource):
     """Get information about the platform status."""
 

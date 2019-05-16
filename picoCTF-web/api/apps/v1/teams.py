@@ -13,7 +13,7 @@ ns = Namespace('teams', description='Team management')
 #       (did not exist in previous API)
 
 
-@ns.route('/')
+@ns.route('')
 class TeamList(Resource):
     """Add a new team."""
 

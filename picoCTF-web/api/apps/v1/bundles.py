@@ -15,7 +15,7 @@ from .schemas import bundle_patch_req
 ns = Namespace('bundles', description='Bundle management')
 
 
-@ns.route('/')
+@ns.route('')
 class BundleList(Resource):
     """Get the full list of bundles."""
 

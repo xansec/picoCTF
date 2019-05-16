@@ -14,7 +14,7 @@ ns = Namespace('exceptions', description='View and dismiss logged exceptions')
 @ns.response(200, 'Success')
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Not authorized')
-@ns.route('/')
+@ns.route('')
 class ExceptionsList(Resource):
     """Get the most recent exceptions, or dismiss all exceptions."""
 

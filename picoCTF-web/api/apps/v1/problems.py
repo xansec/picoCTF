@@ -34,7 +34,7 @@ ns = Namespace('problems', description='Problem management')
 @ns.response(400, 'Error parsing request')
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Not authorized')
-@ns.route('/')
+@ns.route('')
 class ProblemList(Resource):
     """Get the list of problems, or update the problem/bundle state."""
 

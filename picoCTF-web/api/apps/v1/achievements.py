@@ -10,7 +10,7 @@ from .schemas import achievement_patch_req, achievement_req
 ns = Namespace('achievements', description='Achievement management')
 
 
-@ns.route('/')
+@ns.route('')
 class AchievementList(Resource):
     """Get the full list of achievements, or add a new achievement."""
 

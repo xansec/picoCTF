@@ -11,7 +11,7 @@ from .schemas import feedback_list_req, feedback_submission_req
 ns = Namespace('feedback', description='List and submit problem feedback')
 
 
-@ns.route('/')
+@ns.route('')
 class FeedbackList(Resource):
     """Get the list of problem feedback, or submit new feedback."""
 

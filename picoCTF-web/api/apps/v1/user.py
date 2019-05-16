@@ -13,7 +13,7 @@ ns = Namespace('user', description='Authentication and information about ' +
                                    'current user')
 
 
-@ns.route('/')
+@ns.route('')
 class User(Resource):
     """Get the current user or update their extdata."""
 
@@ -123,7 +123,7 @@ class DisableAccountResponse(Resource):
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'CSRF token invalid')
-    @ns.response(500, 'Provided password is not correct')
+    @ns.response(422, 'Provided password is not correct')
     @ns.expect(disable_account_req)
     def post(self):
         """
@@ -136,7 +136,7 @@ class DisableAccountResponse(Resource):
 
         if not api.user.confirm_password(
                 req['password'], user['password_hash']):
-            raise PicoException('The provided password is not correct.')
+            raise PicoException('The provided password is not correct.', 422)
         api.user.disable_account(user['uid'])
         return jsonify({
             'success': True

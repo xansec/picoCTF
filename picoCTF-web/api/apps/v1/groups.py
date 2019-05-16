@@ -11,7 +11,7 @@ from .schemas import (group_invite_req, group_patch_req, group_remove_team_req,
 ns = Namespace('groups', description='Group management')
 
 
-@ns.route('/')
+@ns.route('')
 class GroupList(Resource):
     """Get the list of groups, or add a new group."""
 

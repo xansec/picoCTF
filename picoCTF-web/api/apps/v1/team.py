@@ -12,7 +12,7 @@ from .schemas import (join_group_req, score_progression_req, team_change_req,
 ns = Namespace('team', description="Information about the current user's team")
 
 
-@ns.route('/')
+@ns.route('')
 class Team(Resource):
     """Get the current user's team."""
 

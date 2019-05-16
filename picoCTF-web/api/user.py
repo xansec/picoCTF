@@ -328,10 +328,6 @@ def update_password_request(params, uid=None, check_current=False):
     if params["new-password"] != params["new-password-confirmation"]:
         raise PicoException("Your passwords do not match.", 422)
 
-    # @TODO is this even possible?
-    if len(params["new-password"]) == 0:
-        raise PicoException("Your password cannot be empty.", 400)
-
     db = api.db.get_conn()
     db.users.update(
         {'uid': user['uid']},
