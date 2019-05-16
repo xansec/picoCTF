@@ -9,6 +9,7 @@ from common import ( # noqa (fixture)
   USER_DEMOGRAPHICS,
   get_conn
 )
+import api
 
 
 def test_login(client):
@@ -333,3 +334,58 @@ def test_patch_user(client):
 
     res = client.get('api/v1/user')
     assert res.json['extdata'] == updated_extdata
+
+
+def test_reset_password(client):
+    """Tests the password reset endpoints."""
+    clear_db()
+    register_test_accounts()
+
+    # App init will set api.email.mail to a testing FlaskMail instance
+    with api.email.mail.record_messages() as outbox:
+
+        # Send the password reset request
+        res = client.post('/api/v1/user/reset_password/request', json={
+            'username': USER_DEMOGRAPHICS['username'],
+            })
+        assert res.status_code == 200
+        assert res.json['success'] is True
+
+        # Verify that the token is in the DB
+        # Since we cleared the DB, it's the only token in there, so
+        # we can avoid searching for it...
+        db = get_conn()
+        db_token = db.get_collection('tokens') \
+                     .find_one({})['tokens']['password_reset']
+        assert db_token is not None
+
+        # Verify that the email is in the outbox
+        assert len(outbox) == 1
+        assert outbox[0].subject == ' Password Reset'
+        assert db_token in outbox[0].body
+
+    # Attempt to confirm the reset with the wrong token
+    res = client.post('/api/v1/user/reset_password', json={
+            'reset_token': 'wrongtoken',
+            'new_password': 'newpassword',
+            'new_password_confirmation': 'newpassword'
+            })
+    assert res.status_code == 500  # @TODO this is not a great UX
+
+    # Perform the password reset with the correct token
+    res = client.post('/api/v1/user/reset_password', json={
+            'reset_token': db_token,
+            'new_password': 'newpassword',
+            'new_password_confirmation': 'newpassword'
+            })
+    assert res.status_code == 200
+    assert res.json['success'] is True
+
+    # Log in with the new password
+    client.get('/api/v1/user/logout')
+    res = client.post('/api/v1/user/login', json={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': 'newpassword',
+        })
+    assert res.status_code == 200
+    assert res.json['success'] is True

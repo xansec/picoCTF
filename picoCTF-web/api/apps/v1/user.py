@@ -183,8 +183,8 @@ class ResetPasswordResponse(Resource):
     def post(self):
         """Reset a user's password. Requires a password reset token."""
         req = reset_password_confirmation_req.parse_args(strict=True)
-        api.user.reset_password(req['reset_token', req['new_password'],
-                                req['new_password_confirmation']])
+        api.user.reset_password(req['reset_token'], req['new_password'],
+                                req['new_password_confirmation'])
         return jsonify({
             'success': True
         })

@@ -394,16 +394,19 @@ def reset_password(token_value, password, confirm_password):
         token_value: the password reset token
         password: the password to set
         confirm_password: the same password again
+
+    Raises:
+        PicoException if invalid password reset token is given
     """
-    uid = api.token.find_key_by_token("password_reset", token_value)["uid"]
+    user = api.token.find_key_by_token("password_reset", token_value)
     api.user.update_password_request(
         {
             "new-password": password,
             "new-password-confirmation": confirm_password
         },
-        uid=uid)
+        uid=user['uid'])
 
-    api.token.delete_token({"uid": uid}, "password_reset")
+    api.token.delete_token({"uid": user['uid']}, "password_reset")
 
 
 def confirm_password(attempt, password_hash):
