@@ -37,8 +37,8 @@ setup(
     url='https://github.com/picoCTF/picoCTF',
 
     # Author details
-    author='Christopher Ganas',
-    author_email='cganas@forallsecure.com',
+    author='picoCTF team',
+    author_email='opensource@picoctf.com',
 
     # Choose your license
     license='',
@@ -75,6 +75,7 @@ setup(
         'Flask==1.0.2',
         'Flask-Bcrypt==0.7.1',
         'Flask-Mail==0.9.1',
+        'flask-restplus==0.12.1',
         'gunicorn==19.9.0',
         # 'line_profiler==2.1.2',
         'py==1.5.3',
@@ -86,6 +87,8 @@ setup(
         'dev': [
             'pytest',
             'pytest-cov',
+            'flake8',
+            'pydocstyle',
         ]
     },
     entry_points={
