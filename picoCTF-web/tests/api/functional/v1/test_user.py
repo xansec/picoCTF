@@ -285,7 +285,28 @@ def test_get_user(client):
         'password': USER_DEMOGRAPHICS['password']
     })
 
+    expected_body = {
+        'admin': False,
+        'completed_minigames': [],
+        'country': 'US',
+        'demo': {'age': '13-17',
+        'parentemail': 'student@example.com'},
+        'disabled': False,
+        'email': 'sample@example.com',
+        'extdata': {},
+        'firstname': 'Sample',
+        'lastname': 'User',
+        'teacher': False,
+        'tid': '8b19b0478dcc43e7a448a4e500584c10',
+        'tokens': 0,
+        'uid': 'dc7089e279d24b70b989cd53665eb49c',
+        'unlocked_walkthroughs': [],
+        'username': 'sampleuser',
+        'usertype': 'student',
+        'verified': True
+        }
     res = client.get('/api/v1/user')
-    print(str(res.json))
     assert res.status_code == 200
-
+    for k, v in res.json.items():
+        if k not in {'uid', 'tid'}:
+            assert res.json[k] == expected_body[k]
