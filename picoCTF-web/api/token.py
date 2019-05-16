@@ -6,7 +6,7 @@ group, or other set of fields.
 """
 
 import api
-from api import InternalException
+from api import PicoException
 
 
 def get_token_path(token_name):
@@ -94,6 +94,6 @@ def find_key_by_token(token_name, token_value):
                               })
 
     if key is None:
-        raise InternalException("Could not find {}.".format(token_name))
+        raise PicoException("Could not find {}.".format(token_name))
 
     return key

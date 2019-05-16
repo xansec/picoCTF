@@ -56,18 +56,6 @@ class PicoException(Exception):
         return rv
 
 
-class APIException(Exception):
-    """Base class for exceptions thrown by the API."""
-
-    data = {}
-
-
-class InternalException(APIException):
-    """Exceptions thrown by the API constituting mild errors."""
-
-    pass
-
-
 def WebSuccess(message=None, data=None):
     """Legacy successful response wrapper."""
     return json_util.dumps({
@@ -105,7 +93,7 @@ def flat_multi(multidict):
 
 def check(*callback_tuples):
     """
-    Voluptuous wrapper function to raise our APIException.
+    Voluptuous wrapper function to raise our PicoException.
 
     Args:
         callback_tuples: a callback_tuple should contain
@@ -121,7 +109,7 @@ def check(*callback_tuples):
         Args:
             value: the item to validate
         Raises:
-            APIException with the given error code and msg.
+            PicoException with 400 status code and error msg.
         Returns:
             The value if the validation callbacks are satisfied.
 
@@ -147,7 +135,7 @@ def validate(schema, data):
         data: The validation data for the schema object
 
     Raises:
-        APIException with status 0 and the voluptuous error message
+        PicoException with 400 status code and the voluptuous error message
 
     """
     try:
@@ -158,7 +146,7 @@ def validate(schema, data):
 
 def safe_fail(f, *args, **kwargs):
     """
-    Safely call a function that can raise an APIException.
+    Safely call a function that can raise an PicoException.
 
     Args:
         f: function to call
@@ -169,7 +157,7 @@ def safe_fail(f, *args, **kwargs):
     """
     try:
         return f(*args, **kwargs)
-    except APIException:
+    except Exception:
         return None
 
 

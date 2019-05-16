@@ -4,10 +4,7 @@ import json
 import spur
 
 import api
-from api import (
-  InternalException,
-  PicoException,
-)
+from api import PicoException
 
 
 def get_server(sid):
@@ -198,8 +195,8 @@ def get_assigned_server():
     servers = list(db.shell_servers.find(match, {"_id": 0}))
 
     if len(servers) == 0 and settings["shell_servers"]["enable_sharding"]:
-        raise InternalException("Your assigned shell server is currently down."
-                                + "Please contact an admin.")
+        raise PicoException("Your assigned shell server is currently down." +
+                            "Please contact an admin.")
 
     return servers
 
@@ -278,10 +275,10 @@ def get_assigned_server_number(new_team=True, tid=None):
         team_count = db.teams.count()
     else:
         if not tid:
-            raise InternalException("tid must be specified.")
+            raise PicoException("tid must be specified.")
         oid = db.teams.find_one({"tid": tid}, {"_id": 1})
         if not oid:
-            raise InternalException("Invalid tid.")
+            raise PicoException("Invalid tid.")
         team_count = db.teams.count({"_id": {"$lt": oid["_id"]}})
 
     assigned_number = 1

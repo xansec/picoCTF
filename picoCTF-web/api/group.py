@@ -3,7 +3,7 @@
 from voluptuous import Required, Schema
 
 import api
-from api import check, InternalException, validate
+from api import check, PicoException, validate
 
 group_settings_schema = Schema({
     Required("email_filter"):
@@ -13,44 +13,6 @@ group_settings_schema = Schema({
     check(("Hidden property of a group is a boolean.",
            [lambda hidden: type(hidden) == bool]))
 })
-
-
-def get_roles_in_group(gid, tid=None, uid=None):
-    """
-    Determine what role the team plays in a group.
-
-    Args:
-        gid: the group id
-        tid: the team id
-        uid: optional uid
-    """
-    group = get_group(gid=gid)
-
-    if uid is not None:
-        user = api.user.get_user(uid=uid)
-        team = api.user.get_team(uid=user["uid"])
-
-        if user["admin"]:
-            return {
-                "owner": True,
-                "teacher": True,
-                "member": team["tid"] in group["members"]
-            }
-        else:
-            # If the user isn't an admin we continue on as normal
-            team = api.user.get_team(uid=user["uid"])
-    elif tid is not None:
-        team = api.team.get_team(tid=tid)
-    else:
-        raise InternalException("Either tid or uid must be specified " +
-                                "to determine role in classroom.")
-
-    roles = {}
-    roles["owner"] = team["tid"] == group["owner"]
-    roles["teacher"] = roles["owner"] or team["tid"] in group["teachers"]
-    roles["member"] = team["tid"] in group["members"]
-
-    return roles
 
 
 def get_group(gid=None, name=None, owner_tid=None):
@@ -73,9 +35,7 @@ def get_group(gid=None, name=None, owner_tid=None):
     elif gid is not None:
         match.update({"gid": gid})
     else:
-        raise InternalException(
-            "Classroom name and owner or gid must be specified" +
-            " to look up a classroom.")
+        return None
 
     return db.groups.find_one(match, {"_id": 0})
 
@@ -167,15 +127,26 @@ def get_group_settings(gid):
 
 
 def change_group_settings(gid, settings):
-    """Replace the current settings with the supplied ones."""
+    """
+    Replace the current settings with the supplied ones.
+
+    Args:
+        gid: ID of the group to update
+        settings: new settings object
+
+    Raises:
+        PicoException if attempting to change 'hidden' from true to false
+    """
     db = api.db.get_conn()
 
     validate(group_settings_schema, settings)
 
+    # @TODO only modify changed settings
+    # @TODO is there a good reason hidden groups can't become public again?
     group = api.group.get_group(gid=gid)
     if group["settings"]["hidden"] and not settings["hidden"]:
-        raise InternalException("You can not change a hidden classroom " +
-                                "back to a public classroom.")
+        raise PicoException('Cannot make a previously hidden group public',
+                            status_code=422)
 
     db.groups.update({"gid": group["gid"]}, {"$set": {"settings": settings}})
 
@@ -212,14 +183,8 @@ def leave_group(gid, tid):
         gid: the group id to leave
     """
     db = api.db.get_conn()
-    team = api.team.get_team(tid=tid)
-    roles = get_roles_in_group(gid, tid=team["tid"])
-
-    if roles["teacher"]:
-        db.groups.update({'gid': gid}, {'$pull': {"teachers": tid}})
-
-    elif roles["member"]:
-        db.groups.update({'gid': gid}, {'$pull': {"members": tid}})
+    db.groups.update({'gid': gid}, {'$pull': {"teachers": tid}})
+    db.groups.update({'gid': gid}, {'$pull': {"members": tid}})
 
 
 @api.logger.log_action

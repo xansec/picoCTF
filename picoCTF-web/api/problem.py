@@ -6,7 +6,7 @@ import pymongo
 from voluptuous import ALLOW_EXTRA, Range, Required, Schema
 
 import api
-from api import InternalException, check, validate
+from api import PicoException, check, validate
 
 problem_schema = Schema({
     Required("name"):
@@ -165,17 +165,17 @@ def assign_instance_to_team(pid, tid=None, reassign=False):
                     "server_number", 1), problem["instances"]))
 
     if pid in team["instances"] and not reassign:
-        raise InternalException(
+        raise PicoException(
             "Team with tid {} already has an instance of pid {}.".format(
                 tid, pid))
 
     if len(available_instances) == 0:
         if settings["shell_servers"]["enable_sharding"]:
-            raise InternalException(
+            raise PicoException(
                 "Your assigned shell server is currently down. " +
                 "Please contact an admin.")
         else:
-            raise InternalException(
+            raise PicoException(
                 "Problem {} has no instances to assign.".format(pid))
 
     instance_number = randint(0, len(available_instances) - 1)
@@ -492,8 +492,10 @@ def set_problem_availability(pid, disabled):
 
 def get_unlocked_walkthroughs(uid):
     """
-    Returns list of unlocked walkthroughs, either as result of problem
-    solved by team, or token spend to unlock.
+    Return list of pids with unlocked walkthroughs.
+
+    Walkthroughs are unlocked when a problem is solved by the user's team,
+    or the user spends tokens to unlock.
 
     Args:
         uid: user id to look up
@@ -504,14 +506,16 @@ def get_unlocked_walkthroughs(uid):
 
 def unlock_walkthrough(uid, pid, cost):
     """
-    Unlocks a problem at cost of tokens. Performed as atomic update to
-    decrement tokens while also unlocking, also ensures against race
-    conditions by validating token count and already-unlocked walkthroughs.
+    Unlocks a problem at cost of tokens.
+
+    Performed as atomic update to decrement tokens while also unlocking,
+    also ensures against race conditions by validating token count and
+    already-unlocked walkthroughs.
 
     Args:
         uid: user id
         pid: problem id
-        cpst: token cost of unlock
+        cost: token cost of unlock
     """
     db = api.db.get_conn()
     db.users.update_one({

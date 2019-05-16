@@ -5,7 +5,6 @@ from voluptuous import Length, Required, Schema
 import api
 from api import (
   check,
-  InternalException,
   safe_fail,
   PicoException
 )
@@ -47,7 +46,7 @@ def get_team(tid=None, name=None):
     elif api.user.is_logged_in():
         match.update({"tid": api.user.get_user()["tid"]})
     else:
-        raise InternalException("Must supply tid or team name to get_team")
+        return None
 
     return db.teams.find_one(match, {"_id": 0})
 
@@ -360,7 +359,7 @@ def join_team(team_name, password, user):
         new=True)
 
     if not user_team_update:
-        raise InternalException("There was an issue switching your team!")
+        raise PicoException("There was an issue switching your team!")
 
     # Update the sizes of the old and new teams
     db.teams.find_one_and_update(
@@ -386,9 +385,8 @@ def join_team(team_name, password, user):
         api.group.leave_group(gid=group["gid"], tid=current_team["tid"])
         # Rejoin with new tid if not already member, and classroom
         # email filter is not enabled.
-        roles = api.group.get_roles_in_group(
-            group["gid"], tid=desired_team["tid"])
-        if not roles["teacher"] and not roles["member"]:
+        if (desired_team['tid'] not in group['members'] and
+                desired_team['tid'] not in group['teachers']):
             group_settings = api.group.get_group_settings(gid=group["gid"])
             if not group_settings["email_filter"]:
                 api.group.join_group(

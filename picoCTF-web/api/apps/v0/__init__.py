@@ -229,9 +229,14 @@ def submit_key_hook():
     method = request.form.get('method', '')
     ip = request.remote_addr
 
-    (correct, previously_solved_by_user,
-     previously_solved_by_team) = api.submissions.submit_key(
-            tid, pid, key, method, uid, ip)
+    try:
+        (correct, previously_solved_by_user,
+            previously_solved_by_team) = api.submissions.submit_key(
+               tid, pid, key, method, uid, ip)
+    except PicoException as e:
+        return WebError(
+            message=e.message
+        )
 
     if correct and not previously_solved_by_team:
         return WebSuccess("That is correct!"), 200

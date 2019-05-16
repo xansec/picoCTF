@@ -92,6 +92,7 @@ class Group(Resource):
 
     # @require_teacher
     @ns.response(400, 'Error parsing request')
+    @ns.response(422, 'Cannot make a previously hidden group public')
     @ns.expect(group_patch_req)
     def patch(self, group_id):
         """Modify a group's settings (other fields are not available)."""

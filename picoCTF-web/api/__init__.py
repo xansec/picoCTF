@@ -10,7 +10,7 @@ from werkzeug.contrib.fixers import ProxyFix
 
 # these have to come first
 # from api.cache import memoize
-from api.common import (check, flat_multi, InternalException, PicoException,
+from api.common import (check, flat_multi, PicoException,
                         safe_fail, validate, WebError)
 from api.logger import log_action
 
@@ -112,17 +112,15 @@ def create_app(config={}):
         return response
 
     if not app.debug:
-        @app.errorhandler(InternalException)
-        def handle_internal_exception(e):
-            get_origin_logger(e).error(traceback.format_exc())
-            return WebError(e.args[0]), 500
-
         @app.errorhandler(Exception)
         def handle_generic_exception(e):
+            # @TODO log picoexceptions also?
             get_origin_logger(e).error(traceback.format_exc())
-            return WebError(
-                "An error occurred. Please contact an " +
-                "administrator."), 500
+            response = jsonify({
+                'message': "An internal error occurred. " +
+                           "Please contact an administrator."})
+            response.status_code = 500
+            return response
 
     # Configure logging
     with app.app_context():

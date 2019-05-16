@@ -4,7 +4,7 @@ from voluptuous import Length, Required, Schema
 
 from datetime import datetime
 import api
-from api import check, validate, InternalException, PicoException
+from api import check, validate, PicoException
 
 submission_schema = Schema({
     Required("tid"):
@@ -63,8 +63,8 @@ def submit_key(tid, pid, key, method, uid, ip=None):
     validate(submission_schema, {"tid": tid, "pid": pid, "key": key})
 
     if pid not in api.problem.get_unlocked_pids(tid):
-        raise InternalException(
-            "You can't submit flags to problems you haven't unlocked.")
+        raise PicoException(
+            "You can't submit flags to problems you haven't unlocked.", 422)
 
     previously_solved_by_user = db.submissions.find_one(
         filter={
