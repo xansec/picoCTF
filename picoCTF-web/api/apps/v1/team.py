@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException, require_login
+from api import block_before_competition, PicoException, require_login
 
 from .schemas import (join_group_req, score_progression_req, team_change_req,
                       update_team_password_req)
@@ -24,7 +24,7 @@ class Team(Resource):
         return jsonify(api.team.get_team_information(current_tid))
 
 
-# @TODO doesn't make sense to return score in both /team an /team/score
+# @TODO doesn't make sense to return score in both /team and /team/score
 @ns.route('/score')
 class Score(Resource):
     """Get the current user's team's score."""
@@ -70,7 +70,7 @@ class UpdatePasswordResponse(Resource):
 class ScoreProgression(Resource):
     """Get your team's score progression."""
 
-    # @block_before_competition
+    @block_before_competition
     @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')

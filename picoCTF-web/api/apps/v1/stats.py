@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException
+from api import block_before_competition, PicoException
 
 from .schemas import scoreboard_page_req, top_teams_score_progression_req
 
@@ -23,7 +23,7 @@ class RegistrationStatus(Resource):
 class Scoreboard(Resource):
     """Retrieve the inital scoreboard."""
 
-    # @block_before_competition
+    @block_before_competition
     @ns.response(200, 'Success')
     @ns.response(422, 'Competition has not started')
     def get(self):
@@ -35,7 +35,7 @@ class Scoreboard(Resource):
 class ScoreboardPage(Resource):
     """Retrieve a page of a specific scoreboard."""
 
-    # @block_before_competition
+    @block_before_competition
     @ns.response(200, 'Success')
     @ns.response(401, 'Must be logged in to retrieve groups board')
     @ns.response(422, 'Competition has not started')

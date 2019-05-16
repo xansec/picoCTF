@@ -23,9 +23,10 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException, require_admin, require_login
+from api import (block_before_competition, PicoException, require_admin,
+                 require_login)
 
-from .schemas import shell_server_out, problem_patch_req, problems_req
+from .schemas import problem_patch_req, problems_req, shell_server_out
 
 ns = Namespace('problems', description='Problem management')
 
@@ -37,11 +38,12 @@ ns = Namespace('problems', description='Problem management')
 class ProblemList(Resource):
     """Get the list of problems, or update the problem/bundle state."""
 
-    # @block_before_competition @TODO allow passthrough for admins
+    @block_before_competition
     @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Unauthorized')
+    @ns.response(422, 'Competition has not started')
     @ns.expect(problems_req)
     def get(self):
         """
@@ -202,12 +204,13 @@ class Problem(Resource):
 class ProblemWalkthrough(Resource):
     """Get the walkthrough for a problem, if unlocked."""
 
-    # @block_before_competition
+    @block_before_competition
     @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Walkthrough not unlocked')
     @ns.response(404, 'Problem or walkthrough not found')
+    @ns.response(422, 'Competition has not started')
     def get(self, problem_id):
         """Get the walkthrough for a problem, if unlocked."""
         uid = api.user.get_user()['uid']
@@ -229,13 +232,14 @@ class ProblemWalkthrough(Resource):
 class ProblemWalkthroughUnlockResponse(Resource):
     """Spend tokens to unlock the walkthrough for a problem."""
 
-    # @block_before_competition
+    @block_before_competition
     @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(404, 'Problem or walkthrough not found')
-    @ns.response(422, 'Insufficient tokens to unlock walkthrough')
+    @ns.response(422, 'Insufficient tokens or competition has not started')
     def get(self, problem_id):
+        """Spend tokens to unlock the walkthrough for a problem."""
         curr_user = api.user.get_user()
         problem = api.problem.get_problem(problem_id)
         if problem is None:

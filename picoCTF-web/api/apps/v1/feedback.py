@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException, require_login
+from api import PicoException, require_login, block_before_competition
 
 from .schemas import feedback_list_req, feedback_submission_req
 
@@ -16,11 +16,12 @@ class FeedbackList(Resource):
 
     # @TODO only show the current user's feedback, unless an admin, then allow
     #       uid/pid/tid filtering
-    # @block_before_competition
+    @block_before_competition
     @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
+    @ns.response(422, 'Competition has not started')
     @ns.expect(feedback_list_req)
     def get(self):
         """Get the list of problem feedback, with optional filtering."""
@@ -39,12 +40,13 @@ class FeedbackList(Resource):
             pid=req['pid'], tid=req['tid'], uid=req['uid']
         ))
 
-    # @block_before_competition
     # @check_csrf
+    @block_before_competition
     @require_login
     @ns.response(201, 'Feedback accepted')
     @ns.response(400, 'Error parsing request')
     @ns.response(404, 'Problem not found')
+    @ns.response(422, 'Competition has not started')
     @ns.response(500, 'Feedback submissions disabled')
     @ns.expect(feedback_submission_req)
     def post(self):
