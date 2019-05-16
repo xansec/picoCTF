@@ -24,31 +24,31 @@ def length_restricted(min_length, max_length, base_type):
 # Achievement request schema
 achievement_req = reqparse.RequestParser()
 achievement_req.add_argument(
-    'name', required=True, type=str,
+    'name', required=True, type=str, location='json',
     help='Name of the achievement.')
 achievement_req.add_argument(
-    'score', required=True, type=inputs.natural,
+    'score', required=True, type=inputs.natural, location='json',
     help='Point value of the achievement (positive integer).')
 achievement_req.add_argument(
-    'description', required=True, type=str,
+    'description', required=True, type=str, location='json',
     help='Description of the achievement.')
 achievement_req.add_argument(
-    'processor', required=True, type=str,
+    'processor', required=True, type=str, location='json',
     help='Path to the achievement processor.')
 achievement_req.add_argument(
-    'hidden', required=True, type=inputs.boolean,
+    'hidden', required=True, type=inputs.boolean, location='json',
     help='Hide this achievement?')
 achievement_req.add_argument(
-    'image', required=True, type=str,
+    'image', required=True, type=str, location='json',
     help='Path to achievement image.')
 achievement_req.add_argument(
-    'smallimage', required=True, type=str,
+    'smallimage', required=True, type=str, location='json',
     help='Path to achievement thumbnail.')
 achievement_req.add_argument(
-    'disabled', required=True, type=inputs.boolean,
+    'disabled', required=True, type=inputs.boolean, location='json',
     help='Disable this achievement?')
 achievement_req.add_argument(
-    'multiple', required=True, type=inputs.boolean,
+    'multiple', required=True, type=inputs.boolean, location='json',
     help='Allow earning multiple instances of this achievement?')
 achievement_patch_req = achievement_req.copy()
 for arg in achievement_patch_req.args:
@@ -71,7 +71,7 @@ shell_server_out.add_argument(
 #  shell manager.)
 problem_patch_req = reqparse.RequestParser()
 problem_patch_req.add_argument(
-    'disabled', required=True, type=inputs.boolean,
+    'disabled', required=True, type=inputs.boolean, location='json',
     help='Whether the problem is disabled.'
 )
 
@@ -79,6 +79,7 @@ problem_patch_req.add_argument(
 shell_server_list_req = reqparse.RequestParser()
 shell_server_list_req.add_argument(
     'assigned_only', required=False, type=inputs.boolean, default=True,
+    location='args',
     help='Whether to include only shell servers assigned to the' +
          ' current user. Must be admin to disable.'
 )
@@ -86,26 +87,27 @@ shell_server_list_req.add_argument(
 # Shell server request schema
 shell_server_req = reqparse.RequestParser()
 shell_server_req.add_argument(
-    'name', required=True, type=str,
+    'name', required=True, type=str, location='json',
     help='Shell server display name.')
 shell_server_req.add_argument(
-    'host', required=True, type=str,
+    'host', required=True, type=str, location='json',
     help='Shell server hostname.')
 shell_server_req.add_argument(
-    'port', required=True, type=inputs.int_range(1, 65535),
+    'port', required=True, type=inputs.int_range(1, 65535), location='json',
     help='Shell server port.')
 shell_server_req.add_argument(
-    'username', required=True, type=str,
+    'username', required=True, type=str, location='json',
     help='Username.')
 shell_server_req.add_argument(
-    'password', required=True, type=str,
+    'password', required=True, type=str, location='json',
     help='Password.')
 shell_server_req.add_argument(
     'protocol', required=True, type=str, choices=['HTTP', 'HTTPS'],
+    location='json',
     help='Protocol used to serve web resources.'
 )
 shell_server_req.add_argument(
-    'server_number', required=False, type=inputs.positive,
+    'server_number', required=False, type=inputs.positive, location='json',
     help='Server number (will be automatically assigned if not provided).')
 shell_server_patch_req = shell_server_req.copy()
 for arg in shell_server_patch_req.args:
@@ -114,7 +116,7 @@ for arg in shell_server_patch_req.args:
 # Shell server reassignment schema
 shell_server_reassignment_req = reqparse.RequestParser()
 shell_server_reassignment_req.add_argument(
-    'include_assigned', required=False, type=inputs.boolean,
+    'include_assigned', required=False, type=inputs.boolean, location='json',
     help="Whether to update the assignments of teams that already have " +
          "an assigned shell server."
 )
@@ -183,6 +185,7 @@ settings_patch_req.add_argument(
 bundle_patch_req = reqparse.RequestParser()
 bundle_patch_req.add_argument(
     'dependencies_enabled', required=True, type=inputs.boolean,
+    location='json',
     help="Whether to consider this bundle's dependencies when determining " +
          "unlocked problems."
 )
@@ -220,15 +223,15 @@ problems_req.add_argument(
 # Submission request
 submission_req = reqparse.RequestParser()
 submission_req.add_argument(
-    'pid', required=True, type=str,
+    'pid', required=True, type=str, location='json',
     help='ID of the attempted problem'
 )
 submission_req.add_argument(
-    'key', required=True, type=str,
+    'key', required=True, type=str, location='json',
     help='Flag for the problem'
 )
 submission_req.add_argument(
-    'method', required=True, type=str,
+    'method', required=True, type=str, location='json',
     help='Submission method, e.g. "game"'
 )
 
@@ -250,11 +253,12 @@ feedback_list_req.add_argument(
 # Feedback submission request
 feedback_submission_req = reqparse.RequestParser()
 feedback_submission_req.add_argument(
-    'pid', required=True, type=str, help='Reviewed problem ID'
+    'pid', required=True, type=str, help='Reviewed problem ID', location='json'
 )
 # @TODO validate this at request time - for now see problem_feedback.py
 feedback_submission_req.add_argument(
-    'feedback', required=True, type=object_type, help='Problem feedback'
+    'feedback', required=True, type=object_type, help='Problem feedback',
+    location='json'
 )
 
 # New user request
@@ -309,10 +313,10 @@ user_req.add_argument(
 # Login request
 login_req = reqparse.RequestParser()
 login_req.add_argument(
-    'username', required=True, type=str, help='Username'
+    'username', required=True, type=str, help='Username', location='json'
 )
 login_req.add_argument(
-    'password', required=True, type=str, help='Password'
+    'password', required=True, type=str, help='Password', location='json'
 )
 
 # User extdata update request
@@ -325,7 +329,7 @@ user_extdata_req.add_argument(
 # Disable account request
 disable_account_req = reqparse.RequestParser()
 disable_account_req.add_argument(
-    'password', required=True, type=str,
+    'password', required=True, type=str, location='json',
     help='Current password required for confirmation'
 )
 
@@ -364,13 +368,13 @@ reset_password_confirmation_req.add_argument(
 # Reset password request
 reset_password_req = reqparse.RequestParser()
 reset_password_req.add_argument(
-    'username', required=True, type=str,
+    'username', required=True, type=str, location='json',
     help='Send a password reset email to this user.'
 )
 
 # Email verification request
 email_verification_req = reqparse.RequestParser()
-reset_password_req.add_argument(
+email_verification_req.add_argument(
     'token', required=True, type=str, location='args',
     help='Password reset token'
 )
