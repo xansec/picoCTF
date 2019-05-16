@@ -26,7 +26,7 @@ class GroupList(Resource):
 
     # @require_teacher @TODO throw 403 in this
     # @check_csrf
-    @ns.response(201, 'Success')
+    @ns.response(201, 'Group added')
     @ns.response(400, 'Error parsing request')
     @ns.response(403, 'You do not have permission to create a group')
     @ns.response(409, 'You already have a group with that name')

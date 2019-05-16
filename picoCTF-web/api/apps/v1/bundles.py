@@ -45,7 +45,7 @@ class Bundle(Resource):
         bundle = api.bundles.get_bundle(bundle_id)
         if not bundle:
             raise PicoException('Bundle not found', status_code=404)
-        return bundle, 200
+        return jsonify(bundle)
 
     # @require_admin
     @ns.response(400, 'Error parsing request')

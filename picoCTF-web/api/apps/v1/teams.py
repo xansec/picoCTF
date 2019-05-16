@@ -18,7 +18,7 @@ class TeamList(Resource):
     """Add a new team."""
 
     # @require_login
-    @ns.response(200, 'Success')
+    @ns.response(201, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Unauthorized to create team')
