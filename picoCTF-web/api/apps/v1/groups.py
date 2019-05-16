@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException
+from api import PicoException, require_login, require_teacher
 
 from .schemas import (group_invite_req, group_patch_req, group_remove_team_req,
                       group_req)
@@ -11,23 +11,24 @@ from .schemas import (group_invite_req, group_patch_req, group_remove_team_req,
 ns = Namespace('groups', description='Group management')
 
 
-@ns.response(401, 'Not logged in')
 @ns.route('/')
 class GroupList(Resource):
     """Get the list of groups, or add a new group."""
 
     # @TODO allow admins to see all groups with querystring parameter
-    # @require_login
+    @require_login
     @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
     def get(self):
         """Get the groups of which you are a member."""
         curr_tid = api.user.get_user()['tid']
         return jsonify(api.team.get_groups(curr_tid))
 
-    # @require_teacher @TODO throw 403 in this
     # @check_csrf
+    @require_teacher
     @ns.response(201, 'Group added')
     @ns.response(400, 'Error parsing request')
+    @ns.response(401, 'Not logged in')
     @ns.response(403, 'You do not have permission to create a group')
     @ns.response(409, 'You already have a group with that name')
     @ns.expect(group_req)
@@ -59,7 +60,7 @@ class GroupList(Resource):
 class Group(Resource):
     """Get a specific group."""
 
-    # @require_login
+    @require_login
     def get(self, group_id):
         """Get a specific group."""
         group = api.group.get_group(gid=group_id)
@@ -90,7 +91,7 @@ class Group(Resource):
 
         return jsonify(group)
 
-    # @require_teacher
+    @require_teacher
     @ns.response(400, 'Error parsing request')
     @ns.response(422, 'Cannot make a previously hidden group public')
     @ns.expect(group_patch_req)
@@ -115,7 +116,7 @@ class Group(Resource):
         })
 
     # @check_csrf
-    # @require_teacher
+    @require_teacher
     def delete(self, group_id):
         """Delete a group. Must be the owner of the group."""
         group = api.group.get_group(gid=group_id)
@@ -140,7 +141,6 @@ class Group(Resource):
 @ns.response(403, 'Permission denied')
 @ns.response(404, 'Group not found')
 @ns.response(422, 'Specified team is not a member of the group')
-# @require_login
 @ns.route('/<string:group_id>/remove_team')
 class RemoveTeamResponse(Resource):
     """
@@ -150,8 +150,8 @@ class RemoveTeamResponse(Resource):
     the group.
     """
 
-    # @require_login
     # @check_csrf
+    @require_login
     def get(self, group_id):
         """Remove your own team from this group."""
         group = api.group.get_group(group_id)
@@ -170,8 +170,8 @@ class RemoveTeamResponse(Resource):
             'success': True
         })
 
-    # @require_login
     # @check_csrf
+    @require_login
     @ns.expect(group_remove_team_req)
     def post(self, group_id):
         """
@@ -215,7 +215,7 @@ class RemoveTeamResponse(Resource):
 class FlagSharingInfo(Resource):
     """Get flag sharing statistics for a specific group."""
 
-    # @require_teacher
+    @require_teacher
     def get(self, group_id):
         """Get flag sharing statistics for a specific group."""
         group = api.group.get_group(gid=group_id)
@@ -232,7 +232,7 @@ class FlagSharingInfo(Resource):
         return jsonify(
             api.stats.check_invalid_instance_submissions(group['gid']))
 
-# @require_teacher
+
 @ns.response(200, 'Success')
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Permission denied')
@@ -241,7 +241,7 @@ class FlagSharingInfo(Resource):
 class InviteResponse(Resource):
     """Send an email invite to join this team."""
 
-    # @require_teacher
+    @require_teacher
     @ns.expect(group_invite_req)
     def post(self, group_id):
         """Send an email invite to join this team."""

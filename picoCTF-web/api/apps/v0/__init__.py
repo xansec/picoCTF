@@ -43,8 +43,8 @@ def login_hook():
     return WebSuccess(
         message="Successfully logged in as " + username,
         data={
-            'teacher': api.user.is_teacher(),
-            'admin': api.user.is_admin()
+            'teacher': api.user.get_user().get('teacher', False),
+            'admin': api.user.get_user().get('admin', False)
         }), 200
 
 

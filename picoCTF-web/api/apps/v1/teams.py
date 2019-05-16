@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException
+from api import PicoException, require_login
 
 from .schemas import team_req
 
@@ -17,7 +17,7 @@ ns = Namespace('teams', description='Team management')
 class TeamList(Resource):
     """Add a new team."""
 
-    # @require_login
+    @require_login
     @ns.response(201, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')

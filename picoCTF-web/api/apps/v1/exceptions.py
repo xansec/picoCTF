@@ -4,19 +4,20 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException
+from api import PicoException, require_admin
 
 from .schemas import exception_req
 
 ns = Namespace('exceptions', description='View and dismiss logged exceptions')
 
-
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Not authorized')
 @ns.route('/')
 class ExceptionsList(Resource):
     """Get the most recent exceptions, or dismiss all exceptions."""
 
-    # @require_admin
-    @ns.response(200, 'Success')
+    @require_admin
     @ns.response(400, 'Error parsing request')
     @ns.expect(exception_req)
     def get(self):
@@ -28,7 +29,7 @@ class ExceptionsList(Resource):
             return jsonify(api.logger.get_api_exceptions(
                 result_limit=req['result_limit']))
 
-    # @require_admin
+    @require_admin
     def delete(self):
         """Dismiss all exceptions. Retains the exceptions in the database."""
         count = api.logger.dismiss_api_exceptions()
@@ -39,12 +40,14 @@ class ExceptionsList(Resource):
 
 
 @ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Not authorized')
 @ns.response(404, 'Exception not found')
 @ns.route('/<string:exception_id>')
 class Exception(Resource):
     """Get or dismiss a specific exception."""
 
-    # @require_admin
+    @require_admin
     def get(self, exception_id):
         """Retrieve a specific exception."""
         exception = api.logger.get_api_exception(exception_id)
@@ -53,7 +56,7 @@ class Exception(Resource):
         else:
             return jsonify(exception)
 
-    # @require_admin
+    @require_admin
     def delete(self, exception_id):
         """Dismiss a specific exception."""
         count = api.logger.dismiss_api_exceptions(exception_id)

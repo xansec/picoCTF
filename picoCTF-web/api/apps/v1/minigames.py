@@ -5,7 +5,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException
+from api import PicoException, require_login
 
 from .schemas import minigame_submission_req
 
@@ -16,9 +16,9 @@ ns = Namespace('minigames', description='Minigame submission endpoint')
 class MinigameSubmissionResponse(Resource):
     """Submit a verification key for a minigame."""
 
-    # @require_login
     # @check_csrf
     # @block_before_competition
+    @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')

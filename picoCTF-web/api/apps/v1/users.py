@@ -6,7 +6,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException
+from api import PicoException, require_admin
 
 from .schemas import user_req
 
@@ -17,7 +17,10 @@ ns = Namespace('users', description='User management')
 class UserList(Resource):
     """Get the full list of users, or add a new user."""
 
-    # @require_admin
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Not authorized')
+    @require_admin
     def get(self):
         """Get the full list of users."""
         return jsonify(api.user.get_all_users())
@@ -65,12 +68,14 @@ class UserList(Resource):
 
 
 @ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Not authorized')
 @ns.response(404, 'User not found')
 @ns.route('/<string:user_id>')
 class User(Resource):
     """Get a specific user."""
 
-    # @require_admin
+    @require_admin
     def get(self, user_id):
         """Retrieve a specific user."""
         res = api.user.get_user(uid=user_id)

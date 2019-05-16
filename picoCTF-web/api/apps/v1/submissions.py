@@ -3,6 +3,7 @@ from flask import jsonify, request
 from flask_restplus import Namespace, Resource
 
 import api
+from api import require_admin, require_login
 
 from .schemas import submission_req
 
@@ -14,10 +15,10 @@ ns = Namespace('submissions', description='Submit flags and list ' +
 class SubmissionList(Resource):
     """Submit new solution attempts, or clear all existing submissions."""
 
-    # @require_login
     # @check_csrf
     # @block_before_competition
     # @block_after_competition
+    @require_login
     @ns.response(200, 'Submission successful')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
@@ -61,10 +62,10 @@ class SubmissionList(Resource):
             'message': message
         })
 
-    # @require_admin
+    @require_admin
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
-    @ns.response(403, '')
+    @ns.response(403, 'Not authorized')
     @ns.response(500, 'Debug mode not enabled')
     def delete(self):
         """Clear all submissions (debug mode only)."""
@@ -74,11 +75,14 @@ class SubmissionList(Resource):
         })
 
 
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Not authorized')
 @ns.route('/statistics')
 class SubmissionStatistics(Resource):
     """View submission statistics, broken down by problem."""
 
-    # @require_admin
+    @require_admin
     def get(self):
         """Get submission statistics, broken down by problem name."""
         return jsonify({

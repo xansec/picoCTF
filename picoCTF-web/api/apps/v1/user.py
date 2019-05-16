@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException
+from api import PicoException, require_login
 
 from .schemas import (disable_account_req, login_req,
                       reset_password_confirmation_req, reset_password_req,
@@ -14,19 +14,21 @@ ns = Namespace('user', description='Authentication and information about ' +
                                    'current user')
 
 
-@ns.response(200, 'Success')
-@ns.response(401, 'Not logged in')
 @ns.route('/')
 class User(Resource):
     """Get the current user or update their extdata."""
 
-    # @require_login
+    @require_login
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
     def get(self):
         """Get information about the current user."""
         return jsonify(api.user.get_user())
 
-    # @require_login
     # @check_csrf
+    @require_login
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
     @ns.expect(user_extdata_req)
     def patch(self):
         """Update the current user's extdata (other fields not supported)."""
@@ -41,7 +43,6 @@ class User(Resource):
 class LoginResponse(Resource):
     """Log in."""
 
-    # @require_login
     @ns.response(200, 'Sucess')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Incorrect username or password')
@@ -61,16 +62,12 @@ class LoginResponse(Resource):
 class LogoutResponse(Resource):
     """Log out."""
 
+    @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     def get(self):
         """Log out."""
-        if not api.user.is_logged_in():
-            raise PicoException(
-                'There is no user currently logged in.', 401
-            )
-        else:
-            api.user.logout()
+        api.user.logout()
         return jsonify({
             'success': True
         })
@@ -120,8 +117,8 @@ class AuthorizationResponse(Resource):
 class DisableAccountResponse(Resource):
     """Disable your user account. Requires password confirmation."""
 
-    # @require_login
     # @check_csrf
+    @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(500, 'Provided password is not correct')
@@ -148,8 +145,8 @@ class DisableAccountResponse(Resource):
 class UpdatePasswordResponse(Resource):
     """Update your account password."""
 
-    # @require_login
     # @check_csrf
+    @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
@@ -216,7 +213,7 @@ class UserVerificationResponse(Resource):
     #   max_team_size > 1
     # or / if invalid... either frontend or this will need to change
 
-    # @require_login
+    @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(

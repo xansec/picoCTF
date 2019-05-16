@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException
+from api import PicoException, require_login
 
 from .schemas import (join_group_req, score_progression_req, team_change_req,
                       update_team_password_req)
@@ -15,7 +15,9 @@ ns = Namespace('team', description="Information about the current user's team")
 class Team(Resource):
     """Get the current user's team."""
 
-    # @require_login
+    @require_login
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
     def get(self):
         """Get information about the current user's team."""
         current_tid = api.user.get_user()['tid']
@@ -27,7 +29,9 @@ class Team(Resource):
 class Score(Resource):
     """Get the current user's team's score."""
 
-    # @require_login
+    @require_login
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
     def get(self):
         """Get your team's score."""
         current_tid = api.user.get_user()['tid']
@@ -40,8 +44,8 @@ class Score(Resource):
 class UpdatePasswordResponse(Resource):
     """Update your team's password."""
 
-    # @require_login
     # @check_csrf
+    @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
@@ -66,8 +70,8 @@ class UpdatePasswordResponse(Resource):
 class ScoreProgression(Resource):
     """Get your team's score progression."""
 
-    # @require_login
     # @block_before_competition
+    @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not signed in')
@@ -89,7 +93,7 @@ class ScoreProgression(Resource):
 class TeamJoinResponse(Resource):
     """Join a team."""
 
-    # @require_login
+    @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
@@ -108,8 +112,8 @@ class TeamJoinResponse(Resource):
         })
 
 
-# @require_login
 # @check_csrf
+@require_login
 @ns.response(200, 'Success')
 @ns.response(400, 'Error parsing request')
 @ns.response(401, 'Not logged in')

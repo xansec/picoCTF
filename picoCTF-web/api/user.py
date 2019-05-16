@@ -273,19 +273,6 @@ def is_teacher(uid=None):
     return user.get('teacher', False)
 
 
-def is_admin(uid=None):
-    """
-    Determine if a user is an admin.
-
-    Args:
-        uid: user's uid
-    Returns:
-        True if the user is an admin, False otherwise
-    """
-    user = get_user(uid=uid)
-    return user.get('admin', False)
-
-
 def verify_user(token_value):
     """
     Verify the current user's account.
@@ -472,7 +459,7 @@ def is_logged_in():
     logged_in = 'uid' in session
     if logged_in:
         user = api.user.get_user(uid=session['uid'])
-        if not user or user["disabled"]:
+        if not user or (user.get('disabled', False) is True):
             logout()
             return False
     return logged_in
@@ -493,7 +480,7 @@ def require_teacher(f):
     @require_login
     @wraps(f)
     def wrapper(*args, **kwds):
-        if not api.user.is_teacher():
+        if not api.user.get_user().get('teacher', False):
             raise PicoException(
                 'You do not have permission to access this resource', 403)
         return f(*args, **kwds)
@@ -505,7 +492,7 @@ def require_admin(f):
     @require_login
     @wraps(f)
     def wrapper(*args, **kwds):
-        if not api.user.is_admin():
+        if not api.user.get_user().get('admin', False):
             raise PicoException(
                 'You do not have permission to access this resource', 403)
         return f(*args, **kwds)

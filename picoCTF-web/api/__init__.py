@@ -8,10 +8,12 @@ from flask import Flask, jsonify, session
 from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
 
-# these have to come first
-# from api.cache import memoize
-from api.common import check, PicoException, validate
-from api.logger import log_action
+# these have to come first to avoid circular import issues
+# from api.cache import memoize # noqa
+from api.common import check, PicoException, validate # noqa
+from api.logger import log_action # noqa
+from api.user import require_login, require_teacher, require_admin # noqa
+from api.config import block_before_competition, block_after_competition # noqa
 
 import api.achievement
 import api.bundles

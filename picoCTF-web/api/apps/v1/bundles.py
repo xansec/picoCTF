@@ -8,7 +8,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException
+from api import PicoException, require_admin
 
 from .schemas import bundle_patch_req
 
@@ -19,12 +19,14 @@ ns = Namespace('bundles', description='Bundle management')
 class BundleList(Resource):
     """Get the full list of bundles."""
 
-    # @require_admin
+    @require_admin
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Not authorized')
     def get(self):
         """Get the full list of bundles."""
         return jsonify(api.bundles.get_all_bundles())
 
-    # @require_admin
     @ns.response(501, 'Use the /problems endpoint')
     def patch(self):
         """Not implemented: use the /problems endpoint to update bundles."""
@@ -34,12 +36,14 @@ class BundleList(Resource):
 
 
 @ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Not authorized')
 @ns.response(404, 'Bundle not found')
 @ns.route('/<string:bundle_id>')
 class Bundle(Resource):
     """Get or update the dependencies_enabled property of a specific bundle."""
 
-    # @require_admin
+    @require_admin
     def get(self, bundle_id):
         """Retrieve a specific bundle."""
         bundle = api.bundles.get_bundle(bundle_id)
@@ -47,7 +51,7 @@ class Bundle(Resource):
             raise PicoException('Bundle not found', status_code=404)
         return jsonify(bundle)
 
-    # @require_admin
+    @require_admin
     @ns.response(400, 'Error parsing request')
     @ns.expect(bundle_patch_req)
     def patch(self, bundle_id):

@@ -23,7 +23,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException
+from api import PicoException, require_admin, require_login
 
 from .schemas import shell_server_out, problem_patch_req, problems_req
 
@@ -38,7 +38,7 @@ class ProblemList(Resource):
     """Get the list of problems, or update the problem/bundle state."""
 
     # @block_before_competition @TODO allow passthrough for admins
-    # @require_login
+    @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Unauthorized')
@@ -72,8 +72,8 @@ class ProblemList(Resource):
 
         # Handle the unlocked_only param, which depends on user role
         # Unless just getting the count - then normal users allowed
-        is_teacher = api.user.is_teacher()
-        is_admin = api.user.is_admin()
+        is_teacher = api.user.get_user().get('teacher', False)
+        is_admin = api.user.get_user().get('admin', False)
         if req['unlocked_only'] is True:
             if req['count_only'] is False and not is_teacher and not is_admin:
                 raise PicoException(
@@ -110,9 +110,11 @@ class ProblemList(Resource):
         else:
             return jsonify(problems)
 
-    # @require_admin
+    @require_admin
     @ns.expect(shell_server_out)
     @ns.response(200, 'Problem list updated')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Not authorized')
     @ns.response(404, 'Shell server not found')
     def patch(self):
         """
@@ -172,8 +174,11 @@ class Problem(Resource):
         else:
             return problem, 200
 
-    # @require_admin
+    @require_admin
+    @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Not authorized')
     @ns.expect(problem_patch_req)
     def patch(self, problem_id):
         """
@@ -197,8 +202,8 @@ class Problem(Resource):
 class ProblemWalkthrough(Resource):
     """Get the walkthrough for a problem, if unlocked."""
 
-    # @require_login
     # @block_before_competition
+    @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Walkthrough not unlocked')
@@ -224,8 +229,8 @@ class ProblemWalkthrough(Resource):
 class ProblemWalkthroughUnlockResponse(Resource):
     """Spend tokens to unlock the walkthrough for a problem."""
 
-    # @require_login
     # @block_before_competition
+    @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(404, 'Problem or walkthrough not found')
