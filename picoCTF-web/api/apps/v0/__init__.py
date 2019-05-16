@@ -22,8 +22,8 @@ import api
 from api import PicoException, validate
 
 from .helpers import (block_after_competition, block_before_competition,
-                      check_csrf, require_login, user_login_schema, WebError,
-                      WebSuccess)
+                      check_csrf, flat_multi, require_login, user_login_schema,
+                      WebError, WebSuccess)
 
 blueprint = Blueprint('v0_api', __name__)
 
@@ -120,7 +120,7 @@ def update_extdata_hook():
 
     If no nonce is included, default behavior is to over-write.
     """
-    data = api.common.flat_multi(request.form)
+    data = flat_multi(request.form)
     prev_nonce = int(api.user.get_user()["extdata"].get("nonce", 0))
     nonce = data.get("nonce")
     if nonce is not None and int(nonce) < prev_nonce:

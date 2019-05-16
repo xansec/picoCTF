@@ -3,11 +3,7 @@
 from voluptuous import Length, Required, Schema
 
 import api
-from api import (
-  check,
-  safe_fail,
-  PicoException
-)
+from api import check, PicoException
 
 new_team_schema = Schema({
     Required("team_name"):
@@ -15,9 +11,9 @@ new_team_schema = Schema({
         ("The team name must be between 3 and 40 characters.",
          [str, Length(min=3, max=40)]),
         ("This team name conflicts with an existing user name.",
-         [lambda name: safe_fail(api.user.get_user, name=name) is None]),
+         [lambda name: api.user.get_user(name=name) is None]),
         ("A team with that name already exists.",
-         [lambda name: safe_fail(api.team.get_team, name=name) is None]),
+         [lambda name: api.team.get_team(name=name) is None]),
     ),
     Required("team_password"):
     check(("Passwords must be between 3 and 20 characters.",

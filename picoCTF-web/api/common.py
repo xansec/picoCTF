@@ -3,7 +3,6 @@ import uuid
 from hashlib import md5
 
 import bcrypt
-import bson.json_util as json_util
 from voluptuous import Invalid, MultipleInvalid
 
 
@@ -54,41 +53,6 @@ class PicoException(Exception):
         rv = dict()
         rv['message'] = self.message
         return rv
-
-
-def WebSuccess(message=None, data=None):
-    """Legacy successful response wrapper."""
-    return json_util.dumps({
-            'status': 1,
-            'message': message,
-            'data': data
-        })
-
-
-def WebError(message=None, data=None):
-    """Legacy failure response wrapper."""
-    return json_util.dumps({
-            'status': 0,
-            'message': message,
-            'data': data
-        })
-
-
-def flat_multi(multidict):
-    """
-    Flatten any single element lists in a multidict.
-
-    Args:
-        multidict: multidict to be flattened.
-    Returns:
-        Partially flattened database.
-
-    """
-    flat = {}
-    for key, values in multidict.items():
-        flat[key] = values[0] if type(values) == list and len(values) == 1 \
-                    else values
-    return flat
 
 
 def check(*callback_tuples):
@@ -142,23 +106,6 @@ def validate(schema, data):
         schema(data)
     except MultipleInvalid as error:
         raise PicoException(error.msg, 400)
-
-
-def safe_fail(f, *args, **kwargs):
-    """
-    Safely call a function that can raise an PicoException.
-
-    Args:
-        f: function to call
-        *args: positional arguments
-        **kwargs: keyword arguments
-    Returns:
-        The function result or None if an exception was raised.
-    """
-    try:
-        return f(*args, **kwargs)
-    except Exception:
-        return None
 
 
 def hash_password(password):

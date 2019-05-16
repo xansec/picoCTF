@@ -92,3 +92,20 @@ def block_after_competition():
                 return WebError("The competition is over!")
         return wrapper
     return decorator
+
+
+def flat_multi(multidict):
+    """
+    Flatten any single element lists in a multidict.
+
+    Args:
+        multidict: multidict to be flattened.
+    Returns:
+        Partially flattened database.
+
+    """
+    flat = {}
+    for key, values in multidict.items():
+        flat[key] = values[0] if type(values) == list and len(values) == 1 \
+                    else values
+    return flat
