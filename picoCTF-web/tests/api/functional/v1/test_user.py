@@ -289,8 +289,9 @@ def test_get_user(client):
         'admin': False,
         'completed_minigames': [],
         'country': 'US',
-        'demo': {'age': '13-17',
-        'parentemail': 'student@example.com'},
+        'demo': {
+            'age': '13-17',
+            'parentemail': 'student@example.com'},
         'disabled': False,
         'email': 'sample@example.com',
         'extdata': {},
@@ -310,3 +311,25 @@ def test_get_user(client):
     for k, v in res.json.items():
         if k not in {'uid', 'tid'}:
             assert res.json[k] == expected_body[k]
+
+
+def test_patch_user(client):
+    """Tests the PATCH /user endpoint."""
+    clear_db()
+    register_test_accounts()
+    client.post('/api/v1/user/login', json={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password']
+    })
+
+    updated_extdata = {
+            'testdata': '1'
+        }
+    res = client.patch('/api/v1/user', json={
+        'extdata': updated_extdata
+    })
+    assert res.status_code == 200
+    assert res.json['success'] is True
+
+    res = client.get('api/v1/user')
+    assert res.json['extdata'] == updated_extdata
