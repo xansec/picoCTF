@@ -3,7 +3,8 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException, require_login, block_before_competition
+from api import (block_before_competition, check_csrf, PicoException,
+                 require_login)
 
 from .schemas import feedback_list_req, feedback_submission_req
 
@@ -40,11 +41,12 @@ class FeedbackList(Resource):
             pid=req['pid'], tid=req['tid'], uid=req['uid']
         ))
 
-    # @check_csrf
+    @check_csrf
     @block_before_competition
     @require_login
     @ns.response(201, 'Feedback accepted')
     @ns.response(400, 'Error parsing request')
+    @ns.response(403, 'CSRF token invalid')
     @ns.response(404, 'Problem not found')
     @ns.response(422, 'Competition has not started')
     @ns.response(500, 'Feedback submissions disabled')

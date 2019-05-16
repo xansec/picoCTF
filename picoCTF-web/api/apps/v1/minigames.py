@@ -5,7 +5,8 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException, require_login, block_before_competition
+from api import (block_before_competition, check_csrf, PicoException,
+                 require_login)
 
 from .schemas import minigame_submission_req
 
@@ -16,12 +17,13 @@ ns = Namespace('minigames', description='Minigame submission endpoint')
 class MinigameSubmissionResponse(Resource):
     """Submit a verification key for a minigame."""
 
-    # @check_csrf
+    @check_csrf
     @block_before_competition
     @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
+    @ns.response(403, 'CSRF token invalid')
     @ns.response(404, 'Minigame not found')
     @ns.response(422, 'Invalid verification key or competition ' +
                       'has not started')

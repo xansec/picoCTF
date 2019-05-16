@@ -3,7 +3,8 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import block_before_competition, PicoException, require_login
+from api import (PicoException, block_before_competition, check_csrf,
+                 require_login)
 
 from .schemas import (join_group_req, score_progression_req, team_change_req,
                       update_team_password_req)
@@ -44,11 +45,12 @@ class Score(Resource):
 class UpdatePasswordResponse(Resource):
     """Update your team's password."""
 
-    # @check_csrf
+    @check_csrf
     @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
+    @ns.response(403, 'CSRF token invalid')
     @ns.response(422, 'Provided password does not match')
     @ns.expect(update_team_password_req)
     def post(self):
@@ -112,12 +114,12 @@ class TeamJoinResponse(Resource):
         })
 
 
-# @check_csrf
+@check_csrf
 @require_login
 @ns.response(200, 'Success')
 @ns.response(400, 'Error parsing request')
 @ns.response(401, 'Not logged in')
-@ns.response(403, 'Ineligible to join this group')
+@ns.response(403, 'Ineligible to join this group or CSRF token invalid')
 @ns.response(404, 'Group or group owner not found')
 @ns.response(409, 'Already a member of this group')
 @ns.expect(join_group_req)

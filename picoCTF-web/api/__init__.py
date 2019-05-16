@@ -12,7 +12,7 @@ from werkzeug.contrib.fixers import ProxyFix
 # from api.cache import memoize # noqa
 from api.common import check, PicoException, validate # noqa
 from api.logger import log_action # noqa
-from api.user import require_login, require_teacher, require_admin # noqa
+from api.user import require_login, require_teacher, require_admin, check_csrf # noqa
 from api.config import block_before_competition, block_after_competition # noqa
 
 import api.achievement
@@ -147,7 +147,7 @@ def create_app(config={}):
                 session['token'] = csrf_token
             response.set_cookie('token', session['token'], domain=domain)
 
-        # response.mimetype = 'application/json'
+        response.mimetype = 'application/json'
         return response
 
     return app

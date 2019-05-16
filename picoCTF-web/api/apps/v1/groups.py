@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException, require_login, require_teacher
+from api import check_csrf, PicoException, require_login, require_teacher
 
 from .schemas import (group_invite_req, group_patch_req, group_remove_team_req,
                       group_req)
@@ -24,12 +24,13 @@ class GroupList(Resource):
         curr_tid = api.user.get_user()['tid']
         return jsonify(api.team.get_groups(curr_tid))
 
-    # @check_csrf
+    @check_csrf
     @require_teacher
     @ns.response(201, 'Group added')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
-    @ns.response(403, 'You do not have permission to create a group')
+    @ns.response(403, 'You do not have permission to create a group ' +
+                      'or CSRF token invalid')
     @ns.response(409, 'You already have a group with that name')
     @ns.expect(group_req)
     def post(self):
@@ -93,6 +94,7 @@ class Group(Resource):
 
     @require_teacher
     @ns.response(400, 'Error parsing request')
+    @ns.response(403, 'CSRF token incorrect')
     @ns.response(422, 'Cannot make a previously hidden group public')
     @ns.expect(group_patch_req)
     def patch(self, group_id):
@@ -115,7 +117,7 @@ class Group(Resource):
             'success': True
         })
 
-    # @check_csrf
+    @check_csrf
     @require_teacher
     def delete(self, group_id):
         """Delete a group. Must be the owner of the group."""
@@ -138,7 +140,7 @@ class Group(Resource):
 
 @ns.response(200, 'Success')
 @ns.response(401, 'Not logged in')
-@ns.response(403, 'Permission denied')
+@ns.response(403, 'Permission denied or CSRF token invalid')
 @ns.response(404, 'Group not found')
 @ns.response(422, 'Specified team is not a member of the group')
 @ns.route('/<string:group_id>/remove_team')
@@ -150,7 +152,7 @@ class RemoveTeamResponse(Resource):
     the group.
     """
 
-    # @check_csrf
+    @check_csrf
     @require_login
     def get(self, group_id):
         """Remove your own team from this group."""
@@ -170,7 +172,7 @@ class RemoveTeamResponse(Resource):
             'success': True
         })
 
-    # @check_csrf
+    @check_csrf
     @require_login
     @ns.expect(group_remove_team_req)
     def post(self, group_id):

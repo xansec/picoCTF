@@ -3,7 +3,7 @@ from flask import jsonify, request
 from flask_restplus import Namespace, Resource
 
 import api
-from api import (block_after_competition, block_before_competition,
+from api import (block_after_competition, block_before_competition, check_csrf,
                  require_admin, require_login)
 
 from .schemas import submission_req
@@ -16,13 +16,14 @@ ns = Namespace('submissions', description='Submit flags and list ' +
 class SubmissionList(Resource):
     """Submit new solution attempts, or clear all existing submissions."""
 
-    # @check_csrf
+    @check_csrf
     @block_after_competition
     @block_before_competition
     @require_login
     @ns.response(200, 'Submission successful')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
+    @ns.response(403, 'CSRF token invalid')
     @ns.response(422, 'Problem not unlocked or outside of competition period')
     @ns.expect(submission_req)
     def post(self):

@@ -3,12 +3,11 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException, require_login
+from api import check_csrf, PicoException, require_login
 
-from .schemas import (disable_account_req, login_req,
+from .schemas import (disable_account_req, email_verification_req, login_req,
                       reset_password_confirmation_req, reset_password_req,
-                      update_password_req, user_extdata_req,
-                      email_verification_req)
+                      update_password_req, user_extdata_req)
 
 ns = Namespace('user', description='Authentication and information about ' +
                                    'current user')
@@ -25,10 +24,11 @@ class User(Resource):
         """Get information about the current user."""
         return jsonify(api.user.get_user())
 
-    # @check_csrf
+    @check_csrf
     @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
+    @ns.response(403, 'CSRF token invalid')
     @ns.expect(user_extdata_req)
     def patch(self):
         """Update the current user's extdata (other fields not supported)."""
@@ -117,10 +117,11 @@ class AuthorizationResponse(Resource):
 class DisableAccountResponse(Resource):
     """Disable your user account. Requires password confirmation."""
 
-    # @check_csrf
+    @check_csrf
     @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
+    @ns.response(403, 'CSRF token invalid')
     @ns.response(500, 'Provided password is not correct')
     @ns.expect(disable_account_req)
     def post(self):
@@ -145,11 +146,12 @@ class DisableAccountResponse(Resource):
 class UpdatePasswordResponse(Resource):
     """Update your account password."""
 
-    # @check_csrf
+    @check_csrf
     @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
+    @ns.response(403, 'CSRF token invalid')
     @ns.response(422, 'Provided password does not match')
     @ns.expect(update_password_req)
     def post(self):
