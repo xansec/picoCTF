@@ -211,11 +211,6 @@ class ResetPasswordRequestResponse(Resource):
 class UserVerificationResponse(Resource):
     """Verify a user's email address."""
 
-    # @TODO
-    # previously redirected to /#team-builder : /#status=verified ?
-    #   max_team_size > 1
-    # or / if invalid... either frontend or this will need to change
-
     @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')

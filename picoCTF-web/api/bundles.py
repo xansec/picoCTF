@@ -61,7 +61,7 @@ def upsert_bundle(bundle):
         The created/updated bundle ID.
 
     """
-    # Validate the bundle object @TODO validate this at the routing level
+    # Validate the bundle object
     validate(bundle_schema, bundle)
 
     db = api.db.get_conn()

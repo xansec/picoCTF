@@ -420,7 +420,7 @@ team_change_req.add_argument(
     location='json', help='Password for the new team'
 )
 
-# Scoreboard request @TODO rework
+# Scoreboard page request
 scoreboard_page_req = reqparse.RequestParser()
 scoreboard_page_req.add_argument(
     'board', required=False, choices=['groups', 'global', 'student'],

@@ -412,16 +412,11 @@ def update_password_request(params):
     """
     user = api.user.get_user()
     current_team = api.team.get_team(tid=user["tid"])
-    # @TODO maybe a is_self_team function or team property?
     if current_team["team_name"] == user["username"]:
         raise PicoException("You have not created a team yet.", 422)
 
     if params["new-password"] != params["new-password-confirmation"]:
         raise PicoException("Your team passwords do not match.", 422)
-
-    # @TODO is this possible?
-    if len(params["new-password"]) == 0:
-        raise PicoException("Your team password cannot be empty.", 422)
 
     db = api.db.get_conn()
     db.teams.update(

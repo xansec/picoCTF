@@ -13,9 +13,8 @@ ns = Namespace('groups', description='Group management')
 
 @ns.route('')
 class GroupList(Resource):
-    """Get the list of groups, or add a new group."""
+    """Get the list of your groups, or create a new group."""
 
-    # @TODO allow admins to see all groups with querystring parameter
     @require_login
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
@@ -34,7 +33,7 @@ class GroupList(Resource):
     @ns.response(409, 'You already have a group with that name')
     @ns.expect(group_req)
     def post(self):
-        """Add a new group."""
+        """Create a new group."""
         req = group_req.parse_args(strict=True)
         curr_tid = api.user.get_user('tid')
 

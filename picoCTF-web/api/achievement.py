@@ -175,7 +175,6 @@ def process_achievements(event, data):
         data["tid"] = api.user.get_user(uid=data["uid"])["tid"]
 
     eligible_achievements = [
-        # @TODO clean this up
         achievement for achievement in get_all_achievements()
         if achievement["aid"] not in [
             earned_a['aid'] for earned_a in get_earned_achievements(

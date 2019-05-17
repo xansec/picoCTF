@@ -180,8 +180,6 @@ def get_all_servers():
     )
 
 
-# @TODO remove this and have the shell page get the server_number from the
-# /team call
 def get_assigned_server():
     """Return the assigned shell server for the currently logged-in team."""
     db = api.db.get_conn()

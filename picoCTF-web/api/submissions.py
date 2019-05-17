@@ -95,11 +95,11 @@ def submit_key(tid, pid, key, method, uid, ip=None):
 
     if correct and not previously_solved_by_user:
         # Immediately invalidate some caches
-        # @TODO fix these (without cache=True kwarg)
-        api.stats.get_score(tid=tid, uid=uid)
+        # @TODO caching is planned to be reworked
+        # api.stats.get_score(tid=tid, uid=uid)
         # api.stats.get_unlocked_pids(tid)
-        api.problem.get_solved_problems(tid=tid, uid=uid)
-        api.stats.get_score_progression(tid=tid, uid=uid)
+        # api.problem.get_solved_problems(tid=tid, uid=uid)
+        # api.stats.get_score_progression(tid=tid, uid=uid)
 
         # @TODO achievement processing needs to be fixed/reviewed
         # api.achievement.process_achievements("submit", {

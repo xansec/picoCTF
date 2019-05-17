@@ -9,13 +9,10 @@ from .schemas import team_req
 
 ns = Namespace('teams', description='Team management')
 
-# @TODO create listing / by tid GET endpoints like /problems
-#       (did not exist in previous API)
-
 
 @ns.route('')
 class TeamList(Resource):
-    """Add a new team."""
+    """Create and join a new team."""
 
     @require_login
     @ns.response(201, 'Success')
