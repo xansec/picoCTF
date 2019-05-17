@@ -35,7 +35,7 @@ class GroupList(Resource):
     def post(self):
         """Create a new group."""
         req = group_req.parse_args(strict=True)
-        curr_tid = api.user.get_user('tid')
+        curr_tid = api.user.get_user()['tid']
 
         # Don't create group if teacher already has one with same name
         if api.group.get_group(

@@ -234,3 +234,94 @@ def test_join_team(client):
     assert res.status_code == 403
     assert res.json['message'] == 'You can not switch teams once you ' + \
                                   'have joined one.'
+
+
+def test_join_group(client):
+    """Test the /team/join_group endpoint."""
+    clear_db()
+    register_test_accounts()
+
+    # Create the group we will join
+    client.post('/api/v1/user/login', json={
+        'username': TEACHER_DEMOGRAPHICS['username'],
+        'password': TEACHER_DEMOGRAPHICS['password']
+    })
+    res = client.post('/api/v1/groups', json={
+        'name': 'newgroup'
+    })
+
+    # Attempt to join a nonexistent group
+    client.get('/api/v1/user/logout')
+    client.post('/api/v1/user/login', json={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password']
+    })
+    res = client.post('/api/v1/team/join_group', json={
+        'group_name': 'invalid',
+        'group_owner': TEACHER_DEMOGRAPHICS['username']
+    })
+    assert res.status_code == 404
+    assert res.json['message'] == 'Group not found'
+
+    res = client.post('/api/v1/team/join_group', json={
+        'group_name': 'newgroup',
+        'group_owner': 'invalid'
+    })
+    assert res.status_code == 404
+    assert res.json['message'] == 'Group owner not found'
+
+    # Attempt to join a group that we don't pass the email whitelist for
+    db = get_conn()
+    db.groups.find_one_and_update({'name': 'newgroup'}, {'$set': {
+        'settings.email_filter': ['filtered@email.com']
+    }})
+    res = client.post('/api/v1/team/join_group', json={
+        'group_name': 'newgroup',
+        'group_owner': TEACHER_DEMOGRAPHICS['username']
+    })
+    assert res.status_code == 403
+    assert res.json['message'] == "{}'s email does not belong to the " + \
+        "whitelist for that classroom. Your team may not join this " + \
+        "classroom at this time.".format(USER_DEMOGRAPHICS['username'])
+    db.groups.find_one_and_update({'name': 'newgroup'}, {'$set': {
+        'settings.email_filter': []
+    }})
+
+    # Successfully join a group
+    res = client.post('/api/v1/team/join_group', json={
+        'group_name': 'newgroup',
+        'group_owner': TEACHER_DEMOGRAPHICS['username']
+    })
+    assert res.status_code == 200
+    assert res.json['success'] is True
+    user_team = db.users.find_one({
+        'username': USER_DEMOGRAPHICS['username']})['tid']
+    group = db.groups.find_one({'name': 'newgroup'})
+    assert user_team in group['members']
+
+    # Attempt to join a group we are already a member of
+    res = client.post('/api/v1/team/join_group', json={
+        'group_name': 'newgroup',
+        'group_owner': TEACHER_DEMOGRAPHICS['username']
+    })
+    assert res.status_code == 409
+    assert res.json['message'] == 'Your team is already a member of ' + \
+                                  'this group.'
+
+    # Join a group as a user with teacher permissions
+    client.get('/api/v1/user/logout')
+    client.post('/api/v1/user/login', json={
+        'username': ADMIN_DEMOGRAPHICS['username'],
+        'password': ADMIN_DEMOGRAPHICS['password']
+    })
+    res = client.post('/api/v1/team/join_group', json={
+        'group_name': 'newgroup',
+        'group_owner': TEACHER_DEMOGRAPHICS['username']
+    })
+    assert res.status_code == 200
+    assert res.json['success'] is True
+    admin_team = db.users.find_one({
+        'username': ADMIN_DEMOGRAPHICS['username']})['tid']
+    group = db.groups.find_one({'name': 'newgroup'})
+    assert admin_team not in group['members']
+    assert admin_team in group['teachers']

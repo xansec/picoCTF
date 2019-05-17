@@ -25,7 +25,7 @@ def test_get_users(client): # noqa (fixture)
 
     res = client.get('/api/v1/users')
     assert res.status_code == 200
-    assert len(res.json) == 3
+    assert len(res.json) == 4
     for username in ['sampleuser', 'teacheruser', 'adminuser']:
         assert username in str(res.json)
 
