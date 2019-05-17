@@ -1,4 +1,4 @@
-"""Tests for the /api/v1/user routes."""
+"""Tests for the /api/v1/user endpoints."""
 
 from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,

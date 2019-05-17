@@ -93,7 +93,7 @@ def submit_key(tid, pid, key, method, uid, ip=None):
             'correct': correct,
         })
 
-    if correct and not previously_solved_by_user:
+    # if correct and not previously_solved_by_user:
         # Immediately invalidate some caches
         # @TODO caching is planned to be reworked
         # api.stats.get_score(tid=tid, uid=uid)

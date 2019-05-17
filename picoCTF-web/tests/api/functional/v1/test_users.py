@@ -1,4 +1,4 @@
-"""Tests for the /api/v1/users routes."""
+"""Tests for the /api/v1/users endpoints."""
 
 from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
@@ -14,7 +14,7 @@ from common import ( # noqa (fixture)
 import api
 
 
-def test_get_users(client):
+def test_get_users(client): # noqa (fixture)
     """Tests the GET /users endpoint."""
     clear_db()
     register_test_accounts()
@@ -30,7 +30,7 @@ def test_get_users(client):
         assert username in str(res.json)
 
 
-def test_add_user(client):
+def test_add_user(client): # noqa (fixture)
     """Tests the POST /users endpoint."""
     clear_db()
 
@@ -189,7 +189,7 @@ def test_add_user(client):
     assert teacher_user['admin'] is False
 
 
-def test_get_one_user(client):
+def test_get_one_user(client): # noqa (fixture)
     """Tests the GET /users/<uid> endpoint."""
     clear_db()
     register_test_accounts()
