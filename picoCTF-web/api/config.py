@@ -229,7 +229,7 @@ def block_before_competition(f):
     def wrapper(*args, **kwargs):
         if api.user.is_logged_in() and api.user.get_user().get('admin', False):
             return f(*args, **kwargs)
-        elif (datetime.utcnow().timestamp()
+        elif (datetime.datetime.utcnow().timestamp()
                 <= get_settings()['start_time'].timestamp()):
             raise PicoException(
                 'The competition has not begun yet!', 422)

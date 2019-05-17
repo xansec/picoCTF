@@ -100,6 +100,7 @@ class TeamJoinResponse(Resource):
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Ineligible to join team')
+    @ns.response(404, 'Team not found')
     @ns.expect(team_change_req)
     def post(self):
         """Join a team by providing its name and password."""
@@ -107,6 +108,11 @@ class TeamJoinResponse(Resource):
         if current_user['teacher']:
             raise PicoException('Teachers may not join teams!', 403)
         req = team_change_req.parse_args(strict=True)
+
+        # Ensure that the team exists
+        team = api.team.get_team(name=req['team_name'])
+        if team is None:
+            raise PicoException('Team not found', 404)
         api.team.join_team(
             req['team_name'], req['team_password'], current_user)
         return jsonify({

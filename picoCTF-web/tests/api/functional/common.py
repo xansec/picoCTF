@@ -118,6 +118,23 @@ USER_DEMOGRAPHICS = {
                         'rid': None
                       }
 
+USER_2_DEMOGRAPHICS = {
+                        'username': 'sampleuser2',
+                        'password': 'samplepw2',
+                        'firstname': 'Sample',
+                        'lastname': 'Usertwo',
+                        'email': 'sample2@example.com',
+                        'eligibility': True,
+                        'country': 'US',
+                        'affiliation': 'Sample School',
+                        'usertype': 'other',
+                        'demo': {
+                            'age': '18+'
+                        },
+                        'gid': None,
+                        'rid': None
+                      }
+
 
 def register_test_accounts():
     """
@@ -130,6 +147,7 @@ def register_test_accounts():
         api.user.add_user(ADMIN_DEMOGRAPHICS)
         api.user.add_user(TEACHER_DEMOGRAPHICS)
         api.user.add_user(USER_DEMOGRAPHICS)
+        api.user.add_user(USER_2_DEMOGRAPHICS)
 
 
 sample_shellserver_publish_output = r'''
