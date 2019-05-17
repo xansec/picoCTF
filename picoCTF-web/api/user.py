@@ -8,10 +8,10 @@ from functools import wraps
 
 import bcrypt
 import flask
-from flask import session, request
+from flask import request, session
 
 import api
-from api import PicoException
+from api import log_action, PicoException
 
 
 def check_blacklisted_usernames(username):
@@ -135,7 +135,7 @@ def _validate_captcha(data):
     return parsed_response['success'] is True
 
 
-@api.logger.log_action
+@log_action
 def add_user(params):
     """
     Register a new user and creates a team for them automatically.
@@ -306,7 +306,7 @@ def verify_user(token_value):
         return False
 
 
-@api.logger.log_action
+@log_action
 def update_password_request(params, uid=None, check_current=False):
     """
     Update account password.
@@ -338,7 +338,7 @@ def update_password_request(params, uid=None, check_current=False):
         }})
 
 
-@api.logger.log_action
+@log_action
 def disable_account(uid):
     """
     Disables a user account.
@@ -425,7 +425,7 @@ def confirm_password(attempt, password_hash):
                          password_hash) == password_hash
 
 
-@api.logger.log_action
+@log_action
 def login(username, password):
     """Authenticate a user."""
     user = get_user(name=username, include_pw_hash=True)
@@ -445,7 +445,7 @@ def login(username, password):
         raise PicoException('Incorrect password', 401)
 
 
-@api.logger.log_action
+@log_action
 def logout():
     """Clear the session."""
     session.clear()

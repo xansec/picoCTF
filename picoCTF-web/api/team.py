@@ -3,7 +3,7 @@
 from voluptuous import Length, Required, Schema
 
 import api
-from api import check, PicoException
+from api import check, log_action, PicoException
 
 new_team_schema = Schema({
     Required("team_name"):
@@ -398,7 +398,7 @@ def join_team(team_name, password, user):
     return desired_team['tid']
 
 
-@api.logger.log_action
+@log_action
 def update_password_request(params):
     """
     Update team password.

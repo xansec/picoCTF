@@ -20,7 +20,7 @@ class SubmissionList(Resource):
     @block_after_competition
     @block_before_competition
     @require_login
-    @ns.response(200, 'Submission successful')
+    @ns.response(201, 'Submission successful')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'CSRF token invalid')
@@ -59,10 +59,12 @@ class SubmissionList(Resource):
             message = 'Flag incorrect: please note that someone on your ' + \
                       'team has already solved this problem.'
 
-        return jsonify({
+        res = jsonify({
             'correct': correct,
             'message': message
         })
+        res.status_code = 201
+        return res
 
     @require_admin
     @ns.response(200, 'Success')

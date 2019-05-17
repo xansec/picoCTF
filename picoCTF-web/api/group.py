@@ -3,7 +3,7 @@
 from voluptuous import Required, Schema
 
 import api
-from api import check, PicoException, validate
+from api import check, log_action, PicoException, validate
 
 group_settings_schema = Schema({
     Required("email_filter"):
@@ -81,7 +81,7 @@ def get_member_information(gid):
     return member_information
 
 
-@api.logger.log_action
+@log_action
 def create_group(tid, group_name):
     """
     Insert group into the db. Assumes everything is validated.
@@ -149,7 +149,7 @@ def change_group_settings(gid, settings):
     db.groups.update({"gid": group["gid"]}, {"$set": {"settings": settings}})
 
 
-@api.logger.log_action
+@log_action
 def join_group(gid, tid, teacher=False):
     """
     Add a team to a group. Assumes everything is valid.
@@ -171,7 +171,7 @@ def join_group(gid, tid, teacher=False):
     db.groups.update({'gid': gid}, {'$push': {role_group: tid}})
 
 
-@api.logger.log_action
+@log_action
 def leave_group(gid, tid):
     """
     Remove a team from a group.
@@ -185,7 +185,7 @@ def leave_group(gid, tid):
     db.groups.update({'gid': gid}, {'$pull': {"members": tid}})
 
 
-@api.logger.log_action
+@log_action
 def delete_group(gid):
     """
     Delete a group.

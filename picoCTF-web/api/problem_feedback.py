@@ -5,7 +5,7 @@ from datetime import datetime
 from voluptuous import Length, Required, Schema
 
 import api
-from api import check, validate, PicoException
+from api import check, log_action, PicoException, validate
 
 feedback_schema = Schema({
     Required("liked"):
@@ -45,7 +45,7 @@ def get_problem_feedback(pid=None, tid=None, uid=None):
     return list(db.problem_feedback.find(match, {"_id": 0}))
 
 
-@api.logger.log_action
+@log_action
 def upsert_feedback(pid, feedback):
     """
     Add or update problem feedback in the database.

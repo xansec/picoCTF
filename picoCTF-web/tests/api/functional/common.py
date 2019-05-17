@@ -528,3 +528,20 @@ def ensure_after_competition():
         'start_time': datetime.datetime.utcnow() - datetime.timedelta(11),
         'end_time': datetime.datetime.utcnow() - datetime.timedelta(10),
         }})
+
+
+def get_problem_key(pid, team_name):
+    """Get the flag for a given pid and team name."""
+    db = get_conn()
+    assigned_instance_id = db.teams.find_one({
+        'team_name': team_name
+    })['instances'][pid]
+    problem_instances = db.problems.find_one({
+        'pid': pid
+    })['instances']
+    assigned_instance = None
+    for instance in problem_instances:
+        if instance['iid'] == assigned_instance_id:
+            assigned_instance = instance
+            break
+    return assigned_instance['flag']

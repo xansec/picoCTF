@@ -15,7 +15,7 @@ from common import ( # noqa (fixture)
 import api
 
 
-def test_get_my_team(client):
+def test_get_my_team(client): # noqa (fixture)
     """Tests the /team endpoint."""
     clear_db()
     register_test_accounts()
@@ -61,7 +61,7 @@ def test_get_my_team(client):
     assert res.json['members'][0]['uid'] == uid
 
 
-def test_get_my_team_score(client):
+def test_get_my_team_score(client): # noqa (fixture)
     """Test the /team/score endpoint."""
     # @TODO test after submitting a problem to modify score
     clear_db()
@@ -76,7 +76,7 @@ def test_get_my_team_score(client):
     assert res.json['score'] == 0
 
 
-def test_update_team_password(client):
+def test_update_team_password(client): # noqa (fixture)
     """Test the /team/update_password endpoint."""
     clear_db()
     register_test_accounts()
@@ -121,7 +121,7 @@ def test_update_team_password(client):
     assert new_password != old_password
 
 
-def test_team_score_progression(client):
+def test_team_score_progression(client): # noqa (fixture)
     """Test the /team/score_progression endpoint."""
     # @TODO test submitting problems to change score
     clear_db()
@@ -148,7 +148,7 @@ def test_team_score_progression(client):
     assert res.json == []
 
 
-def test_join_team(client):
+def test_join_team(client): # noqa (fixture)
     """Test the /api/v1/team/join endpoint."""
     clear_db()
     register_test_accounts()
@@ -236,7 +236,7 @@ def test_join_team(client):
                                   'have joined one.'
 
 
-def test_join_group(client):
+def test_join_group(client): # noqa (fixture)
     """Test the /team/join_group endpoint."""
     clear_db()
     register_test_accounts()

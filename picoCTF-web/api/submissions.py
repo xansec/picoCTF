@@ -1,10 +1,11 @@
 """Module for handling flag submissions."""
 
+from datetime import datetime
+
 from voluptuous import Length, Required, Schema
 
-from datetime import datetime
 import api
-from api import check, validate, PicoException
+from api import check, log_action, PicoException, validate
 
 submission_schema = Schema({
     Required("tid"):
@@ -43,7 +44,7 @@ def grade_problem(pid, key, tid=None):
     return correct
 
 
-@api.logger.log_action
+@log_action
 def submit_key(tid, pid, key, method, uid, ip=None):
     """
     User problem submission.
