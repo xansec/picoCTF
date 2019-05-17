@@ -370,7 +370,8 @@ def test_reset_password(client):
             'new_password': 'newpassword',
             'new_password_confirmation': 'newpassword'
             })
-    assert res.status_code == 500  # @TODO this is not a great UX
+    assert res.status_code == 422
+    assert res.json['message'] == 'Invalid password reset token'
 
     # Perform the password reset with the correct token
     res = client.post('/api/v1/user/reset_password', json={
@@ -389,3 +390,50 @@ def test_reset_password(client):
         })
     assert res.status_code == 200
     assert res.json['success'] is True
+
+
+def test_verify(client):
+    """Tests the /user/verify endpoint."""
+    clear_db()
+    register_test_accounts()
+    client.post('/api/v1/user/login', json={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password']
+    })
+
+    # Force user to unverified status and set a token
+    db = get_conn()
+    test_user = db.users.find_one_and_update(
+        {'username': USER_DEMOGRAPHICS['username']},
+        {'$set': {
+            'verified': False
+        }})
+    db.tokens.insert({
+        'uid': test_user['uid'],
+        'email_verification_count': 1,
+        'tokens': {
+            'email_verification': 'test_token'
+        }
+    })
+
+    # Attempt to verify with an incorrect token
+    res = client.get('/api/v1/user/verify?token=invalid')
+    assert res.status_code == 422
+    assert res.json['message'] == 'Invalid verification token.'
+
+    test_user = db.users.find_one({'username': USER_DEMOGRAPHICS['username']})
+    assert test_user['verified'] is False
+
+    # Successfully verify user
+    res = client.get('/api/v1/user/verify?token=test_token')
+    assert res.status_code == 200
+    assert res.json['success'] is True
+
+    test_user = db.users.find_one({'username': USER_DEMOGRAPHICS['username']})
+    assert test_user['verified'] is True
+
+    # Check that the token has been deleted from the database
+    user_tokens = db.tokens.find_one(
+        {'uid': test_user['uid']}
+    )
+    assert len(user_tokens['tokens']) == 0

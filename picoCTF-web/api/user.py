@@ -291,6 +291,8 @@ def verify_user(token_value):
 
     token_user = api.token.find_key_by_token(
         "email_verification", token_value)
+    if token_user is None:
+        return False
     current_user = api.user.get_user()
 
     if token_user["uid"] == current_user['uid']:
@@ -399,6 +401,8 @@ def reset_password(token_value, password, confirm_password):
         PicoException if invalid password reset token is given
     """
     user = api.token.find_key_by_token("password_reset", token_value)
+    if user is None:
+        raise PicoException('Invalid password reset token', 422)
     api.user.update_password_request(
         {
             "new-password": password,

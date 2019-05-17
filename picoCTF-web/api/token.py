@@ -82,18 +82,15 @@ def find_key_by_token(token_name, token_value):
     """
     Search the database for a user with a token_name token_value pair.
 
+    Returns None if no matching user is found.
+
     Args:
         token_name: the name of the token
         token_value: the value of the token
     """
     db = api.db.get_conn()
 
-    key = db.tokens.find_one({get_token_path(token_name): token_value}, {
+    return db.tokens.find_one({get_token_path(token_name): token_value}, {
                                   "_id": 0,
                                   "tokens": 0
                               })
-
-    if key is None:
-        raise PicoException("Could not find {}.".format(token_name))
-
-    return key
