@@ -68,12 +68,14 @@ def submit_key(tid, pid, key, method, uid, ip=None):
 
     previously_solved_by_user = db.submissions.find_one(
         filter={
+            'pid': pid,
             'uid': uid,
             'correct': True
         }) is not None
 
     previously_solved_by_team = db.submissions.find_one(
         filter={
+            'pid': pid,
             'tid': tid,
             'correct': True
         }) is not None
