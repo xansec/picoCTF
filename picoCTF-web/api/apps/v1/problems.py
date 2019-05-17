@@ -94,11 +94,11 @@ class ProblemList(Resource):
             # that have not been unlocked by the current user's team.
             problems = [p for p in problems if p['pid'] in
                         api.problem.get_unlocked_pids(
-                            api.user.get_team()
+                            api.user.get_user()['tid']
                         )]
             # Additionally, show only fields from the assigned instance.
-            problems = [api.problem.filter_problem_instances(p) for p in
-                        problems]
+            problems = [api.problem.filter_problem_instances(
+                            p, api.user.get_user()['tid']) for p in problems]
 
         # Strip out any system properties for non-admin users
         if not is_admin:
@@ -159,22 +159,35 @@ class ProblemList(Resource):
             })
 
 
+@require_login
 @ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Not authorized')
 @ns.response(404, 'Problem not found')
 @ns.route('/<string:problem_id>')
 class Problem(Resource):
     """Get or update the availability of a specific problem."""
 
-    # @TODO: -restrict availability to unlocked if not admin
-    #        -strip out instance information if not admin
-    #        -don't return if not unlocked (filtered?)
     def get(self, problem_id):
         """Retrieve a specific problem."""
+        # Ensure that the problem exists
         problem = api.problem.get_problem(problem_id)
         if not problem:
             raise PicoException('Problem not found', status_code=404)
-        else:
-            return problem, 200
+
+        # Ensure that the user has unlocked it
+        curr_user = api.user.get_user()
+        user_unlocked_pids = api.problem.get_unlocked_pids(curr_user['tid'])
+        if problem['pid'] not in user_unlocked_pids:
+            raise PicoException('You have not unlocked this problem', 403)
+
+        # Strip out instance and system info if not admin
+        if not curr_user.get('admin', False):
+            problem = api.problem.filter_problem_instances(
+                problem, curr_user['tid'])
+            problem = api.problem.sanitize_problem_data(problem)
+
+        return jsonify(problem)
 
     @require_admin
     @ns.response(200, 'Success')
