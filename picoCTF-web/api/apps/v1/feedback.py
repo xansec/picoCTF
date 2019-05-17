@@ -15,27 +15,37 @@ ns = Namespace('feedback', description='List and submit problem feedback')
 class FeedbackList(Resource):
     """Get the list of problem feedback, or submit new feedback."""
 
-    # @TODO only show the current user's feedback, unless an admin, then allow
-    #       uid/pid/tid filtering
     @block_before_competition
     @require_login
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Not authorized')
     @ns.response(422, 'Competition has not started')
     @ns.expect(feedback_list_req)
     def get(self):
-        """Get the list of problem feedback, with optional filtering."""
-        if not api.config.get_settings()['enable_feedback']:
-            raise PicoException('Problem feedback is not currently being ' +
-                                'accepted.', 500)
+        """
+        Get the list of your submitted problem feedback.
 
+        If called as an admin, returns all submitted feedback, with optional
+        filtering using the ?pid, ?uid, and ?tid querystring arguments.
+        """
+        curr_user = api.user.get_user()
         req = feedback_list_req.parse_args(strict=True)
 
         # Handle args if they are present but unset
         for arg in ['pid', 'uid', 'tid']:
             if req[arg] == '':
                 req[arg] = None
+
+        # Non-admins can only view their own feedback
+        if not curr_user.get('admin', False):
+            for arg in ['pid', 'uid', 'tid']:
+                if req[arg] is not None:
+                    raise PicoException(
+                        'You must be an admin to filter the feedback list',
+                        status_code=403)
+            req['uid'] = curr_user['uid']
 
         return jsonify(api.problem_feedback.get_problem_feedback(
             pid=req['pid'], tid=req['tid'], uid=req['uid']
