@@ -28,6 +28,9 @@ auto_add_shell:         True
 auto_load_problems:     True
 auto_start_competition: True
 
+# Prevent script kiddies from using as DOS box
+net_outbound_limit: "40mbit"
+
 
 ###
 # Shell Settings (env specific)
