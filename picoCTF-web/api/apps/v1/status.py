@@ -24,7 +24,6 @@ class Status(Resource):
         """
         settings = api.config.get_settings()
         return jsonify({
-            "server_"
             "enable_feedback":
                 settings["enable_feedback"],
             "enable_captcha":
