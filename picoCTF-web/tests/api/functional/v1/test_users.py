@@ -187,3 +187,27 @@ def test_add_user(client):
     teacher_user = db.users.find_one({'uid': uid})
     assert teacher_user['teacher'] is False
     assert teacher_user['admin'] is False
+
+
+def test_get_one_user(client):
+    """Tests the GET /users/<uid> endpoint."""
+    clear_db()
+    register_test_accounts()
+    client.post('/api/v1/user/login', json={
+        'username': ADMIN_DEMOGRAPHICS['username'],
+        'password': ADMIN_DEMOGRAPHICS['password']
+    })
+
+    db = get_conn()
+    test_account_uid = db.users.find_one({
+        'username': USER_DEMOGRAPHICS['username']})['uid']
+
+    # Attempt to get nonexistent user
+    res = client.get('/api/v1/users/invalid')
+    assert res.status_code == 404
+    assert res.json['message'] == 'User not found'
+
+    # Get a valid user
+    res = client.get(f'/api/v1/users/{test_account_uid}')
+    assert res.status_code == 200
+    assert USER_DEMOGRAPHICS['username'] in str(res.json)
