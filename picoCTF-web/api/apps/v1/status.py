@@ -34,5 +34,9 @@ class Status(Resource):
             "competition_active":
                 api.config.check_competition_active(),
             "email_verification":
-                settings["email"]["email_verification"]
+                settings["email"]["email_verification"],
+            "max_team_size":
+                settings["max_team_size"],
+            "email_filter":
+                settings["email_filter"]
         })

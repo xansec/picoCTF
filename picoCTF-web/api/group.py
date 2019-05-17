@@ -141,7 +141,6 @@ def change_group_settings(gid, settings):
 
     validate(group_settings_schema, settings)
 
-    # @TODO only modify changed settings
     group = api.group.get_group(gid=gid)
     if group["settings"]["hidden"] and not settings["hidden"]:
         raise PicoException('Cannot make a previously hidden group public',

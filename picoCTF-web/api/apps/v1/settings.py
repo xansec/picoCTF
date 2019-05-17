@@ -15,8 +15,6 @@ ns = Namespace('settings', description='View or modify runtime settings')
 class Settings(Resource):
     """Get or modify the current settings."""
 
-    # @TODO anyone should be able to see max_team_size, email_filter
-    #       to replace the dedicated /team/settings call
     @require_admin
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
