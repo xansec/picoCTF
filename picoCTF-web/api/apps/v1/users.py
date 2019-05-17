@@ -25,10 +25,10 @@ class UserList(Resource):
         """Get the full list of users."""
         return jsonify(api.user.get_all_users())
 
-    @ns.expect(user_req)
     @ns.response(201, 'Successfully created user')
     @ns.response(400, 'Error parsing request')
     @ns.response(409, 'Username not available')
+    @ns.expect(user_req)
     def post(self):
         """Register a new user."""
         req = user_req.parse_args(strict=True)

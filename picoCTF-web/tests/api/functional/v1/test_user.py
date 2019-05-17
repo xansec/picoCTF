@@ -1,3 +1,5 @@
+"""Tests for the /api/v1/user routes."""
+
 from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -12,7 +14,7 @@ from common import ( # noqa (fixture)
 import api
 
 
-def test_login(client):
+def test_login(client): # noqa (fixture)
     """Test the /user/login endpoint."""
     clear_db()
     register_test_accounts()
@@ -76,7 +78,7 @@ def test_login(client):
     assert res.json['username'] == USER_DEMOGRAPHICS['username']
 
 
-def test_logout(client):
+def test_logout(client): # noqa (fixture)
     """Test the /user/logout endpont."""
     clear_db()
     register_test_accounts()
@@ -96,7 +98,7 @@ def test_logout(client):
     assert res.json['success'] is True
 
 
-def test_authorize(client):
+def test_authorize(client): # noqa (fixture)
     """Test the /user/authorize endpoint."""
     clear_db()
     register_test_accounts()
@@ -202,7 +204,7 @@ def test_authorize(client):
     client.get('/api/v1/user/logout')
 
 
-def test_disable_account(client):
+def test_disable_account(client): # noqa (fixture)
     """Tests the /user/disable_account endpoint."""
     clear_db()
     register_test_accounts()
@@ -233,7 +235,7 @@ def test_disable_account(client):
     assert user_after_disabling['disabled'] is True
 
 
-def test_update_password(client):
+def test_update_password(client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     client.post('/api/v1/user/login', json={
@@ -277,7 +279,7 @@ def test_update_password(client):
     assert res.json['success'] is True
 
 
-def test_get_user(client):
+def test_get_user(client): # noqa (fixture)
     """Tests the GET /user endpoint."""
     clear_db()
     register_test_accounts()
@@ -314,7 +316,7 @@ def test_get_user(client):
             assert res.json[k] == expected_body[k]
 
 
-def test_patch_user(client):
+def test_patch_user(client): # noqa (fixture)
     """Tests the PATCH /user endpoint."""
     clear_db()
     register_test_accounts()
@@ -336,7 +338,7 @@ def test_patch_user(client):
     assert res.json['extdata'] == updated_extdata
 
 
-def test_reset_password(client):
+def test_reset_password(client): # noqa (fixture)
     """Tests the password reset endpoints."""
     clear_db()
     register_test_accounts()
@@ -392,7 +394,7 @@ def test_reset_password(client):
     assert res.json['success'] is True
 
 
-def test_verify(client):
+def test_verify(client): # noqa (fixture)
     """Tests the /user/verify endpoint."""
     clear_db()
     register_test_accounts()

@@ -1,4 +1,4 @@
-"""Tests for the /api/user/ routes."""
+"""Tests for the /api/v0/user/ routes."""
 import hashlib
 from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
