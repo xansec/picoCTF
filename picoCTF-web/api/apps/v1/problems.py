@@ -76,7 +76,7 @@ class ProblemList(Resource):
         # Unless just getting the count - then normal users allowed
         is_teacher = api.user.get_user().get('teacher', False)
         is_admin = api.user.get_user().get('admin', False)
-        if req['unlocked_only'] is True:
+        if req['unlocked_only'] is False:
             if req['count_only'] is False and not is_teacher and not is_admin:
                 raise PicoException(
                     'You must be a teacher or admin to use ' +
@@ -90,7 +90,7 @@ class ProblemList(Resource):
                     'score': p['score']
                     } for p in problems]
         else:
-            # When unlocked_only is False (by default), strip out any problems
+            # When unlocked_only is True (by default), strip out any problems
             # that have not been unlocked by the current user's team.
             problems = [p for p in problems if p['pid'] in
                         api.problem.get_unlocked_pids(
