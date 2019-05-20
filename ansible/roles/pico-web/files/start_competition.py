@@ -9,7 +9,7 @@
 
 from datetime import datetime, timedelta
 
-import api.config
+import api
 
 
 def main():

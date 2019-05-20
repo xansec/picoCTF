@@ -9,7 +9,6 @@ import sys
 
 # The picoCTF API
 import api
-import api.shell_servers
 
 
 def main(name, host, user, password, port, proto):

@@ -8,31 +8,29 @@
 import sys
 
 import api.problem
-import api.shell_servers
 
 
 def main(name):
     with api.create_app().app_context():
+        # If a server by this name exists we can load problems
+        shell_server = api.shell_servers.get_server(name=name)
         try:
-            # If a server by this name exists we can load problems
-            shell_server = api.shell_servers.get_server(name=name)
-            try:
-                # Load problems and bundles from the shell server
-                api.shell_servers.load_problems_from_server(shell_server["sid"])
+            # Load problems and bundles from the shell server
+            output = api.shell_servers.get_publish_output(
+                shell_server['sid'])
+            api.problem.load_published(output)
 
-                # Set problems to disabled
-                for p in api.problem.get_all_problems(show_disabled=True):
-                    api.problem.set_problem_availability(p["pid"], False)
+            # Set problems to disabled
+            for p in api.problem.get_all_problems(show_disabled=True):
+                api.problem.set_problem_availability(p["pid"], False)
 
-                # Set bundles to enabled to set correct unlock behavior
-                for b in api.problem.get_all_bundles():
-                    api.problem.set_bundle_dependencies_enabled(b["bid"], True)
+            # Set bundles to enabled to set correct unlock behavior
+            for b in api.bundles.get_all_bundles():
+                api.bundles.set_bundle_dependencies_enabled(b["bid"], True)
 
-            except Exception as e:
-                print(e)
-                sys.exit("Failed to load problems.")
-        except:
-            pass
+        except Exception as e:
+            print(e)
+            sys.exit("Failed to load problems.")
 
 
 if __name__ == "__main__":
