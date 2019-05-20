@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import block_before_competition, PicoException
+from api import block_before_competition, PicoException, require_admin
 
 from .schemas import scoreboard_page_req, top_teams_score_progression_req
 
@@ -65,3 +65,19 @@ class TopTeamsScoreProgressions(Resource):
         return jsonify(api.stats.get_top_teams_score_progressions(
             req['limit'], req['include_ineligible'], req['gid']
         ))
+
+
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Not authorized')
+@ns.route('/submissions')
+class SubmissionStatistics(Resource):
+    """View submission statistics, broken down by problem."""
+
+    @require_admin
+    def get(self):
+        """Get submission statistics, broken down by problem name."""
+        return jsonify({
+            p['name']: api.stats.get_problem_submission_stats(p['pid'])
+            for p in api.problem.get_all_problems(show_disabled=True)
+        })
