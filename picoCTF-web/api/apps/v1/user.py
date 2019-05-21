@@ -17,12 +17,16 @@ ns = Namespace('user', description='Authentication and information about ' +
 class User(Resource):
     """Get the current user or update their extdata."""
 
-    @require_login
     @ns.response(200, 'Success')
-    @ns.response(401, 'Not logged in')
     def get(self):
         """Get information about the current user."""
-        return jsonify(api.user.get_user())
+        res = {
+            'logged_in': False
+        }
+        if api.user.is_logged_in():
+            res['logged_in'] = True
+            res.update(api.user.get_user())
+        return jsonify(res)
 
     @check_csrf
     @require_login
