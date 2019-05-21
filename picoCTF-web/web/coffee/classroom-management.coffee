@@ -14,14 +14,14 @@ update = React.addons.update
 
 MemberManagementItem = React.createClass
   removeTeam: ->
-    apiCall "POST", "/api/group/teacher/leave", {gid: @props.gid, tid: @props.tid}
+    apiCall "POST", "http://localhost:5000/api/v1/group/teacher/leave", {gid: @props.gid, tid: @props.tid}
     .done ((resp) ->
       apiNotify resp
       @props.refresh()
     ).bind this
 
   switchUserRole: (tid, role) ->
-    apiCall "POST", "/api/group/teacher/role_switch", {gid: @props.gid, tid: tid, role: role}
+    apiCall "POST", "http://localhost:5000/api/v1/group/teacher/role_switch", {gid: @props.gid, tid: tid, role: role}
     .done ((resp) ->
       apiNotify resp
       @props.refresh()
@@ -75,7 +75,7 @@ MemberInvitePanel = React.createClass
 
   inviteUser: (e) ->
     e.preventDefault()
-    apiCall "POST", "/api/group/invite", {gid: @props.gid, email: @state.email, role: @state.role}
+    apiCall "POST", "http://localhost:5000/api/v1/group/invite", {gid: @props.gid, email: @state.email, role: @state.role}
     .done ((resp) ->
       apiNotify resp
       @setState update @state, $set: email: ""
@@ -131,24 +131,24 @@ GroupManagement = React.createClass
     @refreshSettings()
 
   refreshSettings: ->
-    apiCall "GET", "/api/group/settings", {gid: @props.gid}
+    apiCall "GET", "http://localhost:5000/api/v1/group/settings", {gid: @props.gid}
     .done ((resp) ->
       @setState update @state, $merge: resp.data
     ).bind this
 
-    apiCall "GET", "/api/user/status"
+    apiCall "GET", "http://localhost:5000/api/v1/user/status"
     .done ((resp) ->
       @setState update @state, current_user: $set: resp.data
       if not resp.data["teacher"] or (window.userStatus and not window.userStatus.teacher)
         apiNotify {status: 1, message: "You are no longer a teacher."}, "/profile"
     ).bind this
 
-    apiCall "GET", "/api/group/member_information", {gid: @props.gid}
+    apiCall "GET", "http://localhost:5000/api/v1/group/member_information", {gid: @props.gid}
     .done ((resp) ->
       @setState update @state, member_information: $set: resp.data
     ).bind this
 
-    apiCall "GET", "/api/group/teacher_information", {gid: @props.gid}
+    apiCall "GET", "http://localhost:5000/api/v1/group/teacher_information", {gid: @props.gid}
     .done ((resp) ->
       @setState update @state, teacher_information: $set: resp.data
     ).bind this
@@ -159,7 +159,7 @@ GroupManagement = React.createClass
     if modifier
       data.settings = modifier data.settings
 
-    apiCall "POST", "/api/group/settings", {gid: @props.gid, settings: JSON.stringify data.settings}
+    apiCall "POST", "http://localhost:5000/api/v1/group/settings", {gid: @props.gid, settings: JSON.stringify data.settings}
     .done ((resp) ->
       apiNotify resp
       @refreshSettings()
@@ -283,7 +283,7 @@ TeacherManagement = React.createClass
     @setState update @state, tabKey: $set: tab
 
   componentWillMount: ->
-    apiCall "GET", "/api/group/list"
+    apiCall "GET", "http://localhost:5000/api/v1/group/list"
     .done ((resp) ->
       @setState update @state, groups: $set: resp.data
     ).bind this

@@ -26,7 +26,7 @@ createGroupSetup = () ->
         createGroup($('#new-group-name').val())
 
 @exportProblemCSV = (groupName, teams) ->
-  apiCall "GET", "/api/problems/all" # New teacher-only route for problem names and categories ONLY
+  apiCall "GET", "http://localhost:5000/api/v1/problems/all" # New teacher-only route for problem names and categories ONLY
   .done ((resp) ->
     if resp.status == 0
       apiNotify resp
@@ -61,7 +61,7 @@ loadGroupOverview = (groups, showFirstTab, callback) ->
     tabBody = $(this).attr("href")
     groupName = $(this).data("group-name")
 
-    apiCall "GET", "/api/group/member_information", {gid: $(this).data("gid")}
+    apiCall "GET", "http://localhost:5000/api/v1/group/member_information", {gid: $(this).data("gid")}
     .done (teamData) ->
         ga('send', 'event', 'Group', 'LoadTeacherGroupInformation', 'Success')
         for group in groups
@@ -93,7 +93,7 @@ loadGroupOverview = (groups, showFirstTab, callback) ->
     callback()
 
 loadGroupInfo = (showFirstTab, callback) ->
-  apiCall "GET", "/api/group/list", {}
+  apiCall "GET", "http://localhost:5000/api/v1/group/list", {}
   .done (data) ->
     switch data["status"]
       when 0
@@ -104,7 +104,7 @@ loadGroupInfo = (showFirstTab, callback) ->
         loadGroupOverview data.data, showFirstTab, callback
 
 createGroup = (groupName) ->
-  apiCall "POST",  "/api/group/create", {"group-name": groupName}
+  apiCall "POST",  "http://localhost:5000/api/v1/group/create", {"group-name": groupName}
   .done (data) ->
     if data['status'] is 1
       closeDialog()
@@ -120,7 +120,7 @@ deleteGroup = (groupName) ->
   confirmDialog("You are about to permanently delete this class. This will automatically remove your students from this class. Are you sure you want to delete this class?",
                 "Class Confirmation", "Delete Class", "Cancel",
                 () ->
-                  apiCall "POST", "/api/group/delete", {"group-name": groupName}
+                  apiCall "POST", "http://localhost:5000/api/v1/group/delete", {"group-name": groupName}
                   .done (data) ->
                     apiNotify(data)
                     if data['status'] is 1
@@ -139,7 +139,7 @@ groupRequest = (e) ->
 
 $ ->
   if not window.userStatus
-    apiCall "GET", "/api/user/status"
+    apiCall "GET", "http://localhost:5000/api/v1/user/status"
     .done () ->
       if not window.userStatus.teacher
         apiNotify {status: 1, message: "You are no longer a teacher."}, "/profile"

@@ -36,8 +36,8 @@ loadNavbar = (renderNavbarLinks, renderNestedNavbarLinks) ->
     renderNestedNavbarLinks: renderNestedNavbarLinks
   }
 
-  apiCall "GET", "/api/user/status", {}
-  .done (data) ->
+  apiCall "GET", "http://localhost:5000/api/v1/user", {}
+  .done (data, testStatus, jqXHR) ->
     navbarLayout.links = userNotLoggedIn
     navbarLayout.status = data.data
     navbarLayout.topLevel = true

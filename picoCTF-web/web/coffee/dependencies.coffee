@@ -1,18 +1,28 @@
-@apiCall = (type, url, data) ->
-  if type == "POST"
-    data.token = $.cookie("token")
+@apiCall = (method, url, data) ->
+  params = {
+    method: method,
+    url: url,
+    contentType: "application/json",
+    timeout: 10000,
+    error: (jqXHR, textStatus, errorThrown) ->
+      if errorThrown == ""
+        ga('send', 'event', 'Error', 'APIOffline', url)
+        $.notify "The server is currently down. We will work to fix this error right away.", "error"
+      else
+        $.notify jqXHR.responseJSON.message, "error"
+    }
+  if data
+    params.data = JSON.stringify(data)
+    params.dataType = "json"
+  $.ajax params
 
-  $.ajax {url: url, type: type, data: data, cache: false}
-  .fail (jqXHR, text) ->
-    ga('send', 'event', 'Error', 'APIOffline', url)
-    $.notify "The server is currently down. We will work to fix this error right away.", "error"
-  .success (resp) ->
-    if url == "/api/user/status" and resp.status == 1
-      window.userStatus = resp.data
 
 @redirectIfNotLoggedIn = ->
-  apiCall "GET", "/api/user/status", {}
-  .done (data) ->
+  apiCall "GET", "http://localhost:5000/api/v1/user"
+  .done (data, textStatus, jqXHR) ->
+    console.log("data": data)
+    console.log("textStatus": textStatus)
+    console.log("jqXHR": jqXHR)
     switch data["status"]
       when 1
         if not data.data["logged_in"]
@@ -20,7 +30,7 @@
           window.location.href = "/"
 
 @redirectIfLoggedIn = ->
-  apiCall "GET", "/api/user/status", {}
+  apiCall "GET", "http://localhost:5000/api/v1/user"
   .done (data) ->
     switch data["status"]
       when 1
@@ -29,7 +39,7 @@
           window.location.href = "/news"
 
 @redirectIfTeacher = ->
-  apiCall "GET", "/api/user/status", {}
+  apiCall "GET", "http://localhost:5000/api/v1/user"
   .done (data) ->
     switch data["status"]
       when 1
@@ -38,7 +48,7 @@
           window.location.href = "/classroom"
 
 @redirectIfNotTeacher = ->
-  apiCall "GET", "/api/user/status", {}
+  apiCall "GET", "http://localhost:5000/api/v1/user/status", {}
   .done (data) ->
     switch data["status"]
       when 1
@@ -46,7 +56,7 @@
           window.location.href = "/"
 
 @redirectIfNotAdmin = ->
-  apiCall "GET", "/api/user/status", {}
+  apiCall "GET", "http://localhost:5000/api/v1/user/status", {}
   .done (data) ->
     switch data["status"]
       when 1
@@ -112,7 +122,8 @@ getStyle = (data) ->
     $('#confirm-modal').modal('hide')
 
 @logout = ->
-  apiCall "GET", "/api/user/logout"
+
+  apiCall "GET", "http://localhost:5000/api/v1/user/logout"
   .done (data) ->
     switch data['status']
       when 1
@@ -141,6 +152,8 @@ $.fn.serializeObject = ->
    return o
 
 $ ->
-  apiCall "GET", "/api/user/status", {}
+  apiCall "GET", "http://localhost:5000/api/v1/user", {}
   .done (data) ->
-    document.competition_status = data.data
+    document.competition_status = data
+
+

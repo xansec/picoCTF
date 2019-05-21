@@ -1,7 +1,7 @@
 renderShellServers = _.template($("#shell-servers-template").remove().text())
 
 $ ->
-  apiCall "GET", "/api/user/shell_servers", {}
+  apiCall "GET", "http://localhost:5000/api/v1/user/shell_servers", {}
 
   .done (resp) ->
     switch resp.status

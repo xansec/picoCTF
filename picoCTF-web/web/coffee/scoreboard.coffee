@@ -5,7 +5,7 @@ renderScorepage = _.template($("#scorepage-template").remove().text())
 
 
 load_teamscore = ->
-  apiCall "GET", "/api/team", {}
+  apiCall "GET", "http://localhost:5000/api/v1/team", {}
   .done (resp) ->
     switch resp["status"]
       when 1
@@ -26,7 +26,7 @@ load_teamscore = ->
   setTimeout reload, 100
 
 load_scoreboard_page = (boardname, page, tid) ->
-  apiCall "GET", "/api/stats/scoreboard/" + boardname + "/" + page, {}
+  apiCall "GET", "http://localhost:5000/api/v1/stats/scoreboard/" + boardname + "/" + page, {}
     .done (resp) ->
       switch resp["status"]
           when 1
@@ -42,7 +42,7 @@ load_scoreboard_page = (boardname, page, tid) ->
 
 
 load_scoreboard = ->
-  apiCall "GET", "/api/stats/scoreboard", {}
+  apiCall "GET", "http://localhost:5000/api/v1/stats/scoreboard", {}
   .done (resp) ->
     switch resp["status"]
       when 1

@@ -45,7 +45,7 @@ GeneralTab = React.createClass
           $date: value
 
   pushUpdates: ->
-    apiCall "POST", "/api/admin/settings/change", {json: JSON.stringify(@state)}
+    apiCall "POST", "http://localhost:5000/api/v1/admin/settings/change", {json: JSON.stringify(@state)}
     .done ((data) ->
       apiNotify data
       @props.refresh()
@@ -154,7 +154,7 @@ EmailTab = React.createClass
     if typeof(makeChange) == "function"
       pushData = makeChange pushData
 
-    apiCall "POST", "/api/admin/settings/change", {json: JSON.stringify(pushData)}
+    apiCall "POST", "http://localhost:5000/api/v1/admin/settings/change", {json: JSON.stringify(pushData)}
     .done ((data) ->
       apiNotify data
       @props.refresh()
@@ -263,7 +263,7 @@ ShardingTab = React.createClass
     if typeof(makeChange) == "function"
       pushData = makeChange pushData
 
-    apiCall "POST", "/api/admin/settings/change", {json: JSON.stringify(pushData)}
+    apiCall "POST", "http://localhost:5000/api/v1/admin/settings/change", {json: JSON.stringify(pushData)}
     .done ((data) ->
       apiNotify data
       @props.refresh()
@@ -272,7 +272,7 @@ ShardingTab = React.createClass
   assignServerNumbers: ->
     confirmDialog("This will assign server_numbers to all unassigned teams. This may include teams previously defaulted to server_number 1 and already given problem instances!", "Assign Server Numbers Confirmation", "Assign Server Numbers", "Cancel",
     () ->
-      apiCall "POST", "/api/admin/shell_servers/reassign_teams", {}
+      apiCall "POST", "http://localhost:5000/api/v1/admin/shell_servers/reassign_teams", {}
       .done (data) ->
         apiNotify data
     , () ->
@@ -281,7 +281,7 @@ ShardingTab = React.createClass
   reassignServerNumbers: ->
     confirmDialog("This will reassign all teams. Problem instances will be randomized for any teams that change servers!", "Reassign Server Numbers Confirmation", "Reassign Server Numbers", "Cancel",
     () ->
-      apiCall "POST", "/api/admin/shell_servers/reassign_teams", {"include_assigned": "True"}
+      apiCall "POST", "http://localhost:5000/api/v1/admin/shell_servers/reassign_teams", {"include_assigned": "True"}
       .done (data) ->
         apiNotify data
     , () ->
@@ -349,7 +349,7 @@ SettingsTab = React.createClass
         $set: tab
 
   refresh: ->
-    apiCall "GET", "/api/admin/settings"
+    apiCall "GET", "http://localhost:5000/api/v1/admin/settings"
     .done ((api) ->
       @setState update @state,
         $set:

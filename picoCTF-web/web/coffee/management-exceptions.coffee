@@ -10,7 +10,7 @@ Badge = ReactBootstrap.Badge
 ExceptionTab = React.createClass
 
   onDelete: (exception) ->
-    apiCall "POST", "/api/admin/exceptions/dismiss", {trace: exception.trace}
+    apiCall "POST", "http://localhost:5000/api/v1/admin/exceptions/dismiss", {trace: exception.trace}
     .done @props.onExceptionModification()
 
   createRequestInfo: (request) ->

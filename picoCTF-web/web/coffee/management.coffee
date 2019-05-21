@@ -14,7 +14,7 @@ ManagementTabbedArea = React.createClass
     tabKey: tab
 
   onProblemChange: ->
-    apiCall "GET", "/api/admin/problems"
+    apiCall "GET", "http://localhost:5000/api/v1/admin/problems"
     .done ((api) ->
       @setState React.addons.update @state,
         problems: $set: api.data.problems
@@ -24,14 +24,14 @@ ManagementTabbedArea = React.createClass
     #This could take awhile. However, it may
     #introduce a minor race condition with
     #get_all_problems
-    apiCall "GET", "/api/admin/problems/submissions"
+    apiCall "GET", "http://localhost:5000/api/v1/admin/problems/submissions"
     .done ((api) ->
       @setState React.addons.update @state,
         submissions: $set: api.data
     ).bind this
 
   onExceptionModification: ->
-    apiCall "GET", "/api/admin/exceptions", {limit: 50}
+    apiCall "GET", "http://localhost:5000/api/v1/admin/exceptions", {limit: 50}
     .done ((api) ->
       @setState React.addons.update @state,
         exceptions: $set: api.data

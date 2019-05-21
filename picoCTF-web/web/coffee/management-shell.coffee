@@ -29,23 +29,23 @@ ServerForm = React.createClass
     @props.refresh()
 
   addServer: ->
-    apiCall "POST", "/api/admin/shell_servers/add", @state.shellServer
+    apiCall "POST", "http://localhost:5000/api/v1/admin/shell_servers/add", @state.shellServer
     .done @notifyAndRefresh
 
   deleteServer: ->
-    apiCall "POST", "/api/admin/shell_servers/remove", {"sid": @state.shellServer.sid}
+    apiCall "POST", "http://localhost:5000/api/v1/admin/shell_servers/remove", {"sid": @state.shellServer.sid}
     .done @notifyAndRefresh
 
   updateServer: ->
-    apiCall "POST", "/api/admin/shell_servers/update", @state.shellServer
+    apiCall "POST", "http://localhost:5000/api/v1/admin/shell_servers/update", @state.shellServer
     .done @notifyAndRefresh
 
   loadProblems: ->
-    apiCall "POST", "/api/admin/shell_servers/load_problems", {"sid": @state.shellServer.sid}
+    apiCall "POST", "http://localhost:5000/api/v1/admin/shell_servers/load_problems", {"sid": @state.shellServer.sid}
     .done @notifyAndRefresh
 
   checkStatus: ->
-    apiCall "GET", "/api/admin/shell_servers/check_status", {"sid": @state.shellServer.sid}
+    apiCall "GET", "http://localhost:5000/api/v1/admin/shell_servers/check_status", {"sid": @state.shellServer.sid}
     .done (data) ->
       apiNotify data
 
@@ -124,7 +124,7 @@ ShellServerList = React.createClass
     {shellServers: []}
 
   refresh: ->
-    apiCall "GET", "/api/admin/shell_servers"
+    apiCall "GET", "http://localhost:5000/api/v1/admin/shell_servers"
     .done ((api) ->
       @setState {shellServers: api.data}
     ).bind this
@@ -160,7 +160,7 @@ ProblemLoaderTab = React.createClass
     @setState {publishedJSON: e.target.value}
 
   pushData: ->
-    apiCall "POST", "/api/problems/load_problems", {competition_data: @state.publishedJSON}
+    apiCall "POST", "http://localhost:5000/api/v1/problems/load_problems", {competition_data: @state.publishedJSON}
     .done ((data) ->
       apiNotify data
       @clearPublishedJSON()

@@ -3,7 +3,7 @@ renderGroupInformation = _.template($("#group-info-template").remove().text())
 renderAchievementInformation = _.template($("#achievement-info-template").remove().text())
 
 load_group_info = ->
-  apiCall "GET", "/api/group/list"
+  apiCall "GET", "http://localhost:5000/api/v1/group/list"
   .done (data) ->
     switch data["status"]
       when 0
@@ -18,7 +18,7 @@ load_group_info = ->
           leave_group $(e.target).data("group-name"), $(e.target).data("group-owner")
 
 load_achievement_info = ->
-    apiCall "GET", "/api/achievements"
+    apiCall "GET", "http://localhost:5000/api/v1/achievements"
     .done (data) ->
       switch data['status']
         when 0
@@ -28,7 +28,7 @@ load_achievement_info = ->
             $("#achievement-info").html renderAchievementInformation({data: data.data})
 
 join_group = (group_name, group_owner) ->
-  apiCall "POST", "/api/group/join", {"group-name": group_name, "group-owner": group_owner}
+  apiCall "POST", "http://localhost:5000/api/v1/group/join", {"group-name": group_name, "group-owner": group_owner}
   .done (data) ->
     apiNotify(data)
     if data["status"] is 1
@@ -38,7 +38,7 @@ join_group = (group_name, group_owner) ->
       ga('send', 'event', 'Team', 'JoinGroup', 'Failure::' + data.message)
 
 leave_group = (group_name, group_owner) ->
-  apiCall "POST", "/api/group/leave", {"group-name": group_name, "group-owner": group_owner}
+  apiCall "POST", "http://localhost:5000/api/v1/group/leave", {"group-name": group_name, "group-owner": group_owner}
   .done (data) ->
     apiNotify(data)
     if data["status"] is 1
@@ -79,25 +79,25 @@ ProblemInfo = React.createClass
     user: {}
 
   componentWillMount: ->
-    apiCall "GET", "/api/team"
+    apiCall "GET", "http://localhost:5000/api/v1/team"
     .done ((api) ->
       @setState update @state,
         team: $set: api.data
     ).bind this
 
-    apiCall "GET", "/api/problems"
+    apiCall "GET", "http://localhost:5000/api/v1/problems"
     .done ((api) ->
       @setState update @state,
         problems: $set: api.data
     ).bind this
 
-    apiCall "GET", "/api/problems/solved"
+    apiCall "GET", "http://localhost:5000/api/v1/problems/solved"
     .done ((api) ->
       @setState update @state,
         solvedProblems: $set: api.data
     ).bind this
 
-    apiCall "GET", "/api/user/status"
+    apiCall "GET", "http://localhost:5000/api/v1/user/status"
     .done ((api) ->
       @setState update @state,
         user: $set: api.data

@@ -25,7 +25,7 @@ constructAchievementCallbackChain = (achievements) ->
 submitProblem = (e) ->
   e.preventDefault()
   input = $(e.target).find("input")
-  apiCall "POST", "/api/problems/submit", {pid: input.data("pid"), key: input.val(), method: "web"}
+  apiCall "POST", "http://localhost:5000/api/v1/problems/submit", {pid: input.data("pid"), key: input.val(), method: "web"}
   .done (data) ->
     if data['status'] is 1
       ga('send', 'event', 'Problem', 'Solve', 'Basic')
@@ -36,7 +36,7 @@ submitProblem = (e) ->
     else
       ga('send', 'event', 'Problem', 'Wrong', 'Basic')
     apiNotify data
-    apiCall "GET", "/api/achievements"
+    apiCall "GET", "http://localhost:5000/api/v1/achievements"
     .done (data) ->
       if data['status'] is 1
         new_achievements = (x for x in data.data when !x.seen)
@@ -53,7 +53,7 @@ addProblemReview = (e) ->
 
   postData = {feedback: JSON.stringify(feedback), pid: pid}
 
-  apiCall "POST", "/api/problems/feedback", postData
+  apiCall "POST", "http://localhost:5000/api/v1/problems/feedback", postData
   .done (data) ->
     apiNotify data
     if data['status'] is 1
@@ -62,14 +62,14 @@ addProblemReview = (e) ->
       target.addClass("active")
 
     ga('send', 'event', 'Problem', 'Review', 'Basic')
-    apiCall "GET", "/api/achievements"
+    apiCall "GET", "http://localhost:5000/api/v1/achievements"
     .done (data) ->
       if data['status'] is 1
         new_achievements = (x for x in data.data when !x.seen)
         constructAchievementCallbackChain new_achievements
 
 loadProblems = ->
-  apiCall "GET", "/api/problems"
+  apiCall "GET", "http://localhost:5000/api/v1/problems"
   .done (data) ->
     switch data["status"]
       when 0
@@ -79,7 +79,7 @@ loadProblems = ->
 	# is defined in a template. This solution is therefore a bit
 	# of a hack.
         addScoreToTitle("#title")
-        apiCall "GET", "/api/problems/feedback/reviewed", {}
+        apiCall "GET", "http://localhost:5000/api/v1/problems/feedback/reviewed", {}
         .done (reviewData) ->
           $("#problem-list-holder").html renderProblemList({
             problems: data.data,
@@ -110,7 +110,7 @@ loadProblems = ->
           $(".rating-button").on "click", addProblemReview
 
 addScoreToTitle = (selector) ->
-        apiCall "GET", "/api/team/score", {}
+        apiCall "GET", "http://localhost:5000/api/v1/team/score", {}
         .done (data) ->
           if data.data
             $(selector).children("#team-score").remove()

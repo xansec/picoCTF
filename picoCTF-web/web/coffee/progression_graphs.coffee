@@ -107,7 +107,7 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
   div = divFromSelector selector
 
   drawgraph = (data) ->
-    apiCall "GET", "/api/time", {}
+    apiCall "GET", "http://localhost:5000/api/v1/time", {}
     .done (timedata) ->
       if data.data.length >= 2 && $(selector).is(":visible")
         scoreData = (team.score_progression for team in data.data)
@@ -146,13 +146,13 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
           });
 
   if gid == "student"
-    apiCall "GET", "/api/stats/top_teams/score_progression", {}
+    apiCall "GET", "http://localhost:5000/api/v1/stats/top_teams/score_progression", {}
     .done drawgraph
   else if gid == "global"
-    apiCall "GET", "/api/stats/top_teams/score_progression", {include_ineligible: true}
+    apiCall "GET", "http://localhost:5000/api/v1/stats/top_teams/score_progression", {include_ineligible: true}
     .done drawgraph
   else
-    apiCall "GET", "/api/stats/group/score_progression", {gid:gid}
+    apiCall "GET", "http://localhost:5000/api/v1/stats/group/score_progression", {gid:gid}
     .done drawgraph
 
 @renderTeamRadarGraph = (selector, tid) ->
@@ -174,7 +174,7 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
 
 @renderTeamProgressionGraph = (selector, data) ->
   div = divFromSelector selector
-  apiCall "GET", "/api/time", {}
+  apiCall "GET", "http://localhost:5000/api/v1/time", {}
   .done (timedata) ->
     if data.status == 1
       if data.data.length > 0
@@ -214,6 +214,6 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
         $(selector).html("<p>No problems have been solved.</p>")
 
 @drawTeamProgressionGraph = (selector, container_selector) ->
-  apiCall "GET", "/api/stats/team/score_progression", {}
+  apiCall "GET", "http://localhost:5000/api/v1/stats/team/score_progression", {}
   .done (data) ->
     renderTeamProgressionGraph selector, data

@@ -81,7 +81,7 @@ CompetitionCheck = React.createClass
     setTimeout (setStatus.bind null, t), (Math.random() * 3000)
 
   checkEnabledProblems: (setStatus) ->
-    apiCall "GET", "/api/admin/problems"
+    apiCall "GET", "http://localhost:5000/api/v1/admin/problems"
     .done (result) ->
       status = "failing"
       for problem in result.data.problems
@@ -93,7 +93,7 @@ CompetitionCheck = React.createClass
 
 
   checkProblemsAlive: (setStatus) ->
-    apiCall "GET", "/api/admin/shell_servers"
+    apiCall "GET", "http://localhost:5000/api/v1/admin/shell_servers"
     .done (api) ->
       status = "passing"
       servers = api.data
@@ -101,7 +101,7 @@ CompetitionCheck = React.createClass
       if servers.length is 0
         status = "failing"
 
-      apiCalls = $.map(servers, (server) -> apiCall "GET", "/api/admin/shell_servers/check_status", {sid: server.sid})
+      apiCalls = $.map(servers, (server) -> apiCall "GET", "http://localhost:5000/api/v1/admin/shell_servers/check_status", {sid: server.sid})
       ($.when).apply(this, apiCalls).done () ->
         for result in $.map(arguments, _.first)
           if result.status is 0
@@ -109,7 +109,7 @@ CompetitionCheck = React.createClass
         setStatus status
 
   checkDownloadsAccessible: (setStatus) ->
-    apiCall "GET", "/api/admin/problems"
+    apiCall "GET", "http://localhost:5000/api/v1/admin/problems"
     .done (result) ->
       status = "passing"
       requests = []
