@@ -120,3 +120,51 @@ def test_registration_stats(client):
         'teams': 1,
         'users': 5
     }
+
+def test_scoreboard(client):
+    """Test the /stats/scoreboard endpoint."""
+    clear_db()
+    register_test_accounts()
+    load_sample_problems()
+    enable_sample_problems()
+    ensure_within_competition()
+
+    # Get the scoreboard when not logged in
+    res = client.get('/api/v1/stats/scoreboard')
+    expected_structure = {
+        'global': {
+            'name': 'global',
+            'pages': 0,
+            'scoreboard': [],
+            'start_page': 1
+            },
+        'groups': [],
+        'tid': 0
+        }
+    assert res.json == expected_structure
+
+    # Get the scoreboard when logged in
+    client.post('/api/v1/user/login', json={
+        'username': USER_DEMOGRAPHICS['username'],
+        'password': USER_DEMOGRAPHICS['password']
+    })
+    res = client.get('/api/v1/stats/scoreboard')
+    expected_structure = {
+        'country': 'US',
+        'global': {
+            'name': 'global',
+            'pages': 0,
+            'scoreboard': [],
+            'start_page': 1
+            },
+        'groups': [],
+        'student': {
+            'name': 'student',
+            'pages': 0,
+            'scoreboard': [],
+            'start_page': 1
+            }
+        }
+    for k, v in expected_structure.items():
+        assert res.json[k] == v
+    assert 'tid' in res.json.keys()
