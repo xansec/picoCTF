@@ -2,6 +2,7 @@
 
 import logging
 import logging.handlers
+import traceback
 from datetime import datetime
 from functools import wraps
 
@@ -11,6 +12,7 @@ from flask import logging as flask_logging
 from flask import request
 
 import api
+
 critical_error_timeout = 600
 log = logging.getLogger(__name__)
 
@@ -64,7 +66,8 @@ class ExceptionHandler(logging.StreamHandler):
         information.update({
             "id": api.common.token(),
             "time": datetime.now(),
-            "trace": record.msg,
+            "message": record.msg,
+            "trace": traceback.format_exc(),
             "visible": True
         })
         api.db.get_conn().exceptions.insert(information)
