@@ -131,11 +131,14 @@ def create_app(config={}):
     @app.after_request
     def after_request(response):
         response.headers.add('Access-Control-Allow-Methods',
-                             'GET, POST, PUT, PATCH, DELETE')
+                             'GET, POST, PUT, PATCH, DELETE, OPTIONS')
         response.headers.add('Access-Control-Allow-Credentials', 'true')
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type, *')
         response.headers.add('Cache-Control', 'no-cache')
         response.headers.add('Cache-Control', 'no-store')
+        with app.app_context():
+            if app.debug:
+                response.headers.add('Access-Control-Allow-Origin', '*')
         if api.user.is_logged_in():
             # Flask 1.0+ bug loads config SESSION_COOKIE_DOMAIN
             # correctly as None but later converts it to bool false.
