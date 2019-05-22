@@ -45,9 +45,9 @@ GeneralTab = React.createClass
           $date: value
 
   pushUpdates: ->
-    apiCall "POST", "http://localhost:5000/api/v1/admin/settings/change", {json: JSON.stringify(@state)}
-    .done ((data) ->
-      apiNotify data
+    apiCall "PATCH", "http://localhost:5000/api/v1/settings", @state
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Settings updated"}
       @props.refresh()
     ).bind(this)
 
@@ -154,11 +154,13 @@ EmailTab = React.createClass
     if typeof(makeChange) == "function"
       pushData = makeChange pushData
 
-    apiCall "POST", "http://localhost:5000/api/v1/admin/settings/change", {json: JSON.stringify(pushData)}
-    .done ((data) ->
-      apiNotify data
+    apiCall "PATCH", "http://localhost:5000/api/v1/settings", pushData
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Settings updated"}
       @props.refresh()
     ).bind(this)
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   render: ->
     emailDescription = "Emails must be sent in order for users to reset their passwords."
@@ -263,27 +265,33 @@ ShardingTab = React.createClass
     if typeof(makeChange) == "function"
       pushData = makeChange pushData
 
-    apiCall "POST", "http://localhost:5000/api/v1/admin/settings/change", {json: JSON.stringify(pushData)}
-    .done ((data) ->
-      apiNotify data
+    apiCall "PATCH", "http://localhost:5000/api/v1/settings", pushData
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Settings updated"}
       @props.refresh()
     ).bind(this)
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   assignServerNumbers: ->
     confirmDialog("This will assign server_numbers to all unassigned teams. This may include teams previously defaulted to server_number 1 and already given problem instances!", "Assign Server Numbers Confirmation", "Assign Server Numbers", "Cancel",
     () ->
-      apiCall "POST", "http://localhost:5000/api/v1/admin/shell_servers/reassign_teams", {}
-      .done (data) ->
-        apiNotify data
+      apiCall "POST", "http://localhost:5000/api/v1/shell_servers/update_assignments", {}
+      .success (data) ->
+        apiNotify {"status": 1, "message": "Server assignments updated"}
+      .error (jqXHR) ->
+        apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     , () ->
     )
 
   reassignServerNumbers: ->
     confirmDialog("This will reassign all teams. Problem instances will be randomized for any teams that change servers!", "Reassign Server Numbers Confirmation", "Reassign Server Numbers", "Cancel",
     () ->
-      apiCall "POST", "http://localhost:5000/api/v1/admin/shell_servers/reassign_teams", {"include_assigned": "True"}
-      .done (data) ->
-        apiNotify data
+      apiCall "POST", "http://localhost:5000/api/v1/shell_servers/update_assignments", {"include_assigned": true}
+      .success (data) ->
+        apiNotify {"status": 1, "message": "Server assignments updated"}
+      .error (jqXHR) ->
+        apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     , () ->
     )
 
@@ -349,11 +357,11 @@ SettingsTab = React.createClass
         $set: tab
 
   refresh: ->
-    apiCall "GET", "http://localhost:5000/api/v1/admin/settings"
+    apiCall "GET", "http://localhost:5000/api/v1/settings"
     .done ((api) ->
       @setState update @state,
         $set:
-          settings: api.data
+          settings: api
     ).bind this
 
   componentDidMount: ->

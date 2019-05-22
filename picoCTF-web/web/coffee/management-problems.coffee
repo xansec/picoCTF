@@ -270,7 +270,10 @@ Problem = React.createClass
 
   onStateToggle: (e) ->
     e.preventDefault()
-    apiCall "POST", "http://localhost:5000/api/v1/admin/problems/availability", {pid: @props.pid, state: !@props.disabled}
+    data = {
+      "disabled": @props.disabled
+    }
+    apiCall "PATCH", "http://localhost:5000/api/v1/problems/" + @props.pid, data
     .done @props.onProblemChange
 
   handleExpand: (e) ->
@@ -367,7 +370,10 @@ ProblemList = React.createClass
 
 ProblemDependencyView = React.createClass
   handleClick: (bundle) ->
-    apiCall "POST", "http://localhost:5000/api/v1/admin/bundle/dependencies_active", {bid: bundle.bid, state: !bundle.dependencies_enabled}
+    data = {
+      "dependencies_enabled": !bundle.dependencies_enabled
+    }
+    apiCall "PATCH", "http://localhost:5000/api/v1/bundles/" + bundle.bid, data
     .done @props.onProblemChange
 
   render: ->
@@ -402,7 +408,7 @@ ProblemListModifiers = React.createClass
     window.confirmDialog "Are you sure you want to #{change} these #{changeNumber} problems?", "Mass Problem State Change",
     "Yes", "No", (() ->
       calls = _.map @props.problems, (problem) ->
-        apiCall "POST", "http://localhost:5000/api/v1/admin/problems/availability", {pid: problem.pid, state: !enabled}
+        apiCall "PATCH", "http://localhost:5000/api/v1/problems/" + problem.pid, {disabled: !enabled}
       ($.when.apply this, calls)
         .done (() ->
           if _.all(_.map arguments, (call) -> (_.first call).status == 1)

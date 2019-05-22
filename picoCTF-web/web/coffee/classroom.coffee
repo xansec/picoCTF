@@ -59,7 +59,7 @@ loadGroupOverview = (groups, showFirstTab, callback) ->
     tabBody = $(this).attr("href")
     groupName = $(this).data("group-name")
 
-    apiCall "GET", "http://localhost:5000/api/v1/groups" + $(this).data("gid")
+    apiCall "GET", "http://localhost:5000/api/v1/groups/" + $(this).data("gid")
     .success (data) ->
         ga('send', 'event', 'Group', 'LoadTeacherGroupInformation', 'Success')
         for group in groups
@@ -113,7 +113,7 @@ deleteGroup = (gid) ->
   confirmDialog("You are about to permanently delete this class. This will automatically remove your students from this class. Are you sure you want to delete this class?",
                 "Class Confirmation", "Delete Class", "Cancel",
                 () ->
-                  apiCall "DELETE", "http://localhost:5000/api/v1/groups" + gid, null, 'Group', 'DeleteGroup'
+                  apiCall "DELETE", "http://localhost:5000/api/v1/groups/" + gid, null, 'Group', 'DeleteGroup'
                   .success (data) ->
                     apiNotify {"status": 1, "message": "Successfully deleted classroom"}
                     loadGroupInfo(true)

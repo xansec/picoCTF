@@ -3,49 +3,44 @@ renderGroupInformation = _.template($("#group-info-template").remove().text())
 renderAchievementInformation = _.template($("#achievement-info-template").remove().text())
 
 load_group_info = ->
-  apiCall "GET", "http://localhost:5000/api/v1/group/list"
-  .done (data) ->
-    switch data["status"]
-      when 0
-        apiNotify(data)
-        ga('send', 'event', 'Team', 'GroupLoadFailure', data.message)
-      when 1
-        $("#group-info").html renderGroupInformation({data: data.data})
+  apiCall "GET", "http://localhost:5000/api/v1/groups", null, 'Team', 'GroupLoad'
+  .error (jqXHR) ->
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
+  .success (data) ->
+    $("#group-info").html renderGroupInformation({data: data})
 
-        $("#join-group").on "click", group_request
-        $("#group-request-form").on "submit", join_group_request
-        $(".leave-group-span").on "click", (e) ->
-          leave_group $(e.target).data("group-name"), $(e.target).data("group-owner")
+    $("#join-group").on "click", group_request
+    $("#group-request-form").on "submit", join_group_request
+    $(".leave-group-span").on "click", (e) ->
+      leave_group $(e.target).data("gid")
 
-load_achievement_info = ->
-    apiCall "GET", "http://localhost:5000/api/v1/achievements"
-    .done (data) ->
-      switch data['status']
-        when 0
-            apiNotify(data)
-            ga('send', 'event', 'Achievements', 'LoadFailure', data.message);
-        when 1
-            $("#achievement-info").html renderAchievementInformation({data: data.data})
+# load_achievement_info = ->
+#     apiCall "GET", "http://localhost:5000/api/v1/achievements"
+#     .done (data) ->
+#       switch data['status']
+#         when 0
+#             apiNotify(data)
+#             ga('send', 'event', 'Achievements', 'LoadFailure', data.message);
+#         when 1
+#             $("#achievement-info").html renderAchievementInformation({data: data.data})
 
 join_group = (group_name, group_owner) ->
-  apiCall "POST", "http://localhost:5000/api/v1/group/join", {"group-name": group_name, "group-owner": group_owner}
-  .done (data) ->
-    apiNotify(data)
-    if data["status"] is 1
-      ga('send', 'event', 'Team', 'JoinGroup', 'Success')
-      load_group_info()
-    else
-      ga('send', 'event', 'Team', 'JoinGroup', 'Failure::' + data.message)
+  data = {"group_name": group_name, "group_owner": group_owner}
+  apiCall "POST", "http://localhost:5000/api/v1/team/join_group", data, 'Team', 'JoinGroup'
+  .success (data) ->
+    apiNotify {"status": 1, "message": "Successfully joined group"}
+    load_group_info()
+  .error (jqXHR) ->
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
-leave_group = (group_name, group_owner) ->
-  apiCall "POST", "http://localhost:5000/api/v1/group/leave", {"group-name": group_name, "group-owner": group_owner}
-  .done (data) ->
-    apiNotify(data)
-    if data["status"] is 1
-      ga('send', 'event', 'Team', 'LeaveGroup', 'Success')
-      load_group_info()
-    else
-      ga('send', 'event', 'Team', 'LeaveGroup', 'Failure::' + data.message)
+
+leave_group = (gid) ->
+  apiCall "GET", "http://localhost:5000/api/v1/groups/" + gid + "/remove_team", null, 'Team', 'LeaveGroup'
+  .success (data) ->
+    apiNotify {"status": 1, "message": "Successfully left group"}
+    load_group_info()
+  .error (jqXHR) ->
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 group_request = (e) ->
   e.preventDefault()
@@ -80,28 +75,36 @@ ProblemInfo = React.createClass
 
   componentWillMount: ->
     apiCall "GET", "http://localhost:5000/api/v1/team"
-    .done ((api) ->
+    .success ((data) ->
       @setState update @state,
-        team: $set: api.data
+        team: $set: data
     ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
     apiCall "GET", "http://localhost:5000/api/v1/problems"
-    .done ((api) ->
+    .success ((data) ->
       @setState update @state,
-        problems: $set: api.data
+        problems: $set: data
     ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
-    apiCall "GET", "http://localhost:5000/api/v1/problems/solved"
-    .done ((api) ->
+    apiCall "GET", "http://localhost:5000/api/v1/problems?solved_only=true"
+    .success ((data) ->
       @setState update @state,
-        solvedProblems: $set: api.data
+        solvedProblems: $set: data
     ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
-    apiCall "GET", "http://localhost:5000/api/v1/user/status"
-    .done ((api) ->
+    apiCall "GET", "http://localhost:5000/api/v1/user"
+    .success ((data) ->
       @setState update @state,
-        user: $set: api.data
+        user: $set: data
     ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   render: ->
     allProblemsByCategory = _.groupBy @state.problems, "category"
@@ -119,7 +122,7 @@ ProblemInfo = React.createClass
       "Forensics": "/img/search.svg"
       "Tutorial": "/img/laptop.svg"
 
-    if @state.team and @state.user.username != @state.team.team_name and @state.team.team_name.length > 0
+    if @state.team and @state.team.length > 0 and @state.user.username != @state.team.team_name and @state.team.team_name.length > 0
       panelHeader =
       <div>
         Progress Overview <span className="pull-right">Team: <b>{@state.team.team_name}</b></span>
@@ -149,5 +152,5 @@ $ ->
   #load_team_info()
   React.render <ProblemInfo/>, document.getElementById("progress-info")
   load_group_info()
-  load_achievement_info()
+  # load_achievement_info()
   window.drawTeamProgressionGraph("#team-progression-graph", "#team-progression-graph-container")

@@ -633,12 +633,13 @@ AuthPanel = React.createClass
 
   onPasswordReset: (e) ->
     e.preventDefault()
-    apiCall "POST", "http://localhost:5000/api/v1/user/reset_password", {username: @state.username}
-    .done ((resp) ->
-      apiNotify resp
-      if resp.status == 1
-        @setPage "Login"
+    apiCall "POST", "http://localhost:5000/api/v1/user/reset_password/request", {username: @state.username}
+    .success ((resp) ->
+      apiNotify {status: 1, message: "A password reset link has been sent to the email address provided during registration."}
+      @setPage "Login"
     ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   onLogin: (e) ->
     e.preventDefault()

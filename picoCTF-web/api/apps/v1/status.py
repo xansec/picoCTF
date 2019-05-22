@@ -1,4 +1,6 @@
 """Endpoint for platform status."""
+import datetime
+
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
@@ -37,5 +39,7 @@ class Status(Resource):
             "max_team_size":
                 settings["max_team_size"],
             "email_filter":
-                settings["email_filter"]
+                settings["email_filter"],
+            "time":
+                int(datetime.datetime.utcnow().timestamp())
         })

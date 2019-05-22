@@ -2,15 +2,14 @@
   params = {
     method: method,
     url: url,
-    contentType: "application/json",
+    dataType: "json"
     timeout: 10000,
     error: (jqXHR, textStatus, errorThrown) ->
-      # Handle errors with no HTTP response code. Otherwise handle when calling @apiCall
+      # Notify for errors with no HTTP response code. Otherwise handle when calling @apiCall
       if errorThrown == ""
         ga('send', 'event', 'Error', 'APIOffline', url)
         $.notify "The server is currently down. We will work to fix this error right away.", "error"
       else
-        $.notify jqXHR.responseJSON.message, "error"
         if ga_event_class and ga_event
           ga('send', 'event', ga_event_class, ga_event, "Failure::" + jqXHR.responseJSON.message)
     success: ->
@@ -19,7 +18,7 @@
     }
   if data
     params.data = JSON.stringify(data)
-    params.dataType = "json"
+    params.contentType = "application/json"
   $.ajax params
 
 

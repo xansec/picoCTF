@@ -17,7 +17,7 @@ MemberManagementItem = React.createClass
     data = {
       "tid": @props.tid
     }
-    apiCall "POST", "http://localhost:5000/api/v1/groups" + @props.gid + "remove_team", data
+    apiCall "POST", "http://localhost:5000/api/v1/groups/" + @props.gid + "remove_team", data
     .success ((data) ->
       apiNotify {"status": 1, "message": "Team has successfully left the classroom."}
       @props.refresh()
@@ -172,7 +172,7 @@ GroupManagement = React.createClass
     if modifier
       data.settings = modifier data.settings
 
-    apiCall "PATCH", "http://localhost:5000/api/v1/groups/" + @props.gid, {settings: JSON.stringify data.settings}
+    apiCall "PATCH", "http://localhost:5000/api/v1/groups/" + @props.gid, {settings: data.settings}
     .success ((data) ->
       apiNotify {"status": 1, "message": "Classroom settings changed successfully."}
       @refreshSettings()
