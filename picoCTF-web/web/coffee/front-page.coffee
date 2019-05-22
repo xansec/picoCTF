@@ -478,23 +478,21 @@ TeamManagementForm = React.createClass
     if (!@state.team_name || !@state.team_password)
       apiNotify({status: 0, message: "Invalid team name or password."})
     else
-      apiCall "POST", "http://localhost:5000/api/v1/team/create", {team_name: @state.team_name, team_password: @state.team_password}
-      .done (resp) ->
-        switch resp.status
-          when 0
-              apiNotify resp
-          when 1
-              document.location.href = "/profile"
+      data = {team_name: @state.team_name, team_password: @state.team_password}
+      apiCall "POST", "http://localhost:5000/api/v1/teams", data
+      .success (data) ->
+        document.location.href = "/profile"
+      .error (jqXHR) ->
+        apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   onTeamJoin: (e) ->
     e.preventDefault()
-    apiCall "POST", "http://localhost:5000/api/v1/team/join", {team_name: @state.team_name, team_password: @state.team_password}
-    .done (resp) ->
-      switch resp.status
-        when 0
-            apiNotify resp
-        when 1
-            document.location.href = "/profile"
+    data = {team_name: @state.team_name, team_password: @state.team_password}
+    apiCall "POST", "http://localhost:5000/api/v1/team/join", data
+    .success (data) ->
+      document.location.href = "/profile"
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   render: ->
 
@@ -536,17 +534,13 @@ AuthPanel = React.createClass
     if @state.status == "verified"
       apiNotify({status: 1, message: "Your account has been successfully verified. Please login."})
     if @state.gid
-      apiCall "GET", "http://localhost:5000/api/v1/group/settings", {gid: @state.gid}
-      .done ((resp) ->
-        switch resp.status
-          when 0
-            apiNotify resp
-          when 1
-            @setState update @state,
-              groupName: $set: resp.data.name
-              affiliation: $set: resp.data.name
-              settings: $merge: resp.data.settings
-              page: $set: "Register"
+      apiCall "GET", "http://localhost:5000/api/v1/group/" + @state.gid
+      .success ((data) ->
+        @setState update @state,
+          groupName: $set: data.name
+          affiliation: $set: data.name
+          settings: $merge: data.settings
+          page: $set: "Register"
       ).bind this
     else
       apiCall "GET", "http://localhost:5000/api/v1/status"
