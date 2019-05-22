@@ -309,6 +309,10 @@ user_req.add_argument(
     'rid', required=False, type=str, location='json',
     help='Registration ID (optional, to automatically enroll in group)'
 )
+user_req.add_argument(
+    'g-recaptcha-response', required=False, location='json',
+    help='reCAPTCHA response, required if reCAPTCHA enabled in settings'
+)
 
 # Login request
 login_req = reqparse.RequestParser()

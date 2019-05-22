@@ -595,38 +595,41 @@ AuthPanel = React.createClass
 
     form['g-recaptcha-response'] = @state.captcha
 
-    apiCall "POST", "http://localhost:5000/api/v1/user/create_simple", form
-    .done ((resp) ->
-      switch resp.status
-        when 0
-          apiNotify resp
-        when 1
-          verificationAlert =
-            status: 1
-            message: "You have been sent a verification email. You will need to complete this step before logging in."
+    apiCall "POST", "http://localhost:5000/api/v1/users", form
+    .success ((data) ->
+      verificationAlert =
+        status: 1
+        message: "You have been sent a verification email. You will need to complete this step before logging in."
 
-          if @state.settings.max_team_size > 1
-            if @state.settings.email_verification and not @state.rid
-              apiNotify verificationAlert
-              @setPage "Login"
-              document.location.hash = "#team-builder"
+      successAlert =
+        status: 1
+        message: "User " + @state.username + " registered successfully!"
+
+      if @state.settings.max_team_size > 1
+        if @state.settings.email_verification and not @state.rid
+          apiNotify verificationAlert
+          @setPage "Login"
+          document.location.hash = "#team-builder"
+        else
+          apiCall "GET", "http://localhost:5000/api/v1/user"
+          .success (data) ->
+            if data.teacher
+              apiNotify successAlert, "/profile"
             else
-              if resp.data.teacher
-                apiNotify resp, "/profile"
-              else
-                apiNotify resp
-                @setPage "Team Management"
+              apiNotify successAlert
+              @setPage "Team Management"
+      else
+        if @state.settings.email_verification
+          if not @state.rid or @state.rid.length == 0
+            apiNotify verificationAlert
           else
-            if @state.settings.email_verification
-              if not @state.rid or @state.rid.length == 0
-                apiNotify verificationAlert
-              else
-                apiNotify resp, "/profile"
-              @setPage "Login"
-            else
-             apiNotify resp, "/profile"
-
+            apiNotify successAlert, "/profile"
+          @setPage "Login"
+        else
+          apiNotify successAlert, "/profile"
     ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   onPasswordReset: (e) ->
     e.preventDefault()
