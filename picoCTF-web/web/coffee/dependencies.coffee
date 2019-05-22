@@ -1,15 +1,21 @@
-@apiCall = (method, url, data) ->
+@apiCall = (method, url, data, ga_event_class, ga_event) ->
   params = {
     method: method,
     url: url,
     contentType: "application/json",
     timeout: 10000,
     error: (jqXHR, textStatus, errorThrown) ->
+      # Handle errors with no HTTP response code. Otherwise handle when calling @apiCall
       if errorThrown == ""
         ga('send', 'event', 'Error', 'APIOffline', url)
         $.notify "The server is currently down. We will work to fix this error right away.", "error"
       else
         $.notify jqXHR.responseJSON.message, "error"
+        if ga_event_class and ga_event
+          ga('send', 'event', ga_event_class, ga_event, "Failure::" + jqXHR.responseJSON.message)
+    success: ->
+      if ga_event_class and ga_event
+          ga('send', 'event', ga_event_class, ga_event, "Success")
     }
   if data
     params.data = JSON.stringify(data)
@@ -18,52 +24,34 @@
 
 
 @redirectIfNotLoggedIn = ->
-  apiCall "GET", "http://localhost:5000/api/v1/user"
-  .done (data, textStatus, jqXHR) ->
-    console.log("data": data)
-    console.log("textStatus": textStatus)
-    console.log("jqXHR": jqXHR)
-    switch data["status"]
-      when 1
-        if not data.data["logged_in"]
-          ga('send', 'event', 'Redirect', 'NotLoggedIn')
-          window.location.href = "/"
+  apiCall "GET", "http://localhost:5000/api/v1/user", null, 'Redirect', 'NotLoggedIn'
+  .success (data) ->
+    if not data.logged_in
+      window.location.href = "/"
 
 @redirectIfLoggedIn = ->
-  apiCall "GET", "http://localhost:5000/api/v1/user"
-  .done (data) ->
-    switch data["status"]
-      when 1
-        if data.data["logged_in"]
-          ga('send', 'event', 'Redirect', 'LoggedIn')
-          window.location.href = "/news"
+  apiCall "GET", "http://localhost:5000/api/v1/user", null, 'Redirect', 'LoggedIn'
+  .success (data) ->
+    if data.logged_in
+      window.location.href = "/news"
 
 @redirectIfTeacher = ->
-  apiCall "GET", "http://localhost:5000/api/v1/user"
-  .done (data) ->
-    switch data["status"]
-      when 1
-        if data.data["teacher"]
-          ga('send', 'event', 'Redirect', 'Teacher')
-          window.location.href = "/classroom"
+  apiCall "GET", "http://localhost:5000/api/v1/user", null, 'Redirect', 'Teacher'
+  .success (data) ->
+    if data.teacher
+      window.location.href = "/classroom"
 
 @redirectIfNotTeacher = ->
-  apiCall "GET", "http://localhost:5000/api/v1/user/status", {}
-  .done (data) ->
-    switch data["status"]
-      when 1
-        if not data.data["teacher"]
-          window.location.href = "/"
+  apiCall "GET", "http://localhost:5000/api/v1/user"
+  .success (data) ->
+    if not data.teacher
+      window.location.href = "/"
 
 @redirectIfNotAdmin = ->
-  apiCall "GET", "http://localhost:5000/api/v1/user/status", {}
-  .done (data) ->
-    switch data["status"]
-      when 1
-        if not data.data["admin"]
-          ga('send', 'event', 'Redirect', 'Admin')
-          window.location.href = "/"
-
+  apiCall "GET", "http://localhost:5000/api/v1/user", null, 'Redirect', 'Admin'
+  .success (data) ->
+    if not data.admin
+      window.location.href = "/"
 
 getStyle = (data) ->
   style = "info"
@@ -122,16 +110,9 @@ getStyle = (data) ->
     $('#confirm-modal').modal('hide')
 
 @logout = ->
-
-  apiCall "GET", "http://localhost:5000/api/v1/user/logout"
-  .done (data) ->
-    switch data['status']
-      when 1
-        ga('send', 'event', 'Authentication', 'LogOut', 'Success')
-        document.location.href = "/"
-      when 0
-        ga('send', 'event', 'Authentication', 'LogOut', 'Failure::'+data.message)
-        document.location.href = "/"
+  apiCall "GET", "http://localhost:5000/api/v1/user/logout", null, 'Authentication', 'LogOut'
+  .success (data) ->
+    document.location.href = "/"
 
 $.fn.apiNotify = (data, configuration) ->
   configuration["className"] = getStyle data
@@ -152,8 +133,8 @@ $.fn.serializeObject = ->
    return o
 
 $ ->
-  apiCall "GET", "http://localhost:5000/api/v1/user", {}
-  .done (data) ->
+  apiCall "GET", "http://localhost:5000/api/v1/user"
+  .success (data) ->
     document.competition_status = data
 
 

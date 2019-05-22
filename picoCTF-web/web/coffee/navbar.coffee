@@ -1,33 +1,18 @@
-apiOffline =
-  News: "/news"
-
-teacherLoggedIn =
-  Problems: "/problems"
-  Shell: "/shell"
-  Scoreboard: "/scoreboard"
-  Classroom: "/classroom"
-  News: "/news"
-
-teacherLoggedInNoCompetition =
-  Scoreboard: "/scoreboard"
-  Classroom: "/classroom"
-  News: "/news"
-
-userLoggedIn =
-  Problems: "/problems"
-  Shell: "/shell"
-  Scoreboard: "/scoreboard"
-  News: "/news"
-
-userLoggedInNoCompetition =
-  Scoreboard: "/scoreboard"
-  News: "/news"
-
 userNotLoggedIn =
   News: "/news"
 
-adminLoggedIn =
+loggedInAdditions =
+  Scoreboard: "/scoreboard"
+
+teacherAdditions =
+  Classroom: "/classroom"
+
+adminAdditions =
   Management: "/management"
+
+competitionAdditions =
+  Problems: "/problems"
+  Shell: "/shell"
 
 loadNavbar = (renderNavbarLinks, renderNestedNavbarLinks) ->
 
@@ -36,34 +21,39 @@ loadNavbar = (renderNavbarLinks, renderNestedNavbarLinks) ->
     renderNestedNavbarLinks: renderNestedNavbarLinks
   }
 
-  apiCall "GET", "http://localhost:5000/api/v1/user", {}
-  .done (data, testStatus, jqXHR) ->
-    navbarLayout.links = userNotLoggedIn
-    navbarLayout.status = data.data
-    navbarLayout.topLevel = true
-    if data["status"] == 1
-      if not data.data["logged_in"]
-        $(".show-when-logged-out").css("display", "inline-block")
-      if data.data["teacher"]
-        if data.data["competition_active"]
-           navbarLayout.links = teacherLoggedIn
-        else
-           navbarLayout.links = teacherLoggedInNoCompetition
-      else if data.data["logged_in"]
-         if data.data["competition_active"]
-            navbarLayout.links = userLoggedIn
-         else
-            navbarLayout.links = userLoggedInNoCompetition
+  # Start out with the base links
+  navbarLayout.links = userNotLoggedIn
+  navbarLayout.topLevel = true
 
-        if data.data["admin"]
-           $.extend navbarLayout.links, adminLoggedIn
+  # If a user is logged in, add status and links
+  apiCall "GET", "http://localhost:5000/api/v1/user"
+  .success ((data) ->
+    navbarLayout.status = data
+    if data.logged_in
+      $.extend navbarLayout.links, loggedInAdditions
+    else
+      $(".show-when-logged-out").css("display", "inline-block")
 
+    if data.teacher
+      $.extend navbarLayout.links, teacherAdditions
+
+    if data.admin
+      $.extend navbarLayout.links, adminAdditions
     $("#navbar-links").html renderNavbarLinks(navbarLayout)
     $("#navbar-item-logout").on("click", logout)
+  )
 
-  .fail ->
-    navbarLayout.links = apiOffline
+  # If a competition is active, add links
+  apiCall "GET", "http://localhost:5000/api/v1/status"
+  .success ((data) ->
+    if data.competition_active
+      $.extend navbarLayout.links, competitionAdditions
     $("#navbar-links").html renderNavbarLinks(navbarLayout)
+    $("#navbar-item-logout").on("click", logout)
+  )
+
+  $("#navbar-links").html renderNavbarLinks(navbarLayout)
+  $("#navbar-item-logout").on("click", logout)
 
 $ ->
   renderNavbarLinks = _.template($("#navbar-links-template").remove().text())

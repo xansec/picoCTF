@@ -549,23 +549,22 @@ AuthPanel = React.createClass
               page: $set: "Register"
       ).bind this
     else
-      apiCall "GET", "http://localhost:5000/api/v1/team/settings"
-      .done ((resp) ->
+      apiCall "GET", "http://localhost:5000/api/v1/status"
+      .success ((data) ->
         @setState update @state,
-          settings: $merge: resp.data
+          settings: $merge: data
       ).bind this
 
     apiCall "GET", "http://localhost:5000/api/v1/user"
-    .done ((resp) ->
+    .success ((data) ->
       @setState update @state,
-        settings: $merge: resp.data
-     ).bind this
+        settings: $merge: data
+    ).bind this
 
     apiCall "GET", "http://localhost:5000/api/v1/stats/registration"
-    .done ((resp) ->
-      if resp.status
-        @setState update @state,
-          regStats: $set: resp.data
+    .success ((data) ->
+      @setState update @state,
+        regStats: $set: data
     ).bind this
 
   onRegistration: (e) ->
@@ -650,7 +649,7 @@ AuthPanel = React.createClass
     .success ->
       # Get teacher status
       apiCall "GET", "http://localhost:5000/api/v1/user"
-      .success((data) ->
+      .success ((data) ->
         if document.location.hash == "#team-builder" and not data.teacher
           @setPage "Team Management"
         else
