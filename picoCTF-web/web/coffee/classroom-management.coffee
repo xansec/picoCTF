@@ -20,12 +20,12 @@ MemberManagementItem = React.createClass
       @props.refresh()
     ).bind this
 
-  switchUserRole: (tid, role) ->
-    apiCall "POST", "http://localhost:5000/api/v1/group/teacher/role_switch", {gid: @props.gid, tid: tid, role: role}
-    .done ((resp) ->
-      apiNotify resp
-      @props.refresh()
-    ).bind this
+  # switchUserRole: (tid, role) ->
+  #   apiCall "POST", "http://localhost:5000/api/v1/group/teacher/role_switch", {gid: @props.gid, tid: tid, role: role}
+  #   .done ((resp) ->
+  #     apiNotify resp
+  #     @props.refresh()
+  #   ).bind this
 
   render: ->
     if @props.teacher
@@ -41,10 +41,10 @@ MemberManagementItem = React.createClass
         <p className="text-center">User</p>
       </Button>
 
-    if @props.teacher
-      switchUser = <Button onClick={@switchUserRole.bind(null, @props.tid, "member")}>Make Member</Button>
-    else
-      switchUser = <Button onClick={@switchUserRole.bind(null, @props.tid, "teacher")}>Make Teacher</Button>
+    # if @props.teacher
+    #   switchUser = <Button onClick={@switchUserRole.bind(null, @props.tid, "member")}>Make Member</Button>
+    # else
+    #   switchUser = <Button onClick={@switchUserRole.bind(null, @props.tid, "teacher")}>Make Teacher</Button>
 
     <ListGroupItem>
       <Row className="row">
