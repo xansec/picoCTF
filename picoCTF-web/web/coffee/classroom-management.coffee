@@ -14,10 +14,16 @@ update = React.addons.update
 
 MemberManagementItem = React.createClass
   removeTeam: ->
-    apiCall "POST", "http://localhost:5000/api/v1/group/teacher/leave", {gid: @props.gid, tid: @props.tid}
-    .done ((resp) ->
-      apiNotify resp
+    data = {
+      "tid": @props.tid
+    }
+    apiCall "POST", "http://localhost:5000/api/v1/groups" + @props.gid + "remove_team", data
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Team has successfully left the classroom."}
       @props.refresh()
+    ).bind this
+    .error ((jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     ).bind this
 
   # switchUserRole: (tid, role) ->
@@ -75,11 +81,18 @@ MemberInvitePanel = React.createClass
 
   inviteUser: (e) ->
     e.preventDefault()
-    apiCall "POST", "http://localhost:5000/api/v1/group/invite", {gid: @props.gid, email: @state.email, role: @state.role}
-    .done ((resp) ->
-      apiNotify resp
+    data = {
+      email: @state.email,
+      as_teacher: (@state.role == "teacher")
+    }
+    apiCall "POST", "http://localhost:5000/api/v1/groups/" + @props.gid + "/invite", data
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Email invitation has been sent."}
       @setState update @state, $set: email: ""
       @props.refresh()
+    ).bind this
+    .error ((jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     ).bind this
 
   render: ->
@@ -131,26 +144,26 @@ GroupManagement = React.createClass
     @refreshSettings()
 
   refreshSettings: ->
-    apiCall "GET", "http://localhost:5000/api/v1/group/settings", {gid: @props.gid}
-    .done ((resp) ->
-      @setState update @state, $merge: resp.data
+    apiCall "GET", "http://localhost:5000/api/v1/groups/" + @props.gid
+    .success ((data) ->
+      @setState update @state, $merge: data.settings
     ).bind this
 
-    apiCall "GET", "http://localhost:5000/api/v1/user/status"
-    .done ((resp) ->
-      @setState update @state, current_user: $set: resp.data
-      if not resp.data["teacher"] or (window.userStatus and not window.userStatus.teacher)
+    apiCall "GET", "http://localhost:5000/api/v1/user"
+    .success ((data) ->
+      @setState update @state, current_user: $set: data
+      if not data["teacher"] or (window.userStatus and not window.userStatus.teacher)
         apiNotify {status: 1, message: "You are no longer a teacher."}, "/profile"
     ).bind this
 
-    apiCall "GET", "http://localhost:5000/api/v1/group/member_information", {gid: @props.gid}
-    .done ((resp) ->
-      @setState update @state, member_information: $set: resp.data
+    apiCall "GET", "http://localhost:5000/api/v1/groups/" + @props.gid
+    .success ((data) ->
+      @setState update @state, member_information: $set: data.members
     ).bind this
 
-    apiCall "GET", "http://localhost:5000/api/v1/group/teacher_information", {gid: @props.gid}
-    .done ((resp) ->
-      @setState update @state, teacher_information: $set: resp.data
+    apiCall "GET", "http://localhost:5000/api/v1/groups/" + @props.gid
+    .success ((data) ->
+      @setState update @state, teacher_information: $set: data.teachers
     ).bind this
 
   pushUpdates: (modifier) ->
@@ -159,10 +172,13 @@ GroupManagement = React.createClass
     if modifier
       data.settings = modifier data.settings
 
-    apiCall "POST", "http://localhost:5000/api/v1/group/settings", {gid: @props.gid, settings: JSON.stringify data.settings}
-    .done ((resp) ->
-      apiNotify resp
+    apiCall "PATCH", "http://localhost:5000/api/v1/groups/" + @props.gid, {settings: JSON.stringify data.settings}
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Classroom settings changed successfully."}
       @refreshSettings()
+    ).bind this
+    .error ((jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     ).bind this
 
   render: ->
@@ -283,9 +299,9 @@ TeacherManagement = React.createClass
     @setState update @state, tabKey: $set: tab
 
   componentWillMount: ->
-    apiCall "GET", "http://localhost:5000/api/v1/group/list"
-    .done ((resp) ->
-      @setState update @state, groups: $set: resp.data
+    apiCall "GET", "http://localhost:5000/api/v1/groups"
+    .success ((data) ->
+      @setState update @state, groups: $set: data
     ).bind this
 
   render: ->

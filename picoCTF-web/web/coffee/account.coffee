@@ -104,7 +104,7 @@ TeamManagementForm = React.createClass
         data = {"new_password": newpass, "new_password-confirmation": newpass_confirm}
         apiCall "POST", "http://localhost:5000/api/v1/team/update_password", data
         .success (data) ->
-          apiNotify {"status": 0, "message": "Your team password has been successfully updated!"}, "/account"
+          apiNotify {"status": 1, "message": "Your team password has been successfully updated!"}, "/account"
         .error (jqXHR) ->
           apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
