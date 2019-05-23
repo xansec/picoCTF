@@ -252,9 +252,13 @@ def get_problem(pid):
     """
     db = api.db.get_conn()
     problem = db.problems.find_one({'pid': pid}, {'_id': 0})
-    if api.user.is_logged_in() and api.user.get_user().get('admin', False):
-        problem['reviews'] = api.problem_feedback.get_problem_feedback(
-            pid=problem['pid'])
+    if api.user.is_logged_in():
+        curr_user = api.user.get_user()
+        problem['unlocked'] = \
+            problem['pid'] in api.problem.get_unlocked_pids(curr_user['tid'])
+        if curr_user.get('admin', False):
+            problem['reviews'] = api.problem_feedback.get_problem_feedback(
+                pid=problem['pid'])
     return problem
 
 
@@ -286,10 +290,14 @@ def get_all_problems(category=None, show_disabled=False):
         db.problems.find(match, projection).sort([('score', pymongo.ASCENDING),
                                                   ('name',
                                                    pymongo.ASCENDING)]))
-    if api.user.is_logged_in() and api.user.get_user().get('admin', False):
+    if api.user.is_logged_in():
+        curr_user = api.user.get_user()
         for problem in problems:
-            problem['reviews'] = api.problem_feedback.get_problem_feedback(
-                pid=problem['pid'])
+            problem['unlocked'] = problem['pid'] in \
+                api.problem.get_unlocked_pids(curr_user['tid'])
+            if curr_user.get('admin', False):
+                problem['reviews'] = api.problem_feedback.get_problem_feedback(
+                    pid=problem['pid'])
     return problems
 
 
@@ -402,7 +410,8 @@ def get_unlocked_pids(tid):
     team = api.team.get_team(tid)
 
     unlocked = []
-    for problem in get_all_problems():
+    db = api.db.get_conn()
+    for problem in list(db.problems.find({}, {'_id': 0})):
         if is_problem_unlocked(problem, solved):
             unlocked.append(problem["pid"])
 

@@ -92,10 +92,7 @@ class ProblemList(Resource):
         else:
             # When unlocked_only is True (by default), strip out any problems
             # that have not been unlocked by the current user's team.
-            problems = [p for p in problems if p['pid'] in
-                        api.problem.get_unlocked_pids(
-                            api.user.get_user()['tid']
-                        )]
+            problems = [p for p in problems if (p['unlocked'] is True)]
             # Additionally, show only fields from the assigned instance.
             problems = [api.problem.filter_problem_instances(
                             p, api.user.get_user()['tid']) for p in problems]
@@ -176,12 +173,11 @@ class Problem(Resource):
             raise PicoException('Problem not found', status_code=404)
 
         # Ensure that the user has unlocked it
-        curr_user = api.user.get_user()
-        user_unlocked_pids = api.problem.get_unlocked_pids(curr_user['tid'])
-        if problem['pid'] not in user_unlocked_pids:
+        if not problem['unlocked']:
             raise PicoException('You have not unlocked this problem', 403)
 
         # Strip out instance and system info if not admin
+        curr_user = api.user.get_user()
         if not curr_user.get('admin', False):
             problem = api.problem.filter_problem_instances(
                 problem, curr_user['tid'])
