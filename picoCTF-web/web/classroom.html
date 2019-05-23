@@ -271,7 +271,7 @@ post_scripts:
                    role="tab" data-toggle="tab">
                   <%- group.name %>
                   <% if(window.userStatus && window.userStatus.admin) { %>
-                    <span data-group-name="<%- group.name %>" class="glyphicon glyphicon-remove delete-group-span"></span>
+                    <span data-group-name="<%- group.name %>" data-gid="<%- group.gid %>" class="glyphicon glyphicon-remove delete-group-span"></span>
                   <% } %>
                 </a>
             </li>
