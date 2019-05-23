@@ -210,7 +210,7 @@ post_scripts:
                                           <tr>
                                               <td><%- submission.problem_name %></td>
                                               <td><%- submission.key %></td>
-                                              <td><%- new Date(submission.timestamp["$date"]) %></td>
+                                              <td><%- new Date(submission.timestamp) %></td>
                                           </tr>
                                           <% }) %>
                                       </tbody>
@@ -223,7 +223,7 @@ post_scripts:
                           <div class="team-information">
                               <h4>Solved Problems:</h4>
                               <%
-                              sortedProblems = _.sortBy(team.solved_problems, function(problem) { return -1*problem.solve_time["$date"];})
+                              sortedProblems = _.sortBy(team.solved_problems, function(problem) { return -1*problem.solve_time;})
                               if(team.solved_problems.length > 0) {
                               %>
                               <table class="table table-fixed">
@@ -239,7 +239,7 @@ post_scripts:
                                     <tr>
                                         <td class="col-md-4"><%- problem.name %></td>
                                         <td class="col-md-2"><%- problem.score %></td>
-                                        <td class="col-md-6"><%- new Date(problem.solve_time["$date"]) %></td>
+                                        <td class="col-md-6"><%- new Date(problem.solve_time) %></td>
                                     </tr>
                                     <% }) %>
                                   </tbody>

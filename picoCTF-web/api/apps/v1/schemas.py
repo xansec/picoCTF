@@ -138,11 +138,11 @@ settings_patch_req.add_argument(
     'enable_feedback', required=False, type=inputs.boolean, location='json'
 )
 settings_patch_req.add_argument(
-    'start_time', required=False, type=inputs.datetime_from_rfc822,
+    'start_time', required=False, type=inputs.datetime_from_iso8601,
     location='json'
 )
 settings_patch_req.add_argument(
-    'end_time', required=False, type=inputs.datetime_from_rfc822,
+    'end_time', required=False, type=inputs.datetime_from_iso8601,
     location='json'
 )
 settings_patch_req.add_argument(

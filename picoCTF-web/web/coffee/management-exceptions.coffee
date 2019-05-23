@@ -46,7 +46,7 @@ ExceptionTab = React.createClass
   createExceptionItem: (exception, i) ->
     time =
     <small>
-      {new Date(exception.time["$date"]).toUTCString()}
+      {new Date(exception.time).toUTCString()}
     </small>
 
     deleteButton =
