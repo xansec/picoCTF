@@ -15,9 +15,9 @@ update = React.addons.update
 MemberManagementItem = React.createClass
   removeTeam: ->
     data = {
-      "tid": @props.tid
+      "team_id": @props.tid
     }
-    apiCall "POST", "http://localhost:5000/api/v1/groups/" + @props.gid + "remove_team", data
+    apiCall "POST", "http://localhost:5000/api/v1/groups/" + @props.gid + "/remove_team", data
     .success ((data) ->
       apiNotify {"status": 1, "message": "Team has successfully left the classroom."}
       @props.refresh()
@@ -63,7 +63,6 @@ MemberManagementItem = React.createClass
         </Col>
         <Col xs={4}>
           <ButtonGroup vertical>
-            {switchUser}
             <Button onClick={@removeTeam}>Remove User</Button>
           </ButtonGroup>
         </Col>

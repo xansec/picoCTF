@@ -186,7 +186,7 @@ class RemoveTeamResponse(Resource):
             raise PicoException('Group not found', 404)
         group_teachers = [group['owner']] + group['teachers']
         eligible_for_removal = group['members'] + group['teachers']
-        curr_tid = api.user_get_user['tid']
+        curr_tid = api.user.get_user()['tid']
 
         # Ensure the user has a teacher role within the group
         if curr_tid not in group_teachers:
