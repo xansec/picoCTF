@@ -23,31 +23,31 @@
 
 
 @redirectIfNotLoggedIn = ->
-  apiCall "GET", "http://localhost:5000/api/v1/user", null, 'Redirect', 'NotLoggedIn'
+  apiCall "GET", "/api/v1/user", null, 'Redirect', 'NotLoggedIn'
   .success (data) ->
     if not data.logged_in
       window.location.href = "/"
 
 @redirectIfLoggedIn = ->
-  apiCall "GET", "http://localhost:5000/api/v1/user", null, 'Redirect', 'LoggedIn'
+  apiCall "GET", "/api/v1/user", null, 'Redirect', 'LoggedIn'
   .success (data) ->
     if data.logged_in
       window.location.href = "/news"
 
 @redirectIfTeacher = ->
-  apiCall "GET", "http://localhost:5000/api/v1/user", null, 'Redirect', 'Teacher'
+  apiCall "GET", "/api/v1/user", null, 'Redirect', 'Teacher'
   .success (data) ->
     if data.teacher
       window.location.href = "/classroom"
 
 @redirectIfNotTeacher = ->
-  apiCall "GET", "http://localhost:5000/api/v1/user"
+  apiCall "GET", "/api/v1/user"
   .success (data) ->
     if not data.teacher
       window.location.href = "/"
 
 @redirectIfNotAdmin = ->
-  apiCall "GET", "http://localhost:5000/api/v1/user", null, 'Redirect', 'Admin'
+  apiCall "GET", "/api/v1/user", null, 'Redirect', 'Admin'
   .success (data) ->
     if not data.admin
       window.location.href = "/"
@@ -109,7 +109,7 @@ getStyle = (data) ->
     $('#confirm-modal').modal('hide')
 
 @logout = ->
-  apiCall "GET", "http://localhost:5000/api/v1/user/logout", null, 'Authentication', 'LogOut'
+  apiCall "GET", "/api/v1/user/logout", null, 'Authentication', 'LogOut'
   .success (data) ->
     document.location.href = "/"
 
@@ -132,7 +132,7 @@ $.fn.serializeObject = ->
    return o
 
 $ ->
-  apiCall "GET", "http://localhost:5000/api/v1/user"
+  apiCall "GET", "/api/v1/user"
   .success (data) ->
     document.competition_status = data
 

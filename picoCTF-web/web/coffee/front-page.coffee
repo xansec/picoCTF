@@ -479,7 +479,7 @@ TeamManagementForm = React.createClass
       apiNotify({status: 0, message: "Invalid team name or password."})
     else
       data = {team_name: @state.team_name, team_password: @state.team_password}
-      apiCall "POST", "http://localhost:5000/api/v1/teams", data
+      apiCall "POST", "/api/v1/teams", data
       .success (data) ->
         document.location.href = "/profile"
       .error (jqXHR) ->
@@ -488,7 +488,7 @@ TeamManagementForm = React.createClass
   onTeamJoin: (e) ->
     e.preventDefault()
     data = {team_name: @state.team_name, team_password: @state.team_password}
-    apiCall "POST", "http://localhost:5000/api/v1/team/join", data
+    apiCall "POST", "/api/v1/team/join", data
     .success (data) ->
       document.location.href = "/profile"
     .error (jqXHR) ->
@@ -534,7 +534,7 @@ AuthPanel = React.createClass
     if @state.status == "verified"
       apiNotify({status: 1, message: "Your account has been successfully verified. Please login."})
     if @state.gid
-      apiCall "GET", "http://localhost:5000/api/v1/group/" + @state.gid
+      apiCall "GET", "/api/v1/group/" + @state.gid
       .success ((data) ->
         @setState update @state,
           groupName: $set: data.name
@@ -543,19 +543,19 @@ AuthPanel = React.createClass
           page: $set: "Register"
       ).bind this
     else
-      apiCall "GET", "http://localhost:5000/api/v1/status"
+      apiCall "GET", "/api/v1/status"
       .success ((data) ->
         @setState update @state,
           settings: $merge: data
       ).bind this
 
-    apiCall "GET", "http://localhost:5000/api/v1/user"
+    apiCall "GET", "/api/v1/user"
     .success ((data) ->
       @setState update @state,
         settings: $merge: data
     ).bind this
 
-    apiCall "GET", "http://localhost:5000/api/v1/stats/registration"
+    apiCall "GET", "/api/v1/stats/registration"
     .success ((data) ->
       @setState update @state,
         regStats: $set: data
@@ -595,7 +595,7 @@ AuthPanel = React.createClass
 
     form['g-recaptcha-response'] = @state.captcha
 
-    apiCall "POST", "http://localhost:5000/api/v1/users", form
+    apiCall "POST", "/api/v1/users", form
     .success ((data) ->
       verificationAlert =
         status: 1
@@ -611,7 +611,7 @@ AuthPanel = React.createClass
           @setPage "Login"
           document.location.hash = "#team-builder"
         else
-          apiCall "GET", "http://localhost:5000/api/v1/user"
+          apiCall "GET", "/api/v1/user"
           .success (data) ->
             if data.teacher
               apiNotify successAlert, "/profile"
@@ -633,7 +633,7 @@ AuthPanel = React.createClass
 
   onPasswordReset: (e) ->
     e.preventDefault()
-    apiCall "POST", "http://localhost:5000/api/v1/user/reset_password/request", {username: @state.username}
+    apiCall "POST", "/api/v1/user/reset_password/request", {username: @state.username}
     .success ((resp) ->
       apiNotify {status: 1, message: "A password reset link has been sent to the email address provided during registration."}
       @setPage "Login"
@@ -643,10 +643,10 @@ AuthPanel = React.createClass
 
   onLogin: (e) ->
     e.preventDefault()
-    apiCall "POST", "http://localhost:5000/api/v1/user/login", {username: @state.username, password: @state.password}
+    apiCall "POST", "/api/v1/user/login", {username: @state.username, password: @state.password}
     .success ->
       # Get teacher status
-      apiCall "GET", "http://localhost:5000/api/v1/user"
+      apiCall "GET", "/api/v1/user"
       .success ((data) ->
         if document.location.hash == "#team-builder" and not data.teacher
           @setPage "Team Management"

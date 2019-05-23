@@ -26,7 +26,7 @@ createGroupSetup = () ->
         createGroup($('#new-group-name').val())
 
 @exportProblemCSV = (groupName, teams) ->
-  apiCall "GET", "http://localhost:5000/api/v1/problems?unlocked_only=false"
+  apiCall "GET", "/api/v1/problems?unlocked_only=false"
   .success (data) ->
     # problems = _.filter resp.data.problems, (problem) -> !problem.disabled
     problems = data; # non-admin API only returns non-disabled problems as top level data array
@@ -59,7 +59,7 @@ loadGroupOverview = (groups, showFirstTab, callback) ->
     tabBody = $(this).attr("href")
     groupName = $(this).data("group-name")
 
-    apiCall "GET", "http://localhost:5000/api/v1/groups/" + $(this).data("gid")
+    apiCall "GET", "/api/v1/groups/" + $(this).data("gid")
     .success (data) ->
         ga('send', 'event', 'Group', 'LoadTeacherGroupInformation', 'Success')
         for group in groups
@@ -91,7 +91,7 @@ loadGroupOverview = (groups, showFirstTab, callback) ->
     callback()
 
 loadGroupInfo = (showFirstTab, callback) ->
-  apiCall "GET", "http://localhost:5000/api/v1/groups", null, 'Group', 'GroupListLoad'
+  apiCall "GET", "/api/v1/groups", null, 'Group', 'GroupListLoad'
   .success (data) ->
     window.groupListCache = data
     loadGroupOverview data, showFirstTab, callback
@@ -100,7 +100,7 @@ loadGroupInfo = (showFirstTab, callback) ->
 
 createGroup = (groupName) ->
   data = {"name": groupName}
-  apiCall "POST",  "http://localhost:5000/api/v1/groups", data, 'Group', 'CreateGroup'
+  apiCall "POST",  "/api/v1/groups", data, 'Group', 'CreateGroup'
   .success (data) ->
     closeDialog()
     apiNotify {"status": 1, "message": "Successfully created classroom."}
@@ -113,7 +113,7 @@ deleteGroup = (gid) ->
   confirmDialog("You are about to permanently delete this class. This will automatically remove your students from this class. Are you sure you want to delete this class?",
                 "Class Confirmation", "Delete Class", "Cancel",
                 () ->
-                  apiCall "DELETE", "http://localhost:5000/api/v1/groups/" + gid, null, 'Group', 'DeleteGroup'
+                  apiCall "DELETE", "/api/v1/groups/" + gid, null, 'Group', 'DeleteGroup'
                   .success (data) ->
                     apiNotify {"status": 1, "message": "Successfully deleted classroom"}
                     loadGroupInfo(true)
@@ -128,7 +128,7 @@ groupRequest = (e) ->
 
 $ ->
   if not window.userStatus
-    apiCall "GET", "http://localhost:5000/api/v1/user"
+    apiCall "GET", "/api/v1/user"
     .success (data) ->
       window.userStatus = data
       if not window.userStatus.teacher

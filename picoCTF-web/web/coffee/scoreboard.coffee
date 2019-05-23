@@ -5,7 +5,7 @@ renderScorepage = _.template($("#scorepage-template").remove().text())
 
 
 load_teamscore = ->
-  apiCall "GET", "http://localhost:5000/api/v1/team"
+  apiCall "GET", "/api/v1/team"
   .success (data) ->
     $("#scoreboard-teamscore").html renderScoreboardTeamScore({
       teamscore: data.score
@@ -24,7 +24,7 @@ load_teamscore = ->
   setTimeout reload, 100
 
 load_scoreboard_page = (boardname, page, tid) ->
-  apiCall "GET", "http://localhost:5000/api/v1/stats/scoreboard/page?board=" + boardname + "&page=" + page
+  apiCall "GET", "/api/v1/stats/scoreboard/page?board=" + boardname + "&page=" + page
     .success (data) ->
       $('#' + boardname + " tbody").html(
         renderScorepage({
@@ -38,7 +38,7 @@ load_scoreboard_page = (boardname, page, tid) ->
 
 
 load_scoreboard = ->
-  apiCall "GET", "http://localhost:5000/api/v1/stats/scoreboard"
+  apiCall "GET", "/api/v1/stats/scoreboard"
   .success (data) ->
     $("#scoreboard-tabs").html(renderScoreboardTabs({
       data: data,

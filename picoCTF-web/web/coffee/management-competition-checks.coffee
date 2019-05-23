@@ -81,7 +81,7 @@ CompetitionCheck = React.createClass
     setTimeout (setStatus.bind null, t), (Math.random() * 3000)
 
   checkEnabledProblems: (setStatus) ->
-    apiCall "GET", "http://localhost:5000/api/v1/problems?unlocked_only=false&include_disabled=true"
+    apiCall "GET", "/api/v1/problems?unlocked_only=false&include_disabled=true"
     .success (data) ->
       status = "failing"
       for problem in data
@@ -93,7 +93,7 @@ CompetitionCheck = React.createClass
 
 
   checkProblemsAlive: (setStatus) ->
-    apiCall "GET", "http://localhost:5000/api/v1/shell_servers?assigned_only=false"
+    apiCall "GET", "/api/v1/shell_servers?assigned_only=false"
     .done (data) ->
       status = "passing"
       servers = data
@@ -101,7 +101,7 @@ CompetitionCheck = React.createClass
       if servers.length is 0
         status = "failing"
 
-      apiCalls = $.map(servers, (server) -> apiCall "GET", "http://localhost:5000/api/v1/shell_servers/" + server.sid + "/status")
+      apiCalls = $.map(servers, (server) -> apiCall "GET", "/api/v1/shell_servers/" + server.sid + "/status")
       ($.when).apply(this, apiCalls).done () ->
         for result in $.map(arguments, _.first)
           if not result.status
@@ -109,7 +109,7 @@ CompetitionCheck = React.createClass
         setStatus status
 
   checkDownloadsAccessible: (setStatus) ->
-    apiCall "GET", "http://localhost:5000/api/v1/problems?unlocked_only=false&include_disabled=true"
+    apiCall "GET", "/api/v1/problems?unlocked_only=false&include_disabled=true"
     .done (data) ->
       status = "passing"
       requests = []

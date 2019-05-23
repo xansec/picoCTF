@@ -14,13 +14,13 @@ ManagementTabbedArea = React.createClass
     tabKey: tab
 
   onProblemChange: ->
-    apiCall "GET", "http://localhost:5000/api/v1/problems?unlocked_only=false&include_disabled=true"
+    apiCall "GET", "/api/v1/problems?unlocked_only=false&include_disabled=true"
     .done ((data) ->
       @setState React.addons.update @state,
         problems: $set: data
     ).bind this
 
-    apiCall "GET", "http://localhost:5000/api/v1/bundles"
+    apiCall "GET", "/api/v1/bundles"
     .done ((data) ->
       @setState React.addons.update @state,
         bundles: $set: data
@@ -29,14 +29,14 @@ ManagementTabbedArea = React.createClass
     #This could take awhile. However, it may
     #introduce a minor race condition with
     #get_all_problems
-    apiCall "GET", "http://localhost:5000/api/v1/stats/submissions"
+    apiCall "GET", "/api/v1/stats/submissions"
     .done ((data) ->
       @setState React.addons.update @state,
         submissions: $set: data
     ).bind this
 
   onExceptionModification: ->
-    apiCall "GET", "http://localhost:5000/api/v1/exceptions"
+    apiCall "GET", "/api/v1/exceptions"
     .done ((data) ->
       @setState React.addons.update @state,
         exceptions: $set: data

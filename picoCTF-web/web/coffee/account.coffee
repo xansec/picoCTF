@@ -4,7 +4,7 @@ updatePassword = (e) ->
     "new_password": $("#new-password").val(),
     "new_password_confirmation": $("#new-password-confirmation").val()
   }
-  apiCall "POST", "http://localhost:5000/api/v1/user/update_password", data, 'Authentication', 'UpdatePassword'
+  apiCall "POST", "/api/v1/user/update_password", data, 'Authentication', 'UpdatePassword'
   .success (data) ->
     apiNotify {"status": 1, "message": "Your password has been successfully updated!"}
   .error (jqXHR) ->
@@ -17,7 +17,7 @@ resetPassword = (e) ->
     "new_password": $("#password-reset-form input[name=new-password]").val()
     "new_password_confirmation": $("#password-reset-form input[name=new-password-confirmation")
   }
-  apiCall "POST", "http://localhost:5000/api/v1/user/password_reset", data, 'Authentication', 'ResetPassword'
+  apiCall "POST", "/api/v1/user/password_reset", data, 'Authentication', 'ResetPassword'
   .done (data) ->
     ga('send', 'event', 'Authentication', 'ResetPassword', 'Success')
     apiNotify {"status": 1, "message": "Your password has been reset"}, "/"
@@ -30,7 +30,7 @@ disableAccount = (e) ->
     data = {
       "password": $("#disable-account-form input[name=current-password]").val()
     }
-    apiCall "POST", "http://localhost:5000/api/v1/user/disable_account", data, 'Authentication', 'DisableAccount'
+    apiCall "POST", "/api/v1/user/disable_account", data, 'Authentication', 'DisableAccount'
     .success (data) ->
       apiNotify {"status": 1, "message": "Your account has been disabled"}, "/"
     .error (jqXHR) ->
@@ -58,13 +58,13 @@ TeamManagementForm = React.createClass
     team_password: ""
 
   componentWillMount: ->
-    apiCall "GET", "http://localhost:5000/api/v1/user"
+    apiCall "GET", "/api/v1/user"
     .success ((data) ->
       @setState update @state,
         user: $set: data
     ).bind this
 
-    apiCall "GET", "http://localhost:5000/api/v1/team"
+    apiCall "GET", "/api/v1/team"
     .success ((data) ->
       @setState update @state,
         team: $set: data
@@ -76,7 +76,7 @@ TeamManagementForm = React.createClass
       apiNotify({status: 0, message: "Invalid team name or password."})
     else
       data = {team_name: @state.team_name, team_password: @state.team_password}
-      apiCall "POST", "http://localhost:5000/api/v1/teams", data
+      apiCall "POST", "/api/v1/teams", data
       .success (data) ->
         document.location.href = "/profile"
       .error (jqXHR) ->
@@ -85,7 +85,7 @@ TeamManagementForm = React.createClass
   onTeamJoin: (e) ->
     e.preventDefault()
     data = {team_name: @state.team_name, team_password: @state.team_password}
-    apiCall "POST", "http://localhost:5000/api/v1/team/join", data
+    apiCall "POST", "/api/v1/team/join", data
     .success (data) ->
       document.location.href = "/profile"
     .error (jqXHR) ->
@@ -102,7 +102,7 @@ TeamManagementForm = React.createClass
       confirmDialog "This will change the password needed to join your team.", "Team Password Change Confirmation", "Confirm", "Cancel",
       () ->
         data = {"new_password": newpass, "new_password-confirmation": newpass_confirm}
-        apiCall "POST", "http://localhost:5000/api/v1/team/update_password", data
+        apiCall "POST", "/api/v1/team/update_password", data
         .success (data) ->
           apiNotify {"status": 1, "message": "Your team password has been successfully updated!"}, "/account"
         .error (jqXHR) ->

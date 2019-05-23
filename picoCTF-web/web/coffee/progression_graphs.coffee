@@ -107,7 +107,7 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
   div = divFromSelector selector
 
   drawgraph = (data) ->
-    apiCall "GET", "http://localhost:5000/api/v1/status"
+    apiCall "GET", "/api/v1/status"
     .success (statusdata) ->
       if data.length >= 2 && $(selector).is(":visible")
         scoreData = (team.score_progression for team in data)
@@ -148,17 +148,17 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   if gid == "student"
-    apiCall "GET", "http://localhost:5000/api/v1/stats/top_teams/score_progression"
+    apiCall "GET", "/api/v1/stats/top_teams/score_progression"
     .success drawgraph
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
   else if gid == "global"
-    apiCall "GET", "http://localhost:5000/api/v1/stats/top_teams/score_progression?include_ineligible=true"
+    apiCall "GET", "/api/v1/stats/top_teams/score_progression?include_ineligible=true"
     .success drawgraph
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
   else
-    apiCall "GET", "http://localhost:5000/api/v1/stats/top_teams/score_progression?gid=" + gid
+    apiCall "GET", "/api/v1/stats/top_teams/score_progression?gid=" + gid
     .success drawgraph
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
@@ -182,7 +182,7 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
 
 @renderTeamProgressionGraph = (selector, data) ->
   div = divFromSelector selector
-  apiCall "GET", "http://localhost:5000/api/v1/status"
+  apiCall "GET", "/api/v1/status"
   .success (statusdata) ->
     if data.length > 0
 
@@ -221,7 +221,7 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
     apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 @drawTeamProgressionGraph = (selector, container_selector) ->
-  apiCall "GET", "http://localhost:5000/api/v1/team/score_progression"
+  apiCall "GET", "/api/v1/team/score_progression"
   .success (data) ->
     renderTeamProgressionGraph selector, data
   .error (jqXHR) ->

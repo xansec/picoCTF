@@ -3,7 +3,7 @@ renderGroupInformation = _.template($("#group-info-template").remove().text())
 renderAchievementInformation = _.template($("#achievement-info-template").remove().text())
 
 load_group_info = ->
-  apiCall "GET", "http://localhost:5000/api/v1/groups", null, 'Team', 'GroupLoad'
+  apiCall "GET", "/api/v1/groups", null, 'Team', 'GroupLoad'
   .error (jqXHR) ->
     apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
   .success (data) ->
@@ -15,7 +15,7 @@ load_group_info = ->
       leave_group $(e.target).data("gid")
 
 # load_achievement_info = ->
-#     apiCall "GET", "http://localhost:5000/api/v1/achievements"
+#     apiCall "GET", "/api/v1/achievements"
 #     .done (data) ->
 #       switch data['status']
 #         when 0
@@ -26,7 +26,7 @@ load_group_info = ->
 
 join_group = (group_name, group_owner) ->
   data = {"group_name": group_name, "group_owner": group_owner}
-  apiCall "POST", "http://localhost:5000/api/v1/team/join_group", data, 'Team', 'JoinGroup'
+  apiCall "POST", "/api/v1/team/join_group", data, 'Team', 'JoinGroup'
   .success (data) ->
     apiNotify {"status": 1, "message": "Successfully joined group"}
     load_group_info()
@@ -35,7 +35,7 @@ join_group = (group_name, group_owner) ->
 
 
 leave_group = (gid) ->
-  apiCall "GET", "http://localhost:5000/api/v1/groups/" + gid + "/remove_team", null, 'Team', 'LeaveGroup'
+  apiCall "GET", "/api/v1/groups/" + gid + "/remove_team", null, 'Team', 'LeaveGroup'
   .success (data) ->
     apiNotify {"status": 1, "message": "Successfully left group"}
     load_group_info()
@@ -74,7 +74,7 @@ ProblemInfo = React.createClass
     user: {}
 
   componentWillMount: ->
-    apiCall "GET", "http://localhost:5000/api/v1/team"
+    apiCall "GET", "/api/v1/team"
     .success ((data) ->
       @setState update @state,
         team: $set: data
@@ -82,7 +82,7 @@ ProblemInfo = React.createClass
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
-    apiCall "GET", "http://localhost:5000/api/v1/problems"
+    apiCall "GET", "/api/v1/problems"
     .success ((data) ->
       @setState update @state,
         problems: $set: data
@@ -90,7 +90,7 @@ ProblemInfo = React.createClass
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
-    apiCall "GET", "http://localhost:5000/api/v1/problems?solved_only=true"
+    apiCall "GET", "/api/v1/problems?solved_only=true"
     .success ((data) ->
       @setState update @state,
         solvedProblems: $set: data
@@ -98,7 +98,7 @@ ProblemInfo = React.createClass
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
-    apiCall "GET", "http://localhost:5000/api/v1/user"
+    apiCall "GET", "/api/v1/user"
     .success ((data) ->
       @setState update @state,
         user: $set: data

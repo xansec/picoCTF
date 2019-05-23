@@ -17,7 +17,7 @@ MemberManagementItem = React.createClass
     data = {
       "team_id": @props.tid
     }
-    apiCall "POST", "http://localhost:5000/api/v1/groups/" + @props.gid + "/remove_team", data
+    apiCall "POST", "/api/v1/groups/" + @props.gid + "/remove_team", data
     .success ((data) ->
       apiNotify {"status": 1, "message": "Team has successfully left the classroom."}
       @props.refresh()
@@ -27,7 +27,7 @@ MemberManagementItem = React.createClass
     ).bind this
 
   # switchUserRole: (tid, role) ->
-  #   apiCall "POST", "http://localhost:5000/api/v1/group/teacher/role_switch", {gid: @props.gid, tid: tid, role: role}
+  #   apiCall "POST", "/api/v1/group/teacher/role_switch", {gid: @props.gid, tid: tid, role: role}
   #   .done ((resp) ->
   #     apiNotify resp
   #     @props.refresh()
@@ -84,7 +84,7 @@ MemberInvitePanel = React.createClass
       email: @state.email,
       as_teacher: (@state.role == "teacher")
     }
-    apiCall "POST", "http://localhost:5000/api/v1/groups/" + @props.gid + "/invite", data
+    apiCall "POST", "/api/v1/groups/" + @props.gid + "/invite", data
     .success ((data) ->
       apiNotify {"status": 1, "message": "Email invitation has been sent."}
       @setState update @state, $set: email: ""
@@ -143,24 +143,24 @@ GroupManagement = React.createClass
     @refreshSettings()
 
   refreshSettings: ->
-    apiCall "GET", "http://localhost:5000/api/v1/groups/" + @props.gid
+    apiCall "GET", "/api/v1/groups/" + @props.gid
     .success ((data) ->
       @setState update @state, $merge: data.settings
     ).bind this
 
-    apiCall "GET", "http://localhost:5000/api/v1/user"
+    apiCall "GET", "/api/v1/user"
     .success ((data) ->
       @setState update @state, current_user: $set: data
       if not data["teacher"] or (window.userStatus and not window.userStatus.teacher)
         apiNotify {status: 1, message: "You are no longer a teacher."}, "/profile"
     ).bind this
 
-    apiCall "GET", "http://localhost:5000/api/v1/groups/" + @props.gid
+    apiCall "GET", "/api/v1/groups/" + @props.gid
     .success ((data) ->
       @setState update @state, member_information: $set: data.members
     ).bind this
 
-    apiCall "GET", "http://localhost:5000/api/v1/groups/" + @props.gid
+    apiCall "GET", "/api/v1/groups/" + @props.gid
     .success ((data) ->
       @setState update @state, teacher_information: $set: data.teachers
     ).bind this
@@ -171,7 +171,7 @@ GroupManagement = React.createClass
     if modifier
       data.settings = modifier data.settings
 
-    apiCall "PATCH", "http://localhost:5000/api/v1/groups/" + @props.gid, {settings: data.settings}
+    apiCall "PATCH", "/api/v1/groups/" + @props.gid, {settings: data.settings}
     .success ((data) ->
       apiNotify {"status": 1, "message": "Classroom settings changed successfully."}
       @refreshSettings()
@@ -298,7 +298,7 @@ TeacherManagement = React.createClass
     @setState update @state, tabKey: $set: tab
 
   componentWillMount: ->
-    apiCall "GET", "http://localhost:5000/api/v1/groups"
+    apiCall "GET", "/api/v1/groups"
     .success ((data) ->
       @setState update @state, groups: $set: data
     ).bind this

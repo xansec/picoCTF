@@ -36,9 +36,9 @@ loadNavbar = (renderNavbarLinks, renderNestedNavbarLinks) ->
     renderNestedNavbarLinks: renderNestedNavbarLinks
   }
 
-  apiCall "GET", "http://localhost:5000/api/v1/user"
+  apiCall "GET", "/api/v1/user"
   .success (userData) ->
-    apiCall "GET", "http://localhost:5000/api/v1/status"
+    apiCall "GET", "/api/v1/status"
     .success (competitionData) ->
       navbarLayout.links = userNotLoggedIn
       navbarLayout.status = userData

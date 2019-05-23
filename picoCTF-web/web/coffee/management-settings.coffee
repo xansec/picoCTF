@@ -50,7 +50,7 @@ GeneralTab = React.createClass
       start_time: new Date(@state.start_time).toISOString()
       end_time: new Date(@state.end_time).toISOString()
     }
-    apiCall "PATCH", "http://localhost:5000/api/v1/settings", data
+    apiCall "PATCH", "/api/v1/settings", data
     .success ((data) ->
       apiNotify {"status": 1, "message": "Settings updated successfully"}
       @props.refresh()
@@ -161,7 +161,7 @@ EmailTab = React.createClass
     if typeof(makeChange) == "function"
       pushData = makeChange pushData
 
-    apiCall "PATCH", "http://localhost:5000/api/v1/settings", pushData
+    apiCall "PATCH", "/api/v1/settings", pushData
     .success ((data) ->
       apiNotify {"status": 1, "message": "Settings updated successfully"}
       @props.refresh()
@@ -272,7 +272,7 @@ ShardingTab = React.createClass
     if typeof(makeChange) == "function"
       pushData = makeChange pushData
 
-    apiCall "PATCH", "http://localhost:5000/api/v1/settings", pushData
+    apiCall "PATCH", "/api/v1/settings", pushData
     .success ((data) ->
       apiNotify {"status": 1, "message": "Settings updated successfully"}
       @props.refresh()
@@ -283,7 +283,7 @@ ShardingTab = React.createClass
   assignServerNumbers: ->
     confirmDialog("This will assign server_numbers to all unassigned teams. This may include teams previously defaulted to server_number 1 and already given problem instances!", "Assign Server Numbers Confirmation", "Assign Server Numbers", "Cancel",
     () ->
-      apiCall "POST", "http://localhost:5000/api/v1/shell_servers/update_assignments", {}
+      apiCall "POST", "/api/v1/shell_servers/update_assignments", {}
       .success (data) ->
         apiNotify {"status": 1, "message": "Server assignments updated"}
       .error (jqXHR) ->
@@ -294,7 +294,7 @@ ShardingTab = React.createClass
   reassignServerNumbers: ->
     confirmDialog("This will reassign all teams. Problem instances will be randomized for any teams that change servers!", "Reassign Server Numbers Confirmation", "Reassign Server Numbers", "Cancel",
     () ->
-      apiCall "POST", "http://localhost:5000/api/v1/shell_servers/update_assignments", {"include_assigned": true}
+      apiCall "POST", "/api/v1/shell_servers/update_assignments", {"include_assigned": true}
       .success (data) ->
         apiNotify {"status": 1, "message": "Server assigments updated"}
       .error (jqXHR) ->
@@ -362,7 +362,7 @@ SettingsTab = React.createClass
         $set: tab
 
   refresh: ->
-    apiCall "GET", "http://localhost:5000/api/v1/settings"
+    apiCall "GET", "/api/v1/settings"
     .done ((data) ->
       @setState update @state,
         $set:

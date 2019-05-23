@@ -25,7 +25,7 @@ constructAchievementCallbackChain = (achievements) ->
 submitProblem = (e) ->
   e.preventDefault()
   input = $(e.target).find("input")
-  apiCall "POST", "http://localhost:5000/api/v1/submissions", {pid: input.data("pid"), key: input.val(), method: "web"}
+  apiCall "POST", "/api/v1/submissions", {pid: input.data("pid"), key: input.val(), method: "web"}
   .success (data) ->
     if data.correct
       ga('send', 'event', 'Problem', 'Solve', 'Basic')
@@ -40,7 +40,7 @@ submitProblem = (e) ->
   .error (jqXHR) ->
     apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
-    # apiCall "GET", "http://localhost:5000/api/v1/achievements"
+    # apiCall "GET", "/api/v1/achievements"
     # .done (data) ->
     #   if data['status'] is 1
     #     new_achievements = (x for x in data.data when !x.seen)
@@ -56,7 +56,7 @@ addProblemReview = (e) ->
 
 
   postData = {feedback: feedback, pid: pid}
-  apiCall "POST", "http://localhost:5000/api/v1/feedback", postData
+  apiCall "POST", "/api/v1/feedback", postData
   .success (data) ->
     apiNotify {"status": 1, "message": "Your feedback has been accepted."}
     selector = "#"+pid+"-thumbs"+(if feedback.liked then "down" else "up")
@@ -66,14 +66,14 @@ addProblemReview = (e) ->
   .error (jqXHR) ->
     apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
-    # apiCall "GET", "http://localhost:5000/api/v1/achievements"
+    # apiCall "GET", "/api/v1/achievements"
     # .done (data) ->
     #   if data['status'] is 1
     #     new_achievements = (x for x in data.data when !x.seen)
     #     constructAchievementCallbackChain new_achievements
 
 loadProblems = ->
-  apiCall "GET", "http://localhost:5000/api/v1/problems"
+  apiCall "GET", "/api/v1/problems"
   .error (jqXHR) ->
     apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
   .success (data) ->
@@ -81,7 +81,7 @@ loadProblems = ->
       # is defined in a template. This solution is therefore a bit
       # of a hack.
       addScoreToTitle("#title")
-      apiCall "GET", "http://localhost:5000/api/v1/feedback"
+      apiCall "GET", "/api/v1/feedback"
       .success (reviewData) ->
         $("#problem-list-holder").html renderProblemList({
           problems: data,
@@ -114,7 +114,7 @@ loadProblems = ->
         apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 addScoreToTitle = (selector) ->
-        apiCall "GET", "http://localhost:5000/api/v1/team/score"
+        apiCall "GET", "/api/v1/team/score"
         .done (data) ->
           if data
             $(selector).children("#team-score").remove()

@@ -25,7 +25,7 @@ ServerForm = React.createClass
     {new: @props.new, shellServer: server}
 
   addServer: ->
-    apiCall "POST", "http://localhost:5000/api/v1/shell_servers", @state.shellServer
+    apiCall "POST", "/api/v1/shell_servers", @state.shellServer
     .success ((data) ->
       apiNotify {status: 1, message: "Shell server added."}
       @props.refresh()
@@ -34,7 +34,7 @@ ServerForm = React.createClass
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   deleteServer: ->
-    apiCall "DELETE", "http://localhost:5000/api/v1/shell_servers/" + @state.shellServer.sid
+    apiCall "DELETE", "/api/v1/shell_servers/" + @state.shellServer.sid
     .success ((data) ->
       apiNotify {status: 1, message: "Shell server deleted."}
       @props.refresh()
@@ -52,7 +52,7 @@ ServerForm = React.createClass
       protocol: @state.shellServer.protocol,
       server_number: @state.shellServer.server_number
     }
-    apiCall "PATCH", "http://localhost:5000/api/v1/shell_servers/" + @state.shellServer.sid, data
+    apiCall "PATCH", "/api/v1/shell_servers/" + @state.shellServer.sid, data
     .success ((data) ->
       apiNotify {status: 1, message: "Shell server updated."}
       @props.refresh()
@@ -61,7 +61,7 @@ ServerForm = React.createClass
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   loadProblems: ->
-    apiCall "PATCH", "http://localhost:5000/api/v1/problems?sid=" + @state.shellServer.sid
+    apiCall "PATCH", "/api/v1/problems?sid=" + @state.shellServer.sid
     .success ((data) ->
       apiNotify {status: 1, message: "Successfully loaded problems."}
       @props.refresh()
@@ -70,7 +70,7 @@ ServerForm = React.createClass
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   checkStatus: ->
-    apiCall "GET", "http://localhost:5000/api/v1/shell_servers/" + @state.shellServer.sid + "/status"
+    apiCall "GET", "/api/v1/shell_servers/" + @state.shellServer.sid + "/status"
     .success (data) ->
       if data.all_problems_online
         apiNotify {status: 1, message: "All problems are online"}
@@ -154,7 +154,7 @@ ShellServerList = React.createClass
     {shellServers: []}
 
   refresh: ->
-    apiCall "GET", "http://localhost:5000/api/v1/shell_servers?assigned_only=false"
+    apiCall "GET", "/api/v1/shell_servers?assigned_only=false"
     .done ((data) ->
       @setState {shellServers: data}
     ).bind this
@@ -190,7 +190,7 @@ ProblemLoaderTab = React.createClass
     @setState {publishedJSON: e.target.value}
 
   pushData: ->
-    apiCall "PATCH", "http://localhost:5000/api/v1/problems", @state.publishedJSON
+    apiCall "PATCH", "/api/v1/problems", @state.publishedJSON
     .success ((data) ->
       apiNotify {"status": 1, "message": "Successfully loaded problems."}
       @clearPublishedJSON()
