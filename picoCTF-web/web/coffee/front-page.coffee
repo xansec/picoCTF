@@ -605,31 +605,29 @@ AuthPanel = React.createClass
         status: 1
         message: "User " + @state.username + " registered successfully!"
 
-      if @state.settings.max_team_size > 1
-        if @state.settings.email_verification and not @state.rid
-          apiNotify verificationAlert
-          @setPage "Login"
+      if @state.settings.email_verification and not @state.rid
+        apiNotify verificationAlert
+        @setPage "Login"
+        if @state.settings.max_team_size > 1
           document.location.hash = "#team-builder"
-        else
+      else
+        apiCall "POST", "/api/v1/user/login", {"username": @state.username, "password": @state.password}
+        .success ((loginData) ->
           apiCall "GET", "/api/v1/user"
-          .success (data) ->
+          .success ((userData) ->
             if data.teacher
               apiNotify successAlert, "/profile"
-            else
+            else if @state.settings.max_team_size > 1
               apiNotify successAlert
               @setPage "Team Management"
-      else
-        apiCall "GET", "/api/v1/user"
-          .success ((data) ->
-            if @state.settings.email_verification
-              if not @state.rid or @state.rid.length == 0
-                apiNotify verificationAlert
-              else
-                apiNotify successAlert, "/profile"
-              @setPage "Login"
             else
               apiNotify successAlert, "/profile"
           ).bind this
+          .error (jqXHR) ->
+            apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
+        ).bind this
+        .error (jqXHR) ->
+          apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     ).bind this
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
