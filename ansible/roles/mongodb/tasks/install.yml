@@ -18,11 +18,20 @@
 
 - name: Install mongo
   apt:
-    name: ['mongodb-org']  # from PPA
+    name: [
+      'mongodb-org', # from PPA
+      'redis-server',
+    ]
     state: present
 
 - name: Ensure mongodb is running
   service:
     name: "{{ mongodb_daemon_name }}"
     state: started
+    enabled: yes
+
+- name: Ensure redis is running and started on boot
+  service:
+    name: redis-server
+    state: restarted
     enabled: yes

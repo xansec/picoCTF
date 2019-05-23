@@ -43,6 +43,7 @@ virtualenv_dir: "/picoCTF-env"
 ##
 db_private_ip: 127.0.0.1
 mongodb_conf_auth: False
+redis_conf_auth: False
 
 ##
 # Problem Settings
