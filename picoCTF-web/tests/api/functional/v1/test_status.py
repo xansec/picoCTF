@@ -24,7 +24,7 @@ def test_status(client): # noqa
     #       try modifying the settings and testing also
     clear_db()
 
-    expected_response = {
+    expected_responses = {
         'enable_feedback': True,
         'enable_captcha': False,
         'reCAPTCHA_public_key': '',
@@ -33,6 +33,10 @@ def test_status(client): # noqa
         'max_team_size': 1,
         'email_filter': []
     }
+    nondeterministic_responses = ['time']
     res = client.get('/api/v1/status')
     assert res.status_code == 200
-    assert res.json == expected_response
+    for k, v in expected_responses.items():
+        assert res.json[k] == v
+    for k in nondeterministic_responses:
+        assert k in res.json

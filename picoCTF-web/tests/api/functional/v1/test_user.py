@@ -283,6 +283,15 @@ def test_get_user(client): # noqa (fixture)
     """Tests the GET /user endpoint."""
     clear_db()
     register_test_accounts()
+
+    # Test without logging in
+    res = client.get('/api/v1/user')
+    assert res.status_code == 200
+    assert res.json == {
+        'logged_in': False
+    }
+
+    # Test after logging in
     client.post('/api/v1/user/login', json={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password']
@@ -300,6 +309,7 @@ def test_get_user(client): # noqa (fixture)
         'extdata': {},
         'firstname': 'Sample',
         'lastname': 'User',
+        'logged_in': True,
         'teacher': False,
         'tid': '8b19b0478dcc43e7a448a4e500584c10',
         'tokens': 0,
