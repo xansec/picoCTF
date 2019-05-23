@@ -251,15 +251,7 @@ def get_problem(pid):
 
     """
     db = api.db.get_conn()
-    problem = db.problems.find_one({'pid': pid}, {'_id': 0})
-    if api.user.is_logged_in():
-        curr_user = api.user.get_user()
-        problem['unlocked'] = \
-            problem['pid'] in api.problem.get_unlocked_pids(curr_user['tid'])
-        if curr_user.get('admin', False):
-            problem['reviews'] = api.problem_feedback.get_problem_feedback(
-                pid=problem['pid'])
-    return problem
+    return db.problems.find_one({'pid': pid}, {'_id': 0})
 
 
 def get_all_problems(category=None, show_disabled=False):
@@ -286,19 +278,10 @@ def get_all_problems(category=None, show_disabled=False):
     # Return all except objectID
     projection = {"_id": 0}
 
-    problems = list(
+    return list(
         db.problems.find(match, projection).sort([('score', pymongo.ASCENDING),
                                                   ('name',
                                                    pymongo.ASCENDING)]))
-    if api.user.is_logged_in():
-        curr_user = api.user.get_user()
-        for problem in problems:
-            problem['unlocked'] = problem['pid'] in \
-                api.problem.get_unlocked_pids(curr_user['tid'])
-            if curr_user.get('admin', False):
-                problem['reviews'] = api.problem_feedback.get_problem_feedback(
-                    pid=problem['pid'])
-    return problems
 
 
 # @memoize

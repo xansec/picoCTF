@@ -65,12 +65,22 @@ class ProblemList(Resource):
             category=req['category'],
             show_disabled=req['include_disabled'])
 
+        # Add the unlocked, solved, and review fields
+        curr_user = api.user.get_user()
+        for problem in problems:
+            problem['solves'] = api.stats.get_problem_solves(problem['pid'])
+            problem['unlocked'] = \
+                problem['pid'] in api.problem.get_unlocked_pids(
+                    curr_user['tid'])
+            problem['solved'] = \
+                problem['pid'] in api.problem.get_solved_pids(curr_user['tid'])
+            if curr_user.get('admin', False):
+                problem['reviews'] = api.problem_feedback.get_problem_feedback(
+                    pid=problem['pid'])
+
         # Handle the solved_only param
         if req['solved_only']:
-            problems = [p for p in problems if p['pid'] in
-                        api.problem.get_solved_pids(
-                            api.user.get_team()['tid']
-                        )]
+            problems = [p for p in problems if (p['solved'] is True)]
 
         # Handle the unlocked_only param, which depends on user role
         # Unless just getting the count - then normal users allowed
@@ -171,6 +181,18 @@ class Problem(Resource):
         problem = api.problem.get_problem(problem_id)
         if not problem:
             raise PicoException('Problem not found', status_code=404)
+
+        # Add synthetic fields
+        curr_user = api.user.get_user()
+        problem['solves'] = api.stats.get_problem_solves(problem['pid'])
+        problem['unlocked'] = \
+            problem['pid'] in api.problem.get_unlocked_pids(
+                curr_user['tid'])
+        problem['solved'] = \
+            problem['pid'] in api.problem.get_solved_pids(curr_user['tid'])
+        if curr_user.get('admin', False):
+            problem['reviews'] = api.problem_feedback.get_problem_feedback(
+                pid=problem['pid'])
 
         # Ensure that the user has unlocked it
         if not problem['unlocked']:
