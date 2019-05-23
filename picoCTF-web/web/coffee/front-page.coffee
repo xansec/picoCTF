@@ -656,6 +656,8 @@ AuthPanel = React.createClass
           else
             document.location.href = "/profile"
       )
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   setPage: (page) ->
     @setState update @state,

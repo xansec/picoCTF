@@ -6,9 +6,9 @@ updatePassword = (e) ->
   }
   apiCall "POST", "http://localhost:5000/api/v1/user/update_password", data, 'Authentication', 'UpdatePassword'
   .success (data) ->
-    apiNotify {"status": 1, "message": "Your password has been successfully updated!"}, "/account"
+    apiNotify {"status": 1, "message": "Your password has been successfully updated!"}
   .error (jqXHR) ->
-    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}, "/account"
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 resetPassword = (e) ->
   e.preventDefault()
@@ -17,7 +17,7 @@ resetPassword = (e) ->
     "new_password": $("#password-reset-form input[name=new-password]").val()
     "new_password_confirmation": $("#password-reset-form input[name=new-password-confirmation")
   }
-  apiCall "POST", "http://localhost:5000/api/v1/user/confirm_password_reset", data, 'Authentication', 'ResetPassword'
+  apiCall "POST", "http://localhost:5000/api/v1/user/password_reset", data, 'Authentication', 'ResetPassword'
   .done (data) ->
     ga('send', 'event', 'Authentication', 'ResetPassword', 'Success')
     apiNotify {"status": 1, "message": "Your password has been reset"}, "/"
@@ -32,7 +32,7 @@ disableAccount = (e) ->
     }
     apiCall "POST", "http://localhost:5000/api/v1/user/disable_account", data, 'Authentication', 'DisableAccount'
     .success (data) ->
-      apiNotify {"status": 1, "message": "Your password has been disabled"}, "/"
+      apiNotify {"status": 1, "message": "Your account has been disabled"}, "/"
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
