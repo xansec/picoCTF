@@ -31,23 +31,24 @@ loadNavbar = (renderNavbarLinks, renderNestedNavbarLinks) ->
     navbarLayout.status = data
     if data.logged_in
       $.extend navbarLayout.links, loggedInAdditions
+
+      if data.teacher
+        $.extend navbarLayout.links, teacherAdditions
+
+      if data.admin
+        $.extend navbarLayout.links, adminAdditions
+
+      # If a competition is active, add links
+      apiCall "GET", "http://localhost:5000/api/v1/status"
+      .success ((data) ->
+        if data.competition_active
+          $.extend navbarLayout.links, competitionAdditions
+        $("#navbar-links").html renderNavbarLinks(navbarLayout)
+        $("#navbar-item-logout").on("click", logout)
+      )
     else
       $(".show-when-logged-out").css("display", "inline-block")
 
-    if data.teacher
-      $.extend navbarLayout.links, teacherAdditions
-
-    if data.admin
-      $.extend navbarLayout.links, adminAdditions
-    $("#navbar-links").html renderNavbarLinks(navbarLayout)
-    $("#navbar-item-logout").on("click", logout)
-  )
-
-  # If a competition is active, add links
-  apiCall "GET", "http://localhost:5000/api/v1/status"
-  .success ((data) ->
-    if data.competition_active
-      $.extend navbarLayout.links, competitionAdditions
     $("#navbar-links").html renderNavbarLinks(navbarLayout)
     $("#navbar-item-logout").on("click", logout)
   )
