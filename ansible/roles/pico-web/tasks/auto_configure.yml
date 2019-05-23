@@ -12,16 +12,16 @@
     {{ shell_pass }}
     {{ shell_port }}
     {{ shell_proto }}
+  register: add_shell_server_output
   environment:
     APP_SETTINGS_FILE: "{{ web_config_dir }}/deploy_settings.py"
     PATH: "{{ virtualenv_dir }}/bin/"
   args:
     executable: "{{ virtualenv_dir }}/bin/python"
   when: auto_add_shell
-  no_log: True
 
 - name: Autoload Problems into web interface
-  script: load_problems.py {{ shell_name }}
+  script: load_problems.py {{ add_shell_server_output.stdout }}
   environment:
     APP_SETTINGS_FILE: "{{ web_config_dir }}/deploy_settings.py"
     PATH: "{{ virtualenv_dir }}/bin/"

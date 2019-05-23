@@ -7,17 +7,17 @@
 
 import sys
 
-import api.problem
+import api
 
 
-def main(name):
+def main(sid):
     with api.create_app().app_context():
-        # If a server by this name exists we can load problems
-        shell_server = api.shell_servers.get_server(name=name)
+        shell_server = api.shell_servers.get_server(sid)
         try:
             # Load problems and bundles from the shell server
             output = api.shell_servers.get_publish_output(
                 shell_server['sid'])
+            output['sid'] = shell_server['sid']
             api.problem.load_published(output)
 
             # Set problems to disabled
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) != 2:
         print("Incorrect arguments passed, need")
-        print("name")
+        print("sid")
         print(sys.argv)
         sys.exit("Bad args")
     else:

@@ -619,14 +619,17 @@ AuthPanel = React.createClass
               apiNotify successAlert
               @setPage "Team Management"
       else
-        if @state.settings.email_verification
-          if not @state.rid or @state.rid.length == 0
-            apiNotify verificationAlert
-          else
-            apiNotify successAlert, "/profile"
-          @setPage "Login"
-        else
-          apiNotify successAlert, "/profile"
+        apiCall "GET", "/api/v1/user"
+          .success ((data) ->
+            if @state.settings.email_verification
+              if not @state.rid or @state.rid.length == 0
+                apiNotify verificationAlert
+              else
+                apiNotify successAlert, "/profile"
+              @setPage "Login"
+            else
+              apiNotify successAlert, "/profile"
+          ).bind this
     ).bind this
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}

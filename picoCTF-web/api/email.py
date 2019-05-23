@@ -83,7 +83,7 @@ def send_user_verification_email(username):
                 "User has been sent the maximum number of verification " +
                 "emails.", 422)
 
-    verification_link = "{}/api/user/verify?uid={}&token={}".\
+    verification_link = "{}/api/v1/user/verify?uid={}&token={}".\
         format(settings["competition_url"], user["uid"], token_value)
 
     body = """
