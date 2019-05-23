@@ -46,7 +46,7 @@ def get_connection(sid):
             password=server["password"],
             port=server["port"],
             missing_host_key=spur.ssh.MissingHostKey.accept,
-            connect_timeout=10)
+            connect_timeout=2)
         shell.run(["echo", "connected"])
     except spur.ssh.ConnectionError:
         raise PicoException(
