@@ -69,7 +69,7 @@ class ProblemList(Resource):
         if req['solved_only']:
             problems = [p for p in problems if p['pid'] in
                         api.problem.get_solved_pids(
-                            api.user.get_team()
+                            api.user.get_team()['tid']
                         )]
 
         # Handle the unlocked_only param, which depends on user role
