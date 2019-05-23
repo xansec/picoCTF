@@ -182,7 +182,7 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
 
 @renderTeamProgressionGraph = (selector, data) ->
   div = divFromSelector selector
-  apiCall "GET", "http://localhost:5000/api/v1/status", {}
+  apiCall "GET", "http://localhost:5000/api/v1/status"
   .success (statusdata) ->
     if data.length > 0
 

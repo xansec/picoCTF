@@ -14,41 +14,28 @@ ManagementTabbedArea = React.createClass
     tabKey: tab
 
   onProblemChange: ->
-    apiCall "GET", "http://localhost:5000/api/v1/problems?unlocked_only=false&include_disabled=true"
-    .success ((data) ->
+    apiCall "GET", "/api/admin/problems"
+    .done ((api) ->
       @setState React.addons.update @state,
-        problems: $set: data
+        problems: $set: api.data.problems
+        bundles: $set: api.data.bundles
     ).bind this
-    .error (jqXHR) ->
-      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
-
-    apiCall "GET", "http://localhost:5000/api/v1/bundles"
-    .success ((data) ->
-      @setState React.addons.update @state,
-        bundles: $set: data
-    ).bind this
-    .error (jqXHR) ->
-      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
     #This could take awhile. However, it may
     #introduce a minor race condition with
     #get_all_problems
-    apiCall "GET", "http://localhost:5000/api/v1/stats/submissions"
-    .success ((data) ->
+    apiCall "GET", "/api/admin/problems/submissions"
+    .done ((api) ->
       @setState React.addons.update @state,
-        submissions: $set: data
+        submissions: $set: api.data
     ).bind this
-    .error (jqXHR) ->
-      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   onExceptionModification: ->
-    apiCall "GET", "http://localhost:5000/api/v1/exceptions"
-    .success ((data) ->
+    apiCall "GET", "/api/admin/exceptions", {limit: 50}
+    .done ((api) ->
       @setState React.addons.update @state,
-        exceptions: $set: data
+        exceptions: $set: api.data
     ).bind this
-    .error (jqXHR) ->
-      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   componentDidMount: ->
     # Formatting hack
