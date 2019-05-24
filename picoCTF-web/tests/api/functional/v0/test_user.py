@@ -1,7 +1,7 @@
 """Tests for the /api/v0/user/ routes."""
 import hashlib
 from pytest_mongo import factories
-from common import ( # noqa (fixture)
+from ..common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
   client,

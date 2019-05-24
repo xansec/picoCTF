@@ -1,6 +1,6 @@
 """Tests for the /api/v0/team routes."""
 from pytest_mongo import factories
-from common import (
+from ..common import (
   ADMIN_DEMOGRAPHICS,
   clear_db,
   client,

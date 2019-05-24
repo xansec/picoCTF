@@ -1,6 +1,6 @@
 """Tests for the /api/v1/team endpoints."""
 from pytest_mongo import factories
-from common import ( # noqa (fixture)
+from ..common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
   client,
