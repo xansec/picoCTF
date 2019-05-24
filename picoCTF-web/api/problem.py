@@ -454,7 +454,7 @@ def sanitize_problem_data(data):
     def pop_keys(problem_dict):
         for key in SANITATION_KEYS:
             if key == "walkthrough":
-                if (problem_dict["has_walkthrough"] and
+                if (problem_dict.get("has_walkthrough", False) and
                         problem_dict["pid"] not in unlocked_walkthroughs):
                     problem_dict["walkthrough"] = ""
             else:
