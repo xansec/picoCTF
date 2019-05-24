@@ -1,5 +1,5 @@
 """Tests for the /api/v0/team routes."""
-
+from pytest_mongo import factories
 from common import (
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -16,7 +16,7 @@ from common import (
 )
 
 
-def test_score(client):
+def test_score(mongo_proc, client):
     """Tests the /team/score endpoint."""
     clear_db()
     register_test_accounts()

@@ -1,5 +1,5 @@
 """Tests for the /api/v1/teams routes."""
-
+from pytest_mongo import factories
 from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -13,7 +13,7 @@ from common import ( # noqa (fixture)
 )
 
 
-def test_create_team(client): # noqa (fixture)
+def test_create_team(mongo_proc, client): # noqa (fixture)
     """Tests the POST /teams endpoint."""
     clear_db()
     register_test_accounts()

@@ -1,5 +1,5 @@
 """Tests for the /api/v0/problems/ routes."""
-
+from pytest_mongo import factories
 from common import (app, clear_db, client, decode_response, # noqa (fixture)
                      enable_sample_problems, ensure_after_competition,
                      ensure_before_competition, ensure_within_competition,
@@ -8,7 +8,7 @@ from common import (app, clear_db, client, decode_response, # noqa (fixture)
                      USER_DEMOGRAPHICS)
 
 
-def test_problems(client): # noqa (fixture)
+def test_problems(mongo_proc, client): # noqa (fixture)
     """Tests the /problems endpoint."""
     clear_db()
     register_test_accounts()
@@ -53,7 +53,7 @@ def test_problems(client): # noqa (fixture)
             assert data[i][field] == problems_endpoint_response[i][field]
 
 
-def test_submit(client): # noqa (fixture)
+def test_submit(mongo_proc, client): # noqa (fixture)
     """Test the /problems/submit endpoint."""
     clear_db()
     register_test_accounts()
@@ -184,7 +184,7 @@ def test_submit(client): # noqa (fixture)
                       'already solved this problem.'
 
 
-def test_walkthrough(client): # noqa (fixture)
+def test_walkthrough(mongo_proc, client): # noqa (fixture)
     """Tests the /problems/walkthrough endpoint."""
     clear_db()
     register_test_accounts()
@@ -230,7 +230,7 @@ def test_walkthrough(client): # noqa (fixture)
     assert message == "PROTIP: Find the correct answer to get the points."
 
 
-def test_unlock_walkthrough(client): # noqa (fixture)
+def test_unlock_walkthrough(mongo_proc, client): # noqa (fixture)
     """Tests the /problems/unlock_walkthrough endpoint."""
     clear_db()
     register_test_accounts()

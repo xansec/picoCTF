@@ -1,5 +1,5 @@
 """Tests for the /api/v1/stats endpoints."""
-
+from pytest_mongo import factories
 from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -18,7 +18,7 @@ from common import ( # noqa (fixture)
 )
 import api
 
-def test_registration_stats(client):
+def test_registration_stats(mongo_proc, client):
     """Test the /stats/registration endpoint."""
     clear_db()
     register_test_accounts()
@@ -123,7 +123,7 @@ def test_registration_stats(client):
         'users': 5
     }
 
-def test_scoreboard(client):
+def test_scoreboard(mongo_proc, client):
     """Test the /stats/scoreboard endpoint."""
     clear_db()
     register_test_accounts()

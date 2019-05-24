@@ -1,5 +1,5 @@
 """Tests for the /api/v1/team endpoints."""
-
+from pytest_mongo import factories
 from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -15,7 +15,7 @@ from common import ( # noqa (fixture)
 import api
 
 
-def test_get_my_team(client): # noqa (fixture)
+def test_get_my_team(mongo_proc, client): # noqa (fixture)
     """Tests the /team endpoint."""
     clear_db()
     register_test_accounts()
@@ -61,7 +61,7 @@ def test_get_my_team(client): # noqa (fixture)
     assert res.json['members'][0]['uid'] == uid
 
 
-def test_get_my_team_score(client): # noqa (fixture)
+def test_get_my_team_score(mongo_proc, client): # noqa (fixture)
     """Test the /team/score endpoint."""
     # @TODO test after submitting a problem to modify score
     clear_db()
@@ -76,7 +76,7 @@ def test_get_my_team_score(client): # noqa (fixture)
     assert res.json['score'] == 0
 
 
-def test_update_team_password(client): # noqa (fixture)
+def test_update_team_password(mongo_proc, client): # noqa (fixture)
     """Test the /team/update_password endpoint."""
     clear_db()
     register_test_accounts()
@@ -122,7 +122,7 @@ def test_update_team_password(client): # noqa (fixture)
     assert new_password != old_password
 
 
-def test_team_score_progression(client): # noqa (fixture)
+def test_team_score_progression(mongo_proc, client): # noqa (fixture)
     """Test the /team/score_progression endpoint."""
     # @TODO test submitting problems to change score
     clear_db()
@@ -149,7 +149,7 @@ def test_team_score_progression(client): # noqa (fixture)
     assert res.json == []
 
 
-def test_join_team(client): # noqa (fixture)
+def test_join_team(mongo_proc, client): # noqa (fixture)
     """Test the /api/v1/team/join endpoint."""
     clear_db()
     register_test_accounts()
@@ -237,7 +237,7 @@ def test_join_team(client): # noqa (fixture)
                                   'have joined one.'
 
 
-def test_join_group(client): # noqa (fixture)
+def test_join_group(mongo_proc, client): # noqa (fixture)
     """Test the /team/join_group endpoint."""
     clear_db()
     register_test_accounts()

@@ -1,5 +1,5 @@
 """Tests for the /api/v1/submissions endpoints."""
-
+from pytest_mongo import factories
 from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -19,7 +19,7 @@ from common import ( # noqa (fixture)
 import api
 
 
-def test_submission(client): # noqa (fixture)
+def test_submission(mongo_proc, client): # noqa (fixture)
     """Test the POST /submissions endpoint."""
     clear_db()
     register_test_accounts()
@@ -160,7 +160,7 @@ def test_submission(client): # noqa (fixture)
         'already received points for this flag.'
 
 
-def test_clear_all_submissions(client): # noqa (fixture)
+def test_clear_all_submissions(mongo_proc, client): # noqa (fixture)
     """Test the DELETE /submissions endpoint."""
     clear_db()
     register_test_accounts()

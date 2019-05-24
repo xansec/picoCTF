@@ -87,6 +87,7 @@ setup(
         'dev': [
             'pytest',
             'pytest-cov',
+            'pytest-mongo',
             'flake8',
             'pydocstyle',
         ]

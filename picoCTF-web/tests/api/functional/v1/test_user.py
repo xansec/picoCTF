@@ -1,5 +1,5 @@
 """Tests for the /api/v1/user endpoints."""
-
+from pytest_mongo import factories
 from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -14,7 +14,7 @@ from common import ( # noqa (fixture)
 import api
 
 
-def test_login(client): # noqa (fixture)
+def test_login(mongo_proc, client): # noqa (fixture)
     """Test the /user/login endpoint."""
     clear_db()
     register_test_accounts()
@@ -78,7 +78,7 @@ def test_login(client): # noqa (fixture)
     assert res.json['username'] == USER_DEMOGRAPHICS['username']
 
 
-def test_logout(client): # noqa (fixture)
+def test_logout(mongo_proc, client): # noqa (fixture)
     """Test the /user/logout endpont."""
     clear_db()
     register_test_accounts()
@@ -98,7 +98,7 @@ def test_logout(client): # noqa (fixture)
     assert res.json['success'] is True
 
 
-def test_authorize(client): # noqa (fixture)
+def test_authorize(mongo_proc, client): # noqa (fixture)
     """Test the /user/authorize endpoint."""
     clear_db()
     register_test_accounts()
@@ -204,7 +204,7 @@ def test_authorize(client): # noqa (fixture)
     client.get('/api/v1/user/logout')
 
 
-def test_disable_account(client): # noqa (fixture)
+def test_disable_account(mongo_proc, client): # noqa (fixture)
     """Tests the /user/disable_account endpoint."""
     clear_db()
     register_test_accounts()
@@ -236,7 +236,7 @@ def test_disable_account(client): # noqa (fixture)
     assert user_after_disabling['disabled'] is True
 
 
-def test_update_password(client): # noqa (fixture)
+def test_update_password(mongo_proc, client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     res = client.post('/api/v1/user/login', json={
@@ -281,7 +281,7 @@ def test_update_password(client): # noqa (fixture)
     assert res.json['success'] is True
 
 
-def test_get_user(client): # noqa (fixture)
+def test_get_user(mongo_proc, client): # noqa (fixture)
     """Tests the GET /user endpoint."""
     clear_db()
     register_test_accounts()
@@ -328,7 +328,7 @@ def test_get_user(client): # noqa (fixture)
             assert res.json[k] == expected_body[k]
 
 
-def test_patch_user(client): # noqa (fixture)
+def test_patch_user(mongo_proc, client): # noqa (fixture)
     """Tests the PATCH /user endpoint."""
     clear_db()
     register_test_accounts()
@@ -351,7 +351,7 @@ def test_patch_user(client): # noqa (fixture)
     assert res.json['extdata'] == updated_extdata
 
 
-def test_reset_password(client): # noqa (fixture)
+def test_reset_password(mongo_proc, client): # noqa (fixture)
     """Tests the password reset endpoints."""
     clear_db()
     register_test_accounts()
@@ -407,7 +407,7 @@ def test_reset_password(client): # noqa (fixture)
     assert res.json['success'] is True
 
 
-def test_verify(client): # noqa (fixture)
+def test_verify(mongo_proc, client): # noqa (fixture)
     """Tests the /user/verify endpoint."""
     clear_db()
     register_test_accounts()

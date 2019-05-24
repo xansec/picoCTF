@@ -1,5 +1,5 @@
 """Tests for the /api/v1/status endpoint."""
-
+from pytest_mongo import factories
 from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -18,7 +18,7 @@ from common import ( # noqa (fixture)
 )
 
 
-def test_status(client): # noqa
+def test_status(mongo_proc, client): # noqa
     """Test the /status endpoint."""
     # @TODO currently only tests the default values of these fields
     #       try modifying the settings and testing also

@@ -1,5 +1,6 @@
 """Tests for the /api/v0/user/ routes."""
 import hashlib
+from pytest_mongo import factories
 from common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -13,7 +14,7 @@ from common import ( # noqa (fixture)
 )
 
 
-def test_login(client): # noqa (fixture)
+def test_login(mongo_proc, client): # noqa (fixture)
     """Tests the /user/login and /user/logout endpoints."""
     clear_db()
     register_test_accounts()
@@ -59,7 +60,7 @@ def test_login(client): # noqa (fixture)
     assert message == 'Successfully logged out.'
 
 
-def test_status(client): # noqa (fixture)
+def test_status(mongo_proc, client): # noqa (fixture)
     """
     Tests the /user/status endpoint.
     """
@@ -136,7 +137,7 @@ def test_status(client): # noqa (fixture)
     assert data['score'] == 0
 
 
-def test_extdata(client): # noqa (fixture)
+def test_extdata(mongo_proc, client): # noqa (fixture)
     """Tests the /user/extdata endpoint."""
     clear_db()
     register_test_accounts()
@@ -175,7 +176,7 @@ def test_extdata(client): # noqa (fixture)
     assert data['numerickey'] == '2'
 
 
-def test_minigame(client): # noqa (fixture)
+def test_minigame(mongo_proc, client): # noqa (fixture)
     """Tests the /user/minigame endpoint."""
     clear_db()
     register_test_accounts()
