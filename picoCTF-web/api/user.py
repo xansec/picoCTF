@@ -511,7 +511,7 @@ def check_csrf(f):
             raise PicoException(
                 'Internal server error',
                 data={'debug': 'CSRF token not found in session'})
-        submitted_token = request.cookies.get('token')
+        submitted_token = request.headers.get('X-CSRF-Token', None)
         if submitted_token is None:
             raise PicoException('CSRF token not included in request', 403)
         if session['token'] != submitted_token:

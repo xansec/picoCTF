@@ -2,7 +2,9 @@
   params = {
     method: method,
     url: url,
-    dataType: "json"
+    dataType: "json",
+    beforeSend: (request) ->
+      request.setRequestHeader "X-CSRF-Token", $.cookie("token")
     timeout: 10000,
     error: (jqXHR, textStatus, errorThrown) ->
       # Notify for errors with no HTTP response code. Otherwise handle when calling @apiCall
