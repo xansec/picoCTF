@@ -60,7 +60,6 @@ class GroupList(Resource):
 class Group(Resource):
     """Get a specific group."""
 
-    @require_login
     def get(self, group_id):
         """Get a specific group."""
         group = api.group.get_group(gid=group_id)
@@ -69,11 +68,19 @@ class Group(Resource):
 
         group_members = [group['owner']] + group['members'] + group['teachers']
         group_teachers = [group['owner']] + group['teachers']
+        if not api.user.is_logged_in():
+            # Return group name and settings even if not a member.
+            # Used for group invite links.
+            return jsonify({
+                'name': group['name'],
+                'settings': group['settings']
+            })
         curr_user = api.user.get_user()
         if curr_user['tid'] not in group_members and not curr_user['admin']:
-            raise PicoException(
-                'You do not have permission to view this group.', 403
-            )
+            return jsonify({
+                'name': group['name'],
+                'settings': group['settings']
+            })
 
         # Replace the team ids with full team objects if teacher, else remove
         if curr_user['tid'] in group_teachers:

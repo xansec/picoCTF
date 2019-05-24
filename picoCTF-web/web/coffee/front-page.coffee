@@ -534,7 +534,7 @@ AuthPanel = React.createClass
     if @state.status == "verified"
       apiNotify({status: 1, message: "Your account has been successfully verified. Please login."})
     if @state.gid
-      apiCall "GET", "/api/v1/group/" + @state.gid
+      apiCall "GET", "/api/v1/groups/" + @state.gid
       .success ((data) ->
         @setState update @state,
           groupName: $set: data.name
