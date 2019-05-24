@@ -54,7 +54,6 @@ def client():
     return app.test_client()
 
 
-@pytest.fixture
 def app():
     """Create an instance of the Flask app for testing."""
     app = api.create_app({
