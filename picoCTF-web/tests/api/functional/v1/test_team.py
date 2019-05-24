@@ -80,16 +80,17 @@ def test_update_team_password(client): # noqa (fixture)
     """Test the /team/update_password endpoint."""
     clear_db()
     register_test_accounts()
-    client.post('/api/v1/user/login', json={
+    res = client.post('/api/v1/user/login', json={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password']
     })
+    csrf_t = get_csrf_token(res)
 
     # Attempt to change password while still in initial team
     res = client.post('/api/v1/team/update_password', json={
         'new_password': 'newpassword',
         'new_password_confirmation': 'newpassword',
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 422
     assert res.json['message'] == "You have not created a team yet."
 
@@ -103,7 +104,7 @@ def test_update_team_password(client): # noqa (fixture)
     res = client.post('/api/v1/team/update_password', json={
         'new_password': 'newpassword',
         'new_password_confirmation': 'invalid',
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 422
     assert res.json['message'] == "Your team passwords do not match."
 
@@ -114,7 +115,7 @@ def test_update_team_password(client): # noqa (fixture)
     res = client.post('/api/v1/team/update_password', json={
         'new_password': 'newpassword',
         'new_password_confirmation': 'newpassword',
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 200
     assert res.json['success'] is True
     new_password = str(db.teams.find_one({'tid': tid})['password'])
@@ -242,31 +243,33 @@ def test_join_group(client): # noqa (fixture)
     register_test_accounts()
 
     # Create the group we will join
-    client.post('/api/v1/user/login', json={
+    res = client.post('/api/v1/user/login', json={
         'username': TEACHER_DEMOGRAPHICS['username'],
         'password': TEACHER_DEMOGRAPHICS['password']
     })
+    csrf_t = get_csrf_token(res)
     res = client.post('/api/v1/groups', json={
         'name': 'newgroup'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
 
     # Attempt to join a nonexistent group
     client.get('/api/v1/user/logout')
-    client.post('/api/v1/user/login', json={
+    res = client.post('/api/v1/user/login', json={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password']
     })
+    csrf_t = get_csrf_token(res)
     res = client.post('/api/v1/team/join_group', json={
         'group_name': 'invalid',
         'group_owner': TEACHER_DEMOGRAPHICS['username']
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 404
     assert res.json['message'] == 'Group not found'
 
     res = client.post('/api/v1/team/join_group', json={
         'group_name': 'newgroup',
         'group_owner': 'invalid'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 404
     assert res.json['message'] == 'Group owner not found'
 
@@ -278,7 +281,7 @@ def test_join_group(client): # noqa (fixture)
     res = client.post('/api/v1/team/join_group', json={
         'group_name': 'newgroup',
         'group_owner': TEACHER_DEMOGRAPHICS['username']
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 403
     assert res.json['message'] == "{}'s email does not belong to the " + \
         "whitelist for that classroom. Your team may not join this " + \
@@ -291,7 +294,7 @@ def test_join_group(client): # noqa (fixture)
     res = client.post('/api/v1/team/join_group', json={
         'group_name': 'newgroup',
         'group_owner': TEACHER_DEMOGRAPHICS['username']
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 200
     assert res.json['success'] is True
     user_team = db.users.find_one({
@@ -303,21 +306,22 @@ def test_join_group(client): # noqa (fixture)
     res = client.post('/api/v1/team/join_group', json={
         'group_name': 'newgroup',
         'group_owner': TEACHER_DEMOGRAPHICS['username']
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 409
     assert res.json['message'] == 'Your team is already a member of ' + \
                                   'this group.'
 
     # Join a group as a user with teacher permissions
     client.get('/api/v1/user/logout')
-    client.post('/api/v1/user/login', json={
+    res = client.post('/api/v1/user/login', json={
         'username': ADMIN_DEMOGRAPHICS['username'],
         'password': ADMIN_DEMOGRAPHICS['password']
     })
+    csrf_t = get_csrf_token(res)
     res = client.post('/api/v1/team/join_group', json={
         'group_name': 'newgroup',
         'group_owner': TEACHER_DEMOGRAPHICS['username']
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 200
     assert res.json['success'] is True
     admin_team = db.users.find_one({

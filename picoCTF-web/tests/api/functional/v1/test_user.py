@@ -208,15 +208,16 @@ def test_disable_account(client): # noqa (fixture)
     """Tests the /user/disable_account endpoint."""
     clear_db()
     register_test_accounts()
-    client.post('/api/v1/user/login', json={
+    res = client.post('/api/v1/user/login', json={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password']
     })
+    csrf_t = get_csrf_token(res)
 
     # Attempt to disable account with an incorrect password
     res = client.post('/api/v1/user/disable_account', json={
                     'password': 'invalid'
-                })
+                }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 422
     assert res.json['message'] == 'The provided password is not correct.'
 
@@ -227,7 +228,7 @@ def test_disable_account(client): # noqa (fixture)
     assert user_before_disabling['disabled'] is False
     res = client.post('/api/v1/user/disable_account', json={
                     'password': USER_DEMOGRAPHICS['password']
-                })
+                }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 200
     assert res.json['success'] is True
     user_after_disabling = db.users.find_one(
@@ -238,17 +239,18 @@ def test_disable_account(client): # noqa (fixture)
 def test_update_password(client): # noqa (fixture)
     clear_db()
     register_test_accounts()
-    client.post('/api/v1/user/login', json={
+    res = client.post('/api/v1/user/login', json={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password']
     })
+    csrf_t = get_csrf_token(res)
 
     # Attempt to update password with incorrect current password
     res = client.post('/api/v1/user/update_password', json={
         'current_password': 'invalid',
         'new_password': 'newpassword',
         'new_password_confirmation': 'newpassword'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 422
     assert res.json['message'] == 'Your current password is incorrect.'
 
@@ -257,7 +259,7 @@ def test_update_password(client): # noqa (fixture)
         'current_password': USER_DEMOGRAPHICS['password'],
         'new_password': 'newpassword1',
         'new_password_confirmation': 'newpassword2'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 422
     assert res.json['message'] == 'Your passwords do not match.'
 
@@ -266,7 +268,7 @@ def test_update_password(client): # noqa (fixture)
         'current_password': USER_DEMOGRAPHICS['password'],
         'new_password': 'newpassword',
         'new_password_confirmation': 'newpassword'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 200
     assert res.json['success'] is True
 
@@ -330,17 +332,18 @@ def test_patch_user(client): # noqa (fixture)
     """Tests the PATCH /user endpoint."""
     clear_db()
     register_test_accounts()
-    client.post('/api/v1/user/login', json={
+    res = client.post('/api/v1/user/login', json={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password']
     })
+    csrf_t = get_csrf_token(res)
 
     updated_extdata = {
             'testdata': '1'
         }
     res = client.patch('/api/v1/user', json={
         'extdata': updated_extdata
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 200
     assert res.json['success'] is True
 

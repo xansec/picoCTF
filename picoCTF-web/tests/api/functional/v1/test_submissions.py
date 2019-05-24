@@ -26,17 +26,18 @@ def test_submission(client): # noqa (fixture)
     load_sample_problems()
     enable_sample_problems()
     ensure_within_competition()
-    client.post('/api/v1/user/login', json={
+    res =client.post('/api/v1/user/login', json={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password'],
     })
+    csrf_t = get_csrf_token(res)
 
     # Attempt to submit a solution for a non-unlocked problem
     res = client.post('/api/v1/submissions', json={
         'pid': 'invalid',
         'key': 'flag',
         'method': 'testing'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 422
     assert res.json['message'] == "You can't submit flags to problems " + \
         "you haven't unlocked."
@@ -50,7 +51,7 @@ def test_submission(client): # noqa (fixture)
         'pid': unlocked_pids[0],
         'key': 'invalid',
         'method': 'testing'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 201
     assert res.json['correct'] is False
     assert res.json['message'] == 'That is incorrect!'
@@ -66,7 +67,7 @@ def test_submission(client): # noqa (fixture)
         'pid': unlocked_pids[0],
         'key': correct_key,
         'method': 'testing'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 201
     assert res.json['correct'] is True
     assert res.json['message'] == 'That is correct!'
@@ -76,7 +77,7 @@ def test_submission(client): # noqa (fixture)
         'pid': unlocked_pids[0],
         'key': 'invalid',
         'method': 'testing'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 201
     assert res.json['correct'] is False
     assert res.json['message'] == 'Flag incorrect: please note that you ' + \
@@ -87,7 +88,7 @@ def test_submission(client): # noqa (fixture)
         'pid': unlocked_pids[0],
         'key': correct_key,
         'method': 'testing'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 201
     assert res.json['correct'] is True
     assert res.json['message'] == 'Flag correct: however, you have ' + \
@@ -103,10 +104,11 @@ def test_submission(client): # noqa (fixture)
     })
 
     client.get('/api/v1/user/logout')
-    client.post('/api/v1/user/login', json={
+    res = client.post('/api/v1/user/login', json={
         'username': USER_2_DEMOGRAPHICS['username'],
         'password': USER_2_DEMOGRAPHICS['password'],
     })
+    csrf_t = get_csrf_token(res)
     client.post('/api/v1/team/join', json={
         'team_name': 'newteam',
         'team_password': 'newteam'
@@ -124,22 +126,23 @@ def test_submission(client): # noqa (fixture)
         'pid': unlocked_pids[1],
         'key': correct_key,
         'method': 'testing'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 201
     assert res.json['correct'] is True
 
     # Test incorrect & previously solved by another team member
     client.get('/api/v1/user/logout')
-    client.post('/api/v1/user/login', json={
+    res = client.post('/api/v1/user/login', json={
         'username': USER_DEMOGRAPHICS['username'],
         'password': USER_DEMOGRAPHICS['password']
     })
+    csrf_t = get_csrf_token(res)
 
     res = client.post('/api/v1/submissions', json={
         'pid': unlocked_pids[1],
         'key': 'invalid',
         'method': 'testing'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 201
     assert res.json['correct'] is False
     assert res.json['message'] == 'Flag incorrect: please note that ' + \
@@ -150,7 +153,7 @@ def test_submission(client): # noqa (fixture)
         'pid': unlocked_pids[1],
         'key': correct_key,
         'method': 'testing'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 201
     assert res.json['correct'] is True
     assert res.json['message'] == 'Flag correct: however, your team has ' + \
@@ -164,10 +167,11 @@ def test_clear_all_submissions(client): # noqa (fixture)
     load_sample_problems()
     enable_sample_problems()
     ensure_within_competition()
-    client.post('/api/v1/user/login', json={
+    res = client.post('/api/v1/user/login', json={
         'username': ADMIN_DEMOGRAPHICS['username'],
         'password': ADMIN_DEMOGRAPHICS['password']
     })
+    csrf_t = get_csrf_token(res)
 
     # Fill the database with some submissions
     res = client.get('/api/v1/problems')
@@ -182,12 +186,12 @@ def test_clear_all_submissions(client): # noqa (fixture)
             'pid': pid,
             'key': 'invalid',
             'method': 'testing'
-        })
+        }, headers=[('X-CSRF-Token', csrf_t)])
         res = client.post('/api/v1/submissions', json={
             'pid': pid,
             'key': flags[pid],
             'method': 'testing'
-        })
+        }, headers=[('X-CSRF-Token', csrf_t)])
     db = get_conn()
     assert db.submissions.count_documents({}) == 6
 

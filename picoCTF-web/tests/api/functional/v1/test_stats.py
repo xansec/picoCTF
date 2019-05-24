@@ -103,13 +103,15 @@ def test_registration_stats(client):
 
     # Create a group
     client.get('/api/v1/user/logout')
-    client.post('/api/v1/user/login', json={
+    res = client.post('/api/v1/user/login', json={
         'username': TEACHER_DEMOGRAPHICS['username'],
         'password': TEACHER_DEMOGRAPHICS['password']
     })
+    csrf_t = get_csrf_token(res)
     res = client.post('/api/v1/groups', json={
         'name': 'newgroup'
-    })
+    }, headers=[('X-CSRF-Token', csrf_t)])
+    print(res.json)
     assert res.status_code == 201
 
     res = client.get('/api/v1/stats/registration')

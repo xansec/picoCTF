@@ -26,7 +26,7 @@ def get_csrf_token(res):
         m = re.search('token=(.+?);', header[1])
         if m:
             return m.group(1)
-    return RuntimeError('Could not find CSRF token in response headers.')
+    raise RuntimeError('Could not find CSRF token in response headers: ' + str(res.headers))
 
 
 def get_conn():
