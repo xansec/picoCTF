@@ -268,12 +268,12 @@ user_req.add_argument(
     location='json', help='Email address'
 )
 user_req.add_argument(
-    'firstname', required=True, type=length_restricted(1, 50, str),
-    location='json', help='Given name'
+    'firstname', required=False, type=length_restricted(1, 50, str),
+    location='json', help='Given name', default=''
 )
 user_req.add_argument(
-    'lastname', required=True, type=length_restricted(1, 50, str),
-    location='json', help='Family name'
+    'lastname', required=False, type=length_restricted(1, 50, str),
+    location='json', help='Family name', default=''
 )
 user_req.add_argument(
     'username', required=True, type=length_restricted(3, 20, str),
