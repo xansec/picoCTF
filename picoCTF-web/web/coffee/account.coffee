@@ -1,4 +1,5 @@
 updatePassword = (e) ->
+  e.preventDefault()
   data = {
     "current_password": $("#current-password").val(),
     "new_password": $("#new-password").val(),
@@ -6,7 +7,7 @@ updatePassword = (e) ->
   }
   apiCall "POST", "/api/v1/user/update_password", data, 'Authentication', 'UpdatePassword'
   .success (data) ->
-    apiNotify {"status": 1, "message": "Your password has been successfully updated!"}
+    apiNotify {"status": 1, "message": "Your password has been successfully updated!"}, "/account"
   .error (jqXHR) ->
     apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
