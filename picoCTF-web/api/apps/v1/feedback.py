@@ -71,7 +71,7 @@ class FeedbackList(Resource):
         if not api.config.get_settings()['enable_feedback']:
             raise PicoException(
                 'Problem feedback is not currently being accepted.',
-                response_code=500
+                status_code=500
             )
         req = feedback_submission_req.parse_args(strict=True)
         api.problem_feedback.upsert_feedback(
