@@ -2,7 +2,8 @@
 
 import socket
 
-from flask_mail import Message
+from flask import current_app
+from flask_mail import Mail, Message
 
 import api
 from api import PicoException
@@ -10,8 +11,41 @@ from api import PicoException
 # Socket timeout - applies to SMTP connections
 socket.setdefaulttimeout(10)
 
-# The Flask-Mail object. Should be initialized during app startup.
-mail = None
+mail = Mail()
+
+
+def refresh_email_settings():
+    """
+    Load the current app context mail settings.
+
+    Called to make sure that the current thread/worker has the newest
+    email settings from the database.
+    """
+    with current_app.app_context():
+        settings = api.config.get_settings()
+        if settings["email"]["enable_email"]:
+            current_app.config['MAIL_SUPPRESS_SEND'] = False
+            current_app.config["MAIL_SERVER"] = \
+                settings["email"]["smtp_url"]
+            current_app.config["MAIL_PORT"] = \
+                settings["email"]["smtp_port"]
+            current_app.config["MAIL_USERNAME"] = \
+                settings["email"]["email_username"]
+            current_app.config["MAIL_PASSWORD"] = \
+                settings["email"]["email_password"]
+            current_app.config["MAIL_DEFAULT_SENDER"] = \
+                settings["email"]["from_addr"]
+            if (settings["email"]["smtp_security"] == "TLS"):
+                current_app.config["MAIL_USE_TLS"] = True
+                current_app.config["MAIL_USE_SSL"] = False
+            elif (settings["email"]["smtp_security"] == "SSL"):
+                current_app.config["MAIL_USE_TLS"] = False
+                current_app.config["MAIL_USE_SSL"] = True
+        else:
+            # Use a testing configuration
+            current_app.config['MAIL_SUPPRESS_SEND'] = True
+            current_app.config['MAIL_DEFAULT_SENDER'] = 'testing@picoctf.com'
+    mail.init_app(current_app)
 
 
 def request_password_reset(username):
@@ -25,6 +59,7 @@ def request_password_reset(username):
         PicoException: if provided username not found
 
     """
+    refresh_email_settings()
     user = api.user.get_user(name=username)
     if user is None:
         raise PicoException(
@@ -51,6 +86,7 @@ def send_user_verification_email(username):
     If email_verification is enabled in the config then the user
     won't be able to login until this step is completed.
     """
+    refresh_email_settings()
     settings = api.config.get_settings()
 
     user = api.user.get_user(name=username)
@@ -141,13 +177,9 @@ or your child is under age 13, please email us immediately at {2}.
 
         bulk.append(parent_email)
 
-    print('bulk len:' + str(len(bulk)))
-    print('entering mail loop')
     with mail.connect() as conn:
-        print('connected')
         for msg in bulk:
             conn.send(msg)
-            print('sent mail')
 
 
 def send_email_invite(gid, email, teacher=False):
@@ -156,6 +188,7 @@ def send_email_invite(gid, email, teacher=False):
 
     This link will bypass the email filter.
     """
+    refresh_email_settings()
     settings = api.config.get_settings()
     group = api.group.get_group(gid=gid)
 

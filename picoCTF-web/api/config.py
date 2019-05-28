@@ -210,7 +210,6 @@ def change_settings(changes):
 
     check_keys(settings, changes)
     db.settings.update({"_id": settings["_id"]}, {"$set": changes})
-    api.update_mail_config(current_app)  # reload Flask-Mail config
 
 
 def check_competition_active():

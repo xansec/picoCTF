@@ -5,15 +5,15 @@ import logging
 import traceback
 
 from flask import Flask, jsonify, session
-from flask_mail import Mail
 from werkzeug.contrib.fixers import ProxyFix
 
 # these have to come first to avoid circular import issues
 # from api.cache import memoize # noqa
-from api.common import check, PicoException, validate # noqa
-from api.logger import log_action # noqa
-from api.user import require_login, require_teacher, require_admin, check_csrf # noqa
-from api.config import block_before_competition, block_after_competition # noqa
+from api.common import check, PicoException, validate  # noqa
+from api.config import block_after_competition, block_before_competition  # noqa
+from api.logger import log_action  # noqa
+from api.user import (check_csrf, require_admin, require_login,  # noqa
+                      require_teacher)
 
 import api.achievement
 import api.bundles
@@ -50,29 +50,6 @@ def get_origin_logger(exception):
         return logging.getLogger('origin_fallback')
 
 
-def update_mail_config(app):
-    """Update the Flask-Mail config based on the current settings."""
-    with app.app_context():
-        settings = api.config.get_settings()
-        if settings["email"]["enable_email"]:
-            app.config['MAIL_SUPPRESS_SEND'] = False
-            app.config["MAIL_SERVER"] = settings["email"]["smtp_url"]
-            app.config["MAIL_PORT"] = settings["email"]["smtp_port"]
-            app.config["MAIL_USERNAME"] = settings["email"]["email_username"]
-            app.config["MAIL_PASSWORD"] = settings["email"]["email_password"]
-            app.config["MAIL_DEFAULT_SENDER"] = settings["email"]["from_addr"]
-            if (settings["email"]["smtp_security"] == "TLS"):
-                app.config["MAIL_USE_TLS"] = True
-            elif (settings["email"]["smtp_security"] == "SSL"):
-                app.config["MAIL_USE_SSL"] = True
-            api.email.mail = Mail(app)
-        else:
-            # Use a testing configuration
-            app.config['MAIL_SUPPRESS_SEND'] = True
-            app.config['MAIL_DEFAULT_SENDER'] = 'testing@picoctf.com'
-            api.email.mail = Mail(app)
-
-
 def create_app(config={}):
     """
     Configure and create the Flask app via factory function.
@@ -90,9 +67,6 @@ def create_app(config={}):
     # If any config settings specified, set them
     for k, v in config.items():
         app.config[k] = v
-
-    # Configure Mail object based on runtime settings
-    update_mail_config(app)
 
     # Register blueprints
     app.register_blueprint(
