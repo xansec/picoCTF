@@ -1,5 +1,5 @@
 """Endpoints related to authorization and the current user."""
-from flask import jsonify
+from flask import jsonify, redirect
 from flask_restplus import Namespace, Resource
 
 import api
@@ -215,21 +215,14 @@ class ResetPasswordRequestResponse(Resource):
 class UserVerificationResponse(Resource):
     """Verify a user's email address."""
 
-    @require_login
-    @ns.response(200, 'Success')
-    @ns.response(401, 'Not logged in')
-    @ns.response(
-        422,
-        'Invalid token, or user has requested max number of verificiations')
     @ns.expect(email_verification_req)
     def get(self):
         """Verify a user's email address."""
         req = email_verification_req.parse_args(strict=True)
-        success = api.user.verify_user(req['token'])
-        if not success:
-            raise PicoException(
-                'Invalid verification token.', 422
-            )
-        return jsonify({
-            'success': True
-        })
+        success = api.user.verify_user(req['uid'], req['token'])
+        settings = api.config.get_settings()
+        if success:
+            return redirect(settings['competition_url'] + "/#status=verified")
+        else:
+            return redirect(settings['competition_url'] +
+                            "/#status=verification_error")

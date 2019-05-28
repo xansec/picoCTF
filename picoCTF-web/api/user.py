@@ -273,7 +273,7 @@ def is_teacher(uid=None):
     return user.get('teacher', False)
 
 
-def verify_user(token_value):
+def verify_user(uid, token_value):
     """
     Verify the current user's account.
 
@@ -293,7 +293,7 @@ def verify_user(token_value):
         "email_verification", token_value)
     if token_user is None:
         return False
-    current_user = api.user.get_user()
+    current_user = api.user.get_user(uid=uid)
 
     if token_user["uid"] == current_user['uid']:
         db.users.find_one_and_update(

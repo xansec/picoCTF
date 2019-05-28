@@ -382,6 +382,10 @@ email_verification_req.add_argument(
     'token', required=True, type=str, location='args',
     help='Password reset token'
 )
+email_verification_req.add_argument(
+    'uid', required=True, type=str, location='args',
+    help='User ID'
+)
 
 # Team password update request
 update_team_password_req = reqparse.RequestParser()

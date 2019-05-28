@@ -533,6 +533,8 @@ AuthPanel = React.createClass
   componentWillMount: ->
     if @state.status == "verified"
       apiNotify({status: 1, message: "Your account has been successfully verified. Please login."})
+    else if @state.status == "verification_error"
+      apiNotify({status: 0, message: "Invalid verification code. Please contact an administrator."})
     if @state.gid
       apiCall "GET", "/api/v1/groups/" + @state.gid
       .success ((data) ->
