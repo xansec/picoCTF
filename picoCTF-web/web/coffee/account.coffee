@@ -16,9 +16,9 @@ resetPassword = (e) ->
   data = {
     "reset_token": window.location.hash.substring(1)
     "new_password": $("#password-reset-form input[name=new-password]").val()
-    "new_password_confirmation": $("#password-reset-form input[name=new-password-confirmation")
+    "new_password_confirmation": $("#password-reset-form input[name=new-password-confirmation]").val()
   }
-  apiCall "POST", "/api/v1/user/password_reset", data, 'Authentication', 'ResetPassword'
+  apiCall "POST", "/api/v1/user/reset_password", data, 'Authentication', 'ResetPassword'
   .done (data) ->
     ga('send', 'event', 'Authentication', 'ResetPassword', 'Success')
     apiNotify {"status": 1, "message": "Your password has been reset"}, "/"
