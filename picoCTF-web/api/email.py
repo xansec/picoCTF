@@ -1,9 +1,14 @@
 """Module for email related functionality."""
 
+import socket
+
 from flask_mail import Message
 
 import api
 from api import PicoException
+
+# Socket timeout - applies to SMTP connections
+socket.setdefaulttimeout(10)
 
 # The Flask-Mail object. Should be initialized during app startup.
 mail = None
@@ -136,9 +141,13 @@ or your child is under age 13, please email us immediately at {2}.
 
         bulk.append(parent_email)
 
+    print('bulk len:' + str(len(bulk)))
+    print('entering mail loop')
     with mail.connect() as conn:
+        print('connected')
         for msg in bulk:
             conn.send(msg)
+            print('sent mail')
 
 
 def send_email_invite(gid, email, teacher=False):

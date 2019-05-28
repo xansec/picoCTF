@@ -55,6 +55,7 @@ def update_mail_config(app):
     with app.app_context():
         settings = api.config.get_settings()
         if settings["email"]["enable_email"]:
+            app.config['MAIL_SUPPRESS_SEND'] = False
             app.config["MAIL_SERVER"] = settings["email"]["smtp_url"]
             app.config["MAIL_PORT"] = settings["email"]["smtp_port"]
             app.config["MAIL_USERNAME"] = settings["email"]["email_username"]
