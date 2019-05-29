@@ -29,4 +29,3 @@ matrix:
   allow_failures:
     - env: TOXENV=flake8
     - env: TOXENV=bandit
-    - env: TOXENV=web-unittest
