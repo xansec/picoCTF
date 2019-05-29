@@ -112,7 +112,7 @@ class Group(Resource):
             raise PicoException('Group not found', 404)
 
         curr_user = api.user.get_user()
-        if (curr_user['tid'] not in group['teachers']
+        if (curr_user['tid'] not in ([group['owner']] + group['teachers'])
                 and not curr_user['admin']):
             raise PicoException(
                 'You do not have permission to modify this group.', 403
