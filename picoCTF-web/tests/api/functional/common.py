@@ -33,7 +33,7 @@ def get_conn():
     """Get a connection to the testing database."""
     global db
     if db is None:
-        client = pymongo.MongoClient('127.0.0.1')
+        client = pymongo.MongoClient(host='127.0.0.1', port=27018)
         db = client[TESTING_DB_NAME]
     return db
 
@@ -49,7 +49,8 @@ def client():
     """Create a test client of the Flask app."""
     app = api.create_app({
         'TESTING': True,
-        'MONGO_DB_NAME': TESTING_DB_NAME
+        'MONGO_DB_NAME': TESTING_DB_NAME,
+        'MONGO_PORT': 27018
     })
     return app.test_client()
 
@@ -58,7 +59,8 @@ def app():
     """Create an instance of the Flask app for testing."""
     app = api.create_app({
         'TESTING': True,
-        'MONGO_DB_NAME': TESTING_DB_NAME
+        'MONGO_DB_NAME': TESTING_DB_NAME,
+        'MONGO_PORT': 27018
     })
     return app
 
