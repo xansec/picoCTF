@@ -119,7 +119,7 @@ TeamManagementForm = React.createClass
       towerGlyph = <Glyphicon glyph="tower"/>
       lockGlyph = <Glyphicon glyph="lock"/>
 
-      teamCreated = (@state.user and @state.user.username != @state.user.team_name)
+      teamCreated = (@state.user and @state.user.username != @state.team.team_name)
       if teamCreated
         <Panel header="Team Management">
         <p><strong>Team Name:</strong> {@state.team.team_name}</p>
