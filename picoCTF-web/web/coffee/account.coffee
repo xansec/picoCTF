@@ -102,7 +102,7 @@ TeamManagementForm = React.createClass
       newpass_confirm = @state.confirm_team_password
       confirmDialog "This will change the password needed to join your team.", "Team Password Change Confirmation", "Confirm", "Cancel",
       () ->
-        data = {"new_password": newpass, "new_password-confirmation": newpass_confirm}
+        data = {"new_password": newpass, "new_password_confirmation": newpass_confirm}
         apiCall "POST", "/api/v1/team/update_password", data
         .success (data) ->
           apiNotify {"status": 1, "message": "Your team password has been successfully updated!"}, "/account"
