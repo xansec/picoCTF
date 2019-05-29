@@ -6,7 +6,6 @@ group, or other set of fields.
 """
 
 import api
-from api import PicoException
 
 
 def get_token_path(token_name):

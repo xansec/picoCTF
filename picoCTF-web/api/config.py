@@ -3,7 +3,6 @@
 import datetime
 from functools import wraps
 
-from flask import current_app
 
 import api
 from api import PicoException
