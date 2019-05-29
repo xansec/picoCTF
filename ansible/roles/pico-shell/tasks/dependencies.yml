@@ -24,8 +24,10 @@
       'dpkg',
       'fakeroot',
       'gcc-multilib',
+      'iptables-persistent',
       'libffi-dev',
       'libssl-dev',
+      'netfilter-persistent',
       'nginx',
       'nodejs',
       'php7.2-cli',       # php5 package deprecated

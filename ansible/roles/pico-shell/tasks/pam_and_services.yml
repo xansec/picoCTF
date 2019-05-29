@@ -149,3 +149,36 @@
     name: systemd-logind.service
     state: stopped
     masked: yes
+
+# REJECT would be more helpful to anyone trying. So DROP it.
+- name: Add iptables rules and save them
+  block:
+    - name: Block outgoing SMTP
+      iptables:
+        chain: OUTPUT
+        destination_port: smtp
+        protocol: tcp
+        jump: DROP
+      register: block_smtp
+    - name: Save iptables rules
+      command: netfilter-persistent save
+      when: block_smtp is changed
+
+
+- name: Install tc-limit service
+  block:
+    - name: Add tc-limit.service
+      template:
+        src: tc-limit.service.j2
+        dest: "/etc/systemd/system/tc-limit.service"
+        owner: root
+        group: root
+        mode: 0644
+    - name: Get systemd to pickup tc-limit.service
+      command: systemctl daemon-reload
+    - name: Ensure limit-tc is enabled and started
+      service:
+        name: tc-limit.service
+        state: started
+        enabled: yes
+  when: on_aws | default(False) | bool
