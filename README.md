@@ -10,6 +10,9 @@ The platform is designed to be easily adapted to other CTF or programming
 competitions. Additional documentation can be found on the
 [wiki](https://github.com/picoCTF/picoCTF/wiki).
 
+Please visit our Discord server for other platform deployment questions not
+covered in our documentation: https://discord.gg/pbdQQ7h
+
 ## Quick Start
 
 The following steps will use [Vagrant](https://www.vagrantup.com/) to get you
