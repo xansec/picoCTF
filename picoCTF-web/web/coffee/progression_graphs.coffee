@@ -120,7 +120,7 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
           datasets = []
           for points,i in dataPoints
             datasets.push
-              label: data.data[i].name
+              label: data[i].name
               data: points
               pointBackgroundColor: borderColors[i % borderColors.length]
               borderColor: borderColors[i % borderColors.length]

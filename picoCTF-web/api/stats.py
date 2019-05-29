@@ -312,7 +312,7 @@ def get_top_teams_score_progressions(
             include_ineligible=include_ineligible)
     else:
         teams = api.stats.get_group_scores(gid=gid)
-    return teams[:limit]
+    teams = teams[:limit]
 
     return [{
         "name": team["name"],
