@@ -432,17 +432,23 @@ def test_verify(mongo_proc, client): # noqa (fixture)
     })
 
     # Attempt to verify with an incorrect token
-    res = client.get('/api/v1/user/verify?token=invalid')
-    assert res.status_code == 422
-    assert res.json['message'] == 'Invalid verification token.'
+    res = client.get('/api/v1/user/verify?uid={}&token=invalid'.format(
+        test_user['uid']
+    ))
+    assert res.status_code == 302
+    assert res.headers['Location'] == \
+        'http://localhost/#status=verification_error'
 
     test_user = db.users.find_one({'username': USER_DEMOGRAPHICS['username']})
     assert test_user['verified'] is False
 
     # Successfully verify user
-    res = client.get('/api/v1/user/verify?token=test_token')
-    assert res.status_code == 200
-    assert res.json['success'] is True
+    res = client.get('/api/v1/user/verify?uid={}&token=test_token'.format(
+        test_user['uid']
+    ))
+    assert res.status_code == 302
+    assert res.headers['Location'] == \
+        'http://localhost/#status=verified'
 
     test_user = db.users.find_one({'username': USER_DEMOGRAPHICS['username']})
     assert test_user['verified'] is True
