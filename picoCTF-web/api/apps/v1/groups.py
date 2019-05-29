@@ -231,7 +231,7 @@ class FlagSharingInfo(Resource):
             raise PicoException('Group not found', 404)
 
         curr_user = api.user.get_user()
-        if (curr_user['tid'] not in group['teachers']
+        if (curr_user['tid'] not in (group['teachers'] + [group['owner']])
                 and not curr_user['admin']):
             raise PicoException(
                 'You do not have permission to view these statistics.', 403
@@ -259,7 +259,7 @@ class InviteResponse(Resource):
             raise PicoException('Group not found', 404)
 
         curr_user = api.user.get_user()
-        if (curr_user['tid'] not in group['teachers']
+        if (curr_user['tid'] not in (group['teachers'] + [group['owner']])
                 and not curr_user['admin']):
             raise PicoException(
                 'You do not have permission to invite members to this group.',
