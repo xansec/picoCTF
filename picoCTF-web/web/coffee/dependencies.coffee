@@ -1,59 +1,58 @@
-@apiCall = (type, url, data) ->
-  if type == "POST"
-    data.token = $.cookie("token")
+@apiCall = (method, url, data, ga_event_class, ga_event) ->
+  params = {
+    method: method,
+    url: url,
+    dataType: "json",
+    beforeSend: (request) ->
+      request.setRequestHeader "X-CSRF-Token", $.cookie("token")
+    timeout: 10000,
+    error: (jqXHR, textStatus, errorThrown) ->
+      # Notify for errors with no HTTP response code. Otherwise handle when calling @apiCall
+      if errorThrown == ""
+        ga('send', 'event', 'Error', 'APIOffline', url)
+        $.notify "The server is currently down. We will work to fix this error right away.", "error"
+      else
+        if ga_event_class and ga_event
+          ga('send', 'event', ga_event_class, ga_event, "Failure::" + jqXHR.responseJSON.message)
+    success: ->
+      if ga_event_class and ga_event
+          ga('send', 'event', ga_event_class, ga_event, "Success")
+    }
+  if data
+    params.data = JSON.stringify(data)
+    params.contentType = "application/json"
+  $.ajax params
 
-  $.ajax {url: url, type: type, data: data, cache: false}
-  .fail (jqXHR, text) ->
-    ga('send', 'event', 'Error', 'APIOffline', url)
-    $.notify "The server is currently down. We will work to fix this error right away.", "error"
-  .success (resp) ->
-    if url == "/api/user/status" and resp.status == 1
-      window.userStatus = resp.data
 
 @redirectIfNotLoggedIn = ->
-  apiCall "GET", "/api/user/status", {}
-  .done (data) ->
-    switch data["status"]
-      when 1
-        if not data.data["logged_in"]
-          ga('send', 'event', 'Redirect', 'NotLoggedIn')
-          window.location.href = "/"
+  apiCall "GET", "/api/v1/user", null, 'Redirect', 'NotLoggedIn'
+  .success (data) ->
+    if not data.logged_in
+      window.location.href = "/"
 
 @redirectIfLoggedIn = ->
-  apiCall "GET", "/api/user/status", {}
-  .done (data) ->
-    switch data["status"]
-      when 1
-        if data.data["logged_in"]
-          ga('send', 'event', 'Redirect', 'LoggedIn')
-          window.location.href = "/news"
+  apiCall "GET", "/api/v1/user", null, 'Redirect', 'LoggedIn'
+  .success (data) ->
+    if data.logged_in
+      window.location.href = "/news"
 
 @redirectIfTeacher = ->
-  apiCall "GET", "/api/user/status", {}
-  .done (data) ->
-    switch data["status"]
-      when 1
-        if data.data["teacher"]
-          ga('send', 'event', 'Redirect', 'Teacher')
-          window.location.href = "/classroom"
+  apiCall "GET", "/api/v1/user", null, 'Redirect', 'Teacher'
+  .success (data) ->
+    if data.teacher
+      window.location.href = "/classroom"
 
 @redirectIfNotTeacher = ->
-  apiCall "GET", "/api/user/status", {}
-  .done (data) ->
-    switch data["status"]
-      when 1
-        if not data.data["teacher"]
-          window.location.href = "/"
+  apiCall "GET", "/api/v1/user"
+  .success (data) ->
+    if not data.teacher
+      window.location.href = "/"
 
 @redirectIfNotAdmin = ->
-  apiCall "GET", "/api/user/status", {}
-  .done (data) ->
-    switch data["status"]
-      when 1
-        if not data.data["admin"]
-          ga('send', 'event', 'Redirect', 'Admin')
-          window.location.href = "/"
-
+  apiCall "GET", "/api/v1/user", null, 'Redirect', 'Admin'
+  .success (data) ->
+    if not data.admin
+      window.location.href = "/"
 
 getStyle = (data) ->
   style = "info"
@@ -112,15 +111,9 @@ getStyle = (data) ->
     $('#confirm-modal').modal('hide')
 
 @logout = ->
-  apiCall "GET", "/api/user/logout"
-  .done (data) ->
-    switch data['status']
-      when 1
-        ga('send', 'event', 'Authentication', 'LogOut', 'Success')
-        document.location.href = "/"
-      when 0
-        ga('send', 'event', 'Authentication', 'LogOut', 'Failure::'+data.message)
-        document.location.href = "/"
+  apiCall "GET", "/api/v1/user/logout", null, 'Authentication', 'LogOut'
+  .success (data) ->
+    document.location.href = "/"
 
 $.fn.apiNotify = (data, configuration) ->
   configuration["className"] = getStyle data
@@ -141,6 +134,8 @@ $.fn.serializeObject = ->
    return o
 
 $ ->
-  apiCall "GET", "/api/user/status", {}
-  .done (data) ->
-    document.competition_status = data.data
+  apiCall "GET", "/api/v1/user"
+  .success (data) ->
+    document.competition_status = data
+
+

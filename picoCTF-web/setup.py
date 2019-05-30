@@ -5,7 +5,6 @@ https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
 """
 
-import os
 import sys
 # To use a consistent encoding
 from codecs import open
@@ -30,16 +29,16 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.2.1',
-    description="CTF Web Infrastructure",
+    version='2.0.0',
+    description="picoCTF web API",
     long_description=long_description,
 
     # The project's main homepage.
     url='https://github.com/picoCTF/picoCTF',
 
     # Author details
-    author='Christopher Ganas',
-    author_email='cganas@forallsecure.com',
+    author='picoCTF team',
+    author_email='opensource@picoctf.com',
 
     # Choose your license
     license='',
@@ -50,7 +49,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
@@ -58,9 +57,7 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
 
     # What does your project relate to?
@@ -78,19 +75,26 @@ setup(
         'Flask==1.0.2',
         'Flask-Bcrypt==0.7.1',
         'Flask-Mail==0.9.1',
+        'flask-restplus==0.12.1',
         'gunicorn==19.9.0',
         # 'line_profiler==2.1.2',
         'py==1.5.3',
         'pymongo==3.7.0',
-        'pytest==3.6.1',
         'spur==0.3.20',
         'voluptuous==0.11.1',
     ],
-    tests_require=["selenium"],
+    extras_require={
+        'dev': [
+            'pytest',
+            'pytest-cov',
+            'pytest-mongo',
+            'flake8',
+            'pydocstyle',
+        ]
+    },
     entry_points={
         'console_scripts': [
-            'api_manager=api.api_manager:main',
-            'daemon_manager=api.daemon_manager:main',
+            'daemon_manager=daemon_manager:main',
         ],
     },
 )

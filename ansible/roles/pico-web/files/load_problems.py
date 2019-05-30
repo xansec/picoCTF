@@ -7,39 +7,37 @@
 
 import sys
 
-# The picoCTF API
 import api
 
 
-def main(name):
-
-    try:
-        # If a server by this name exists we can load problems
-        shell_server = api.shell_servers.get_server(name=name)
+def main(sid):
+    with api.create_app().app_context():
+        shell_server = api.shell_servers.get_server(sid)
         try:
             # Load problems and bundles from the shell server
-            api.shell_servers.load_problems_from_server(shell_server["sid"])
+            output = api.shell_servers.get_publish_output(
+                shell_server['sid'])
+            output['sid'] = shell_server['sid']
+            api.problem.load_published(output)
 
             # Set problems to disabled
             for p in api.problem.get_all_problems(show_disabled=True):
-                api.admin.set_problem_availability(p["pid"], False)
+                api.problem.set_problem_availability(p["pid"], False)
 
             # Set bundles to enabled to set correct unlock behavior
-            for b in api.problem.get_all_bundles():
-                api.problem.set_bundle_dependencies_enabled(b["bid"], True)
+            for b in api.bundles.get_all_bundles():
+                api.bundles.set_bundle_dependencies_enabled(b["bid"], True)
 
         except Exception as e:
             print(e)
             sys.exit("Failed to load problems.")
-    except:
-        pass
 
 
 if __name__ == "__main__":
 
     if len(sys.argv) != 2:
         print("Incorrect arguments passed, need")
-        print("name")
+        print("sid")
         print(sys.argv)
         sys.exit("Bad args")
     else:

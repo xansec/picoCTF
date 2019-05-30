@@ -14,18 +14,24 @@ update = React.addons.update
 
 MemberManagementItem = React.createClass
   removeTeam: ->
-    apiCall "POST", "/api/group/teacher/leave", {gid: @props.gid, tid: @props.tid}
-    .done ((resp) ->
-      apiNotify resp
+    data = {
+      "team_id": @props.tid
+    }
+    apiCall "POST", "/api/v1/groups/" + @props.gid + "/remove_team", data
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Team has successfully left the classroom."}
       @props.refresh()
+    ).bind this
+    .error ((jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     ).bind this
 
-  switchUserRole: (tid, role) ->
-    apiCall "POST", "/api/group/teacher/role_switch", {gid: @props.gid, tid: tid, role: role}
-    .done ((resp) ->
-      apiNotify resp
-      @props.refresh()
-    ).bind this
+  # switchUserRole: (tid, role) ->
+  #   apiCall "POST", "/api/v1/group/teacher/role_switch", {gid: @props.gid, tid: tid, role: role}
+  #   .done ((resp) ->
+  #     apiNotify resp
+  #     @props.refresh()
+  #   ).bind this
 
   render: ->
     if @props.teacher
@@ -41,10 +47,10 @@ MemberManagementItem = React.createClass
         <p className="text-center">User</p>
       </Button>
 
-    if @props.teacher
-      switchUser = <Button onClick={@switchUserRole.bind(null, @props.tid, "member")}>Make Member</Button>
-    else
-      switchUser = <Button onClick={@switchUserRole.bind(null, @props.tid, "teacher")}>Make Teacher</Button>
+    # if @props.teacher
+    #   switchUser = <Button onClick={@switchUserRole.bind(null, @props.tid, "member")}>Make Member</Button>
+    # else
+    #   switchUser = <Button onClick={@switchUserRole.bind(null, @props.tid, "teacher")}>Make Teacher</Button>
 
     <ListGroupItem>
       <Row className="row">
@@ -57,7 +63,6 @@ MemberManagementItem = React.createClass
         </Col>
         <Col xs={4}>
           <ButtonGroup vertical>
-            {switchUser}
             <Button onClick={@removeTeam}>Remove User</Button>
           </ButtonGroup>
         </Col>
@@ -75,11 +80,18 @@ MemberInvitePanel = React.createClass
 
   inviteUser: (e) ->
     e.preventDefault()
-    apiCall "POST", "/api/group/invite", {gid: @props.gid, email: @state.email, role: @state.role}
-    .done ((resp) ->
-      apiNotify resp
+    data = {
+      email: @state.email,
+      as_teacher: (@state.role == "teacher")
+    }
+    apiCall "POST", "/api/v1/groups/" + @props.gid + "/invite", data
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Email invitation has been sent."}
       @setState update @state, $set: email: ""
       @props.refresh()
+    ).bind this
+    .error ((jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     ).bind this
 
   render: ->
@@ -131,26 +143,18 @@ GroupManagement = React.createClass
     @refreshSettings()
 
   refreshSettings: ->
-    apiCall "GET", "/api/group/settings", {gid: @props.gid}
-    .done ((resp) ->
-      @setState update @state, $merge: resp.data
+    apiCall "GET", "/api/v1/groups/" + @props.gid
+    .success ((data) ->
+      @setState update @state, settings: $set: data.settings
+      @setState update @state, member_information: $set: data.members
+      @setState update @state, teacher_information: $set: data.teachers
     ).bind this
 
-    apiCall "GET", "/api/user/status"
-    .done ((resp) ->
-      @setState update @state, current_user: $set: resp.data
-      if not resp.data["teacher"] or (window.userStatus and not window.userStatus.teacher)
+    apiCall "GET", "/api/v1/user"
+    .success ((data) ->
+      @setState update @state, current_user: $set: data
+      if not data["teacher"] or (window.userStatus and not window.userStatus.teacher)
         apiNotify {status: 1, message: "You are no longer a teacher."}, "/profile"
-    ).bind this
-
-    apiCall "GET", "/api/group/member_information", {gid: @props.gid}
-    .done ((resp) ->
-      @setState update @state, member_information: $set: resp.data
-    ).bind this
-
-    apiCall "GET", "/api/group/teacher_information", {gid: @props.gid}
-    .done ((resp) ->
-      @setState update @state, teacher_information: $set: resp.data
     ).bind this
 
   pushUpdates: (modifier) ->
@@ -159,10 +163,13 @@ GroupManagement = React.createClass
     if modifier
       data.settings = modifier data.settings
 
-    apiCall "POST", "/api/group/settings", {gid: @props.gid, settings: JSON.stringify data.settings}
-    .done ((resp) ->
-      apiNotify resp
+    apiCall "PATCH", "/api/v1/groups/" + @props.gid, {settings: data.settings}
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Classroom settings changed successfully."}
       @refreshSettings()
+    ).bind this
+    .error ((jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     ).bind this
 
   render: ->
@@ -283,9 +290,9 @@ TeacherManagement = React.createClass
     @setState update @state, tabKey: $set: tab
 
   componentWillMount: ->
-    apiCall "GET", "/api/group/list"
-    .done ((resp) ->
-      @setState update @state, groups: $set: resp.data
+    apiCall "GET", "/api/v1/groups"
+    .success ((data) ->
+      @setState update @state, groups: $set: data
     ).bind this
 
   render: ->

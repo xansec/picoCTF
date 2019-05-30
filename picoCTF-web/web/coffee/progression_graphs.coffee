@@ -107,20 +107,20 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
   div = divFromSelector selector
 
   drawgraph = (data) ->
-    apiCall "GET", "/api/time", {}
-    .done (timedata) ->
-      if data.data.length >= 2 && $(selector).is(":visible")
-        scoreData = (team.score_progression for team in data.data)
+    apiCall "GET", "/api/v1/status"
+    .success (statusdata) ->
+      if data.length >= 2 && $(selector).is(":visible")
+        scoreData = (team.score_progression for team in data)
 
         #Ensure there are submissions to work with
         if _.max(_.map(scoreData, (submissions) -> submissions.length)) > 0
 
-          dataPoints = progressionDataToPoints scoreData, numDataPoints, timedata.data
+          dataPoints = progressionDataToPoints scoreData, numDataPoints, statusdata.time
 
           datasets = []
           for points,i in dataPoints
             datasets.push
-              label: data.data[i].name
+              label: data[i].name
               data: points
               pointBackgroundColor: borderColors[i % borderColors.length]
               borderColor: borderColors[i % borderColors.length]
@@ -144,16 +144,24 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
               data: data,
               options: scoreboardChartSettings
           });
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   if gid == "student"
-    apiCall "GET", "/api/stats/top_teams/score_progression", {}
-    .done drawgraph
+    apiCall "GET", "/api/v1/stats/top_teams/score_progression"
+    .success drawgraph
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
   else if gid == "global"
-    apiCall "GET", "/api/stats/top_teams/score_progression", {include_ineligible: true}
-    .done drawgraph
+    apiCall "GET", "/api/v1/stats/top_teams/score_progression?include_ineligible=true"
+    .success drawgraph
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
   else
-    apiCall "GET", "/api/stats/group/score_progression", {gid:gid}
-    .done drawgraph
+    apiCall "GET", "/api/v1/stats/top_teams/score_progression?gid=" + gid
+    .success drawgraph
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 @renderTeamRadarGraph = (selector, tid) ->
   div = divFromSelector selector
@@ -174,46 +182,47 @@ progressionDataToPoints = (data, dataPoints, currentDate = 0) ->
 
 @renderTeamProgressionGraph = (selector, data) ->
   div = divFromSelector selector
-  apiCall "GET", "/api/time", {}
-  .done (timedata) ->
-    if data.status == 1
-      if data.data.length > 0
+  apiCall "GET", "/api/v1/status"
+  .success (statusdata) ->
+    if data.length > 0
 
-        dataPoints = progressionDataToPoints [data.data], numDataPoints, timedata.data
+      dataPoints = progressionDataToPoints [data], numDataPoints, statusdata.time
 
-        datasets = [
-            label: "Score"
-            data: dataPoints
-            pointBackgroundColor: borderColors[0]
-            borderColor: borderColors[0]
-            backgroundColor: backgroundColors[0]
-            pointHitRadius: 0
-            pointRadius: 0
-            lineTension: 0
-        ]
+      datasets = [
+          label: "Score"
+          data: dataPoints
+          pointBackgroundColor: borderColors[0]
+          borderColor: borderColors[0]
+          backgroundColor: backgroundColors[0]
+          pointHitRadius: 0
+          pointRadius: 0
+          lineTension: 0
+      ]
 
-        data =
-          labels: ("" for i in [1..numDataPoints])
-          datasets: datasets
+      data =
+        labels: ("" for i in [1..numDataPoints])
+        datasets: datasets
 
-        $(div).empty()
-        canvas = $("<canvas>").appendTo(div)
+      $(div).empty()
+      canvas = $("<canvas>").appendTo(div)
 
-        canvas.attr('width', $(div).width())
-        canvas.attr('height', $(div).height())
+      canvas.attr('width', $(div).width())
+      canvas.attr('height', $(div).height())
 
-        chart = new Chart(_.first(canvas).getContext("2d"), {
-              type: 'line',
-              data: data,
-              options: teamChartSettings
-        });
+      chart = new Chart(_.first(canvas).getContext("2d"), {
+            type: 'line',
+            data: data,
+            options: teamChartSettings
+      });
 
-      else
-          $(selector).html("<p>No problems have been solved.</p>")
     else
         $(selector).html("<p>No problems have been solved.</p>")
+  .error (jqXHR) ->
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 @drawTeamProgressionGraph = (selector, container_selector) ->
-  apiCall "GET", "/api/stats/team/score_progression", {}
-  .done (data) ->
+  apiCall "GET", "/api/v1/team/score_progression"
+  .success (data) ->
     renderTeamProgressionGraph selector, data
+  .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}

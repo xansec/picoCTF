@@ -1,32 +1,41 @@
 updatePassword = (e) ->
   e.preventDefault()
-  apiCall "POST", "/api/user/update_password", $("#password-update-form").serializeObject()
-  .done (data) ->
-    switch data['status']
-      when 1
-        ga('send', 'event', 'Authentication', 'UpdatePassword', 'Success')
-      when 0
-        ga('send', 'event', 'Authentication', 'UpdatePassword', 'Failure::' + data.message)
-    apiNotify data, "/account"
+  data = {
+    "current_password": $("#current-password").val(),
+    "new_password": $("#new-password").val(),
+    "new_password_confirmation": $("#new-password-confirmation").val()
+  }
+  apiCall "POST", "/api/v1/user/update_password", data, 'Authentication', 'UpdatePassword'
+  .success (data) ->
+    apiNotify {"status": 1, "message": "Your password has been successfully updated!"}, "/account"
+  .error (jqXHR) ->
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 resetPassword = (e) ->
   e.preventDefault()
-  form = $("#password-reset-form").serializeObject()
-  form["reset-token"] = window.location.hash.substring(1)
-  apiCall "POST", "/api/user/confirm_password_reset", form
+  data = {
+    "reset_token": window.location.hash.substring(1)
+    "new_password": $("#password-reset-form input[name=new-password]").val()
+    "new_password_confirmation": $("#password-reset-form input[name=new-password-confirmation]").val()
+  }
+  apiCall "POST", "/api/v1/user/reset_password", data, 'Authentication', 'ResetPassword'
   .done (data) ->
     ga('send', 'event', 'Authentication', 'ResetPassword', 'Success')
-    apiNotify data, "/"
+    apiNotify {"status": 1, "message": "Your password has been reset"}, "/"
+  .error (jqXHR) ->
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 disableAccount = (e) ->
   e.preventDefault()
-  confirmDialog("This will disable your account, drop you from your team, and prevent you from playing!", "Disable Account Confirmation", "Disable Account", "Cancel",
-  () ->
-    form = $("#disable-account-form").serializeObject()
-    apiCall "POST", "/api/user/disable_account", form
-    .done (data) ->
-      ga('send', 'event', 'Authentication', 'DisableAccount', 'Success')
-      apiNotify data, "/")
+  confirmDialog "This will disable your account, drop you from your team, and prevent you from playing!", "Disable Account Confirmation", "Disable Account", "Cancel", () ->
+    data = {
+      "password": $("#disable-account-form input[name=current-password]").val()
+    }
+    apiCall "POST", "/api/v1/user/disable_account", data, 'Authentication', 'DisableAccount'
+    .success (data) ->
+      apiNotify {"status": 1, "message": "Your account has been disabled"}, "/"
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 Input = ReactBootstrap.Input
 Row = ReactBootstrap.Row
@@ -50,16 +59,16 @@ TeamManagementForm = React.createClass
     team_password: ""
 
   componentWillMount: ->
-    apiCall "GET", "/api/user/status"
-    .done ((api) ->
+    apiCall "GET", "/api/v1/user"
+    .success ((data) ->
       @setState update @state,
-        user: $set: api.data
+        user: $set: data
     ).bind this
 
-    apiCall "GET", "/api/team"
-    .done ((api) ->
+    apiCall "GET", "/api/v1/team"
+    .success ((data) ->
       @setState update @state,
-        team: $set: api.data
+        team: $set: data
     ).bind this
 
   onTeamRegistration: (e) ->
@@ -67,23 +76,21 @@ TeamManagementForm = React.createClass
     if (!@state.team_name || !@state.team_password)
       apiNotify({status: 0, message: "Invalid team name or password."})
     else
-      apiCall "POST", "/api/team/create", {team_name: @state.team_name, team_password: @state.team_password}
-      .done (resp) ->
-        switch resp.status
-          when 0
-              apiNotify resp
-          when 1
-              document.location.href = "/profile"
+      data = {team_name: @state.team_name, team_password: @state.team_password}
+      apiCall "POST", "/api/v1/teams", data
+      .success (data) ->
+        document.location.href = "/profile"
+      .error (jqXHR) ->
+        apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   onTeamJoin: (e) ->
     e.preventDefault()
-    apiCall "POST", "/api/team/join", {team_name: @state.team_name, team_password: @state.team_password}
-    .done (resp) ->
-      switch resp.status
-        when 0
-            apiNotify resp
-        when 1
-            document.location.href = "/profile"
+    data = {team_name: @state.team_name, team_password: @state.team_password}
+    apiCall "POST", "/api/v1/team/join", data
+    .success (data) ->
+      document.location.href = "/profile"
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 
   onTeamPasswordChange: (e) ->
@@ -93,16 +100,14 @@ TeamManagementForm = React.createClass
     else
       newpass = @state.team_password
       newpass_confirm = @state.confirm_team_password
-      confirmDialog("This will change the password needed to join your team.", "Team Password Change Confirmation", "Confirm", "Cancel",
+      confirmDialog "This will change the password needed to join your team.", "Team Password Change Confirmation", "Confirm", "Cancel",
       () ->
-        apiCall "POST", "/api/team/update_password", {"new-password": newpass, "new-password-confirmation": newpass_confirm}
-        .done (resp) ->
-          switch resp.status
-            when 0
-                apiNotify resp
-            when 1
-                apiNotify resp, "/account"
-      )
+        data = {"new_password": newpass, "new_password_confirmation": newpass_confirm}
+        apiCall "POST", "/api/v1/team/update_password", data
+        .success (data) ->
+          apiNotify {"status": 1, "message": "Your team password has been successfully updated!"}, "/account"
+        .error (jqXHR) ->
+          apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   listMembers: () ->
     for member in @state.team["members"]
@@ -114,7 +119,7 @@ TeamManagementForm = React.createClass
       towerGlyph = <Glyphicon glyph="tower"/>
       lockGlyph = <Glyphicon glyph="lock"/>
 
-      teamCreated = (@state.user and @state.user.username != @state.user.team_name)
+      teamCreated = (@state.user and @state.user.username != @state.team.team_name)
       if teamCreated
         <Panel header="Team Management">
         <p><strong>Team Name:</strong> {@state.team.team_name}</p>

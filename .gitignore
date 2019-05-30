@@ -1,6 +1,8 @@
-/*-console.log
+**/*-console.log
 /.terraform
 /.vagrant
 /terraform.tfstate*
 /dist
+**/*.egg-info
+**/.pytest_cache
 site.retry

@@ -35,21 +35,28 @@ GeneralTab = React.createClass
   updateStartTime: (value) ->
     @setState update @state,
       $set:
-        start_time:
-          $date: value
+        start_time: value
 
   updateEndTime: (value) ->
     @setState update @state,
       $set:
-        end_time:
-          $date: value
+        end_time: value
 
   pushUpdates: ->
-    apiCall "POST", "/api/admin/settings/change", {json: JSON.stringify(@state)}
-    .done ((data) ->
-      apiNotify data
+    data = {
+      enable_feedback: @state.enable_feedback
+      competition_name: @state.competition_name
+      competition_url: @state.competition_url
+      start_time: new Date(@state.start_time).toISOString()
+      end_time: new Date(@state.end_time).toISOString()
+    }
+    apiCall "PATCH", "/api/v1/settings", data
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Settings updated successfully"}
       @props.refresh()
     ).bind(this)
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   render: ->
     feedbackDescription = "Users will be able to review problems when this feature is enabled. The ratings will be available to you
@@ -66,8 +73,8 @@ GeneralTab = React.createClass
       <BooleanEntry name="Receive Problem Feedback" value={@state.enable_feedback} onChange=@toggleFeedbackEnabled description={feedbackDescription}/>
       <TextEntry name="Competition Name" value={@state.competition_name} type="text" onChange=@updateCompetitionName description={competitionNameDescription}/>
       <TextEntry name="Competition URL" value={@state.competition_url} type="text" onChange=@updateCompetitionURL description={competitionURLDescription}/>
-      <TimeEntry name="Competition Start Time" value={@state.start_time["$date"]} onChange=@updateStartTime description={startTimeDescription}/>
-      <TimeEntry name="Competition End Time" value={@state.end_time["$date"]} onChange=@updateEndTime description={endTimeDescription}/>
+      <TimeEntry name="Competition Start Time" value={@state.start_time} onChange=@updateStartTime description={startTimeDescription}/>
+      <TimeEntry name="Competition End Time" value={@state.end_time} onChange=@updateEndTime description={endTimeDescription}/>
 
       <Row>
         <div className="text-center">
@@ -154,11 +161,13 @@ EmailTab = React.createClass
     if typeof(makeChange) == "function"
       pushData = makeChange pushData
 
-    apiCall "POST", "/api/admin/settings/change", {json: JSON.stringify(pushData)}
-    .done ((data) ->
-      apiNotify data
+    apiCall "PATCH", "/api/v1/settings", pushData
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Settings updated successfully"}
       @props.refresh()
     ).bind(this)
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   render: ->
     emailDescription = "Emails must be sent in order for users to reset their passwords."
@@ -263,27 +272,33 @@ ShardingTab = React.createClass
     if typeof(makeChange) == "function"
       pushData = makeChange pushData
 
-    apiCall "POST", "/api/admin/settings/change", {json: JSON.stringify(pushData)}
-    .done ((data) ->
-      apiNotify data
+    apiCall "PATCH", "/api/v1/settings", pushData
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Settings updated successfully"}
       @props.refresh()
     ).bind(this)
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   assignServerNumbers: ->
     confirmDialog("This will assign server_numbers to all unassigned teams. This may include teams previously defaulted to server_number 1 and already given problem instances!", "Assign Server Numbers Confirmation", "Assign Server Numbers", "Cancel",
     () ->
-      apiCall "POST", "/api/admin/shell_servers/reassign_teams", {}
-      .done (data) ->
-        apiNotify data
+      apiCall "POST", "/api/v1/shell_servers/update_assignments", {}
+      .success (data) ->
+        apiNotify {"status": 1, "message": "Server assignments updated"}
+      .error (jqXHR) ->
+        apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     , () ->
     )
 
   reassignServerNumbers: ->
     confirmDialog("This will reassign all teams. Problem instances will be randomized for any teams that change servers!", "Reassign Server Numbers Confirmation", "Reassign Server Numbers", "Cancel",
     () ->
-      apiCall "POST", "/api/admin/shell_servers/reassign_teams", {"include_assigned": "True"}
-      .done (data) ->
-        apiNotify data
+      apiCall "POST", "/api/v1/shell_servers/update_assignments", {"include_assigned": true}
+      .success (data) ->
+        apiNotify {"status": 1, "message": "Server assigments updated"}
+      .error (jqXHR) ->
+        apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     , () ->
     )
 
@@ -316,10 +331,8 @@ ShardingTab = React.createClass
 SettingsTab = React.createClass
   getInitialState: ->
     settings:
-      start_time:
-        $date: 0
-      end_time:
-        $date: 0
+      start_time: "Tue, 21 May 2019 17:59:12 GMT"
+      end_time: "Mon, 27 May 2019 17:59:12 GMT"
       competition_name: ""
       competition_url: ""
       enable_feedback: true
@@ -349,11 +362,11 @@ SettingsTab = React.createClass
         $set: tab
 
   refresh: ->
-    apiCall "GET", "/api/admin/settings"
-    .done ((api) ->
+    apiCall "GET", "/api/v1/settings"
+    .done ((data) ->
       @setState update @state,
         $set:
-          settings: api.data
+          settings: data
     ).bind this
 
   componentDidMount: ->
@@ -366,7 +379,6 @@ SettingsTab = React.createClass
       competition_url: @state.settings.competition_url
       start_time: @state.settings.start_time
       end_time: @state.settings.end_time
-
     <Well>
       <Grid>
         <Row>

@@ -21,19 +21,22 @@ pamh = None
 
 
 def competition_active():
-    r = requests.get(SERVER + "/api/user/status")
-    return json.loads(r.text)["data"]["competition_active"]
+    r = requests.get(SERVER + "/api/v1/status")
+    return json.loads(r.text)["competition_active"]
 
 
 def run_login(user, password):
     r = requests.post(
-        SERVER + "/api/user/login",
-        data={
+        SERVER + "/api/v1/user/login",
+        json={
             "username": user,
             "password": password
         },
         timeout=TIMEOUT)
-    return str(json.loads(r.text)['message'])
+    if 'success' in json.loads(r.text):
+        return "Successfully logged in"
+    else:
+        return str(json.loads(r.text)['message'])
 
 
 def display(string):

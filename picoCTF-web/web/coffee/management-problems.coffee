@@ -270,7 +270,7 @@ Problem = React.createClass
 
   onStateToggle: (e) ->
     e.preventDefault()
-    apiCall "POST", "/api/admin/problems/availability", {pid: @props.pid, state: !@props.disabled}
+    apiCall "PATCH", "/api/v1/problems/" + @props.pid, {disabled: !@props.disabled}
     .done @props.onProblemChange
 
   handleExpand: (e) ->
@@ -367,7 +367,7 @@ ProblemList = React.createClass
 
 ProblemDependencyView = React.createClass
   handleClick: (bundle) ->
-    apiCall "POST", "/api/admin/bundle/dependencies_active", {bid: bundle.bid, state: !bundle.dependencies_enabled}
+    apiCall "PATCH", "/api/v1/bundles/" + bundle.bid, {dependencies_enabled: !bundle.dependencies_enabled}
     .done @props.onProblemChange
 
   render: ->
@@ -402,10 +402,10 @@ ProblemListModifiers = React.createClass
     window.confirmDialog "Are you sure you want to #{change} these #{changeNumber} problems?", "Mass Problem State Change",
     "Yes", "No", (() ->
       calls = _.map @props.problems, (problem) ->
-        apiCall "POST", "/api/admin/problems/availability", {pid: problem.pid, state: !enabled}
+        apiCall "PATCH", "/api/v1/problems/" + problem.pid, {disabled: !enabled}
       ($.when.apply this, calls)
         .done (() ->
-          if _.all(_.map arguments, (call) -> (_.first call).status == 1)
+          if _.all(_.map arguments, (call) -> (_.first call).success == true)
             apiNotify {status: 1, message: "All problems have been successfully changed."}
           else
             apiNotify {status: 0, message: "There was an error changing some of the problems."}

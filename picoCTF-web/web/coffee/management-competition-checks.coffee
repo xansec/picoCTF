@@ -81,10 +81,10 @@ CompetitionCheck = React.createClass
     setTimeout (setStatus.bind null, t), (Math.random() * 3000)
 
   checkEnabledProblems: (setStatus) ->
-    apiCall "GET", "/api/admin/problems"
-    .done (result) ->
+    apiCall "GET", "/api/v1/problems?unlocked_only=false&include_disabled=true"
+    .success (data) ->
       status = "failing"
-      for problem in result.data.problems
+      for problem in data
         if problem.disabled == false
           status = "passing"
           break
@@ -93,27 +93,27 @@ CompetitionCheck = React.createClass
 
 
   checkProblemsAlive: (setStatus) ->
-    apiCall "GET", "/api/admin/shell_servers"
-    .done (api) ->
+    apiCall "GET", "/api/v1/shell_servers?assigned_only=false"
+    .done (data) ->
       status = "passing"
-      servers = api.data
+      servers = data
 
       if servers.length is 0
         status = "failing"
 
-      apiCalls = $.map(servers, (server) -> apiCall "GET", "/api/admin/shell_servers/check_status", {sid: server.sid})
+      apiCalls = $.map(servers, (server) -> apiCall "GET", "/api/v1/shell_servers/" + server.sid + "/status")
       ($.when).apply(this, apiCalls).done () ->
         for result in $.map(arguments, _.first)
-          if result.status is 0
+          if not result.status
             status = "failing"
         setStatus status
 
   checkDownloadsAccessible: (setStatus) ->
-    apiCall "GET", "/api/admin/problems"
-    .done (result) ->
+    apiCall "GET", "/api/v1/problems?unlocked_only=false&include_disabled=true"
+    .done (data) ->
       status = "passing"
       requests = []
-      for problem in result.data.problems
+      for problem in data
         for instance in problem.instances
           $("<p>"+instance.description+"</p>").find("a").each (i, a) ->
             url = $(a).attr("href")

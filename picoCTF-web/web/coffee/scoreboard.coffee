@@ -5,15 +5,13 @@ renderScorepage = _.template($("#scorepage-template").remove().text())
 
 
 load_teamscore = ->
-  apiCall "GET", "/api/team", {}
-  .done (resp) ->
-    switch resp["status"]
-      when 1
-        $("#scoreboard-teamscore").html renderScoreboardTeamScore({
-          teamscore: resp.data.score
-        })
-      when 0
-        apiNotify(resp)
+  apiCall "GET", "/api/v1/team"
+  .success (data) ->
+    $("#scoreboard-teamscore").html renderScoreboardTeamScore({
+      teamscore: data.score
+    })
+  .error (jqXHR) ->
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 @reloadGraph = ->
   reload = ->
@@ -26,52 +24,48 @@ load_teamscore = ->
   setTimeout reload, 100
 
 load_scoreboard_page = (boardname, page, tid) ->
-  apiCall "GET", "/api/stats/scoreboard/" + boardname + "/" + page, {}
-    .done (resp) ->
-      switch resp["status"]
-          when 1
-            $('#' + boardname + " tbody").html(
-              renderScorepage({
-                scorepage: resp.data
-                page:page
-                tid: tid
-              })
-            )
-          when 0
-            apiNotify(resp)
+  apiCall "GET", "/api/v1/stats/scoreboard/page?board=" + boardname + "&page=" + page
+    .success (data) ->
+      $('#' + boardname + " tbody").html(
+        renderScorepage({
+          scorepage: data
+          page:page
+          tid: tid
+        })
+      )
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 
 load_scoreboard = ->
-  apiCall "GET", "/api/stats/scoreboard", {}
-  .done (resp) ->
-    switch resp["status"]
-      when 1
-        $("#scoreboard-tabs").html(renderScoreboardTabs({
-          data: resp.data,
-          renderScoreboard: renderScoreboard
-        })).promise().then( ->
-          data = resp.data;
-          paginate = ((board) ->
-            $('#' + board.name + '-pagination').bootstrapPaginator({
-              totalPages: board.pages,
-              bootstrapMajorVersion: 3,
-              numberOfPages: 10,
-              currentPage: board.start_page,
-              onPageClicked: ((e, eOriginal, type, page) ->
-                load_scoreboard_page(board.name, page, data.tid)
-              )
-            })
+  apiCall "GET", "/api/v1/stats/scoreboard"
+  .success (data) ->
+    $("#scoreboard-tabs").html(renderScoreboardTabs({
+      data: data,
+      renderScoreboard: renderScoreboard
+    })).promise().then( ->
+      data = data;
+      paginate = ((board) ->
+        $('#' + board.name + '-pagination').bootstrapPaginator({
+          totalPages: board.pages,
+          bootstrapMajorVersion: 3,
+          numberOfPages: 10,
+          currentPage: board.start_page,
+          onPageClicked: ((e, eOriginal, type, page) ->
+            load_scoreboard_page(board.name, page, data.tid)
           )
-          Object.keys(data).forEach( (e) ->
-            if Array.isArray(data[e])
-              data[e].forEach(paginate)
-            else if typeof(data[e]) == 'object'
-              paginate(data[e])
-          )
-        )
-        reloadGraph()
-      when 0
-        apiNotify(resp)
+        })
+      )
+      Object.keys(data).forEach( (e) ->
+        if Array.isArray(data[e])
+          data[e].forEach(paginate)
+        else if typeof(data[e]) == 'object'
+          paginate(data[e])
+      )
+    )
+    reloadGraph()
+  .error (jqXHR) ->
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 $ ->
   load_scoreboard()

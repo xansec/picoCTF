@@ -1,51 +1,24 @@
-"""
-CTF API Configuration File
-
-Note this is just a python script. It does config things.
-"""
+"""Stores and retrieves runtime settings from the database."""
 
 import datetime
-import json
+from functools import wraps
+
 
 import api
-import api.app
-from api.common import WebException
+from api import PicoException
 
+"""
+Default Settings
 
-# Helper class for timezones
-class EST(datetime.tzinfo):
-
-    def __init__(self, utc_offset):
-        self.utc_offset = utc_offset
-
-    def utcoffset(self, dt):
-        return datetime.timedelta(hours=-self.utc_offset)
-
-    def dst(self, dt):
-        return datetime.timedelta(0)
-
-
-# Competition Information Placeholder
-competition_name = ""
-competition_urls = [
-    "",
-]
-
-""" CTF Settings
 These are the default settings that will be loaded
 into the database if no settings are already loaded.
 """
 default_settings = {
-    "enable_teachers":
-    True,
-    "enable_feedback":
-    True,
+    "enable_feedback": True,
 
     # TIME WINDOW
-    "start_time":
-    datetime.datetime.utcnow(),
-    "end_time":
-    datetime.datetime.utcnow(),
+    "start_time": datetime.datetime.utcnow(),
+    "end_time": datetime.datetime.utcnow(),
 
     # COMPETITION INFORMATION
     "competition_name": "",
@@ -55,8 +28,7 @@ default_settings = {
     "email_filter": [],
 
     # TEAMS
-    "max_team_size":
-    1,
+    "max_team_size": 1,
 
     # ACHIEVEMENTS
     "achievements": {
@@ -171,35 +143,63 @@ default_settings = {
     "eligibility": {
         "usertype": "student",
         "country": "US"
+    },
+
+    # MINIGAME TOKEN VALUES
+    "minigame": {
+        "secret": "foo",
+        "token_values": {
+            "a1": 10,
+            "a2": 20,
+            "a3": 30,
+            "b1": 15,
+            "b2": 30,
+            "b3": 45,
+            "c3": 20,
+        },
     }
 }
-""" Helper functions to get settings. Do not change these """
 
 
 def get_settings():
-    db = api.common.get_conn()
+    """Retrieve settings from the database."""
+    db = api.db.get_conn()
     settings = db.settings.find_one({}, {"_id": 0})
 
     if settings is None:
         db.settings.insert(default_settings)
         # Initialize indexes, runonce
-        api.setup.index_mongo()
+        api.db.index_mongo()
         return default_settings
-
     return settings
 
 
 def change_settings(changes):
-    db = api.common.get_conn()
+    """
+    Update settings in the database.
+
+    Raises:
+        PicoException: if an updated key did not previously exist in settings,
+                       or the updated value is of a different type
+
+    """
+    db = api.db.get_conn()
     settings = db.settings.find_one({})
 
+    # @TODO validate incoming settings at the request level
     def check_keys(real, changed):
         keys = list(changed.keys())
         for key in keys:
             if key not in real:
-                raise WebException("Cannot update setting for '{}'".format(key))
-            elif type(real[key]) != type(changed[key]):
-                raise WebException("Cannot update setting for '{}'".format(key))
+                raise PicoException(
+                    "Cannot update setting for '{}'".format(key) +
+                    " (setting not found)",
+                    status_code=400)
+            elif type(real[key]) != type(changed[key]):  # noqa:E721
+                raise PicoException(
+                    "Cannot update setting for '{}'".format(key) +
+                    " (incorrect type)",
+                    status_code=400)
             elif isinstance(real[key], dict):
                 check_keys(real[key], changed[key])
                 # change the key so mongo $set works correctly
@@ -208,5 +208,49 @@ def change_settings(changes):
                 changed.pop(key)
 
     check_keys(settings, changes)
-
     db.settings.update({"_id": settings["_id"]}, {"$set": changes})
+
+
+def check_competition_active():
+    """Check whether the competition is currently running."""
+    settings = get_settings()
+
+    return (settings["start_time"].timestamp() <
+            datetime.datetime.utcnow().timestamp() <
+            settings["end_time"].timestamp())
+
+
+def block_before_competition(f):
+    """
+    Wrap routing functions that are blocked prior to the competition.
+
+    Admins can bypass.
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if api.user.is_logged_in() and api.user.get_user().get('admin', False):
+            return f(*args, **kwargs)
+        elif (datetime.datetime.utcnow().timestamp()
+                <= get_settings()['start_time'].timestamp()):
+            raise PicoException(
+                'The competition has not begun yet!', 422)
+        return f(*args, **kwargs)
+    return wrapper
+
+
+def block_after_competition(f):
+    """
+    Wrap routing functions that are blocked after the competition.
+
+    Admins can bypass.
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if api.user.is_logged_in() and api.user.get_user().get('admin', False):
+            return f(*args, **kwargs)
+        elif (datetime.datetime.utcnow().timestamp()
+                >= get_settings()['end_time'].timestamp()):
+            raise PicoException(
+                'The competition has ended!', 422)
+        return f(*args, **kwargs)
+    return wrapper

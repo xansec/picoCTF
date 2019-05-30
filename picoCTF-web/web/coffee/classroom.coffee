@@ -26,27 +26,25 @@ createGroupSetup = () ->
         createGroup($('#new-group-name').val())
 
 @exportProblemCSV = (groupName, teams) ->
-  apiCall "GET", "/api/problems/all" # New teacher-only route for problem names and categories ONLY
-  .done ((resp) ->
-    if resp.status == 0
-      apiNotify resp
-    else
-      # problems = _.filter resp.data.problems, (problem) -> !problem.disabled
-      problems = resp.data; # non-admin API only returns non-disabled problems as top level data array
-      data = [["Teamname", "Member Name(s)"].concat(_.map(problems, (problem) -> problem.name), ["Total"])]
-      _.each teams, ((team) ->
-        members = '"' + team.members.map((member) -> return this.getName(member.firstname, member.lastname, member.username)).join(", ") + '"'
-        teamData = [team.team_name, members]
-        teamData = teamData.concat _.map problems, ((problem) ->
-          solved = _.find team.solved_problems, (solvedProblem) -> solvedProblem.name == problem.name
-          return if solved then problem.score else 0
-        )
-        teamData = teamData.concat [team.score]
-        data.push teamData
+  apiCall "GET", "/api/v1/problems?unlocked_only=false"
+  .success (data) ->
+    # problems = _.filter resp.data.problems, (problem) -> !problem.disabled
+    problems = data; # non-admin API only returns non-disabled problems as top level data array
+    outputData = [["Teamname", "Member Name(s)"].concat(_.map(problems, (problem) -> problem.name), ["Total"])]
+    _.each teams, ((team) ->
+      members = '"' + team.members.map((member) -> return this.getName(member.firstname, member.lastname, member.username)).join(", ") + '"'
+      teamData = [team.team_name, members]
+      teamData = teamData.concat _.map problems, ((problem) ->
+        solved = _.find team.solved_problems, (solvedProblem) -> solvedProblem.name == problem.name
+        return if solved then problem.score else 0
       )
-      csvData = (_.map data, (fields) -> fields.join ",").join "\n"
-      download(csvData, "#{groupName}.csv", "text/csv")
-  )
+      teamData = teamData.concat [team.score]
+      outputData.push teamData
+    )
+    csvData = (_.map outputData, (fields) -> fields.join ",").join "\n"
+    download(csvData, "#{groupName}.csv", "text/csv")
+  .error (jqXHR) ->
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 loadGroupOverview = (groups, showFirstTab, callback) ->
   $("#group-overview").html renderGroupInformation({data: groups})
@@ -61,15 +59,15 @@ loadGroupOverview = (groups, showFirstTab, callback) ->
     tabBody = $(this).attr("href")
     groupName = $(this).data("group-name")
 
-    apiCall "GET", "/api/group/member_information", {gid: $(this).data("gid")}
-    .done (teamData) ->
+    apiCall "GET", "/api/v1/groups/" + $(this).data("gid")
+    .success (data) ->
         ga('send', 'event', 'Group', 'LoadTeacherGroupInformation', 'Success')
         for group in groups
           if `group.name == groupName` # coffee script will translate to === which doesn't work for numbers (e.g. 14741)
-            $(tabBody).html renderTeamSelection({teams: teamData.data, groupName: groupName, owner: group.owner, gid: group.gid})
+            $(tabBody).html renderTeamSelection({teams: data.members, groupName: groupName, owner: group.owner, gid: group.gid})
         $(".team-visualization-enabler").on "click", (e) ->
           tid = $(e.target).data("tid")
-          for team in teamData.data
+          for team in data.members
             if tid == team.tid
               preparedData = {status: 1, data: team.progression}
               window.renderTeamProgressionGraph("#visualizer-"+tid, preparedData)
@@ -87,47 +85,38 @@ loadGroupOverview = (groups, showFirstTab, callback) ->
 
   $("#group-request-form").on "submit", groupRequest
   $(".delete-group-span").on "click", (e) ->
-    deleteGroup $(e.target).data("group-name")
+    deleteGroup $(e.target).data("gid")
 
   if callback
     callback()
 
 loadGroupInfo = (showFirstTab, callback) ->
-  apiCall "GET", "/api/group/list", {}
-  .done (data) ->
-    switch data["status"]
-      when 0
-        apiNotify(data)
-        ga('send', 'event', 'Group', 'GroupListLoadFailure', data.message)
-      when 1
-        window.groupListCache = data.data
-        loadGroupOverview data.data, showFirstTab, callback
+  apiCall "GET", "/api/v1/groups", null, 'Group', 'GroupListLoad'
+  .success (data) ->
+    window.groupListCache = data
+    loadGroupOverview data, showFirstTab, callback
+  .error (jqXHR) ->
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
 createGroup = (groupName) ->
-  apiCall "POST",  "/api/group/create", {"group-name": groupName}
-  .done (data) ->
-    if data['status'] is 1
-      closeDialog()
-      ga('send', 'event', 'Group', 'CreateGroup', 'Success')
-      apiNotify(data)
-      loadGroupInfo(false, () ->
-                     $('#class-tabs li:eq(-2) a').tab('show'))
-    else
-      ga('send', 'event', 'Group', 'CreateGroup', 'Failure::' + data.message)
-      apiNotifyElement($("#new-group-name"), data)
+  data = {"name": groupName}
+  apiCall "POST",  "/api/v1/groups", data, 'Group', 'CreateGroup'
+  .success (data) ->
+    closeDialog()
+    apiNotify {"status": 1, "message": "Successfully created classroom."}
+    loadGroupInfo(false, () ->
+      $('#class-tabs li:eq(-2) a').tab('show'))
+  .error (jqXHR) ->
+    apiNotifyElement($("#new-group-name"), {"status": 0, "message": jqXHR.responseJSON.message})
 
-deleteGroup = (groupName) ->
+deleteGroup = (gid) ->
   confirmDialog("You are about to permanently delete this class. This will automatically remove your students from this class. Are you sure you want to delete this class?",
                 "Class Confirmation", "Delete Class", "Cancel",
                 () ->
-                  apiCall "POST", "/api/group/delete", {"group-name": groupName}
-                  .done (data) ->
-                    apiNotify(data)
-                    if data['status'] is 1
-                      ga('send', 'event', 'Group', 'DeleteGroup', 'Success')
-                      loadGroupInfo(true)
-                    else
-                      ga('send', 'event', 'Group', 'DeleteGroup', 'Failure::' + data.message)
+                  apiCall "DELETE", "/api/v1/groups/" + gid, null, 'Group', 'DeleteGroup'
+                  .success (data) ->
+                    apiNotify {"status": 1, "message": "Successfully deleted classroom"}
+                    loadGroupInfo(true)
                ,() ->
                   ga('send', 'event', 'Group', 'DeleteGroup', 'RejectPrompt'))
 
@@ -139,8 +128,9 @@ groupRequest = (e) ->
 
 $ ->
   if not window.userStatus
-    apiCall "GET", "/api/user/status"
-    .done () ->
+    apiCall "GET", "/api/v1/user"
+    .success (data) ->
+      window.userStatus = data
       if not window.userStatus.teacher
         apiNotify {status: 1, message: "You are no longer a teacher."}, "/profile"
   else if not window.userStatus.teacher

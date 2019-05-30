@@ -1,36 +1,30 @@
-"""
-API functions relating to user management and registration.
-"""
+"""User management and registration module."""
 
 import json
 import re
-import string
 import urllib.parse
 import urllib.request
+from functools import wraps
+
+import bcrypt
+import flask
+from flask import request, session
 
 import api
-import flask
-from api.annotations import log_action
-from api.common import (check, InternalException, safe_fail, validate,
-                        WebException)
-from voluptuous import Length, Required, Schema
-
-_check_email_format = lambda email: re.match(r".+@.+\..{2,}", email) is not None
-
-
-def _check_username(username):
-    return all(
-        [c in string.digits + string.ascii_lowercase for c in username.lower()])
+from api import log_action, PicoException
 
 
 def check_blacklisted_usernames(username):
     """
     Verify that the username isn't present in the username blacklist.
-    """
 
+    Args:
+        username: the username to check
+    """
     settings = api.config.get_settings()
     return username not in settings.get(
-        "username_blacklist", api.config.default_settings["username_blacklist"])
+        "username_blacklist",
+        api.config.default_settings["username_blacklist"])
 
 
 def verify_email_in_whitelist(email, whitelist=None):
@@ -40,7 +34,6 @@ def verify_email_in_whitelist(email, whitelist=None):
     Args:
         email: The email address to verify
     """
-
     if whitelist is None:
         settings = api.config.get_settings()
         whitelist = settings["email_filter"]
@@ -56,86 +49,6 @@ def verify_email_in_whitelist(email, whitelist=None):
     return False
 
 
-user_schema = Schema(
-    {
-        Required('email'):
-        check(
-            ("Email must be between 5 and 50 characters.",
-             [str, Length(min=5, max=50)]),
-            ("Your email does not look like an email address.",
-             [_check_email_format]),
-        ),
-        Required('firstname'):
-        check(("First Name must be between 1 and 50 characters.",
-               [str, Length(min=1, max=50)])),
-        Required('lastname'):
-        check(("Last Name must be between 1 and 50 characters.",
-               [str, Length(min=1, max=50)])),
-        Required('username'):
-        check(("Usernames must be between 3 and 20 characters.",
-               [str, Length(min=3, max=20)]),
-              ("Usernames must be alphanumeric.", [_check_username]),
-              ("This username already exists.",
-               [lambda name: safe_fail(get_user, name=name) is None]),
-              ("This username conflicts with an existing team.",
-               [lambda name: safe_fail(api.team.get_team, name=name) is None]),
-              ("This username is reserved. Please choose another one.",
-               [check_blacklisted_usernames])),
-        Required('password'):
-        check(("Passwords must be between 3 and 20 characters.",
-               [str, Length(min=3, max=20)])),
-        Required('affiliation'):
-        check(("You must specify a school or organization.", [str,
-                                                    Length(min=3, max=50)])),
-        Required('usertype'):
-        check(("You must specify a status",
-               [str, lambda status: status in ["student", "college", "teacher", "other"]])),
-        Required('country'):
-            check(("Please select a country", [str, Length(min=2, max=2)])),
-        Required("demo"): Schema({
-            "parentemail":
-            check(
-                ("Parent Email must be between 5 and 50 characters.",
-                 [str, Length(min=5, max=50)]),
-                ("Your parent's email does not look like an email address.",
-                 [_check_email_format]),
-            ),
-            Required("age"):
-            check(("You must specify your age",
-                   [lambda age: age in ["13-17", "18+"]])),
-        }, extra=True),
-    },
-    extra=True)
-
-# RETIRE: this concept has been moved to team.py in 56a1fca
-new_team_schema = Schema(
-    {
-        Required('team-name-new'):
-        check(("The team name must be between 3 and 40 characters.",
-               [str, Length(min=3, max=40)]),
-              ("A team with that name already exists.",
-               [lambda name: safe_fail(api.team.get_team, name=name) is None])),
-        Required('team-password-new'):
-        check(("Team passphrase must be between 3 and 20 characters.",
-               [str, Length(min=3, max=20)])),
-    },
-    extra=True)
-
-# RETIRE: this concept has been moved to team.py in 5265701
-existing_team_schema = Schema({
-    Required('team-name-existing'): check(
-        ("Existing team names must be between 3 and 50 characters.", [str, Length(min=3, max=50)]),
-        ("There is no existing team named that.", [
-            lambda name: api.team.get_team(name=name) is not None]),
-        ("There are too many members on that team for you to join.", [
-            lambda name: len(api.team.get_team_uids(name=name, show_disabled=False)) < api.config.get_settings()["max_team_size"]
-        ])
-    ),
-    Required('team-password-existing'):
-        check(("Team passwords must be between 3 and 50 characters.", [str, Length(min=3, max=50)]))
-}, extra=True)
-
-
 def get_team(uid=None):
     """
     Retrieve the the corresponding team to the user's uid.
@@ -145,159 +58,65 @@ def get_team(uid=None):
     Returns:
         The user's team.
     """
-
     user = get_user(uid=uid)
     return api.team.get_team(tid=user["tid"])
 
 
-def get_user(name=None, uid=None):
+def get_user(name=None, uid=None, include_pw_hash=False):
     """
-    Retrieve a user based on a property. If the user is logged in,
-    it will return that user object.
+    Retrieve a user based on a property, or the current user, if logged in.
 
-    Args:
+    Kwargs:
         name: the user's username
         uid: the user's uid
+        include_pw_hash: include password hash in the dict
     Returns:
         Returns the corresponding user object or None if it could not be found
     """
-
-    db = api.common.get_conn()
+    db = api.db.get_conn()
 
     match = {}
+    projection = {
+        '_id': 0
+    }
+    if not include_pw_hash:
+        projection['password_hash'] = 0
 
     if uid is not None:
         match.update({'uid': uid})
     elif name is not None:
         match.update({'username': name})
-    elif api.auth.is_logged_in():
-        match.update({'uid': api.auth.get_uid()})
+    elif api.user.is_logged_in():
+        match.update({'uid': session['uid']})
     else:
-        raise InternalException("Uid or name must be specified for get_user")
+        raise PicoException(
+            'Could not retrieve user - not logged in', 401)
 
-    user = db.users.find_one(match)
-
-    if user is None:
-        raise InternalException("User does not exist")
-
-    return user
+    return db.users.find_one(match, projection)
 
 
-def create_user(username,
-                firstname,
-                lastname,
-                email,
-                password_hash,
-                tid,
-                usertype,
-                country,
-                demo,
-                teacher=False,
-                admin=False,
-                verified=False):
+def get_all_users():
     """
-    This inserts a user directly into the database. It assumes all data is valid.
+    Find all users in the database.
 
-    Args:
-        username: user's username
-        firstname: user's first name
-        lastname: user's last name
-        email: user's email
-        password_hash: a hash of the user's password
-        tid: the team id to join
-        usertype: category of user (student, teacher, etc)
-        country: primary country (dependent on usertype)
-        demo: dict of demographic data
-        teacher: whether this account is a teacher
     Returns:
-        Returns the uid of the newly created user
+        Returns all user dicts.
+
     """
-
-    db = api.common.get_conn()
-    settings = api.config.get_settings()
-    uid = api.common.token()
-
-    if safe_fail(get_user, name=username) is not None:
-        raise InternalException("User already exists!")
-
-    max_team_size = api.config.get_settings()["max_team_size"]
-
-    updated_team = db.teams.find_and_modify(
-        query={
-            "tid": tid,
-            "size": {
-                "$lt": max_team_size
-            }
-        },
-        update={"$inc": {
-            "size": 1
-        }},
-        new=True)
-
-    if not updated_team:
-        raise InternalException("There are too many users on this team!")
-
-    # All teachers are admins.
-    if admin or db.users.count() == 0:
-        admin = True
-        teacher = True
-
-    user = {
-        'uid': uid,
-        'firstname': firstname,
-        'lastname': lastname,
-        'username': username,
-        'email': email,
-        'password_hash': password_hash,
-        'tid': tid,
-        'usertype': usertype,
-        'country': country,
-        'demo': demo,
-        'teacher': teacher,
-        'admin': admin,
-        'disabled': False,
-        'verified': not settings["email"]["email_verification"] or verified,
-        'extdata': {},
-    }
-
-    db.users.insert(user)
-
-    if settings["email"]["email_verification"] and not user["verified"]:
-        api.email.send_user_verification_email(username)
-
-    return uid
-
-
-def get_all_users(show_teachers=False):
-    """
-    Finds all the users in the database
-
-    Args:
-        show_teachers: whether or not to include teachers in the response
-    Returns:
-        Returns the uid, username, and email of all users.
-    """
-
-    db = api.common.get_conn()
-
-    match = {}
-    projection = {"uid": 1, "username": 1, "email": 1, "tid": 1}
-
-    if not show_teachers:
-        match.update({"teacher": False})
-        projection.update({"teacher": 1})
-
-    return list(db.users.find(match, projection))
+    db = api.db.get_conn()
+    return list(db.users.find({}, {
+        '_id': 0,
+        'password_hash': 0
+        }))
 
 
 def _validate_captcha(data):
     """
-    Validates a captcha with google's reCAPTCHA.
+    Validate a captcha with google's reCAPTCHA.
 
     Args:
         data: the posted form data
     """
-
     settings = api.config.get_settings()["captcha"]
 
     post_data = urllib.parse.urlencode({
@@ -317,9 +136,10 @@ def _validate_captcha(data):
 
 
 @log_action
-def create_simple_user_request(params):
+def add_user(params):
     """
-    Registers a new user and creates a team for them automatically. Validates all fields.
+    Register a new user and creates a team for them automatically.
+
     Assume arguments to be specified in a dict.
 
     Args:
@@ -333,255 +153,226 @@ def create_simple_user_request(params):
             affiliation: user's affiliation
             usertype: "student", "teacher" or other
             demo: arbitrary dict of demographic data
-            gid: group registration
-            rid: registration id
+            gid (optional): group registration
+            rid (optional): registration id
     """
+    # Make sure the username is unique
+    db = api.db.get_conn()
+    if db.users.find_one({'username': params['username']}):
+        raise PicoException(
+            'There is already a user with this username.', 409)
+    if db.teams.find_one({'team_name': params['username']}):
+        raise PicoException(
+            'There is already a team with this username.', 409)
 
-    validate(user_schema, params)
-
-    if api.config.get_settings()["email"]["parent_verification_email"] and params["demo"]["age"] != "18+" and not params["demo"].get("parentemail", None):
-        raise WebException(
-            "You must include your parent's email address")
-
-    whitelist = None
-
+    # If gid is specified, force affiliation to that team's name
+    email_whitelist = None
     if params.get("gid", None):
         group = api.group.get_group(gid=params["gid"])
         group_settings = api.group.get_group_settings(gid=group["gid"])
-
-        # Force affiliation
         params["affiliation"] = group["name"]
+        email_whitelist = group_settings["email_filter"]
 
-        whitelist = group_settings["email_filter"]
-
+    # If rid is specified and gid and email match,
+    # get teacher status from registration token.
+    # Additionally, invited users are automatically validated.
     user_is_teacher = params["usertype"] == "teacher"
     user_was_invited = False
-
     if params.get("rid", None):
         key = api.token.find_key_by_token("registration_token", params["rid"])
-
         if params.get("gid") != key["gid"]:
-            raise WebException(
+            raise PicoException(
                 "Registration token group and supplied gid do not match.")
-
         if params["email"] != key["email"]:
-            raise WebException(
+            raise PicoException(
                 "Registration token email does not match the supplied one.")
-
         user_is_teacher = key["teacher"]
         user_was_invited = True
-
         api.token.delete_token(key, "registration_token")
+
+    # If not invited, validate the user's email against the whitelist
     else:
-        if not verify_email_in_whitelist(params["email"], whitelist):
-            raise WebException(
-                "Your email does not belong to the whitelist. Please see the registration form for details."
-            )
+        if not verify_email_in_whitelist(params["email"], email_whitelist):
+            raise PicoException(
+                "Your email does not belong to the whitelist. " +
+                "Please see the registration form for details.")
 
-    if api.config.get_settings(
-    )["captcha"]["enable_captcha"] and not _validate_captcha(params):
-        raise WebException("Incorrect captcha!")
+    # If CAPTCHAs are enabled, validate the submission
+    if (api.config.get_settings()["captcha"]["enable_captcha"] and not
+            _validate_captcha(params)):
+        raise PicoException("Incorrect captcha!")
 
-    team_params = {
+    # Create a team for the new user and set its count to 1
+    tid = api.team.create_team({
         "team_name": params["username"],
         "password": api.common.token(),
         "affiliation": params["affiliation"],
         "country": params["country"]
-    }
-    tid = api.team.create_team(team_params)
+    })
+    db.teams.update_one(
+        {'tid': tid},
+        {'$set': {
+            'size': 1
+        }}
+    )
 
-    if tid is None:
-        raise InternalException("Failed to create new team")
+    # The first registered user automatically becomes an admin
+    user_is_admin = False
+    if db.users.count() == 0:
+        user_is_admin = True
+        user_is_teacher = True
 
-    team = api.team.get_team(tid=tid)
+    # Insert the new user in the DB
+    uid = api.common.token()
+    settings = api.config.get_settings()
+    db.users.insert_one({
+        'uid': uid,
+        'firstname': params['firstname'],
+        'lastname': params['lastname'],
+        'username': params['username'],
+        'email': params['email'],
+        'password_hash': api.common.hash_password(params["password"]),
+        'tid': tid,
+        'usertype': params['usertype'],
+        'country': params['country'],
+        'demo': params['demo'],
+        'teacher': user_is_teacher,
+        'admin': user_is_admin,
+        'disabled': False,
+        'verified': (not settings["email"]["email_verification"] or
+                     user_was_invited),
+        'extdata': {},
+        'completed_minigames': [],
+        'unlocked_walkthroughs': [],
+        'tokens': 0,
+    })
 
-    # Create new user
-    uid = create_user(
-        params["username"],
-        params["firstname"],
-        params["lastname"],
-        params["email"],
-        api.common.hash_password(params["password"]),
-        team["tid"],
-        params["usertype"],
-        params["country"],
-        params["demo"],
-        teacher=user_is_teacher,
-        verified=user_was_invited)
-
-    if uid is None:
-        raise InternalException("There was an error during registration.")
-
-    # Join group after everything else has succeeded
+    # If gid was specified, add the newly created team to the group
     if params.get("gid", None):
         api.group.join_group(
-            params["gid"], team["tid"], teacher=user_is_teacher)
+            params["gid"], tid, teacher=user_is_teacher)
+
+    # If email verification is enabled and user wasn't invited, send
+    # validation email
+    if settings["email"]["email_verification"] and not user_was_invited:
+        api.email.send_user_verification_email(params['username'])
 
     return uid
 
 
 def is_teacher(uid=None):
     """
-    Determines if a user is a teacher.
+    Determine if a user is a teacher.
 
     Args:
         uid: user's uid
     Returns:
         True if the user is a teacher, False otherwise
     """
-
     user = get_user(uid=uid)
     return user.get('teacher', False)
 
 
-def is_admin(uid=None):
-    """
-    Determines if a user is an admin.
-
-    Args:
-        uid: user's uid
-    Returns:
-        True if the user is an admin, False otherwise
-    """
-
-    user = get_user(uid=uid)
-    return user.get('admin', False)
-
-
 def verify_user(uid, token_value):
     """
-    Verify an unverified user account. Link should have been sent to the user's email.
+    Verify the current user's account.
+
+    Link should have been sent to the user's email.
 
     Args:
-        uid: the user id
         token_value: the verification token value
     Returns:
         True if successful verification based on the (uid, token_value)
+        False if token is not valid for the current user
+    Raises:
+        PicoException if user is not logged in
     """
+    db = api.db.get_conn()
 
-    db = api.common.get_conn()
+    token_user = api.token.find_key_by_token(
+        "email_verification", token_value)
+    if token_user is None:
+        return False
+    current_user = api.user.get_user(uid=uid)
 
-    if uid is None:
-        raise InternalException("You must specify a uid.")
-
-    token_user = api.token.find_key_by_token("email_verification", token_value)
-
-    if token_user["uid"] == uid:
-        db.users.find_and_modify({"uid": uid}, {"$set": {"verified": True}})
-        api.token.delete_token({"uid": uid}, "email_verification")
+    if token_user["uid"] == current_user['uid']:
+        db.users.find_one_and_update(
+            {"uid": current_user['uid']},
+            {"$set": {"verified": True}})
+        api.token.delete_token(
+            {"uid": current_user['uid']}, "email_verification")
         return True
     else:
-        raise InternalException("This is not a valid token for your user.")
+        return False
 
 
 @log_action
 def update_password_request(params, uid=None, check_current=False):
     """
     Update account password.
+
     Assumes args are keys in params.
 
     Args:
         uid: uid to reset
         check_current: whether to ensure that current-password is correct
-        params:
+        params (dict):
             current-password: the users current password
             new-password: the new password
             new-password-confirmation: confirmation of password
     """
+    user = get_user(uid=uid, include_pw_hash=True)
 
-    user = get_user(uid=uid)
-
-    if check_current and not api.auth.confirm_password(
+    if check_current and not api.user.confirm_password(
             params["current-password"], user['password_hash']):
-        raise WebException("Your current password is incorrect.")
+        raise PicoException("Your current password is incorrect.", 422)
 
     if params["new-password"] != params["new-password-confirmation"]:
-        raise WebException("Your passwords do not match.")
+        raise PicoException("Your passwords do not match.", 422)
 
-    if len(params["new-password"]) == 0:
-        raise WebException("Your password cannot be empty.")
-
-    update_password(user['uid'], params["new-password"])
-
-
-def update_password(uid, password):
-    """
-    Updates an account's password.
-
-    Args:
-        uid: user's uid.
-        password: the new user unhashed password.
-    """
-
-    db = api.common.get_conn()
-    db.users.update({
-        'uid': uid
-    }, {'$set': {
-        'password_hash': api.common.hash_password(password)
-    }})
+    db = api.db.get_conn()
+    db.users.update(
+        {'uid': user['uid']},
+        {'$set': {
+            'password_hash': api.common.hash_password(params["new-password"])
+        }})
 
 
+@log_action
 def disable_account(uid):
     """
-    Disables a user account. They will no longer be able to login and do not count
-    towards a team's maximum size limit.
+    Disables a user account.
+
+    Disabled user accounts can't login or consume space on a team.
 
     Args:
-        uid: user's uid
+        uid: ID of the user to disable
     """
-
-    db = api.common.get_conn()
-    result = db.users.update({
+    db = api.db.get_conn()
+    db.users.find_one_and_update({
         "uid": uid,
-        "disabled": False
     }, {"$set": {
         "disabled": True
     }})
 
-    tid = api.user.get_team(uid=uid)["tid"]
+    db.teams.find_one_and_update(
+        {
+            "tid": api.user.get_team(uid=uid)["tid"],
+            "size": {
+                "$gt": 0
+            }
+        },
+        {"$inc": {
+            "size": -1
+        }})
 
-    # Making certain that we have actually made a change.
-    # result["n"] refers to how many documents have been updated.
-    if result["n"] == 1:
-        db.teams.find_and_modify(
-            query={
-                "tid": tid,
-                "size": {
-                    "$gt": 0
-                }
-            },
-            update={"$inc": {
-                "size": -1
-            }},
-            new=True)
-
-
-@log_action
-def disable_account_request(params, uid=None, check_current=False):
-    """
-    Disable user account so they can't login or consume space on a team.
-    Assumes args are keys in params.
-
-    Args:
-        uid: uid to reset
-        check_current: whether to ensure that current-password is correct
-        params:
-            current-password: the users current password
-    """
-
-    user = get_user(uid=uid)
-
-    if check_current and not api.auth.confirm_password(
-            params["current-password"], user['password_hash']):
-        raise WebException("Your current password is incorrect.")
-    disable_account(user['uid'])
-
-    api.auth.logout()
+    api.user.logout()
 
 
 def update_extdata(params):
     """
     Update user extdata.
+
     Assumes args are keys in params.
 
     Args:
@@ -589,6 +380,141 @@ def update_extdata(params):
             (any)
     """
     user = get_user(uid=None)
-    db = api.common.get_conn()
-    params.pop('token', None)
+    db = api.db.get_conn()
     db.users.update_one({'uid': user['uid']}, {'$set': {'extdata': params}})
+
+
+def reset_password(token_value, password, confirm_password):
+    """
+    Perform the password update operation.
+
+    Gets a token and new password from a submitted form, if the token is found
+    in a team object in the database the new password is hashed and set,
+    the token is then removed and an appropriate response is returned.
+
+    Args:
+        token_value: the password reset token
+        password: the password to set
+        confirm_password: the same password again
+
+    Raises:
+        PicoException if invalid password reset token is given
+    """
+    user = api.token.find_key_by_token("password_reset", token_value)
+    if user is None:
+        raise PicoException('Invalid password reset token', 422)
+    api.user.update_password_request(
+        {
+            "new-password": password,
+            "new-password-confirmation": confirm_password
+        },
+        uid=user['uid'])
+
+    api.token.delete_token({"uid": user['uid']}, "password_reset")
+
+
+def confirm_password(attempt, password_hash):
+    """
+    Verify the password attempt.
+
+    Args:
+        attempt: the password attempt
+        password_hash: the real password hash
+    """
+    return bcrypt.hashpw(attempt.encode('utf-8'),
+                         password_hash) == password_hash
+
+
+@log_action
+def login(username, password):
+    """Authenticate a user."""
+    user = get_user(name=username, include_pw_hash=True)
+    if user is None:
+        raise PicoException('Incorrect username.', 401)
+
+    if user['disabled']:
+        raise PicoException('This account has been disabled.', 403)
+
+    if not user['verified']:
+        raise PicoException('This account has not been verified yet.', 403)
+
+    if confirm_password(password, user['password_hash']):
+        session['uid'] = user['uid']
+        session.permanent = True
+    else:
+        raise PicoException('Incorrect password', 401)
+
+
+@log_action
+def logout():
+    """Clear the session."""
+    session.clear()
+
+
+def is_logged_in():
+    """
+    Check if the user is currently logged in.
+
+    Returns:
+        True if the user is logged in, false otherwise.
+
+    """
+    logged_in = 'uid' in session
+    if logged_in:
+        user = api.user.get_user(uid=session['uid'])
+        if not user or (user.get('disabled', False) is True):
+            logout()
+            return False
+    return logged_in
+
+
+def require_login(f):
+    """Wrap routing functions that require a user to be logged in."""
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if not api.user.is_logged_in():
+            raise PicoException('You must be logged in', 401)
+        return f(*args, **kwds)
+    return wrapper
+
+
+def require_teacher(f):
+    """Wrap routing functions that require a user to be a teacher."""
+    @require_login
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if not api.user.get_user().get('teacher', False):
+            raise PicoException(
+                'You do not have permission to access this resource', 403)
+        return f(*args, **kwds)
+    return wrapper
+
+
+def require_admin(f):
+    """Wrap routing functions that require a user to be an admin."""
+    @require_login
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if not api.user.get_user().get('admin', False):
+            raise PicoException(
+                'You do not have permission to access this resource', 403)
+        return f(*args, **kwds)
+    return wrapper
+
+
+def check_csrf(f):
+    """Wrap routing functions that require a CSRF token."""
+    @wraps(f)
+    @require_login
+    def wrapper(*args, **kwds):
+        if 'token' not in session:
+            raise PicoException(
+                'Internal server error',
+                data={'debug': 'CSRF token not found in session'})
+        submitted_token = request.headers.get('X-CSRF-Token', None)
+        if submitted_token is None:
+            raise PicoException('CSRF token not included in request', 403)
+        if session['token'] != submitted_token:
+            raise PicoException('CSRF token is not correct', 403)
+        return f(*args, **kwds)
+    return wrapper

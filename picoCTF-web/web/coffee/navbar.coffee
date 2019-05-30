@@ -36,31 +36,33 @@ loadNavbar = (renderNavbarLinks, renderNestedNavbarLinks) ->
     renderNestedNavbarLinks: renderNestedNavbarLinks
   }
 
-  apiCall "GET", "/api/user/status", {}
-  .done (data) ->
-    navbarLayout.links = userNotLoggedIn
-    navbarLayout.status = data.data
-    navbarLayout.topLevel = true
-    if data["status"] == 1
-      if not data.data["logged_in"]
-        $(".show-when-logged-out").css("display", "inline-block")
-      if data.data["teacher"]
-        if data.data["competition_active"]
-           navbarLayout.links = teacherLoggedIn
+  apiCall "GET", "/api/v1/user"
+  .success (userData) ->
+    apiCall "GET", "/api/v1/status"
+    .success (competitionData) ->
+      navbarLayout.links = userNotLoggedIn
+      navbarLayout.status = userData
+      navbarLayout.topLevel = true
+      if userData["logged_in"]
+        if userData["teacher"]
+          if competitionData["competition_active"]
+            navbarLayout.links = teacherLoggedIn
+          else
+            navbarLayout.links = teacherLoggedInNoCompetition
         else
-           navbarLayout.links = teacherLoggedInNoCompetition
-      else if data.data["logged_in"]
-         if data.data["competition_active"]
-            navbarLayout.links = userLoggedIn
-         else
-            navbarLayout.links = userLoggedInNoCompetition
-
-        if data.data["admin"]
-           $.extend navbarLayout.links, adminLoggedIn
-
-    $("#navbar-links").html renderNavbarLinks(navbarLayout)
-    $("#navbar-item-logout").on("click", logout)
-
+          if competitionData["competition_active"]
+              navbarLayout.links = userLoggedIn
+          else
+              navbarLayout.links = userLoggedInNoCompetition
+        if userData["admin"]
+          $.extend navbarLayout.links, adminLoggedIn
+      else
+        $(".show-when-logged-out").css("display", "inline-block")
+      $("#navbar-links").html renderNavbarLinks(navbarLayout)
+      $("#navbar-item-logout").on("click", logout)
+    .fail ->
+      navbarLayout.links = apiOffline
+      $("#navbar-links").html renderNavbarLinks(navbarLayout)
   .fail ->
     navbarLayout.links = apiOffline
     $("#navbar-links").html renderNavbarLinks(navbarLayout)

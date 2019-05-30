@@ -10,7 +10,7 @@ Badge = ReactBootstrap.Badge
 ExceptionTab = React.createClass
 
   onDelete: (exception) ->
-    apiCall "POST", "/api/admin/exceptions/dismiss", {trace: exception.trace}
+    apiCall "DELETE", "/api/v1/exceptions/" + exception.id
     .done @props.onExceptionModification()
 
   createRequestInfo: (request) ->
@@ -46,7 +46,7 @@ ExceptionTab = React.createClass
   createExceptionItem: (exception, i) ->
     time =
     <small>
-      {new Date(exception.time["$date"]).toUTCString()}
+      {new Date(exception.time).toUTCString()}
     </small>
 
     deleteButton =

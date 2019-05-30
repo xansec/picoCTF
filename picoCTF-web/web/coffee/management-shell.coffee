@@ -24,30 +24,60 @@ ServerForm = React.createClass
 
     {new: @props.new, shellServer: server}
 
-  notifyAndRefresh: (data) ->
-    apiNotify data
-    @props.refresh()
-
   addServer: ->
-    apiCall "POST", "/api/admin/shell_servers/add", @state.shellServer
-    .done @notifyAndRefresh
+    apiCall "POST", "/api/v1/shell_servers", @state.shellServer
+    .success ((data) ->
+      apiNotify {status: 1, message: "Shell server added."}
+      @props.refresh()
+    ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   deleteServer: ->
-    apiCall "POST", "/api/admin/shell_servers/remove", {"sid": @state.shellServer.sid}
-    .done @notifyAndRefresh
+    apiCall "DELETE", "/api/v1/shell_servers/" + @state.shellServer.sid
+    .success ((data) ->
+      apiNotify {status: 1, message: "Shell server deleted."}
+      @props.refresh()
+    ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   updateServer: ->
-    apiCall "POST", "/api/admin/shell_servers/update", @state.shellServer
-    .done @notifyAndRefresh
+    data = {
+      name: @state.shellServer.name,
+      host: @state.shellServer.host,
+      port: @state.shellServer.port,
+      username: @state.shellServer.username,
+      password: @state.shellServer.password,
+      protocol: @state.shellServer.protocol,
+      server_number: @state.shellServer.server_number
+    }
+    apiCall "PATCH", "/api/v1/shell_servers/" + @state.shellServer.sid, data
+    .success ((data) ->
+      apiNotify {status: 1, message: "Shell server updated."}
+      @props.refresh()
+    ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   loadProblems: ->
-    apiCall "POST", "/api/admin/shell_servers/load_problems", {"sid": @state.shellServer.sid}
-    .done @notifyAndRefresh
+    apiCall "PATCH", "/api/v1/problems?sid=" + @state.shellServer.sid
+    .success ((data) ->
+      apiNotify {status: 1, message: "Successfully loaded problems."}
+      @props.refresh()
+    ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   checkStatus: ->
-    apiCall "GET", "/api/admin/shell_servers/check_status", {"sid": @state.shellServer.sid}
-    .done (data) ->
-      apiNotify data
+    apiCall "GET", "/api/v1/shell_servers/" + @state.shellServer.sid + "/status"
+    .success (data) ->
+      if data.all_problems_online
+        apiNotify {status: 1, message: "All problems are online"}
+      else
+        apiNotify {status: 0, message: "One or more problems are offline. Please connect and fix the errors."}
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   updateHost: (e) ->
     copy = @state.shellServer
@@ -124,9 +154,9 @@ ShellServerList = React.createClass
     {shellServers: []}
 
   refresh: ->
-    apiCall "GET", "/api/admin/shell_servers"
-    .done ((api) ->
-      @setState {shellServers: api.data}
+    apiCall "GET", "/api/v1/shell_servers?assigned_only=false"
+    .done ((data) ->
+      @setState {shellServers: data}
     ).bind this
 
   componentDidMount: ->
@@ -160,11 +190,13 @@ ProblemLoaderTab = React.createClass
     @setState {publishedJSON: e.target.value}
 
   pushData: ->
-    apiCall "POST", "/api/problems/load_problems", {competition_data: @state.publishedJSON}
-    .done ((data) ->
-      apiNotify data
+    apiCall "PATCH", "/api/v1/problems", @state.publishedJSON
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Successfully loaded problems."}
       @clearPublishedJSON()
     ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   clearPublishedJSON: ->
     @setState {publishedJSON: ""}

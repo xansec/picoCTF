@@ -478,23 +478,21 @@ TeamManagementForm = React.createClass
     if (!@state.team_name || !@state.team_password)
       apiNotify({status: 0, message: "Invalid team name or password."})
     else
-      apiCall "POST", "/api/team/create", {team_name: @state.team_name, team_password: @state.team_password}
-      .done (resp) ->
-        switch resp.status
-          when 0
-              apiNotify resp
-          when 1
-              document.location.href = "/profile"
+      data = {team_name: @state.team_name, team_password: @state.team_password}
+      apiCall "POST", "/api/v1/teams", data
+      .success (data) ->
+        document.location.href = "/profile"
+      .error (jqXHR) ->
+        apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   onTeamJoin: (e) ->
     e.preventDefault()
-    apiCall "POST", "/api/team/join", {team_name: @state.team_name, team_password: @state.team_password}
-    .done (resp) ->
-      switch resp.status
-        when 0
-            apiNotify resp
-        when 1
-            document.location.href = "/profile"
+    data = {team_name: @state.team_name, team_password: @state.team_password}
+    apiCall "POST", "/api/v1/team/join", data
+    .success (data) ->
+      document.location.href = "/profile"
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   render: ->
 
@@ -535,37 +533,34 @@ AuthPanel = React.createClass
   componentWillMount: ->
     if @state.status == "verified"
       apiNotify({status: 1, message: "Your account has been successfully verified. Please login."})
+    else if @state.status == "verification_error"
+      apiNotify({status: 0, message: "Invalid verification code. Please contact an administrator."})
     if @state.gid
-      apiCall "GET", "/api/group/settings", {gid: @state.gid}
-      .done ((resp) ->
-        switch resp.status
-          when 0
-            apiNotify resp
-          when 1
-            @setState update @state,
-              groupName: $set: resp.data.name
-              affiliation: $set: resp.data.name
-              settings: $merge: resp.data.settings
-              page: $set: "Register"
+      apiCall "GET", "/api/v1/groups/" + @state.gid
+      .success ((data) ->
+        @setState update @state,
+          groupName: $set: data.name
+          affiliation: $set: data.name
+          settings: $merge: data.settings
+          page: $set: "Register"
       ).bind this
     else
-      apiCall "GET", "/api/team/settings"
-      .done ((resp) ->
+      apiCall "GET", "/api/v1/status"
+      .success ((data) ->
         @setState update @state,
-          settings: $merge: resp.data
+          settings: $merge: data
       ).bind this
 
-    apiCall "GET", "/api/user/status"
-    .done ((resp) ->
+    apiCall "GET", "/api/v1/user"
+    .success ((data) ->
       @setState update @state,
-        settings: $merge: resp.data
-     ).bind this
+        settings: $merge: data
+    ).bind this
 
-    apiCall "GET", "/api/stats/registration"
-    .done ((resp) ->
-      if resp.status
-        @setState update @state,
-          regStats: $set: resp.data
+    apiCall "GET", "/api/v1/stats/registration"
+    .success ((data) ->
+      @setState update @state,
+        regStats: $set: data
     ).bind this
 
   onRegistration: (e) ->
@@ -602,64 +597,70 @@ AuthPanel = React.createClass
 
     form['g-recaptcha-response'] = @state.captcha
 
-    apiCall "POST", "/api/user/create_simple", form
-    .done ((resp) ->
-      switch resp.status
-        when 0
-          apiNotify resp
-        when 1
-          verificationAlert =
-            status: 1
-            message: "You have been sent a verification email. You will need to complete this step before logging in."
+    apiCall "POST", "/api/v1/users", form
+    .success ((data) ->
+      verificationAlert =
+        status: 1
+        message: "You have been sent a verification email. You will need to complete this step before logging in."
 
-          if @state.settings.max_team_size > 1
-            if @state.settings.email_verification and not @state.rid
-              apiNotify verificationAlert
-              @setPage "Login"
-              document.location.hash = "#team-builder"
-            else
-              if resp.data.teacher
-                apiNotify resp, "/profile"
-              else
-                apiNotify resp
-                @setPage "Team Management"
-          else
-            if @state.settings.email_verification
-              if not @state.rid or @state.rid.length == 0
-                apiNotify verificationAlert
-              else
-                apiNotify resp, "/profile"
-              @setPage "Login"
-            else
-             apiNotify resp, "/profile"
+      successAlert =
+        status: 1
+        message: "User " + @state.username + " registered successfully!"
 
+      if @state.settings.email_verification and not @state.rid
+        apiNotify verificationAlert
+        @setPage "Login"
+        if @state.settings.max_team_size > 1
+          document.location.hash = "#team-builder"
+      else
+        apiCall "POST", "/api/v1/user/login", {"username": @state.username, "password": @state.password}
+        .success ((loginData) ->
+          apiCall "GET", "/api/v1/user"
+          .success ((userData) ->
+            if data.teacher
+              apiNotify successAlert, "/profile"
+            else if @state.settings.max_team_size > 1
+              apiNotify successAlert
+              @setPage "Team Management"
+            else
+              apiNotify successAlert, "/profile"
+          ).bind this
+          .error (jqXHR) ->
+            apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
+        ).bind this
+        .error (jqXHR) ->
+          apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
     ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   onPasswordReset: (e) ->
     e.preventDefault()
-    apiCall "POST", "/api/user/reset_password", {username: @state.username}
-    .done ((resp) ->
-      apiNotify resp
-      if resp.status == 1
-        @setPage "Login"
+    apiCall "POST", "/api/v1/user/reset_password/request", {username: @state.username}
+    .success ((resp) ->
+      apiNotify {status: 1, message: "A password reset link has been sent to the email address provided during registration."}
+      @setPage "Login"
     ).bind this
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   onLogin: (e) ->
     e.preventDefault()
-    apiCall "POST", "/api/user/login", {username: @state.username, password: @state.password}
-    .done ((resp) ->
-      switch resp.status
-        when 0
-            apiNotify resp
-        when 1
-          if document.location.hash == "#team-builder" and not resp.data.teacher
-            @setPage "Team Management"
+    apiCall "POST", "/api/v1/user/login", {username: @state.username, password: @state.password}
+    .success ->
+      # Get teacher status
+      apiCall "GET", "/api/v1/user"
+      .success ((data) ->
+        if document.location.hash == "#team-builder" and not data.teacher
+          @setPage "Team Management"
+        else
+          if data.teacher
+            document.location.href = "/classroom"
           else
-            if resp.data.teacher
-              document.location.href = "/classroom"
-            else
-              document.location.href = "/profile"
-    ).bind this
+            document.location.href = "/profile"
+      )
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
   setPage: (page) ->
     @setState update @state,

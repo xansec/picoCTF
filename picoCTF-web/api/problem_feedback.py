@@ -1,13 +1,11 @@
-""" Module for handling problem feedback """
+"""Module for handling problem feedback."""
 
 from datetime import datetime
 
-import api
-import pymongo
-from api.annotations import log_action
-from api.common import (check, InternalException, safe_fail,
-                        SevereInternalException, validate, WebException)
 from voluptuous import Length, Required, Schema
+
+import api
+from api import check, log_action, PicoException, validate
 
 feedback_schema = Schema({
     Required("liked"):
@@ -25,7 +23,7 @@ feedback_schema = Schema({
 
 def get_problem_feedback(pid=None, tid=None, uid=None):
     """
-    Retrieve feedback for a given problem, team, or user
+    Retrieve feedback for a given problem, team, or user.
 
     Args:
         pid: the problem id
@@ -34,8 +32,7 @@ def get_problem_feedback(pid=None, tid=None, uid=None):
     Returns:
         A list of problem feedback entries.
     """
-
-    db = api.common.get_conn()
+    db = api.db.get_conn()
     match = {}
 
     if pid is not None:
@@ -48,39 +45,26 @@ def get_problem_feedback(pid=None, tid=None, uid=None):
     return list(db.problem_feedback.find(match, {"_id": 0}))
 
 
-def get_reviewed_pids(uid=None):
-    """
-    Gets the list of pids reviewed by the user
-
-    Args:
-        uid: the user id
-    Returns:
-        A list of pids
-    """
-
-    db = api.common.get_conn()
-
-    if uid is None:
-        uid = api.user.get_user()['uid']
-
-    return [entry["pid"] for entry in get_problem_feedback(uid=uid)]
-
-
 @log_action
-def add_problem_feedback(pid, uid, feedback):
+def upsert_feedback(pid, feedback):
     """
-    Add user problem feedback to the database.
+    Add or update problem feedback in the database.
 
     Args:
         pid: the problem id
-        uid: the user id
         feedback: the problem feedback.
-    """
+    Raises:
+        PicoException if provided pid does not exist
 
-    db = api.common.get_conn()
+    """
+    db = api.db.get_conn()
+
+    uid = api.user.get_user()['uid']
 
     # Make sure the problem actually exists.
-    api.problem.get_problem(pid=pid)
+    if not api.problem.get_problem(pid):
+        raise PicoException('Problem not found', 404)
+
     team = api.user.get_team(uid=uid)
     solved = pid in api.problem.get_solved_pids(tid=team["tid"])
 
@@ -105,8 +89,9 @@ def add_problem_feedback(pid, uid, feedback):
             "feedback": feedback
         })
 
-        api.achievement.process_achievements("review", {
-            "uid": uid,
-            "tid": team['tid'],
-            "pid": pid
-        })
+        # @TODO achievement processing needs to be fixed/reviewed
+        # api.achievement.process_achievements("review", {
+        #     "uid": uid,
+        #     "tid": team['tid'],
+        #     "pid": pid
+        # })
