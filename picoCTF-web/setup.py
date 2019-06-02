@@ -72,17 +72,17 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'Flask==1.0.2',
+        'Flask==1.0.3',
         'Flask-Bcrypt==0.7.1',
         'Flask-Mail==0.9.1',
         'flask-restplus==0.12.1',
         'gunicorn==19.9.0',
         # 'line_profiler==2.1.2',
         'marshmallow==3.0.0rc5',
-        'py==1.5.3',
-        'pymongo==3.7.0',
-        'spur==0.3.20',
-        'voluptuous==0.11.1',
+        'py==1.8.0',
+        'pymongo==3.8.0',
+        'spur==0.3.21',
+        'voluptuous==0.11.5',
     ],
     extras_require={
         'dev': [
