@@ -6,7 +6,7 @@ server {
         root  {{ pico_http_dir }};
 
         {% if enable_web_ssl | bool -%}
-        listen       443;
+        listen       443 ssl http2;
 
         ssl_certificate  /etc/ssl/certs/ssl-pico.chained.crt;
         ssl_certificate_key /etc/ssl/private/ssl-pico.key;
