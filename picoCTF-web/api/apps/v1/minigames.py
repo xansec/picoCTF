@@ -40,7 +40,7 @@ class MinigameSubmissionResponse(Resource):
             raise PicoException('Minigame not found', 404)
 
         hashstring = req['minigame_id'] + curr_user['username'] + \
-            minigame_config.get('secret')
+            settings['minigame']['secret']
 
         if hashlib.md5(hashstring.encode('utf-8')).hexdigest() != \
                 req['verification_key']:
