@@ -75,15 +75,16 @@ LoginForm = React.createClass
         }
         switch @props.usertype.value
           when "student"
-            inputs.url = true
             inputs.grade = true
             inputs.schoolcountry = true
             inputs.zipcode = true
             inputs.studentOnly = true
             inputs.referrer = true
+            inputs.url = true
           when "college"
             inputs.schoolcountry = true
             inputs.zipcode = true
+            inputs.url = true
           when "teacher"
             inputs.teacherlevel = true
             inputs.subjectstaught = true
@@ -91,9 +92,10 @@ LoginForm = React.createClass
             inputs.zipcode = true
             inputs.teacherOnly = true
             inputs.referrer = true
+            inputs.url = true
           when "other"
+            inputs.url = true
           else
-            inputs.residencecountry = false
             inputs.affiliation = false
         show = inputs[inputName]
         if prop == "class"
@@ -330,6 +332,14 @@ LoginForm = React.createClass
             </Col>
           </Row>
           <Row>
+            <Col md={12} className={showOrHide('class', 'residencecountry')}>
+              <Input type="select" name="residencecountry" id="residencecountry" defaultValue="" valueLink={@props.residencecountry} label="Country/Region of Residence *" placeholder="Country of Residence" required>
+              <option value="" disabled>-Select-</option>
+              {generateCountries()}
+              </Input>
+            </Col>
+          </Row>
+          <Row>
             <Col md={12}>
               <Input type="select" name="usertype" id="usertype" defaultValue="" label="Status *" required valueLink={@props.usertype}>
                 <option value="" disabled>-Select Category-</option>
@@ -340,7 +350,6 @@ LoginForm = React.createClass
               </Input>
             </Col>
           </Row>
-
           <Row>
             <Col md={6} className={showOrHide('class', 'affiliation')}>
               <Input type="text" name="affiliation" id="affiliation" valueLink={@props.affiliation} label={if @props.usertype.value == "other" then "Organization Name *" else "School Name *"} placeholder="Example School, Pittsburgh, PA" maxlength="50" required/>
@@ -348,22 +357,14 @@ LoginForm = React.createClass
                Your school or organization name may be visible to other users.
                </p>
             </Col>
-            <Col md={6} className={showOrHide('class', 'residencecountry')}>
-              <Input type="select" name="residencecountry" id="residencecountry" defaultValue="" valueLink={@props.residencecountry} label="Country/Region of Residence *" placeholder="Country of Residence" required>
-              <option value="" disabled>-Select-</option>
-              {generateCountries()}
-              </Input>
+            <Col md={6} className={showOrHide('class', 'url')}>
+              <Input type="text" name="url" disabled={showOrHide( 'disabled', 'url')} id="url" valueLink={@props.url} label={if @props.usertype.value == "other" then "Organization URL (optional)" else "School URL (optional)"} placeholder={if @props.usertype.value == "other" then "Organization URL" else "School URL"}/>
             </Col>
           </Row>
           <Row>
-            <Col md={6} className={showOrHide('class', 'url')}>
-              <Input type="text" name="url" disabled={showOrHide( 'disabled', 'url')} id="url" valueLink={@props.url} label="School URL (optional)" placeholder="School URL"/>
-            </Col>
             <Col md={6} className={showOrHide('class', 'grade')}>
               <Input type="number" min="1" max="12" name="grade" disabled={showOrHide('disabled','grade')} id="grade" valueLink={@props.grade} label="Your Current Grade/Year (1-12) *" placeholder="Your Current Grade/Year" required/>
             </Col>
-          </Row>
-          <Row>
             <Col md={6} className={showOrHide('class', 'teacherlevel')}>
               <label>I teach *</label>
               <Input type="checkbox" checkedLink={@props.teacher_middleschool} label="Middle School"/>
