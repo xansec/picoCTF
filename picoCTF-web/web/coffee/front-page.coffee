@@ -71,7 +71,7 @@ LoginForm = React.createClass
           studentOnly: false
           teacherOnly: false
           referrer: false
-          gender: false
+          gender: true
         }
         switch @props.usertype.value
           when "student"
@@ -408,12 +408,12 @@ LoginForm = React.createClass
                   <option value="transgenderwoman">Transgender Woman</option>
                   <option value="transgenderman">Transgender Man</option>
                   <option value="gfnc">Gender Fluid/Non-Conforming</option>
-                  <option value="other">I prefer: (fill in:)</option>
+                  <option value="other">I prefer: (fill in)</option>
               </Input>
             </Col>
             <Col md={6} className={if @props.gender.value == "other" then "show" else "hide"}>
               <br/>
-              <Input type="text" name="genderother" disabled={if @props.gender.value == "other" then false else true} id="genderother" valueLink={@props.genderother} label="Gender prefer" placeholder=""/>
+              <Input type="text" name="genderother" disabled={if @props.gender.value == "other" then false else true} id="genderother" valueLink={@props.genderother} label="Gender preference" placeholder=""/>
             </Col>
           </Row>
           <Row>
