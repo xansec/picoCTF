@@ -58,6 +58,8 @@ LoginForm = React.createClass
       # Toggle input fields according to user type
       showOrHide = ((prop, inputName) ->
         inputs = {
+          firstname: false
+          lastname: false
           url: false
           grade: false
           teacherlevel: false
@@ -69,19 +71,20 @@ LoginForm = React.createClass
           studentOnly: false
           teacherOnly: false
           referrer: false
-          gender: false
+          gender: true
         }
         switch @props.usertype.value
           when "student"
-            inputs.url = true
             inputs.grade = true
             inputs.schoolcountry = true
             inputs.zipcode = true
             inputs.studentOnly = true
             inputs.referrer = true
+            inputs.url = true
           when "college"
             inputs.schoolcountry = true
             inputs.zipcode = true
+            inputs.url = true
           when "teacher"
             inputs.teacherlevel = true
             inputs.subjectstaught = true
@@ -89,9 +92,10 @@ LoginForm = React.createClass
             inputs.zipcode = true
             inputs.teacherOnly = true
             inputs.referrer = true
+            inputs.url = true
           when "other"
+            inputs.url = true
           else
-            inputs.residencecountry = false
             inputs.affiliation = false
         show = inputs[inputName]
         if prop == "class"
@@ -317,14 +321,22 @@ LoginForm = React.createClass
               {if @props.emailFilter.length > 0 and not @props.rid then showEmailFilter() else <span/>}
               <br/>
             </div>
-            <Col md={6}>
+            <Col md={6} className={showOrHide('class', 'firstname')}>
               <Input type="text" id="firstname" valueLink={@props.firstname} label="First Name" placeholder="Jane"/>
             </Col>
-            <Col md={6}>
+            <Col md={6} className={showOrHide('class', 'lastname')}>
               <Input type="text" id="lastname" valueLink={@props.lastname} label="Last Name" placeholder="Doe"/>
             </Col>
             <Col md={12}>
               <Input type="email" name="email" id="email" valueLink={@props.email} label="E-mail *" placeholder="email@example.com" required/>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={12} className={showOrHide('class', 'residencecountry')}>
+              <Input type="select" name="residencecountry" id="residencecountry" defaultValue="" valueLink={@props.residencecountry} label="Country/Region of Residence *" placeholder="Country of Residence" required>
+              <option value="" disabled>-Select-</option>
+              {generateCountries()}
+              </Input>
             </Col>
           </Row>
           <Row>
@@ -338,7 +350,6 @@ LoginForm = React.createClass
               </Input>
             </Col>
           </Row>
-
           <Row>
             <Col md={6} className={showOrHide('class', 'affiliation')}>
               <Input type="text" name="affiliation" id="affiliation" valueLink={@props.affiliation} label={if @props.usertype.value == "other" then "Organization Name *" else "School Name *"} placeholder="Example School, Pittsburgh, PA" maxlength="50" required/>
@@ -346,22 +357,14 @@ LoginForm = React.createClass
                Your school or organization name may be visible to other users.
                </p>
             </Col>
-            <Col md={6} className={showOrHide('class', 'residencecountry')}>
-              <Input type="select" name="residencecountry" id="residencecountry" defaultValue="" valueLink={@props.residencecountry} label="Country/Region of Residence *" placeholder="Country of Residence" required>
-              <option value="" disabled>-Select-</option>
-              {generateCountries()}
-              </Input>
+            <Col md={6} className={showOrHide('class', 'url')}>
+              <Input type="text" name="url" disabled={showOrHide( 'disabled', 'url')} id="url" valueLink={@props.url} label={if @props.usertype.value == "other" then "Organization URL (optional)" else "School URL (optional)"} placeholder={if @props.usertype.value == "other" then "Organization URL" else "School URL"}/>
             </Col>
           </Row>
           <Row>
-            <Col md={6} className={showOrHide('class', 'url')}>
-              <Input type="text" name="url" disabled={showOrHide( 'disabled', 'url')} id="url" valueLink={@props.url} label="School URL (optional)" placeholder="School URL"/>
-            </Col>
             <Col md={6} className={showOrHide('class', 'grade')}>
               <Input type="number" min="1" max="12" name="grade" disabled={showOrHide('disabled','grade')} id="grade" valueLink={@props.grade} label="Your Current Grade/Year (1-12) *" placeholder="Your Current Grade/Year" required/>
             </Col>
-          </Row>
-          <Row>
             <Col md={6} className={showOrHide('class', 'teacherlevel')}>
               <label>I teach *</label>
               <Input type="checkbox" checkedLink={@props.teacher_middleschool} label="Middle School"/>
@@ -406,12 +409,12 @@ LoginForm = React.createClass
                   <option value="transgenderwoman">Transgender Woman</option>
                   <option value="transgenderman">Transgender Man</option>
                   <option value="gfnc">Gender Fluid/Non-Conforming</option>
-                  <option value="other">I prefer: (fill in:)</option>
+                  <option value="other">I prefer: (fill in)</option>
               </Input>
             </Col>
             <Col md={6} className={if @props.gender.value == "other" then "show" else "hide"}>
               <br/>
-              <Input type="text" name="genderother" disabled={if @props.gender.value == "other" then false else true} id="genderother" valueLink={@props.genderother} label="Gender prefer" placeholder=""/>
+              <Input type="text" name="genderother" disabled={if @props.gender.value == "other" then false else true} id="genderother" valueLink={@props.genderother} label="Gender preference" placeholder=""/>
             </Col>
           </Row>
           <Row>
