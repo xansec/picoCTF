@@ -58,6 +58,8 @@ LoginForm = React.createClass
       # Toggle input fields according to user type
       showOrHide = ((prop, inputName) ->
         inputs = {
+          firstname: false
+          lastname: false
           url: false
           grade: false
           teacherlevel: false
@@ -317,10 +319,10 @@ LoginForm = React.createClass
               {if @props.emailFilter.length > 0 and not @props.rid then showEmailFilter() else <span/>}
               <br/>
             </div>
-            <Col md={6}>
+            <Col md={6} className={showOrHide('class', 'firstname')}>
               <Input type="text" id="firstname" valueLink={@props.firstname} label="First Name" placeholder="Jane"/>
             </Col>
-            <Col md={6}>
+            <Col md={6} className={showOrHide('class', 'lastname')}>
               <Input type="text" id="lastname" valueLink={@props.lastname} label="Last Name" placeholder="Doe"/>
             </Col>
             <Col md={12}>
