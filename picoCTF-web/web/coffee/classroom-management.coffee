@@ -112,6 +112,67 @@ MemberInvitePanel = React.createClass
       </form>
     </Panel>
 
+BatchRegistrationPanel = React.createClass
+  mixins: [React.addons.LinkedStateMixin]
+
+  propTypes:
+    gid: React.PropTypes.string.isRequired
+
+  handleFileUpload: (e) ->
+    e.preventDefault()
+    formData = new FormData();
+    formData.append('csv', this.refs.fileUpload.getInputDOMNode().files[0]);
+    params = {
+      method: "POST"
+      url: "/api/v1/groups/" + @props.gid + "/batch_registration"
+      data: formData
+      cache: false
+      contentType: false
+      processData: false
+    }
+    $.ajax params
+    .success ((data) ->
+      response_html = '<div class="panel panel-success batch-registration-response"><div class="panel-heading"><h4>Accounts successfully created!</h4>' +
+                      '<p>Usernames and passwords are displayed below in the order of the input CSV.</p>' +
+                      '<p>Please copy these passwords, as they will only be displayed once.</p>' +
+                      '<table class="table">'
+      for i in [0...data.accounts.length]
+        response_html += '<tr><td>' + data.accounts[i].username + '</td><td>' + data.accounts[i].password + '</td></tr>'
+      response_html += '</table></div></div>'
+      $('.batch-registration-response').remove()
+      $('#batch-registration-panel').append(response_html)
+      @props.refresh()
+    ).bind this
+    .error ((jqXHR) ->
+      errors = jqXHR.responseJSON.message
+      response_html = '<div class="panel panel-danger batch-registration-response"><div class="panel-heading"><h4>Errors found in CSV.</h4>' +
+                      '<p>Please resolve the issues below and resubmit:</p>'
+      for row_num, row of errors
+        response_html += '<p><strong>Row ' + (parseInt(row_num) + 1) + ':</strong></p><ul>'
+        for field, err_messages of row
+          for err_message in err_messages
+            if field == '_schema'
+              response_html += '<li>' + err_message + '</li>'
+            else
+              response_html += '<li>' + field + ': ' + err_message + '</li>'
+        response_html += '</ul>'
+      $('.batch-registration-response').remove()
+      $('#batch-registration-panel').append(response_html)
+    ).bind this
+
+  render: ->
+    <Panel id="batch-registration-panel">
+      <Col xs={6}>
+        <Button href="/files/picoctf_batch_import.csv">Download Template</Button>
+      </Col>
+      <Col xs={6}>
+        <form>
+          <Input type='file' label='Upload CSV' accept='.csv' ref='fileUpload'/>
+          <Input type='submit' onClick={@handleFileUpload}/>
+        </form>
+      </Col>
+    </Panel>
+
 MemberManagement = React.createClass
   render: ->
     allMembers = update @props.teacherInformation, {$push: @props.memberInformation}
@@ -126,6 +187,8 @@ MemberManagement = React.createClass
     <Panel>
       <h4>User Management</h4>
       <MemberInvitePanel gid={@props.gid} refresh={@props.refresh}/>
+      <h4>Batch Registration</h4>
+      <BatchRegistrationPanel gid={@props.gid} refresh={@props.refresh}/>
       {memberInformation}
     </Panel>
 
