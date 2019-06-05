@@ -144,6 +144,11 @@ BatchRegistrationPanel = React.createClass
       @props.refresh()
     ).bind this
     .error ((jqXHR) ->
+      # If the error is a string
+      if typeof(jqXHR.responseJSON.message) is 'string'
+        apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
+        return
+      # Otherwise, the error is an object of validation errors
       errors = jqXHR.responseJSON.message
       response_html = '<div class="panel panel-danger batch-registration-response"><div class="panel-heading"><h4>Errors found in CSV.</h4>' +
                       '<p>Please resolve the issues below and resubmit:</p>'
@@ -152,9 +157,9 @@ BatchRegistrationPanel = React.createClass
         for field, err_messages of row
           for err_message in err_messages
             if field == '_schema'
-              response_html += '<li>' + err_message + '</li>'
+              response_html += '<li>' + _.escape(err_message) + '</li>'
             else
-              response_html += '<li>' + field + ': ' + err_message + '</li>'
+              response_html += '<li>' + _.escape(field) + ': ' + _.escape(err_message) + '</li>'
         response_html += '</ul>'
       $('.batch-registration-response').remove()
       $('#batch-registration-panel').append(response_html)
