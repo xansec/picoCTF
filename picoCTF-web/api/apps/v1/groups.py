@@ -311,7 +311,7 @@ class BatchRegistrationResponse(Resource):
             n = int(s)
             if not (1 <= n <= 12):
                 raise ValidationError(
-                    f'Current Year must be between 1 and 12 (provided {s})')
+                    f'Grade must be between 1 and 12 (provided {s})')
 
         def validate_country_code(s):
             if len(s) != 2:
@@ -337,7 +337,7 @@ class BatchRegistrationResponse(Resource):
                 return in_data
 
             current_year = fields.Str(
-                data_key='Current Year (1-12)',
+                data_key='Grade',
                 required=True,
                 validate=validate_current_year)
             age = fields.Str(
