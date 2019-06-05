@@ -343,6 +343,9 @@ class BatchRegistrationResponse(Resource):
             age = fields.Str(
                 data_key='Age', required=True,
                 validate=validate.OneOf(choices=['13-17', '18+']))
+            gender = fields.Str(
+                data_key="Gender", required=False
+            )
             country = fields.Str(
                 data_key='Country/Region of Residence', required=True,
                 validate=validate_country_code)

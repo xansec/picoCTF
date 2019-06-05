@@ -134,7 +134,7 @@ BatchRegistrationPanel = React.createClass
     .success ((data) ->
       response_html = '<div class="panel panel-success batch-registration-response"><div class="panel-heading"><h4>Accounts successfully created!</h4>' +
                       '<p>Usernames and passwords are displayed below in the order of the input CSV.</p>' +
-                      '<p>Please copy these passwords, as they will only be displayed once.</p>' +
+                      '<p>Please copy these credentials, as they will only be displayed once.</p>' +
                       '<table class="table">'
       for i in [0...data.accounts.length]
         response_html += '<tr><td>' + data.accounts[i].username + '</td><td>' + data.accounts[i].password + '</td></tr>'

@@ -253,6 +253,7 @@ def batch_register(students, teacher, gid):
                 'usertype': 'student',
                 'demo': {
                     'age': student['age'],
+                    'gender': student['gender'],
                     'grade': student['current_year'],
                     'parentemail': student['parent_email'],
                     'residencecountry': student['country'],
