@@ -167,15 +167,23 @@ BatchRegistrationPanel = React.createClass
 
   render: ->
     <Panel id="batch-registration-panel">
-      <Col xs={6}>
-        <Button href="/files/picoctf_batch_import.csv">Download Template</Button>
-      </Col>
-      <Col xs={6}>
-        <form>
-          <Input type='file' label='Upload CSV' accept='.csv' ref='fileUpload'/>
-          <Input type='submit' onClick={@handleFileUpload}/>
-        </form>
-      </Col>
+      <Row>
+        <Col xs={12}>
+          <p>{"Batch-register students into this classroom by uploading a CSV of student demographic information. Usernames and passwords will be automatically generated."}</p>
+          <p>{"Please note that your account's email address will be associated with any student accounts created via batch registration."}</p>
+        </Col>
+      </Row>
+      <Row>
+        <Col xs={6}>
+          <Button href="/files/picoctf_batch_import.csv">Download Template</Button>
+        </Col>
+        <Col xs={6}>
+          <form>
+            <Input type='file' label='Upload CSV' accept='.csv' ref='fileUpload'/>
+            <Input type='submit' onClick={@handleFileUpload}/>
+          </form>
+        </Col>
+      </Row>
     </Panel>
 
 MemberManagement = React.createClass

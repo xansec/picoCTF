@@ -3,14 +3,13 @@ import csv
 
 from flask import jsonify
 from flask_restplus import Namespace, Resource
-from marshmallow import (fields, pre_load, RAISE, Schema, validate,
-                         validates_schema, ValidationError, post_load)
+from marshmallow import fields, RAISE, Schema, validate, ValidationError
 
 import api
 from api import check_csrf, PicoException, require_login, require_teacher
 
-from .schemas import (batch_registration_req, group_invite_req, group_patch_req,
-                      group_remove_team_req, group_req)
+from .schemas import (batch_registration_req, group_invite_req,
+                      group_patch_req, group_remove_team_req, group_req)
 
 ns = Namespace('groups', description='Group management')
 
@@ -313,59 +312,18 @@ class BatchRegistrationResponse(Resource):
                 raise ValidationError(
                     f'Grade must be between 1 and 12 (provided {s})')
 
-        def validate_country_code(s):
-            if len(s) != 2:
-                raise ValidationError(
-                    f'Must be 2-character country code, e.g. "US" \
-                        (provided {s})')
-
         class BatchRegistrationUserSchema(Schema):
-            # Convert empty strings to Nones when doing validation,
-            # but back before storing in database.
-            @pre_load
-            def empty_to_none(self, in_data):
-                for k, v in in_data.items():
-                    if v == "":
-                        in_data[k] = None
-                return in_data
-
-            @post_load
-            def none_to_empty(self, in_data):
-                for k, v in in_data.items():
-                    if v is None:
-                        in_data[k] = ''
-                return in_data
-
             current_year = fields.Str(
-                data_key='Grade',
+                data_key='Grade (1-12)',
                 required=True,
                 validate=validate_current_year)
             age = fields.Str(
-                data_key='Age', required=True,
+                data_key='Age (13-17 or 18+)', required=True,
                 validate=validate.OneOf(choices=['13-17', '18+']))
             gender = fields.Str(
                 data_key="Gender", required=False
             )
-            country = fields.Str(
-                data_key='Country/Region of Residence', required=True,
-                validate=validate_country_code)
-            email = fields.Email(data_key='Email', required=True)
-            postal_code = fields.Str(
-                data_key='School ZIP/Postal Code', required=True)
-            school_country = fields.Str(
-                data_key='School Country', required=True,
-                validate=validate_country_code
-            )
-            parent_email = fields.Email(
-                data_key='Parent Email (if under 18)', required=True,
-                allow_none=True
-            )
-            @validates_schema
-            def validate_parent_email(self, data):
-                if (data['age'] == '13-17' and
-                        data['parent_email'] is None):
-                    raise ValidationError(
-                        'Parent email must be specified for students under 18')
+
         try:
             students = BatchRegistrationUserSchema().load(
                 students, many=True, unknown=RAISE)

@@ -239,7 +239,7 @@ def batch_register(students, teacher, gid):
             # Create a registration token to bypass verification & reCAPTCHA
             rid = api.token.set_token({
                 'gid': gid,
-                'email': student['email'],
+                'email': teacher['email'],
                 'teacher': False
             }, 'registration_token')
             uid = api.user.add_user({
@@ -247,19 +247,20 @@ def batch_register(students, teacher, gid):
                 'password': password,
                 'firstname': '',
                 'lastname': '',
-                'email': student['email'],
-                'country': student['country'],
+                'email': teacher['email'],
+                'country': teacher['country'],
                 'affiliation': api.group.get_group(gid=gid)['name'],
                 'usertype': 'student',
                 'demo': {
                     'age': student['age'],
                     'gender': student['gender'],
                     'grade': student['current_year'],
-                    'parentemail': student['parent_email'],
-                    'residencecountry': student['country'],
-                    'schoolcountry': student['school_country'],
-                    'url': '',
-                    'zipcode': student['postal_code']
+                    'parentemail': teacher['email'],
+                    'residencecountry': teacher['country'],
+                    'schoolcountry': teacher.get('demo', {})
+                                            .get('schoolcountry', ''),
+                    'url': teacher.get('demo', {}).get('url', ''),
+                    'zipcode': teacher.get('demo', {}).get('zipcode', '')
                 },
                 'gid': gid,
                 'rid': rid
