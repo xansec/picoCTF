@@ -1,6 +1,5 @@
 """Module for handling groups of teams."""
 
-from pymongo import DESCENDING
 from voluptuous import Required, Schema
 
 import api
@@ -218,17 +217,17 @@ def batch_register(students, teacher, gid):
 
     Returns:
         list of {uid, username, (plaintext) password} tuples for created users
+
     """
     # Created accounts' usernames are: {teacher_username}.student{number}
-    db = api.db.get_conn()
-    last_added_student = db.users.find_one(
-        {'username': {'$regex':  teacher['username'] + r'\.'}},
-        {'username': 1}, sort=[('username', DESCENDING)])
-    if last_added_student is None:
+    teacher_metadata = api.token.find_key({
+        'uid': teacher['uid']
+    })
+    if not teacher_metadata:
         curr_student_number = 0
     else:
-        curr_student_number = int(last_added_student['username']
-                                  .split('.student')[1])
+        curr_student_number = teacher_metadata.get("tokens", {}).get(
+            'batch_registered_students', 0)
 
     created_users = []
     for i, student in enumerate(students):
@@ -265,6 +264,10 @@ def batch_register(students, teacher, gid):
                 'gid': gid,
                 'rid': rid
             })
+            api.token.set_token(
+                {'uid': teacher['uid']},
+                'batch_registered_students',
+                curr_student_number)
         except PicoException:
             return created_users
         created_users.append({
