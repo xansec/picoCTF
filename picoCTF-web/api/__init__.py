@@ -32,7 +32,6 @@ import api.submissions
 import api.team
 import api.token
 import api.user
-from api.apps.v0 import blueprint as v0_blueprint
 from api.apps.v1 import blueprint as v1_blueprint
 
 log = logging.getLogger(__name__)
@@ -69,9 +68,6 @@ def create_app(config={}):
         app.config[k] = v
 
     # Register blueprints
-    app.register_blueprint(
-        v0_blueprint, url_prefix="/api/v0"
-    )
     app.register_blueprint(
         v1_blueprint, url_prefix="/api/v1"
     )
