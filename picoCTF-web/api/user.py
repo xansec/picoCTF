@@ -341,6 +341,8 @@ def update_password_request(params, uid=None, check_current=False):
 @log_action
 def disable_account(uid):
     """
+    Note: The original disable account has now been updated to perform delete account instead.
+
     Disables a user account.
 
     Disabled user accounts can't login or consume space on a team.
@@ -351,8 +353,14 @@ def disable_account(uid):
     db = api.db.get_conn()
     db.users.find_one_and_update({
         "uid": uid,
+        "disabled": False
     }, {"$set": {
-        "disabled": True
+        "disabled": True,
+        "firstname": "null",
+        "lastname": "null",
+        "email": "null",
+        "country": "null",
+        "demo" : "{}"
     }})
 
     db.teams.find_one_and_update(
