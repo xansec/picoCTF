@@ -132,6 +132,11 @@ EmailTab = React.createClass
       $set:
         from_name: e.target.value
 
+  updateMaxVerificationEmails: (e) ->
+    @setState update @state,
+      $set:
+        max_verification_emails: parseInt(e.target.value)
+
   toggleEnabled: ->
     @setState update @state,
       $set:
@@ -152,6 +157,7 @@ EmailTab = React.createClass
       email:
         enable_email: @state.enable_email
         email_verification: @state.email_verification
+        max_verification_emails: @state.max_verification_emails
         parent_verification_email: @state.parent_verification_email
         smtp_url: @state.smtp_url
         smtp_port: @state.smtp_port
@@ -176,6 +182,7 @@ EmailTab = React.createClass
   render: ->
     emailDescription = "Emails must be sent in order for users to reset their passwords."
     emailVerificationDescription = "Mandate email verification for new users"
+    MaxVerificationEmailsDescription = "The number of times a verification email can be resent before the account is locked"
     parentEmailVerificationDescription = "Send an email to the parent's email address (if provided) upon registration"
     SMTPDescription = "The URL of the STMP server you are using"
     SMTPPortDescription = "The port of the running SMTP server"
@@ -223,6 +230,7 @@ EmailTab = React.createClass
           <TextEntry name="From Address" value={@state.from_addr} type="text" onChange=@updateFromAddr description={fromAddressDescription}/>
           <TextEntry name="From Name" value={@state.from_name} type="text" onChange=@updateFromName description={fromNameDescription}/>
           <BooleanEntry name="Email Verification" value={@state.email_verification} onChange=@toggleEmailVerification description={emailVerificationDescription}/>
+          <TextEntry name="Max Verification Emails" value={@state.max_verification_emails} type="number" onChange=@updateMaxVerificationEmails description={MaxVerificationEmailsDescription} />
           <BooleanEntry name="Parent Verification Email" value={@state.parent_verification_email} onChange=@toggleSendParentVerificationEmail description={parentEmailVerificationDescription}/>
           {SMTPSecuritySelect}
           <Row>
@@ -345,6 +353,7 @@ SettingsTab = React.createClass
       email:
         email_verification: false
         parent_verification_email: false
+        max_verification_emails: 3
         enable_email: false
         from_addr: ""
         smtp_url: ""
