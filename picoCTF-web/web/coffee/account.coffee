@@ -33,7 +33,7 @@ disableAccount = (e) ->
     }
     apiCall "POST", "/api/v1/user/disable_account", data, 'Authentication', 'DisableAccount'
     .success (data) ->
-      apiNotify {"status": 1, "message": "Your account has been Deleted."}, "/"
+      apiNotify {"status": 1, "message": "Your account has been deleted."}, "/"
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 

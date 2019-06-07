@@ -269,7 +269,7 @@ def get_team_information(tid):
     return team_info
 
 
-def is_eligible(tid):
+def is_eligible(tid, show_disabled=False):
     """
     Return a team's eligibility for the current event.
 
