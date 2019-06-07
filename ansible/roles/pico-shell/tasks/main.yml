@@ -27,6 +27,9 @@
     state: started
     enabled: yes
 
+- name: hidepid
+  command: mount -o remount,hidepid=2 /proc
+
 - name: Copy over 99-motd
   copy:
     src: 99-motd
