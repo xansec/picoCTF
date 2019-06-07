@@ -122,14 +122,6 @@ default_settings = {
         "reCAPTCHA_private_key": "",
     },
 
-    # LOGGING
-    # Will be emailed any severe internal exceptions!
-    # Requires email block to be setup.
-    "logging": {
-        "admin_emails": ["ben@example.com", "joe@example.com"],
-        "critical_error_timeout": 600
-    },
-
     # SHELL SERVERS
     "shell_servers": {
         "enable_sharding": False,

@@ -154,8 +154,6 @@ EmailTab = React.createClass
         from_addr: @state.from_addr
         from_name: @state.from_name
         smtp_security: @state.smtp_security
-      logging:
-        admin_emails: @state.admin_emails
       email_filter: @state.email_filter
 
     if typeof(makeChange) == "function"
@@ -345,8 +343,6 @@ SettingsTab = React.createClass
         email_username: ""
         email_password: ""
         from_name: ""
-      logging:
-        admin_emails: []
       email_filter: []
       shell_servers:
         enable_sharding: false
