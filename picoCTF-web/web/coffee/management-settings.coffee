@@ -89,12 +89,10 @@ EmailTab = React.createClass
   propTypes:
     refresh: React.PropTypes.func.isRequired
     emailSettings: React.PropTypes.object.isRequired
-    loggingSettings: React.PropTypes.object.isRequired
     emailFilterSettings: React.PropTypes.array.isRequired
 
   getInitialState: ->
     settings = @props.emailSettings
-    $.extend settings, @props.loggingSettings
     settings.email_filter = @props.emailFilterSettings
     settings
 
@@ -341,6 +339,77 @@ ShardingTab = React.createClass
       </Row>
     </Well>
 
+CaptchaTab = React.createClass
+  propTypes:
+    refresh: React.PropTypes.func.isRequired
+    captchaSettings: React.PropTypes.object.isRequired
+
+  getInitialState: ->
+    settings = @props.captchaSettings
+
+  toggleEnableCaptcha: ->
+    @setState update @state,
+      $set:
+        enable_captcha: !@state.enable_captcha
+
+  updateCaptchaURL: (e) ->
+    @setState update @state,
+      $set:
+        captcha_url: e.target.value
+
+  updateRecaptchaPublicKey: (e) ->
+    @setState update @state,
+      $set:
+        reCAPTCHA_public_key: e.target.value
+
+  updateRecaptchaPrivateKey: (e) ->
+    @setState update @state,
+      $set:
+        reCAPTCHA_private_key: e.target.value
+
+  pushUpdates: (makeChange) ->
+    pushData =
+      captcha:
+        enable_captcha: @state.enable_captcha
+        captcha_url: @state.captcha_url
+        reCAPTCHA_public_key: @state.reCAPTCHA_public_key
+        reCAPTCHA_private_key: @state.reCAPTCHA_private_key
+
+    if typeof(makeChange) == "function"
+      pushData = makeChange pushData
+
+    apiCall "PATCH", "/api/v1/settings", pushData
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Settings updated successfully"}
+      @props.refresh()
+    ).bind(this)
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
+
+  render: ->
+    enableCaptchaDescription = "Require users to solve a CAPTCHA when registering an account. Does not apply to invited or batch-registered accounts"
+    captchaURLDescription = "URL to request a CAPTCHA"
+    reCaptchaPublicKeyDescription = "Public key for the reCAPTCHA API"
+    reCaptchaPrivateKeyDescription = "Private key for the reCAPTCHA API"
+
+    <Well>
+      <Row>
+        <Col sm={8}>
+          <BooleanEntry name="Enable CAPTCHA" value={@state.enable_captcha} onChange=@toggleEnableCaptcha description={enableCaptchaDescription}/>
+          <TextEntry name="CAPTCHA URL" type="text" value={@state.captcha_url} onChange=@updateCaptchaURL description={captchaURLDescription}/>
+          <TextEntry name="reCAPTCHA Public Key" type="textarea" value={@state.reCAPTCHA_public_key} onChange=@updateRecaptchaPublicKey description={reCaptchaPublicKeyDescription}/>
+          <TextEntry name="reCAPTCHA Private Key" type="textarea" value={@state.reCAPTCHA_private_key} onChange=@updateRecaptchaPrivateKey description={reCaptchaPrivateKeyDescription}/>
+          <Row>
+            <div className="text-center">
+              <ButtonToolbar>
+                <Button onClick={@pushUpdates}>Update</Button>
+              </ButtonToolbar>
+            </div>
+          </Row>
+        </Col>
+      </Row>
+    </Well>
+
 
 SettingsTab = React.createClass
   getInitialState: ->
@@ -367,6 +436,11 @@ SettingsTab = React.createClass
         default_stepping: 1
         steps: ""
         limit_added_range: false
+      captcha:
+        enable_captcha: false
+        captcha_url: ""
+        reCAPTCHA_public_key: ""
+        reCAPTCHA_private_key: ""
 
     tabKey: "general"
 
@@ -408,8 +482,11 @@ SettingsTab = React.createClass
           </TabPane>
 
           <TabPane eventKey='email' tab='Email'>
-            <EmailTab refresh={@refresh} emailSettings={@state.settings.email} emailFilterSettings={@state.settings.email_filter}
-              loggingSettings={@state.settings.logging} key={Math.random()}/>
+            <EmailTab refresh={@refresh} emailSettings={@state.settings.email} emailFilterSettings={@state.settings.email_filter} key={Math.random()}/>
+          </TabPane>
+
+          <TabPane eventKey='captcha' tab='CAPTCHA'>
+            <CaptchaTab refresh={@refresh} captchaSettings={@state.settings.captcha} key={Math.random()}/>
           </TabPane>
         </TabbedArea>
       </Grid>
