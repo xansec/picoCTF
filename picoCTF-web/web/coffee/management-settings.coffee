@@ -142,11 +142,17 @@ EmailTab = React.createClass
       $set:
         email_verification: !@state.email_verification
 
+  toggleSendParentVerificationEmail: ->
+    @setState update @state,
+      $set:
+        parent_verification_email: !@state.parent_verification_email
+
   pushUpdates: (makeChange) ->
     pushData =
       email:
         enable_email: @state.enable_email
         email_verification: @state.email_verification
+        parent_verification_email: @state.parent_verification_email
         smtp_url: @state.smtp_url
         smtp_port: @state.smtp_port
         email_username: @state.email_username
@@ -170,6 +176,7 @@ EmailTab = React.createClass
   render: ->
     emailDescription = "Emails must be sent in order for users to reset their passwords."
     emailVerificationDescription = "Mandate email verification for new users"
+    parentEmailVerificationDescription = "Send an email to the parent's email address (if provided) upon registration"
     SMTPDescription = "The URL of the STMP server you are using"
     SMTPPortDescription = "The port of the running SMTP server"
     usernameDescription = "The username of the email account"
@@ -216,6 +223,7 @@ EmailTab = React.createClass
           <TextEntry name="From Address" value={@state.from_addr} type="text" onChange=@updateFromAddr description={fromAddressDescription}/>
           <TextEntry name="From Name" value={@state.from_name} type="text" onChange=@updateFromName description={fromNameDescription}/>
           <BooleanEntry name="Email Verification" value={@state.email_verification} onChange=@toggleEmailVerification description={emailVerificationDescription}/>
+          <BooleanEntry name="Parent Verification Email" value={@state.parent_verification_email} onChange=@toggleSendParentVerificationEmail description={parentEmailVerificationDescription}/>
           {SMTPSecuritySelect}
           <Row>
             <div className="text-center">
@@ -336,6 +344,7 @@ SettingsTab = React.createClass
       enable_feedback: true
       email:
         email_verification: false
+        parent_verification_email: false
         enable_email: false
         from_addr: ""
         smtp_url: ""
