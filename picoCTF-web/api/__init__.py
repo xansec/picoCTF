@@ -68,6 +68,10 @@ def create_app(config={}):
     for k, v in config.items():
         app.config[k] = v
 
+    # Add any new runtime settings to DB
+    with app.app_context():
+        api.config.merge_new_settings()
+
     # Register blueprints
     app.register_blueprint(
         v0_blueprint, url_prefix="/api/v0"
