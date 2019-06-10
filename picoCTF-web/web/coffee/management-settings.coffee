@@ -410,6 +410,52 @@ CaptchaTab = React.createClass
       </Row>
     </Well>
 
+EligibilityTab = React.createClass
+  propTypes:
+    refresh: React.PropTypes.func.isRequired
+    eligibilitySettings: React.PropTypes.object.isRequired
+
+  getInitialState: ->
+    settings = @props.eligibilitySettings
+
+  updateCountry: (e) ->
+    @setState update @state,
+      $set:
+        country: e.target.value
+
+  pushUpdates: (makeChange) ->
+    pushData =
+      eligibility:
+        country: @state.country
+
+    if typeof(makeChange) == "function"
+      pushData = makeChange pushData
+
+    apiCall "PATCH", "/api/v1/settings", pushData
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Settings updated successfully"}
+      @props.refresh()
+    ).bind(this)
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
+
+  render: ->
+    countryDescription = "2-character code of the country considered eligible for this competition"
+
+    <Well>
+      <Row>
+        <Col sm={8}>
+          <TextEntry name="Country" type="text" value={@state.country} onChange=@updateCountry description={countryDescription}/>
+          <Row>
+            <div className="text-center">
+              <ButtonToolbar>
+                <Button onClick={@pushUpdates}>Update</Button>
+              </ButtonToolbar>
+            </div>
+          </Row>
+        </Col>
+      </Row>
+    </Well>
 
 SettingsTab = React.createClass
   getInitialState: ->
@@ -441,6 +487,9 @@ SettingsTab = React.createClass
         captcha_url: ""
         reCAPTCHA_public_key: ""
         reCAPTCHA_private_key: ""
+      eligibility:
+        usertype: "student"
+        country: "US"
 
     tabKey: "general"
 
@@ -487,6 +536,10 @@ SettingsTab = React.createClass
 
           <TabPane eventKey='captcha' tab='CAPTCHA'>
             <CaptchaTab refresh={@refresh} captchaSettings={@state.settings.captcha} key={Math.random()}/>
+          </TabPane>
+
+          <TabPane eventKey='eligibility' tab='Eligibility'>
+            <EligibilityTab refresh={@refresh} eligibilitySettings={@state.settings.eligibility} key={Math.random()}/>
           </TabPane>
         </TabbedArea>
       </Grid>
