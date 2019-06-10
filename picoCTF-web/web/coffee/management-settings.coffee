@@ -42,6 +42,11 @@ GeneralTab = React.createClass
       $set:
         end_time: value
 
+  updateMaxTeamSize: (e) ->
+    @setState update @state,
+      $set:
+        max_team_size: parseInt(e.target.value)
+
   pushUpdates: ->
     data = {
       enable_feedback: @state.enable_feedback
@@ -49,6 +54,7 @@ GeneralTab = React.createClass
       competition_url: @state.competition_url
       start_time: new Date(@state.start_time).toISOString()
       end_time: new Date(@state.end_time).toISOString()
+      max_team_size: @state.max_team_size
     }
     apiCall "PATCH", "/api/v1/settings", data
     .success ((data) ->
@@ -69,13 +75,15 @@ GeneralTab = React.createClass
     startTimeDescription = "Before the competition has started, users will be able to register without viewing the problems."
     endTimeDescription = "After the competition has ended, users will no longer be able to submit keys to the challenges."
 
+    maxTeamSizeDescription = "Maximum number of users that can join a single team."
+
     <Well>
       <BooleanEntry name="Receive Problem Feedback" value={@state.enable_feedback} onChange=@toggleFeedbackEnabled description={feedbackDescription}/>
       <TextEntry name="Competition Name" value={@state.competition_name} type="text" onChange=@updateCompetitionName description={competitionNameDescription}/>
       <TextEntry name="Competition URL" value={@state.competition_url} type="text" onChange=@updateCompetitionURL description={competitionURLDescription}/>
       <TimeEntry name="Competition Start Time" value={@state.start_time} onChange=@updateStartTime description={startTimeDescription}/>
       <TimeEntry name="Competition End Time" value={@state.end_time} onChange=@updateEndTime description={endTimeDescription}/>
-
+      <TextEntry name="Max Team Size" value={@state.max_team_size} type="number" onChange=@updateMaxTeamSize description={maxTeamSizeDescription} />
       <Row>
         <div className="text-center">
           <ButtonToolbar>
@@ -465,6 +473,7 @@ SettingsTab = React.createClass
       competition_name: ""
       competition_url: ""
       enable_feedback: true
+      max_team_size: 1
       email:
         email_verification: false
         parent_verification_email: false
@@ -516,6 +525,7 @@ SettingsTab = React.createClass
       competition_url: @state.settings.competition_url
       start_time: @state.settings.start_time
       end_time: @state.settings.end_time
+      max_team_size: @state.settings.max_team_size
     <Well>
       <Grid>
         <Row>
