@@ -47,6 +47,11 @@ GeneralTab = React.createClass
       $set:
         max_team_size: parseInt(e.target.value)
 
+  updateUsernameBlacklist: (e) ->
+    @setState update @state,
+      $set:
+        username_blacklist: e.target.value.split('\n')
+
   pushUpdates: ->
     data = {
       enable_feedback: @state.enable_feedback
@@ -55,6 +60,7 @@ GeneralTab = React.createClass
       start_time: new Date(@state.start_time).toISOString()
       end_time: new Date(@state.end_time).toISOString()
       max_team_size: @state.max_team_size
+      username_blacklist: @state.username_blacklist
     }
     apiCall "PATCH", "/api/v1/settings", data
     .success ((data) ->
@@ -76,6 +82,7 @@ GeneralTab = React.createClass
     endTimeDescription = "After the competition has ended, users will no longer be able to submit keys to the challenges."
 
     maxTeamSizeDescription = "Maximum number of users that can join a single team."
+    usernameBlacklistDescription = "Usernames that are unavailable for registration."
 
     <Well>
       <BooleanEntry name="Receive Problem Feedback" value={@state.enable_feedback} onChange=@toggleFeedbackEnabled description={feedbackDescription}/>
@@ -84,6 +91,7 @@ GeneralTab = React.createClass
       <TimeEntry name="Competition Start Time" value={@state.start_time} onChange=@updateStartTime description={startTimeDescription}/>
       <TimeEntry name="Competition End Time" value={@state.end_time} onChange=@updateEndTime description={endTimeDescription}/>
       <TextEntry name="Max Team Size" value={@state.max_team_size} type="number" onChange=@updateMaxTeamSize description={maxTeamSizeDescription} />
+      <TextEntry name="Username Blacklist" value={@state.username_blacklist.join('\n')} type="textarea" onChange=@updateUsernameBlacklist description={usernameBlacklistDescription}/>
       <Row>
         <div className="text-center">
           <ButtonToolbar>
@@ -474,6 +482,7 @@ SettingsTab = React.createClass
       competition_url: ""
       enable_feedback: true
       max_team_size: 1
+      username_blacklist: []
       email:
         email_verification: false
         parent_verification_email: false
@@ -526,6 +535,7 @@ SettingsTab = React.createClass
       start_time: @state.settings.start_time
       end_time: @state.settings.end_time
       max_team_size: @state.settings.max_team_size
+      username_blacklist: @state.settings.username_blacklist
     <Well>
       <Grid>
         <Row>
