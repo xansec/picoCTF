@@ -355,9 +355,11 @@ def disable_account(uid):
         "disabled": True
     }})
 
+    # Drop them from their team
+    former_tid = api.user.get_team(uid=uid)["tid"]
     db.teams.find_one_and_update(
         {
-            "tid": api.user.get_team(uid=uid)["tid"],
+            "tid": former_tid,
             "size": {
                 "$gt": 0
             }
@@ -366,7 +368,16 @@ def disable_account(uid):
             "size": -1
         }})
 
-    api.user.logout()
+    # Recalculate team country
+    former_team_members = api.team.get_team_members(
+        tid=former_tid, show_disabled=False)
+    member_countries = set()
+    for member in former_team_members:
+        member_countries.add(member.get("country", "??"))
+    if len(member_countries) == 1:
+        db.teams.find_one_and_update(
+            {"tid": former_tid},
+            {"$set": {"country": member_countries.pop()}})
 
 
 def update_extdata(params):
