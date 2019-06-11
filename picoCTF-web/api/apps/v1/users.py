@@ -49,6 +49,12 @@ class UserList(Resource):
                 "Must provide a valid parent email address under the key " +
                 "'demo.parentemail'.", status_code=400
             )
+        accepted_genders = ['man', 'woman', 'transgenderman',
+                            'transgenderwoman', 'gfnc']
+        if ('gender' in req['demo'] and
+                req['demo']['gender'] not in accepted_genders):
+            raise PicoException(
+               f"'demo.gender' must be one of: {str(accepted_genders)}", 400)
         if not all([
                 c in string.digits + string.ascii_lowercase for
                 c in req['username'].lower()]):

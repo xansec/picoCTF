@@ -401,7 +401,7 @@ LoginForm = React.createClass
             </Col>
           </Row>
           <Row className={showOrHide('class', 'gender')}>
-            <Col md={if @props.gender.value == "other" then 6 else 12}>
+            <Col md={12}>
               <Input type="select" id="gender" name="gender" defaultValue="" label="Which gender identity do you most identify with?" valueLink={@props.gender}>
                   <option value="">-Select-</option>
                   <option value="woman">Woman</option>
@@ -409,12 +409,7 @@ LoginForm = React.createClass
                   <option value="transgenderwoman">Transgender Woman</option>
                   <option value="transgenderman">Transgender Man</option>
                   <option value="gfnc">Gender Fluid/Non-Conforming</option>
-                  <option value="other">I prefer: (fill in)</option>
               </Input>
-            </Col>
-            <Col md={6} className={if @props.gender.value == "other" then "show" else "hide"}>
-              <br/>
-              <Input type="text" name="genderother" disabled={if @props.gender.value == "other" then false else true} id="genderother" valueLink={@props.genderother} label="Gender preference" placeholder=""/>
             </Col>
           </Row>
           <Row>
@@ -585,10 +580,6 @@ AuthPanel = React.createClass
     form.usertype = @state.usertype
     form.demo = {}
 
-    if @state.demo_gender == "other"
-      @state.demo_gender = @state.demo_genderother
-      delete @state.demo_genderother
-
     for k,v of @state
       if k.substr(0,5) == "demo_"
         form.demo[k.substr(5)] = v
@@ -694,7 +685,6 @@ AuthPanel = React.createClass
     grade: @linkState "demo_grade"
     referrer: @linkState "demo_referrer"
     gender: @linkState "demo_gender"
-    genderother: @linkState "demo_genderother"
     teacher_middleschool: @linkState "demo_teacher_middleschool"
     teacher_highschool: @linkState "demo_teacher_highscool"
     teacher_afterschoolclub: @linkState "demo_teacher_afterschool"

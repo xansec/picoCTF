@@ -3,7 +3,8 @@ import csv
 
 from flask import jsonify
 from flask_restplus import Namespace, Resource
-from marshmallow import fields, RAISE, Schema, validate, ValidationError
+from marshmallow import (fields, post_load, pre_load, RAISE, Schema, validate,
+                         ValidationError)
 
 import api
 from api import check_csrf, PicoException, require_login, require_teacher
@@ -313,6 +314,21 @@ class BatchRegistrationResponse(Resource):
                     f'Grade must be between 1 and 12 (provided {s})')
 
         class BatchRegistrationUserSchema(Schema):
+            # Convert empty strings to Nones when doing validation,
+            # but back before storing in database.
+            @pre_load
+            def empty_to_none(self, in_data):
+                for k, v in in_data.items():
+                    if v == "":
+                        in_data[k] = None
+                return in_data
+
+            @post_load
+            def none_to_empty(self, in_data):
+                for k, v in in_data.items():
+                    if v is None:
+                        in_data[k] = ''
+                return in_data
             current_year = fields.Str(
                 data_key='Grade (1-12)',
                 required=True,
@@ -321,7 +337,15 @@ class BatchRegistrationResponse(Resource):
                 data_key='Age (13-17 or 18+)', required=True,
                 validate=validate.OneOf(choices=['13-17', '18+']))
             gender = fields.Str(
-                data_key="Gender", required=False
+                data_key="Gender", required=False, allow_none=True,
+                validate=validate.OneOf(
+                    ['man', 'woman', 'transgenderman', 'transgenderwoman',
+                     'gfnc'],
+                    ['Man', 'Woman', 'Transgender Man', 'Transgender Woman',
+                     'Gender Fluid/Non-Conforming'],
+                    error="If specified, must be one of {labels}. Please use "
+                          "the corresponding code from: {choices}."
+                )
             )
 
         try:
