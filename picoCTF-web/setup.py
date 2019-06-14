@@ -78,6 +78,7 @@ setup(
         'flask-restplus==0.12.1',
         'gunicorn==19.9.0',
         # 'line_profiler==2.1.2',
+        'marshmallow==3.0.0rc5',
         'py==1.5.3',
         'pymongo==3.7.0',
         'spur==0.3.20',

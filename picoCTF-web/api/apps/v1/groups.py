@@ -1,12 +1,16 @@
 """Group manangement."""
+import csv
+
 from flask import jsonify
 from flask_restplus import Namespace, Resource
+from marshmallow import (fields, post_load, pre_load, RAISE, Schema, validate,
+                         ValidationError)
 
 import api
 from api import check_csrf, PicoException, require_login, require_teacher
 
-from .schemas import (group_invite_req, group_patch_req, group_remove_team_req,
-                      group_req)
+from .schemas import (batch_registration_req, group_invite_req,
+                      group_patch_req, group_remove_team_req, group_req)
 
 ns = Namespace('groups', description='Group management')
 
@@ -271,3 +275,97 @@ class InviteResponse(Resource):
         return jsonify({
             'success': True
             })
+
+
+@ns.route('/<string:group_id>/batch_registration')
+class BatchRegistrationResponse(Resource):
+    """
+    Register multiple student accounts and assign them to this group.
+
+    Demographics for the registered accounts are provided via CSV upload.
+    """
+
+    @require_teacher
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Permission denied')
+    @ns.response(404, 'Group not found')
+    @ns.expect(batch_registration_req)
+    def post(self, group_id):
+        """Automatically registers several student accounts based on a CSV."""
+        # Load in student demographics from CSV
+        req = batch_registration_req.parse_args(strict=True)
+        students = []
+        csv_reader = csv.DictReader(
+            req['csv'].read().decode('utf-8').split('\n'))
+        try:
+            for row in csv_reader:
+                students.append(row)
+        except csv.Error as e:
+            raise PicoException(
+                f"Error reading CSV at line {csv_reader.line_num}: {e}",
+                status_code=400)
+
+        # Validate demographics
+        def validate_current_year(s):
+            n = int(s)
+            if not (1 <= n <= 12):
+                raise ValidationError(
+                    f'Grade must be between 1 and 12 (provided {s})')
+
+        class BatchRegistrationUserSchema(Schema):
+            # Convert empty strings to Nones when doing validation,
+            # but back before storing in database.
+            @pre_load
+            def empty_to_none(self, in_data):
+                for k, v in in_data.items():
+                    if v == "":
+                        in_data[k] = None
+                return in_data
+
+            @post_load
+            def none_to_empty(self, in_data):
+                for k, v in in_data.items():
+                    if v is None:
+                        in_data[k] = ''
+                return in_data
+            current_year = fields.Str(
+                data_key='Grade (1-12)',
+                required=True,
+                validate=validate_current_year)
+            age = fields.Str(
+                data_key='Age (13-17 or 18+)', required=True,
+                validate=validate.OneOf(choices=['13-17', '18+']))
+            gender = fields.Str(
+                data_key="Gender", required=False, allow_none=True,
+                validate=validate.OneOf(
+                    ['man', 'woman', 'transgenderman', 'transgenderwoman',
+                     'gfnc'],
+                    ['Man', 'Woman', 'Transgender Man', 'Transgender Woman',
+                     'Gender Fluid/Non-Conforming'],
+                    error="If specified, must be one of {labels}. Please use "
+                          "the corresponding code from: {choices}."
+                )
+            )
+
+        try:
+            students = BatchRegistrationUserSchema().load(
+                students, many=True, unknown=RAISE)
+        except ValidationError as err:
+            raise PicoException(err.messages, status_code=400)
+
+        # Batch-register accounts
+        curr_teacher = api.user.get_user()
+        created_accounts = api.group.batch_register(
+            students, curr_teacher, group_id)
+
+        if len(created_accounts) != len(students):
+            raise PicoException(
+                "An error occurred while adding student accounts. " +
+                f"The first {len(created_accounts)} were created. " +
+                "Please contact an administrator."
+            )
+        return jsonify({
+            'success': True,
+            'accounts': created_accounts
+        })

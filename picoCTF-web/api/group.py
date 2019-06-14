@@ -201,3 +201,78 @@ def get_all_groups():
     """Return a list of all groups in the database."""
     db = api.db.get_conn()
     return list(db.groups.find({}, {"_id": 0}))
+
+
+def batch_register(students, teacher, gid):
+    """
+    Batch registers multiple students and assigns them to a group.
+
+    Stops if an error is encountered adding a user, and returns the information
+    for the users created successfully up to that point.
+
+    Args:
+        students: list of DictParser dicts from the uploaded CSV
+        teacher: teacher object performing the batch registration
+        group: ID of the group the students should be assigned to
+
+    Returns:
+        list of {uid, username, (plaintext) password} tuples for created users
+
+    """
+    # Created accounts' usernames are: {teacher_username}.student{number}
+    teacher_metadata = api.token.find_key({
+        'uid': teacher['uid']
+    })
+    if not teacher_metadata:
+        curr_student_number = 0
+    else:
+        curr_student_number = teacher_metadata.get("tokens", {}).get(
+            'batch_registered_students', 0)
+
+    created_users = []
+    for i, student in enumerate(students):
+        curr_student_number += 1
+        username = f"{teacher['username']}.student{str(curr_student_number)}"
+        password = api.common.token()
+        try:
+            # Create a registration token to bypass verification & reCAPTCHA
+            rid = api.token.set_token({
+                'gid': gid,
+                'email': teacher['email'],
+                'teacher': False
+            }, 'registration_token')
+            uid = api.user.add_user({
+                'username': username,
+                'password': password,
+                'firstname': '',
+                'lastname': '',
+                'email': teacher['email'],
+                'country': teacher['country'],
+                'affiliation': api.group.get_group(gid=gid)['name'],
+                'usertype': 'student',
+                'demo': {
+                    'age': student['age'],
+                    'gender': student['gender'],
+                    'grade': student['current_year'],
+                    'parentemail': teacher['email'],
+                    'residencecountry': teacher['country'],
+                    'schoolcountry': teacher.get('demo', {})
+                                            .get('schoolcountry', ''),
+                    'url': teacher.get('demo', {}).get('url', ''),
+                    'zipcode': teacher.get('demo', {}).get('zipcode', '')
+                },
+                'gid': gid,
+                'rid': rid
+            })
+            api.token.set_token(
+                {'uid': teacher['uid']},
+                'batch_registered_students',
+                curr_student_number)
+        except PicoException:
+            return created_users
+        created_users.append({
+            'uid': uid,
+            'username': username,
+            'password': password,
+        })
+    return created_users

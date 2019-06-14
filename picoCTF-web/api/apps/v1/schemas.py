@@ -1,5 +1,6 @@
 """Validation schemas for API requests."""
-from flask_restplus import reqparse, inputs
+import werkzeug.datastructures
+from flask_restplus import inputs, reqparse
 
 
 def object_type(value):
@@ -510,4 +511,12 @@ minigame_submission_req.add_argument(
 minigame_submission_req.add_argument(
     'verification_key', required=True, type=str, location='json',
     help='Verification key for the minigame'
+)
+
+# Batch registration schema
+batch_registration_req = reqparse.RequestParser()
+batch_registration_req.add_argument(
+    'csv', type=werkzeug.datastructures.FileStorage,
+    location='files', required=True,
+    help="Modified copy of the provided batch import CSV"
 )
