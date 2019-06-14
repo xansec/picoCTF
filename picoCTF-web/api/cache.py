@@ -3,17 +3,59 @@
 import logging
 from functools import wraps
 
-from bson import datetime
+from flask import current_app, g
+from walrus import *
 
-import api
+from api import PicoException
 
 log = logging.getLogger(__name__)
 
-"""
-@TODO
-Per internal discussion, caching (@memoize) is currently disabled
-pending a move towards per-function caches in Redis.
-"""
+
+def get_conn():
+    """
+    Get a redis connection, reusing one if it exists.
+
+    """
+    if not g.walrus:
+        conf = current_app.config
+        try:
+            g.walrus = Walrus(host=conf["REDIS_ADDR"], port=conf["REDIS_PORT"],
+                              password=conf["REDIS_PW"])
+        except Exception as error:
+            raise PicoException(
+                'Internal server error. Please contact a system administrator.',
+                data={'original_error': error})
+    return g.walrus
+
+
+def get_cache():
+    """
+    Get a walrus cache, reusing one if it exists.
+
+    """
+    if not g.cache:
+        walrus = get_conn()
+        g.cache = walrus.cache()
+    return g.cache
+
+
+def memoize(*argz, **kwds):
+    """
+    Wrapper for walrus cache.cached function that verifies redis connection in context first
+    """
+    _cache = get_cache()
+    f = None
+    if len(argz) == 1 and callable(argz[0]):
+        f = argz[0]
+
+    def decorator(f):
+        """Inner decorator."""
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            """Cache a function result."""
+            return _cache.cached(**kwds)(f)(*args, **kwargs)
+        return wrapper
+    return decorator(f) if f else decorator
 
 
 def _get_hash_key(f, args, kwargs):
@@ -75,7 +117,7 @@ def _set(key, value, timeout=None):
     db.cache.find_one_and_update({'key': key}, cache_obj, upsert=True)
 
 
-def memoize(*args, **kwargs):
+def old_memoize(*args, **kwargs):
     """
     Memoize a function by caching its results.
 

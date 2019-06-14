@@ -7,6 +7,7 @@ from voluptuous import ALLOW_EXTRA, Range, Required, Schema
 
 import api
 from api import PicoException, check, validate
+from api.cache import memoize
 
 problem_schema = Schema({
     Required("name"):
@@ -242,7 +243,7 @@ def filter_problem_instances(problem, tid):
     return problem
 
 
-# @memoize
+@memoize
 def get_problem(pid):
     """
     Get a single problem.
@@ -288,7 +289,7 @@ def get_all_problems(category=None, show_disabled=False):
                                                    pymongo.ASCENDING)]))
 
 
-# @memoize
+@memoize
 def get_solved_problems(tid=None, uid=None, category=None,
                         show_disabled=False):
     """
@@ -378,7 +379,7 @@ def is_problem_unlocked(problem, solved):
     return unlocked
 
 
-# @memoize
+@memoize
 def get_unlocked_pids(tid):
     """
     Get the unlocked pids for a given team.

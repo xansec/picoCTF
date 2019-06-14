@@ -6,7 +6,8 @@ import math
 import pymongo
 
 import api
-# from api import memoize
+from api.cache import memoize
+
 
 scoreboard_page_len = 50
 
@@ -16,7 +17,7 @@ def _get_problem_names(problems):
     return [problem['name'] for problem in problems]
 
 
-# @memoize
+@memoize
 def get_score(tid=None, uid=None):
     """
     Get the score for a user or team.
@@ -55,7 +56,7 @@ def get_team_review_count(tid=None, uid=None):
 
 
 # Stored by the cache_stats daemon.
-# @memoize
+@memoize
 def get_group_scores(gid=None, name=None):
     """
     Get the group scores.
@@ -100,7 +101,7 @@ def get_group_average_score(gid=None, name=None):
 
 
 # Stored by the cache_stats daemon
-# @memoize
+@memoize
 def get_all_team_scores(country=None, include_ineligible=False):
     """
     Get the score for every team in the database.
@@ -181,7 +182,7 @@ def get_all_user_scores():
     return sorted(result, key=lambda entry: entry['score'], reverse=True)
 
 
-# @memoize(timeout=120)
+@memoize(timeout=120)
 def get_problems_by_category():
     """
     Get the list of all problems divided into categories.
@@ -237,7 +238,7 @@ def get_problem_submission_stats(pid=None):
     }
 
 
-# @memoize
+@memoize
 def get_score_progression(tid=None, uid=None, category=None):
     """
     Find the score and time after each correct submission of a team or user.
@@ -273,7 +274,7 @@ def get_score_progression(tid=None, uid=None, category=None):
 
 
 # Stored by the cache_stats daemon
-# @memoize
+@memoize
 def get_problem_solves(pid):
     """
     Return the number of solves for a particular problem.
@@ -290,7 +291,7 @@ def get_problem_solves(pid):
 
 
 # Stored by the cache_stats daemon
-# @memoize
+@memoize
 def get_top_teams_score_progressions(
         limit, include_ineligible=False, gid=None):
     """
@@ -321,7 +322,7 @@ def get_top_teams_score_progressions(
     } for team in teams]
 
 
-# @memoize(timeout=300)
+@memoize(timeout=300)
 def check_invalid_instance_submissions(gid=None):
     """Get submissions of keys for the wrong problem instance."""
     db = api.db.get_conn()
@@ -353,7 +354,7 @@ def check_invalid_instance_submissions(gid=None):
 
 
 # Stored by the cache_stats daemon.
-# @memoize
+@memoize
 def get_registration_count():
     """Get the user, team, and group counts."""
     db = api.db.get_conn()
