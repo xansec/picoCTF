@@ -52,3 +52,6 @@ shell_proto: "HTTP"
 # HTTP Basic Auth
 enable_basic_auth: false
 htpasswd_accounts: []
+
+# SSL requires cert and vault-encrypted key
+enable_web_ssl: False
