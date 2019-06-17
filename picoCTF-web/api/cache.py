@@ -10,13 +10,20 @@ from api import PicoException
 
 log = logging.getLogger(__name__)
 
+__walrus = None
+__cache = None
 
 def get_conn():
     """
     Get a redis connection, reusing one if it exists.
 
+
     """
-    if not g.walrus:
+    global __walrus
+    if not __walrus:
+        __walrus = Walrus()
+    """
+    if 'walrus' not in g:
         conf = current_app.config
         try:
             g.walrus = Walrus(host=conf["REDIS_ADDR"], port=conf["REDIS_PORT"],
@@ -26,6 +33,8 @@ def get_conn():
                 'Internal server error. Please contact a system administrator.',
                 data={'original_error': error})
     return g.walrus
+    """
+    return __walrus
 
 
 def get_cache():
@@ -33,10 +42,17 @@ def get_cache():
     Get a walrus cache, reusing one if it exists.
 
     """
-    if not g.cache:
+    global __cache
+    if not __cache:
+        walrus = get_conn()
+        __cache = walrus.cache()
+    """
+    if 'cache' not in g:
         walrus = get_conn()
         g.cache = walrus.cache()
     return g.cache
+    """
+    return __cache
 
 
 def memoize(*argz, **kwds):
