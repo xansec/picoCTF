@@ -278,7 +278,7 @@ def is_eligible(tid):
     Returns:
         True or False
     """
-    members = get_team_members(tid)
+    members = get_team_members(tid, show_disabled=False)
     conditions = api.config.get_settings()['eligibility']
     for member in members:
         is_eligible = all(

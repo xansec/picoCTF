@@ -27,13 +27,13 @@ resetPassword = (e) ->
 
 disableAccount = (e) ->
   e.preventDefault()
-  confirmDialog "This will disable your account, drop you from your team, and prevent you from playing!", "Disable Account Confirmation", "Disable Account", "Cancel", () ->
+  confirmDialog "This will delete your account, drop you from your team, and prevent you from playing!", "Delete Account Confirmation", "Delete Account", "Cancel", () ->
     data = {
       "password": $("#disable-account-form input[name=current-password]").val()
     }
     apiCall "POST", "/api/v1/user/disable_account", data, 'Authentication', 'DisableAccount'
     .success (data) ->
-      apiNotify {"status": 1, "message": "Your account has been disabled"}, "/"
+      apiNotify {"status": 1, "message": "Your account has been deleted."}, "/"
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
