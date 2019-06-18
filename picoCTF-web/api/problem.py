@@ -6,7 +6,7 @@ import pymongo
 from voluptuous import ALLOW_EXTRA, Range, Required, Schema
 
 import api
-from api import PicoException, check, validate
+from api import check, PicoException, validate
 from api.cache import memoize
 
 problem_schema = Schema({

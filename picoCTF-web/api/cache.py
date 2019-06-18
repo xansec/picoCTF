@@ -1,11 +1,13 @@
 """Caching Library."""
 
+import datetime
 import logging
 from functools import wraps
 
-from flask import current_app, g
-from walrus import *
+from flask import current_app
+from walrus import Walrus
 
+import api
 from api import PicoException
 
 log = logging.getLogger(__name__)
@@ -13,65 +15,42 @@ log = logging.getLogger(__name__)
 __walrus = None
 __cache = None
 
+
 def get_conn():
-    """
-    Get a redis connection, reusing one if it exists.
-
-
-    """
+    """Get a redis connection, reusing one if it exists."""
     global __walrus
     if not __walrus:
-        __walrus = Walrus()
-    """
-    if 'walrus' not in g:
         conf = current_app.config
         try:
-            g.walrus = Walrus(host=conf["REDIS_ADDR"], port=conf["REDIS_PORT"],
+            __walrus = Walrus(host=conf["REDIS_ADDR"], port=conf["REDIS_PORT"],
                               password=conf["REDIS_PW"])
         except Exception as error:
             raise PicoException(
-                'Internal server error. Please contact a system administrator.',
+                'Internal server error. ' +
+                'Please contact a system administrator.',
                 data={'original_error': error})
-    return g.walrus
-    """
     return __walrus
 
 
 def get_cache():
-    """
-    Get a walrus cache, reusing one if it exists.
-
-    """
+    """Get a walrus cache, reusing one if it exists."""
     global __cache
     if not __cache:
-        walrus = get_conn()
-        __cache = walrus.cache()
-    """
-    if 'cache' not in g:
-        walrus = get_conn()
-        g.cache = walrus.cache()
-    return g.cache
-    """
+        __cache = get_conn().cache()
     return __cache
 
 
-def memoize(*argz, **kwds):
-    """
-    Wrapper for walrus cache.cached function that verifies redis connection in context first
-    """
-    _cache = get_cache()
-    f = None
-    if len(argz) == 1 and callable(argz[0]):
-        f = argz[0]
-
+def memoize(_f=None, **cached_kwargs):
+    """walrus.Cache.cached wrapper that reuses shared cache."""
     def decorator(f):
-        """Inner decorator."""
         @wraps(f)
         def wrapper(*args, **kwargs):
-            """Cache a function result."""
-            return _cache.cached(**kwds)(f)(*args, **kwargs)
+            return get_cache().cached(**cached_kwargs)(f)(*args, **kwargs)
         return wrapper
-    return decorator(f) if f else decorator
+    if _f is None:
+        return decorator
+    else:
+        return decorator(_f)
 
 
 def _get_hash_key(f, args, kwargs):
