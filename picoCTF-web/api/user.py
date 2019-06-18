@@ -356,10 +356,10 @@ def disable_account(uid):
         "disabled": False
     }, {"$set": {
         "disabled": True,
-        "firstname": "null",
-        "lastname": "null",
-        "email": "null",
-        "country": "null",
+        "firstname": "",
+        "lastname": "",
+        "email": "",
+        "country": "",
         "demo" : "{}"
     }})
 
