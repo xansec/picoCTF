@@ -5,7 +5,7 @@ from datetime import datetime
 from voluptuous import Length, Required, Schema
 
 import api
-from api import check, log_action, PicoException, validate
+from api import cache, check, log_action, PicoException, validate
 
 submission_schema = Schema({
     Required("tid"):
@@ -96,13 +96,20 @@ def submit_key(tid, pid, key, method, uid, ip=None):
             'correct': correct,
         })
 
-    # if correct and not previously_solved_by_user:
+    if correct and not previously_solved_by_team:
         # Immediately invalidate some caches
-        # @TODO caching is planned to be reworked
-        # api.stats.get_score(tid=tid, uid=uid)
-        # api.stats.get_unlocked_pids(tid)
-        # api.problem.get_solved_problems(tid=tid, uid=uid)
-        # api.stats.get_score_progression(tid=tid, uid=uid)
+        cache.invalidate(api.stats.get_score, tid=tid)
+        cache.invalidate(api.stats.get_score, uid=uid)
+        cache.invalidate(api.problem.get_unlocked_pids, tid)
+        cache.invalidate(
+            api.problem.get_solved_problems, tid=tid, uid=uid, category=None)
+        cache.invalidate(api.problem.get_solved_problems, tid=tid, uid=uid)
+        cache.invalidate(api.problem.get_solved_problems, tid=tid)
+        cache.invalidate(api.problem.get_solved_problems, uid=uid)
+        cache.invalidate(
+            api.stats.get_score_progression, tid=tid, category=None)
+        cache.invalidate(api.stats.get_score_progression, tid=tid)
+
 
         # @TODO achievement processing needs to be fixed/reviewed
         # api.achievement.process_achievements("submit", {

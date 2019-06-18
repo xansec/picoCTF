@@ -394,7 +394,7 @@ def get_unlocked_pids(tid):
 
     """
     # Note: Do NOT limit solved problems to category for proper weight count
-    solved = get_solved_problems(tid)
+    solved = get_solved_problems(tid=tid)
     team = api.team.get_team(tid)
 
     unlocked = []

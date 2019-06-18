@@ -8,6 +8,8 @@ from flask import current_app
 from walrus import Walrus
 
 import api
+import hashlib
+import pickle
 from api import PicoException
 
 log = logging.getLogger(__name__)
@@ -40,17 +42,39 @@ def get_cache():
     return __cache
 
 
+def clear():
+    global __cache
+    if __cache:
+        __cache.flush()
+
+
 def memoize(_f=None, **cached_kwargs):
     """walrus.Cache.cached wrapper that reuses shared cache."""
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
+            if kwargs.get("reset_cache", False):
+                kwargs.pop("reset_cache", None)
+                invalidate(f, *args, **kwargs)
             return get_cache().cached(**cached_kwargs)(f)(*args, **kwargs)
         return wrapper
     if _f is None:
         return decorator
     else:
         return decorator(_f)
+
+
+def _hash_key(a, k):
+    return hashlib.md5(pickle.dumps((a, k))).hexdigest()
+
+
+def invalidate(f, *args, **kwargs):
+    """
+    Clunky way to replicate busting behavior due to awkward wrapping of walrus cached decorator
+    """
+    cache = get_cache()
+    key = '%s:%s' % (f.__name__, _hash_key(args, kwargs))
+    cache.delete(key)
 
 
 def _get_hash_key(f, args, kwargs):

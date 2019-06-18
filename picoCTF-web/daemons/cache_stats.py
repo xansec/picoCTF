@@ -35,4 +35,4 @@ def run():
         print("Caching number of solves for each problem.")
         for problem in api.problem.get_all_problems():
             print(problem["name"], api.stats.get_problem_solves(
-                  pid=problem["pid"], ))
+                  problem["pid"], ))

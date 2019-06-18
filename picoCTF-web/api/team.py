@@ -3,7 +3,7 @@
 from voluptuous import Length, Required, Schema
 
 import api
-from api import check, log_action, PicoException
+from api import cache, check, log_action, PicoException
 
 new_team_schema = Schema({
     Required("team_name"):
@@ -400,12 +400,25 @@ def join_team(team_name, password, user):
                 api.group.join_group(
                     gid=group["gid"], tid=desired_team["tid"])
 
-    # @TODO Immediately invalidate some caches
-    # api.problem.get_unlocked_pids(desired_team['tid'])
-    # api.problem.get_solved_problems(tid=desired_team['tid'],
-    #                                 uid=user['uid'])
-    # api.stats.get_score(tid=desired_team['tid'])
-    # api.stats.get_score_progression(tid=desired_team['tid'])
+    # Immediately invalidate some caches
+
+    cache.invalidate(api.stats.get_score, tid=desired_team['tid'])
+    cache.invalidate(api.stats.get_score, uid=user['uid'])
+    cache.invalidate(api.problem.get_unlocked_pids, desired_team['tid'])
+    cache.invalidate(
+        api.problem.get_solved_problems,
+        tid=desired_team['tid'],
+        uid=user['uid'],
+        category=None)
+    cache.invalidate(
+        api.problem.get_solved_problems,
+        tid=desired_team['tid'],
+        uid=user['uid'])
+    cache.invalidate(api.problem.get_solved_problems, tid=desired_team['tid'])
+    cache.invalidate(api.problem.get_solved_problems, uid=user['uid'])
+    cache.invalidate(
+        api.stats.get_score_progression, tid=desired_team['tid'], category=None)
+    cache.invalidate(api.stats.get_score_progression, tid=desired_team['tid'])
 
     return desired_team['tid']
 

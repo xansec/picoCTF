@@ -28,9 +28,16 @@ def get_score(tid=None, uid=None):
     Returns:
         The users's or team's score
     """
+    if uid is None:
+        solved_problems = api.problem.get_solved_problems(tid=tid)
+    elif tid is None:
+        solved_problems = api.problem.get_solved_problems(uid=uid)
+    else:
+        solved_problems = api.problem.get_solved_problems(tid=tid, uid=uid)
+
     score = sum([
         problem['score']
-        for problem in api.problem.get_solved_problems(tid=tid, uid=uid)
+        for problem in solved_problems
     ])
     return score
 
@@ -293,7 +300,7 @@ def get_problem_solves(pid):
 # Stored by the cache_stats daemon
 @memoize
 def get_top_teams_score_progressions(
-        limit, include_ineligible=False, gid=None):
+        limit=5, include_ineligible=False, gid=None):
     """
     Get the score progressions for the top teams.
 

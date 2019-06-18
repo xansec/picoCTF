@@ -70,10 +70,9 @@ class ProblemList(Resource):
         for problem in problems:
             problem['solves'] = api.stats.get_problem_solves(problem['pid'])
             problem['unlocked'] = \
-                problem['pid'] in api.problem.get_unlocked_pids(
-                    curr_user['tid'])
+                problem['pid'] in api.problem.get_unlocked_pids(curr_user['tid'])
             problem['solved'] = \
-                problem['pid'] in api.problem.get_solved_pids(curr_user['tid'])
+                problem['pid'] in api.problem.get_solved_pids(tid=curr_user['tid'])
             if curr_user.get('admin', False):
                 problem['reviews'] = api.problem_feedback.get_problem_feedback(
                     pid=problem['pid'])
@@ -186,10 +185,9 @@ class Problem(Resource):
         curr_user = api.user.get_user()
         problem['solves'] = api.stats.get_problem_solves(problem['pid'])
         problem['unlocked'] = \
-            problem['pid'] in api.problem.get_unlocked_pids(
-                curr_user['tid'])
+            problem['pid'] in api.problem.get_unlocked_pids(curr_user['tid'])
         problem['solved'] = \
-            problem['pid'] in api.problem.get_solved_pids(curr_user['tid'])
+            problem['pid'] in api.problem.get_solved_pids(tid=curr_user['tid'])
         if curr_user.get('admin', False):
             problem['reviews'] = api.problem_feedback.get_problem_feedback(
                 pid=problem['pid'])
