@@ -50,7 +50,7 @@ class LoginResponse(Resource):
     @ns.response(200, 'Sucess')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Incorrect username or password')
-    @ns.response(403, 'Account disabled or not yet verified')
+    @ns.response(403, 'Account deleted or not yet verified')
     @ns.expect(login_req)
     def post(self):
         """Log in."""

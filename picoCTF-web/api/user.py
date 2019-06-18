@@ -356,10 +356,10 @@ def disable_account(uid):
         "disabled": False
     }, {"$set": {
         "disabled": True,
-        "firstname": "",
-        "lastname": "",
-        "email": "",
-        "country": "",
+        "firstname": "null",
+        "lastname": "null",
+        "email": "null",
+        "country": "null",
         "demo" : "{}"
     }})
 
@@ -441,7 +441,7 @@ def login(username, password):
         raise PicoException('Incorrect username.', 401)
 
     if user['disabled']:
-        raise PicoException('This account has been disabled.', 403)
+        raise PicoException('This account has been deleted.', 403)
 
     if not user['verified']:
         raise PicoException('This account has not been verified yet.', 403)
