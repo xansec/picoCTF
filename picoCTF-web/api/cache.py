@@ -23,7 +23,7 @@ def get_conn():
         conf = current_app.config
         try:
             __walrus = Walrus(host=conf["REDIS_ADDR"], port=conf["REDIS_PORT"],
-                              password=conf["REDIS_PW"])
+                              password=conf["REDIS_PW"], db=conf["REDIS_DB_NUMBER"])
         except Exception as error:
             raise PicoException(
                 'Internal server error. ' +
@@ -36,7 +36,7 @@ def get_cache():
     """Get a walrus cache, reusing one if it exists."""
     global __cache
     if not __cache:
-        __cache = get_conn().cache()
+        __cache = get_conn().cache(default_timeout=0)
     return __cache
 
 
