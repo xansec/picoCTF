@@ -910,6 +910,19 @@ def deploy_problems(args, config):
                 deploy_location = problem_name
             elif isdir(problem_name):
                 # problem_name is a source dir - convert to .deb and install
+
+                # check for duplicates, abort if a problem with a different author exists
+                problem_object = get_problem(problem_name)
+                if os.path.isdir(get_problem_root(problem_object["name"], absolute=True)):
+                    old_problem = get_problem(get_problem_root(problem_object["name"], absolute=True))
+                    if old_problem["author"] != problem_object["author"]:
+                        raise Exception(
+                            "Trying to package a problem named {} by {}, but a problem with the same name by {} already exists. Please remove the old problem or rename the new problem."
+                            .format(problem_object["name"], problem_object["author"], old_problem["author"]))
+                    else:
+                        logger.info("A problem named '%s' by '%s' ('%s'). already exists. Overwriting it.",
+                                    problem_object["name"], problem_object["author"], old_problem["author"])
+
                 try:
                     if not os.path.isdir(TEMP_DEB_DIR):
                         os.mkdir(TEMP_DEB_DIR)
