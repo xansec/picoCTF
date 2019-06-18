@@ -7,14 +7,14 @@ from api import (PicoException, block_before_competition, check_csrf,
                  rate_limit, require_login)
 
 from .schemas import (join_group_req, score_progression_req, team_change_req,
-                      update_team_password_req)
+                      team_patch_req, update_team_password_req)
 
 ns = Namespace('team', description="Information about the current user's team")
 
 
 @ns.route('')
 class Team(Resource):
-    """Get the current user's team."""
+    """The current user's team."""
 
     @require_login
     @ns.response(200, 'Success')
@@ -23,6 +23,20 @@ class Team(Resource):
         """Get information about the current user's team."""
         current_tid = api.user.get_user()['tid']
         return jsonify(api.team.get_team_information(current_tid))
+
+    @require_login
+    @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing request')
+    @ns.response(401, 'Not logged in')
+    @ns.expect(team_patch_req)
+    def patch(self):
+        """Update team settings."""
+        req = team_patch_req.parse_args(strict=True)
+        current_tid = api.user.get_user()['tid']
+        api.team.update_team(current_tid, req)
+        return jsonify({
+            'success': True
+        })
 
 
 # @TODO doesn't make sense to return score in both /team and /team/score

@@ -506,6 +506,14 @@ team_req.add_argument(
     error='A password for the new team is required'
 )
 
+# Team patch request
+team_patch_req = reqparse.RequestParser()
+team_patch_req.add_argument(
+    'allow_ineligible_members', required=False, type=inputs.boolean,
+    location='json', store_missing=False,
+    help='Whether to allow ineligible users to join the team'
+)
+
 # Scoreboard page request
 scoreboard_page_req = reqparse.RequestParser()
 scoreboard_page_req.add_argument(

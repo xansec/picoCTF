@@ -7,7 +7,7 @@ from flask_restplus import Namespace, Resource
 import api
 from api import PicoException, require_admin, require_login
 
-from .schemas import team_req
+from .schemas import team_req, team_patch_req
 
 ns = Namespace('teams', description='Team management')
 
@@ -51,6 +51,29 @@ class TeamList(Resource):
         })
         res.status_code = 201
         return res
+
+
+@ns.route('/<string:team_id>')
+class Team(Resource):
+    """A specific team."""
+
+    @require_admin
+    @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing request')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Not authorized')
+    @ns.response(404, 'Team not found')
+    @ns.expect(team_patch_req)
+    def patch(self, team_id):
+        """Update team settings."""
+        req = team_patch_req.parse_args(strict=True)
+        res = api.team.get_team(tid=team_id)
+        if not res:
+            raise PicoException('Team not found', status_code=404)
+        api.team.update_team(team_id, req)
+        return jsonify({
+            'success': True
+        })
 
 
 @ns.response(200, 'Success')

@@ -48,6 +48,28 @@ def get_team(tid=None, name=None):
     return db.teams.find_one(match, {"_id": 0})
 
 
+def update_team(tid, updates):
+    """
+    Update a team with new properties.
+
+    Args:
+        tid: the tid of the team to update
+        updates: dict of updated properties
+
+    Returns:
+        tid of the updated team (unchanged), or
+        None if the team was not found
+
+    """
+    db = api.db.get_conn()
+    if len(updates) > 0:
+        success = db.teams.find_one_and_update(
+            {'tid': tid}, {'$set': updates})
+        if not success:
+            return None
+    return tid
+
+
 @memoize
 def get_groups(tid):
     """
@@ -128,6 +150,7 @@ def create_and_join_new_team(team_name, team_password, user):
         "affiliation": current_team["affiliation"],
         "creator": user["uid"],
         "country": user["country"],
+        "allow_ineligible_members": False
     })
     join_team(team_name, team_password, user)
 
@@ -284,6 +307,7 @@ def calculate_elegibility(users):
 
     Returns:
         True or False
+
     """
     conditions = api.config.get_settings()['eligibility']
     for user in users:
@@ -372,7 +396,9 @@ def join_team(team_name, password, user):
             'That is not the correct password to join that team.', 403)
 
     # Make sure joining the team will not impact its eligibility
-    if desired_team_info['size'] > 0 and desired_team_info['eligible'] is True:
+    if (desired_team_info['size'] > 0 and
+            desired_team_info['eligible'] is True and
+            not desired_team_info.get('allow_ineligible_members', False)):
         projected_team_members = [m for m in desired_team_info['members']]
         projected_team_members.append(api.user.get_user())
         if not calculate_elegibility(projected_team_members):
