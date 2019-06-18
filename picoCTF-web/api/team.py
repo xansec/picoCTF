@@ -275,6 +275,25 @@ def get_team_information(tid):
     return team_info
 
 
+def calculate_elegibility(users):
+    """
+    Determine whether a set of users all satisfy eligibility criteria.
+
+    Args:
+        users: iterable of user dicts
+
+    Returns:
+        True or False
+    """
+    conditions = api.config.get_settings()['eligibility']
+    for user in users:
+        is_eligible = all(
+            (user[k] == conditions[k] for k in conditions.keys()))
+        if not is_eligible:
+            return False
+    return True
+
+
 def is_eligible(tid):
     """
     Return a team's eligibility for the current event.
@@ -285,13 +304,7 @@ def is_eligible(tid):
         True or False
     """
     members = get_team_members(tid, show_disabled=False)
-    conditions = api.config.get_settings()['eligibility']
-    for member in members:
-        is_eligible = all(
-            (member[k] == conditions[k] for k in conditions.keys()))
-        if not is_eligible:
-            return False
-    return True
+    return calculate_elegibility(members)
 
 
 def mark_eligiblity(tid, status):
@@ -343,6 +356,7 @@ def join_team(team_name, password, user):
     """
     current_team = api.user.get_team(uid=user["uid"])
     desired_team = api.team.get_team(name=team_name)
+    desired_team_info = api.team.get_team_information(desired_team['tid'])
 
     if current_team["team_name"] != user["username"]:
         raise PicoException(
@@ -356,6 +370,16 @@ def join_team(team_name, password, user):
     if not api.user.confirm_password(password, desired_team["password"]):
         raise PicoException(
             'That is not the correct password to join that team.', 403)
+
+    # Make sure joining the team will not impact its eligibility
+    if desired_team_info['size'] > 0 and desired_team_info['eligible'] is True:
+        projected_team_members = [m for m in desired_team_info['members']]
+        projected_team_members.append(api.user.get_user())
+        if not calculate_elegibility(projected_team_members):
+            raise PicoException(
+                'You cannot join this team as doing so would make it ' +
+                'ineligible for the competition.', 403
+            )
 
     # Join the new team
     db = api.db.get_conn()
