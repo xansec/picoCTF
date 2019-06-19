@@ -140,10 +140,13 @@ TeamManagementForm = React.createClass
           <form onSubmit={@onTeamPasswordChange}>
             <Input type="password" valueLink={@linkState "team_password"} addonBefore={lockGlyph} label="New Team Password" required/>
             <Input type="password" valueLink={@linkState "confirm_team_password"} addonBefore={lockGlyph} label="Confirm New Team Password" required/>
-            <Col md={6}>
+            <Col className="form-group">
                 <Button type="submit">Change Team Password</Button>
             </Col>
           </form>
+
+        <hr/>
+        <p>Your team is considered <b>{if @state.team.eligible then 'eligible' else 'ineligible'}</b> for this competition.</p>
         </Panel>
       else
         <Panel header="Team Management">
