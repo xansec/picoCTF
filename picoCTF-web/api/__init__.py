@@ -11,8 +11,8 @@ from werkzeug.contrib.fixers import ProxyFix
 from api.common import check, PicoException, validate  # noqa
 from api.config import block_after_competition, block_before_competition  # noqa
 from api.logger import log_action  # noqa
-from api.user import (check_csrf, require_admin, require_login,  # noqa
-                      require_teacher)
+from api.user import (check_csrf, rate_limit, require_admin,  # noqa
+                      require_login, require_teacher)
 
 import api.achievement
 import api.bundles

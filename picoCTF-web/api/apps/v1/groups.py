@@ -8,7 +8,8 @@ from marshmallow import (fields, post_load, pre_load, RAISE, Schema, validate,
                          ValidationError)
 
 import api
-from api import check_csrf, PicoException, require_login, require_teacher
+from api import (check_csrf, PicoException, rate_limit, require_login,
+                 require_teacher)
 
 from .schemas import (batch_registration_req, group_invite_req,
                       group_patch_req, group_remove_team_req, group_req)
@@ -30,12 +31,14 @@ class GroupList(Resource):
 
     @check_csrf
     @require_teacher
+    @rate_limit(limit=1, duration=10)
     @ns.response(201, 'Group added')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'You do not have permission to create a group ' +
                       'or CSRF token invalid')
     @ns.response(409, 'You already have a group with that name')
+    @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(group_req)
     def post(self):
         """Create a new group."""
@@ -262,6 +265,8 @@ class InviteResponse(Resource):
     """Send an email invite to join this team."""
 
     @require_teacher
+    @rate_limit(limit=1, duration=30)
+    @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(group_invite_req)
     def post(self, group_id):
         """Send an email invite to join this team."""
@@ -294,10 +299,12 @@ class BatchRegistrationResponse(Resource):
     """
 
     @require_teacher
+    @rate_limit(limit=1, duration=30)
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Permission denied')
     @ns.response(404, 'Group not found')
+    @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(batch_registration_req)
     def post(self, group_id):
         """Automatically registers several student accounts based on a CSV."""

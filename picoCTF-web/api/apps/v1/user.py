@@ -3,7 +3,7 @@ from flask import jsonify, redirect
 from flask_restplus import Namespace, Resource
 
 import api
-from api import check_csrf, PicoException, require_login
+from api import check_csrf, PicoException, rate_limit, require_login
 
 from .schemas import (disable_account_req, email_verification_req, login_req,
                       reset_password_confirmation_req, reset_password_req,
@@ -46,11 +46,12 @@ class User(Resource):
 @ns.route('/login')
 class LoginResponse(Resource):
     """Log in."""
-
-    @ns.response(200, 'Sucess')
+    @rate_limit(limit=20, duration=15, by_ip=True)
+    @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Incorrect username or password')
     @ns.response(403, 'Account deleted or not yet verified')
+    @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(login_req)
     def post(self):
         """Log in."""
@@ -181,9 +182,11 @@ class UpdatePasswordResponse(Resource):
 class ResetPasswordResponse(Resource):
     """Reset a user's password. Requires a password reset token."""
 
+    @rate_limit(limit=2, duration=15, by_ip=True)
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(422, 'Invalid token')
+    @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(reset_password_confirmation_req)
     def post(self):
         """Reset a user's password. Requires a password reset token."""
@@ -199,9 +202,11 @@ class ResetPasswordResponse(Resource):
 class ResetPasswordRequestResponse(Resource):
     """Request a password reset. Does not require authentication."""
 
+    @rate_limit(limit=2, duration=30, by_ip=True)
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(404, 'Username not found')
+    @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(reset_password_req)
     def post(self):
         """Request a password reset. Does not require authentication."""

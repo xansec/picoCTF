@@ -4,7 +4,7 @@ from flask_restplus import Namespace, Resource
 
 import api
 from api import (block_after_competition, block_before_competition, check_csrf,
-                 require_admin, require_login)
+                 rate_limit, require_admin, require_login)
 
 from .schemas import submission_req
 
@@ -20,11 +20,13 @@ class SubmissionList(Resource):
     @block_after_competition
     @block_before_competition
     @require_login
+    @rate_limit(limit=5, duration=30)
     @ns.response(201, 'Submission successful')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'CSRF token invalid')
     @ns.response(422, 'Problem not unlocked or outside of competition period')
+    @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(submission_req)
     def post(self):
         """Submit a solution to a problem."""

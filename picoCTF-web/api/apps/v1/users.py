@@ -6,7 +6,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException, require_admin
+from api import PicoException, rate_limit, require_admin
 
 from .schemas import user_req
 
@@ -25,9 +25,11 @@ class UserList(Resource):
         """Get the full list of users."""
         return jsonify(api.user.get_all_users())
 
+    @rate_limit(limit=5, duration=15, by_ip=True)
     @ns.response(201, 'Successfully created user')
     @ns.response(400, 'Error parsing request')
     @ns.response(409, 'Username not available')
+    @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(user_req)
     def post(self):
         """Register a new user."""

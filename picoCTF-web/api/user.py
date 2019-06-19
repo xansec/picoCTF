@@ -11,7 +11,7 @@ import flask
 from flask import request, session
 
 import api
-from api import log_action, PicoException
+from api import cache, log_action, PicoException
 
 
 def check_blacklisted_usernames(username):
@@ -537,3 +537,43 @@ def check_csrf(f):
             raise PicoException('CSRF token is not correct', 403)
         return f(*args, **kwds)
     return wrapper
+
+
+def rate_limit(limit=5, duration=60, by_ip=False):
+    """
+    Limits requests per user or ip to specified limit threshold
+    with lingering duration/expiry (as opposed to rolling interval).
+    Note that non-user IP limits should be more generous given shared IPs
+    likely in school networks.
+
+    Does not use Walrus rate_limit to avoid having to instantiate new instance
+    per rate-limit target.
+    :param limit: number of requests allowed before limit is enforced
+    :param duration: expiration of last request before limit is reset
+    :param by_ip: force keying by ip. Note that requests out of user context
+                  default to ip-based key
+    """
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            _cache = cache.get_cache()
+            _db = cache.get_conn()
+            key_id = request.remote_addr
+            if is_logged_in():
+                current_user = get_user()
+                # Bypass admin
+                if current_user.get('admin', False):
+                    return f(*args, **kwargs)
+                if not by_ip:
+                    key_id = current_user['uid']
+            key = "rate_limit:{}:{}".format(request.path, key_id)
+            # Avoid race conditions of setting (get-value + 1)
+            _db.incr(key)
+            _db.expire(key, duration)
+            count = int(_db.get(key))
+            if count is not None and count <= limit:
+                return f(*args, **kwargs)
+            else:
+                raise PicoException('Too many requests, slow down!', 429)
+        return wrapper
+    return decorator
