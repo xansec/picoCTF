@@ -12,7 +12,7 @@ from shutil import copy, rmtree
 import spur
 from shell_manager.util import (FatalException, full_copy, get_problem,
                                 get_problem_root, move, sanitize_name,
-                                get_problem_root_hashed)
+                                get_problem_root_hashed, get_pid_hash)
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def problem_to_control(problem, debian_path):
 
     # a-z, digits 0-9, plus + and minus - signs, and periods
     package_name = problem.get("pkg_name", problem["name"])
-    sanitized_name = sanitize_name(package_name)
+    sanitized_name = "{}-{}".format(sanitize_name(package_name), get_pid_hash(problem, True))
     control = deepcopy(DEB_DEFAULTS)
     control.update(
         **{
