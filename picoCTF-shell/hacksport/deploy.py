@@ -136,7 +136,8 @@ from shell_manager.bundle import get_bundle, get_bundle_root
 from shell_manager.package import package_problem
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_problem, get_problem_root, HACKSPORTS_ROOT,
-                                sanitize_name, STAGING_ROOT)
+                                sanitize_name, STAGING_ROOT, get_problem_root_hashed,
+                                get_pid_hash)
 from spur import RunProcessError
 
 logger = logging.getLogger(__name__)
@@ -717,7 +718,8 @@ def deploy_problem(problem_directory,
         instance_list.append((instance_number, instance))
 
     deployment_json_dir = join(DEPLOYED_ROOT,
-                               sanitize_name(problem_object["name"]))
+                               "{}-{}".format(sanitize_name(problem_object["name"]),
+                               get_pid_hash(problem_object, True)))
     if not os.path.isdir(deployment_json_dir):
         os.makedirs(deployment_json_dir)
 
@@ -902,9 +904,9 @@ def deploy_problems(args, config):
 
     try:
         for problem_name in problem_names:
-            if isdir(join(get_problem_root(problem_name, absolute=True))):
+            if isdir(join(get_problem_root_hashed(get_problem(problem_name), absolute=True))):
                 # problem_name is already an installed package
-                deploy_location = join(get_problem_root(problem_name, absolute=True))
+                deploy_location = join(get_problem_root_hashed(get_problem(problem_name), absolute=True))
             elif isdir(problem_name) and args.dry:
                 # dry run - avoid installing package
                 deploy_location = problem_name
@@ -913,8 +915,8 @@ def deploy_problems(args, config):
 
                 # check for duplicates, abort if a problem with a different author exists
                 problem_object = get_problem(problem_name)
-                if os.path.isdir(get_problem_root(problem_object["name"], absolute=True)):
-                    old_problem = get_problem(get_problem_root(problem_object["name"], absolute=True))
+                if os.path.isdir(get_problem_root_hashed(problem_object, absolute=True)):
+                    old_problem = get_problem(get_problem_root_hashed(problem_object, absolute=True))
                     if old_problem["author"] != problem_object["author"]:
                         raise Exception(
                             "Trying to package a problem named {} by {}, but a problem with the same name by {} already exists. Please remove the old problem or rename the new problem."
@@ -937,7 +939,7 @@ def deploy_problems(args, config):
                 except subprocess.CalledProcessError:
                     logger.error("An error occurred while installing problem packages.")
                     raise FatalException
-                deploy_location = join(get_problem_root(problem_name, absolute=True))
+                deploy_location = join(get_problem_root_hashed(problem_object, absolute=True))
             else:
                 logger.error("'%s' is neither an installed package, nor a valid problem directory",
                              problem_name)
