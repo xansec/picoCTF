@@ -66,7 +66,7 @@ TeamManagementForm = React.createClass
     team_name: ""
     team_password: ""
 
-  componentWillMount: ->
+  refresh: ->
     apiCall "GET", "/api/v1/user"
     .success ((data) ->
       @setState update @state,
@@ -78,6 +78,9 @@ TeamManagementForm = React.createClass
       @setState update @state,
         team: $set: data
     ).bind this
+
+  componentDidMount: ->
+    @refresh()
 
   onTeamRegistration: (e) ->
     e.preventDefault()
@@ -97,6 +100,18 @@ TeamManagementForm = React.createClass
     apiCall "POST", "/api/v1/team/join", data
     .success (data) ->
       document.location.href = "/profile"
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
+
+
+  toggleAllowIneligibleMembers: (e) ->
+    e.preventDefault()
+    data = {"allow_ineligible_members": !@state.team.allow_ineligible_members}
+    apiCall "PATCH", "/api/v1/team", data
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Settings updated successfully"}
+      @refresh()
+    ).bind(this)
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
@@ -130,23 +145,27 @@ TeamManagementForm = React.createClass
       teamCreated = (@state.user and @state.user.username != @state.team.team_name)
       if teamCreated
         <Panel header="Team Management">
-        <p><strong>Team Name:</strong> {@state.team.team_name}</p>
-        <p><strong>Members</strong> ({@state.team.members.length}/{@state.team.max_team_size}):</p>
-        <ul>
-          {@listMembers()}
-        </ul>
+          <p><strong>Team Name:</strong> {@state.team.team_name}</p>
+          <p><strong>Members</strong> ({@state.team.members.length}/{@state.team.max_team_size}):</p>
+          <ul>
+            {@listMembers()}
+          </ul>
 
-        <hr/>
-          <form onSubmit={@onTeamPasswordChange}>
-            <Input type="password" valueLink={@linkState "team_password"} addonBefore={lockGlyph} label="New Team Password" required/>
-            <Input type="password" valueLink={@linkState "confirm_team_password"} addonBefore={lockGlyph} label="Confirm New Team Password" required/>
-            <Col className="form-group">
-                <Button type="submit">Change Team Password</Button>
-            </Col>
-          </form>
+          <hr/>
+            <form onSubmit={@onTeamPasswordChange}>
+              <Input type="password" valueLink={@linkState "team_password"} addonBefore={lockGlyph} label="New Team Password" required/>
+              <Input type="password" valueLink={@linkState "confirm_team_password"} addonBefore={lockGlyph} label="Confirm New Team Password" required/>
+              <Col className="form-group">
+                  <Button type="submit">Change Team Password</Button>
+              </Col>
+            </form>
 
-        <hr/>
-        <p>Your team is considered <b>{if @state.team.eligible then 'eligible' else 'ineligible'}</b> for this competition.</p>
+          <hr/>
+          <p>Your team is considered <b>{if @state.team.eligible then 'eligible' else 'ineligible'}</b> for this competition.</p>
+          <p>Ineligible users are currently <b>{if @state.team.allow_ineligible_members then "able to join" else "blocked from joining"}</b> your team.</p>
+          <Col className="form-group">
+            <Button onClick={@toggleAllowIneligibleMembers}>{if @state.team.allow_ineligible_members then 'Block Ineligible Users' else 'Allow Ineligible Users'}</Button>
+          </Col>
         </Panel>
       else
         <Panel header="Team Management">
