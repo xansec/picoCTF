@@ -98,8 +98,9 @@ def upsert_problem(problem, sid):
     for instance in problem["instances"]:
         validate(instance_schema, instance)
 
-    problem["pid"] = api.common.hash("{}-{}".format(problem["name"],
-                                                    problem["author"]))
+    problem["pid"] = api.common.hash("{}-{}-{}".format(problem["name"],
+                                                    problem["author"],
+                                                    problem["organization"]))
     # Initially disable problems
     problem["disabled"] = True
 

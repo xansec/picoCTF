@@ -914,6 +914,7 @@ def deploy_problems(args, config):
                 # problem_name is a source dir - convert to .deb and install
 
                 # check for duplicates, abort if a problem with a different author exists
+                # should not happen anymore with the hashed names
                 problem_object = get_problem(problem_name)
                 if os.path.isdir(get_problem_root_hashed(problem_object, absolute=True)):
                     old_problem = get_problem(get_problem_root_hashed(problem_object, absolute=True))
@@ -1002,7 +1003,12 @@ def remove_instances(path, instance_list):
         execute(["service", "xinetd", "restart"], timeout=60)
 
 def undeploy_problems(args, config):
-    """ Main entrypoint for problem undeployment """
+    """
+    Main entrypoint for problem undeployment
+    
+    Does not remove the installed packages (apt-get remove [sanitized name with hash]). 
+    Does not remove the problem from the web server (delete it from the mongo db).
+    """
 
     problem_names = args.problem_paths
 

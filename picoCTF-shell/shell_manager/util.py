@@ -440,7 +440,7 @@ def get_pid_hash(problem, short=False):
         logger.critical(e)
         raise FatalException
     
-    input = "{}-{}".format(problem["name"], problem["author"])
+    input = "{}-{}-{}".format(problem["name"], problem["author"], problem["organization"])
     output = md5(input.encode("utf-8")).hexdigest()
 
     if short:
