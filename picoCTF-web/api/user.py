@@ -8,7 +8,7 @@ from functools import wraps
 
 import bcrypt
 import flask
-from flask import request, session
+from flask import current_app, request, session
 
 import api
 from api import cache, log_action, PicoException
@@ -539,7 +539,7 @@ def check_csrf(f):
     return wrapper
 
 
-def rate_limit(limit=5, duration=60, by_ip=False):
+def rate_limit(limit=5, duration=60, by_ip=False, allow_bypass=False):
     """
     Limits requests per user or ip to specified limit threshold
     with lingering duration/expiry (as opposed to rolling interval).
@@ -552,13 +552,19 @@ def rate_limit(limit=5, duration=60, by_ip=False):
     :param duration: expiration of last request before limit is reset
     :param by_ip: force keying by ip. Note that requests out of user context
                   default to ip-based key
+    :param allow_bypass: allow inclusion of bypass secret in HTTP header
     """
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            _cache = cache.get_cache()
-            _db = cache.get_conn()
+            if allow_bypass:
+                bypass_header = request.headers.get('Limit-Bypass')
+                conf = current_app.config
+                if bypass_header == conf["RATE_LIMIT_BYPASS"]:
+                    return f(*args, **kwargs)
+
             key_id = request.remote_addr
+
             if is_logged_in():
                 current_user = get_user()
                 # Bypass admin
@@ -566,6 +572,8 @@ def rate_limit(limit=5, duration=60, by_ip=False):
                     return f(*args, **kwargs)
                 if not by_ip:
                     key_id = current_user['uid']
+
+            _db = cache.get_conn()
             key = "rate_limit:{}:{}".format(request.path, key_id)
             # Avoid race conditions of setting (get-value + 1)
             _db.incr(key)

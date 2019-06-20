@@ -46,7 +46,7 @@ class User(Resource):
 @ns.route('/login')
 class LoginResponse(Resource):
     """Log in."""
-    @rate_limit(limit=20, duration=15, by_ip=True)
+    @rate_limit(limit=20, duration=15, by_ip=True, allow_bypass=True)
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Incorrect username or password')
@@ -55,7 +55,7 @@ class LoginResponse(Resource):
     @ns.expect(login_req)
     def post(self):
         """Log in."""
-        req = login_req.parse_args(strict=True)
+        req = login_req.parse_args(strict=False)
         api.user.login(req['username'], req['password'])
         return jsonify({
             "success": True,
