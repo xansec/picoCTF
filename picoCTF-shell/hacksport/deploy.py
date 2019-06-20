@@ -904,9 +904,9 @@ def deploy_problems(args, config):
 
     try:
         for problem_name in problem_names:
-            if isdir(join(get_problem_root_hashed(get_problem(problem_name), absolute=True))):
+            if isdir(join(get_problem_root(problem_name, absolute=True))):
                 # problem_name is already an installed package
-                deploy_location = join(get_problem_root_hashed(get_problem(problem_name), absolute=True))
+                deploy_location = join(get_problem_root(problem_name, absolute=True))
             elif isdir(problem_name) and args.dry:
                 # dry run - avoid installing package
                 deploy_location = problem_name
