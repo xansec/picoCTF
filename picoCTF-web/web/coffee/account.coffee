@@ -136,6 +136,13 @@ TeamManagementForm = React.createClass
     for member in @state.team["members"]
       <li>{member.username} (<span className="capitalize">{member.usertype} - {member.country}</span>)</li>
 
+  renderIneligibleMemberToggle: ->
+    if @state.team.eligible
+      <Col className="form-group">
+        <p>Ineligible users are currently <b>{if @state.team.allow_ineligible_members then "permitted to join" else "blocked from joining"}</b> your team.</p>
+        <Button onClick={@toggleAllowIneligibleMembers}>{if @state.team.allow_ineligible_members then 'Block Ineligible Users' else 'Allow Ineligible Users'}</Button>
+      </Col>
+
   render: ->
     if @state.team.max_team_size > 1 and not @state.user.teacher
       window.$("#team-management-container").show()
@@ -162,10 +169,7 @@ TeamManagementForm = React.createClass
 
           <hr/>
           <p>Your team is considered <b>{if @state.team.eligible then 'eligible' else 'ineligible'}</b> for this competition.</p>
-          <p>Ineligible users are currently <b>{if @state.team.allow_ineligible_members then "able to join" else "blocked from joining"}</b> your team.</p>
-          <Col className="form-group">
-            <Button onClick={@toggleAllowIneligibleMembers}>{if @state.team.allow_ineligible_members then 'Block Ineligible Users' else 'Allow Ineligible Users'}</Button>
-          </Col>
+          {@renderIneligibleMemberToggle()}
         </Panel>
       else
         <Panel header="Team Management">
