@@ -169,196 +169,6 @@ sample_shellserver_publish_output = r'''
 {
   "problems": [
     {
-      "name": "SQL Injection 1",
-      "category": "Web Exploitation",
-      "pkg_dependencies": [
-        "php7.2-sqlite3"
-      ],
-      "description": "There is a website running at http://{{server}}:{{port}}. Try to see if you can login!",
-      "score": 40,
-      "hints": [],
-      "author": "Tim Becker",
-      "organization": "ForAllSecure",
-      "instances": [
-        {
-          "user": "sql-injection-1_0",
-          "deployment_directory": "/problems/sql-injection-1_0_9e114b246c48eb158b16525f71ae2a00",
-          "service": "sql-injection-1_0",
-          "socket": null,
-          "server": "192.168.2.3",
-          "description": "There is a website running at http://192.168.2.3:17648. Try to see if you can login!",
-          "flag": "9ac0a74de6bced3cdce8e7fd466f32d0",
-          "flag_sha1": "958416d52940e4948eca8d9fb1eca21e4cf7eda1",
-          "instance_number": 0,
-          "should_symlink": false,
-          "files": [
-            {
-              "path": "webroot/config.php",
-              "permissions": 436,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "webroot/login.phps",
-              "permissions": 436,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "webroot/login.php",
-              "permissions": 436,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "webroot/index.html",
-              "permissions": 436,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "users.db",
-              "permissions": 288,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "xinet_startup.sh",
-              "permissions": 1517,
-              "user": null,
-              "group": null
-            }
-          ],
-          "port": 17648
-        },
-        {
-          "user": "sql-injection-1_1",
-          "deployment_directory": "/problems/sql-injection-1_1_10a4b1cdfd3a0f78d0d8b9759e6d69c5",
-          "service": "sql-injection-1_1",
-          "socket": null,
-          "server": "192.168.2.3",
-          "description": "There is a website running at http://192.168.2.3:10987. Try to see if you can login!",
-          "flag": "28054fef0f362256c78025f82e6572c3",
-          "flag_sha1": "f57fa5d3861c22a657eecafe30a43bd4ad7a4a2a",
-          "instance_number": 1,
-          "should_symlink": false,
-          "files": [
-            {
-              "path": "webroot/config.php",
-              "permissions": 436,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "webroot/login.phps",
-              "permissions": 436,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "webroot/login.php",
-              "permissions": 436,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "webroot/index.html",
-              "permissions": 436,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "users.db",
-              "permissions": 288,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "xinet_startup.sh",
-              "permissions": 1517,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "xinet_startup.sh",
-              "permissions": 1517,
-              "user": null,
-              "group": null
-            }
-          ],
-          "port": 10987
-        }
-      ],
-      "sanitized_name": "sql-injection-1"
-    },
-    {
-      "name": "Buffer Overflow 1",
-      "category": "Binary Exploitation",
-      "description": "Exploit the {{url_for(\"vuln\", display=\"Buffer Overflow\")}} found here: {{directory}}.",
-      "score": 50,
-      "hints": [
-        "This is a classic buffer overflow with no modern protections."
-      ],
-      "walkthrough": "PROTIP: Find the correct answer to get the points.",
-      "author": "Tim Becker",
-      "organization": "ForAllSecure",
-      "instances": [
-        {
-          "user": "buffer-overflow-1_0",
-          "deployment_directory": "/problems/buffer-overflow-1_0_bab40cd8ebd7845e1c4c2951c6f82e1f",
-          "service": null,
-          "socket": null,
-          "server": "192.168.2.3",
-          "description": "Exploit the <a href='//192.168.2.3/static/bd08ee41f495f8bff378c13157d0f511/vuln'>Buffer Overflow</a> found here: /problems/buffer-overflow-1_0_bab40cd8ebd7845e1c4c2951c6f82e1f.",
-          "flag": "638608c79eca2165e7b241ff365df05b",
-          "flag_sha1": "4b97abef055a11ec19c14622eb31eb1168d98aca",
-          "instance_number": 0,
-          "should_symlink": true,
-          "files": [
-            {
-              "path": "flag.txt",
-              "permissions": 288,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "vuln",
-              "permissions": 1517,
-              "user": null,
-              "group": null
-            }
-          ]
-        },
-        {
-          "user": "buffer-overflow-1_1",
-          "deployment_directory": "/problems/buffer-overflow-1_1_f49b6bd5da29513569bd87f98a934fa6",
-          "service": null,
-          "socket": null,
-          "server": "192.168.2.3",
-          "description": "Exploit the <a href='//192.168.2.3/static/c95410042007bb17f49b891a2a87afb2/vuln'>Buffer Overflow</a> found here: /problems/buffer-overflow-1_1_f49b6bd5da29513569bd87f98a934fa6.",
-          "flag": "35013564b97b80d4fd3f2be45e5836ff",
-          "flag_sha1": "5675d2d5819084d4203c1ef314239527074938a9",
-          "instance_number": 1,
-          "should_symlink": true,
-          "files": [
-            {
-              "path": "flag.txt",
-              "permissions": 288,
-              "user": null,
-              "group": null
-            },
-            {
-              "path": "vuln",
-              "permissions": 1517,
-              "user": null,
-              "group": null
-            }
-          ]
-        }
-      ],
-      "sanitized_name": "buffer-overflow-1"
-    },
-    {
       "name": "ECB 1",
       "category": "Cryptography",
       "description": "There is a crypto service running at {{server}}:{{port}}. We were able to recover the source code, which you can download at {{url_for(\"ecb.py\")}}.",
@@ -367,6 +177,7 @@ sample_shellserver_publish_output = r'''
       "score": 70,
       "author": "Tim Becker",
       "organization": "ForAllSecure",
+      "event": "Sample",
       "pip_requirements": [
         "pycrypto"
       ],
@@ -451,7 +262,202 @@ sample_shellserver_publish_output = r'''
           "port": 21953
         }
       ],
-      "sanitized_name": "ecb-1"
+      "sanitized_name": "ecb-1",
+      "unique_name": "ecb-1-b06174a"
+    },
+    {
+      "name": "SQL Injection 1",
+      "category": "Web Exploitation",
+      "pkg_dependencies": [
+        "php7.2-sqlite3"
+      ],
+      "description": "There is a website running at http://{{server}}:{{port}}. Try to see if you can login!",
+      "score": 40,
+      "hints": [],
+      "author": "Tim Becker",
+      "organization": "ForAllSecure",
+      "event": "Sample",
+      "instances": [
+        {
+          "user": "sql-injection-1_0",
+          "deployment_directory": "/problems/sql-injection-1_0_9e114b246c48eb158b16525f71ae2a00",
+          "service": "sql-injection-1_0",
+          "socket": null,
+          "server": "192.168.2.3",
+          "description": "There is a website running at http://192.168.2.3:17648. Try to see if you can login!",
+          "flag": "9ac0a74de6bced3cdce8e7fd466f32d0",
+          "flag_sha1": "958416d52940e4948eca8d9fb1eca21e4cf7eda1",
+          "instance_number": 0,
+          "should_symlink": false,
+          "files": [
+            {
+              "path": "webroot/index.html",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "webroot/login.php",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "webroot/login.phps",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "webroot/config.php",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "users.db",
+              "permissions": 288,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "xinet_startup.sh",
+              "permissions": 1517,
+              "user": null,
+              "group": null
+            }
+          ],
+          "port": 17648
+        },
+        {
+          "user": "sql-injection-1_1",
+          "deployment_directory": "/problems/sql-injection-1_1_10a4b1cdfd3a0f78d0d8b9759e6d69c5",
+          "service": "sql-injection-1_1",
+          "socket": null,
+          "server": "192.168.2.3",
+          "description": "There is a website running at http://192.168.2.3:10987. Try to see if you can login!",
+          "flag": "28054fef0f362256c78025f82e6572c3",
+          "flag_sha1": "f57fa5d3861c22a657eecafe30a43bd4ad7a4a2a",
+          "instance_number": 1,
+          "should_symlink": false,
+          "files": [
+            {
+              "path": "webroot/index.html",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "webroot/login.php",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "webroot/login.phps",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "webroot/config.php",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "users.db",
+              "permissions": 288,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "xinet_startup.sh",
+              "permissions": 1517,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "xinet_startup.sh",
+              "permissions": 1517,
+              "user": null,
+              "group": null
+            }
+          ],
+          "port": 10987
+        }
+      ],
+      "sanitized_name": "sql-injection-1",
+      "unique_name": "sql-injection-1-0c436d0"
+    },
+    {
+      "name": "Buffer Overflow 1",
+      "category": "Binary Exploitation",
+      "description": "Exploit the {{url_for(\"vuln\", display=\"Buffer Overflow\")}} found here: {{directory}}.",
+      "score": 50,
+      "hints": [
+        "This is a classic buffer overflow with no modern protections."
+      ],
+      "walkthrough": "PROTIP: Find the correct answer to get the points.",
+      "author": "Tim Becker",
+      "organization": "ForAllSecure",
+      "event": "Sample",
+      "instances": [
+        {
+          "user": "buffer-overflow-1_0",
+          "deployment_directory": "/problems/buffer-overflow-1_0_bab40cd8ebd7845e1c4c2951c6f82e1f",
+          "service": null,
+          "socket": null,
+          "server": "192.168.2.3",
+          "description": "Exploit the <a href='//192.168.2.3/static/bd08ee41f495f8bff378c13157d0f511/vuln'>Buffer Overflow</a> found here: /problems/buffer-overflow-1_0_bab40cd8ebd7845e1c4c2951c6f82e1f.",
+          "flag": "638608c79eca2165e7b241ff365df05b",
+          "flag_sha1": "4b97abef055a11ec19c14622eb31eb1168d98aca",
+          "instance_number": 0,
+          "should_symlink": true,
+          "files": [
+            {
+              "path": "flag.txt",
+              "permissions": 288,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "vuln",
+              "permissions": 1517,
+              "user": null,
+              "group": null
+            }
+          ]
+        },
+        {
+          "user": "buffer-overflow-1_1",
+          "deployment_directory": "/problems/buffer-overflow-1_1_f49b6bd5da29513569bd87f98a934fa6",
+          "service": null,
+          "socket": null,
+          "server": "192.168.2.3",
+          "description": "Exploit the <a href='//192.168.2.3/static/c95410042007bb17f49b891a2a87afb2/vuln'>Buffer Overflow</a> found here: /problems/buffer-overflow-1_1_f49b6bd5da29513569bd87f98a934fa6.",
+          "flag": "35013564b97b80d4fd3f2be45e5836ff",
+          "flag_sha1": "5675d2d5819084d4203c1ef314239527074938a9",
+          "instance_number": 1,
+          "should_symlink": true,
+          "files": [
+            {
+              "path": "flag.txt",
+              "permissions": 288,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "vuln",
+              "permissions": 1517,
+              "user": null,
+              "group": null
+            }
+          ]
+        }
+      ],
+      "sanitized_name": "buffer-overflow-1",
+      "unique_name": "buffer-overflow-1-35e6d9d"
     }
   ],
   "bundles": [
@@ -465,22 +471,22 @@ sample_shellserver_publish_output = r'''
         "Web Exploitation"
       ],
       "problems": [
-        "buffer-overflow-1",
-        "ecb-1",
-        "sql-injection-1"
+        "buffer-overflow-1-35e6d9d",
+        "ecb-1-b06174a",
+        "sql-injection-1-0c436d0"
       ],
       "dependencies": {
-        "ecb-1": {
+        "ecb-1-b06174a": {
           "threshold": 1,
           "weightmap": {
-            "buffer-overflow-1": 1
+            "buffer-overflow-1-35e6d9d": 1
           }
         },
-        "sql-injection-1": {
+        "sql-injection-1-0c436d0": {
           "threshold": 1,
           "weightmap": {
-            "buffer-overflow-1": 1,
-            "ecb-1": 1
+            "buffer-overflow-1-35e6d9d": 1,
+            "ecb-1-b06174a": 1
           }
         }
       }

@@ -10,6 +10,7 @@ import string
 from os import chmod, listdir, sep, unlink
 from os.path import isdir, isfile, join
 from shutil import copy2, copytree
+from hashlib import md5
 
 from voluptuous import (All, ALLOW_EXTRA, Length, MultipleInvalid, Range,
                         Required, Schema)
@@ -83,10 +84,11 @@ problem_schema = Schema({
     Required("description"): str,
     Required("category"): All(str, Length(min=1, max=32)),
     Required("hints"): list,
+    Required("organization"): All(str, Length(min=1, max=32)),
+    Required("event"): All(str, Length(min=1, max=32)),
     "walkthrough": All(str, Length(min=1, max=512)),
     "version": All(str, Length(min=1, max=8)),
     "tags": list,
-    "organization": All(str, Length(min=1, max=32)),
     "pkg_description": All(str, Length(min=1, max=256)),
     "pkg_name": All(str, Length(min=1, max=32)),
     "pkg_dependencies": list,
@@ -217,6 +219,26 @@ def get_problem_root(problem_name, absolute=False):
     """
 
     problem_root = join(PROBLEM_ROOT, sanitize_name(problem_name))
+
+    assert problem_root.startswith(sep)
+    if absolute:
+        return problem_root
+
+    return problem_root[len(sep):]
+
+def get_problem_root_hashed(problem, absolute=False):
+    """
+    Installation location for a given problem.
+
+    Args:
+        problem: the problem object.
+        absolute: should return an absolute path.
+
+    Returns:
+        The tentative installation location.
+    """
+
+    problem_root = join(PROBLEM_ROOT, "{}-{}".format(sanitize_name(problem["name"]), get_pid_hash(problem, True)))
 
     assert problem_root.startswith(sep)
     if absolute:
@@ -399,3 +421,30 @@ def place_default_config(destination=join(HACKSPORTS_ROOT, "config.json")):
 
     write_configuration_file(destination, default_config)
     chmod(destination, 0o640)
+
+def get_pid_hash(problem, short=False):
+    """
+    Returns a hash of a given problem.
+
+    Args:
+        problem: a valid problem object.
+        short: shorten the return value (first 7 characters)
+
+    Returns:
+        Hex digest of the MD5 hash
+    """
+
+    try:
+        problem_schema(problem)
+    except MultipleInvalid as e:
+        logger.critical("Error validating problem object!")
+        logger.critical(e)
+        raise FatalException
+    
+    input = "{}-{}-{}-{}".format(problem["name"], problem["author"], problem["organization"], problem["event"])
+    output = md5(input.encode("utf-8")).hexdigest()
+
+    if short:
+        return output[:7]
+
+    return output

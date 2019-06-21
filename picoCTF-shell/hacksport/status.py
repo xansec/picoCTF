@@ -9,13 +9,13 @@ from hacksport.operations import execute
 from shell_manager.bundle import get_bundle, get_bundle_root
 from shell_manager.util import (BUNDLE_ROOT, DEPLOYED_ROOT, get_problem,
                                 get_problem_root, HACKSPORTS_ROOT, PROBLEM_ROOT,
-                                STAGING_ROOT)
+                                STAGING_ROOT, get_pid_hash, sanitize_name)
 
 logger = logging.getLogger(__name__)
 
 
 def get_all_problems():
-    """ Returns a dictionary of name:object mappings """
+    """ Returns a dictionary of name-hash:object mappings """
 
     problems = {}
     if os.path.isdir(PROBLEM_ROOT):
@@ -43,7 +43,12 @@ def get_all_bundles():
 
 
 def get_all_problem_instances(problem_path):
-    """ Returns a list of instances for a given problem """
+    """
+    Returns a list of instances for a given problem
+
+    Args:
+        problem_path: Sanitized problem name with hash.
+    """
 
     instances = []
     instances_dir = join(DEPLOYED_ROOT, problem_path)
@@ -69,9 +74,11 @@ def publish(args, config):
 
     output = {"problems": [], "bundles": []}
 
-    for path, problem in problems.items():
-        problem["instances"] = get_all_problem_instances(path)
-        problem["sanitized_name"] = path
+    for name_with_hash, problem in problems.items():
+        logger.debug("Finding instances of %s", name_with_hash)
+        problem["instances"] = get_all_problem_instances(name_with_hash)
+        problem["sanitized_name"] = sanitize_name(problem["name"])
+        problem["unique_name"] = name_with_hash
         output["problems"].append(problem)
 
     for _, bundle in bundles.items():
@@ -131,9 +138,9 @@ def status(args, config):
 
         return status
 
-    def get_problem_status(path, problem):
+    def get_problem_status(name_with_hash, problem):
         problem_status = {"name": problem["name"]}
-        instances = get_all_problem_instances(path)
+        instances = get_all_problem_instances(name_with_hash)
         instance_statuses = []
         for instance in instances:
             instance_statuses.append(get_instance_status(instance))
@@ -166,18 +173,18 @@ def status(args, config):
             print("{}{}".format(prefix, string))
 
         pprint("[{} ({})]".format(bundle["name"], path))
-        for problem_path in bundle["problems"]:
-            problem = problems.get(problem_path, None)
+        for name_with_hash in bundle["problems"]:
+            problem = problems.get(name_with_hash, None)
             if problem is None:
-                pprint("  ! Invalid problem '{}' !".format(problem_path))
+                pprint("  ! Invalid problem '{}' !".format(name_with_hash))
                 continue
-            pprint("  {} ({})".format(problem['name'], problem_path))
+            pprint("  {} ({})".format(problem['name'], name_with_hash))
 
     def get_bundle_status(bundle):
         problem_statuses = []
-        for problem_path in bundle["problems"]:
-            problem = problems.get(problem_path)
-            problem_statuses.append(get_problem_status(problem_path, problem))
+        for name_with_hash in bundle["problems"]:
+            problem = problems.get(name_with_hash)
+            problem_statuses.append(get_problem_status(name_with_hash, problem))
         bundle["problems"] = problem_statuses
         return bundle
 

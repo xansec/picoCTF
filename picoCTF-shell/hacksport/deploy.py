@@ -136,7 +136,8 @@ from shell_manager.bundle import get_bundle, get_bundle_root
 from shell_manager.package import package_problem
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_problem, get_problem_root, HACKSPORTS_ROOT,
-                                sanitize_name, STAGING_ROOT)
+                                sanitize_name, STAGING_ROOT, get_problem_root_hashed,
+                                get_pid_hash)
 from spur import RunProcessError
 
 logger = logging.getLogger(__name__)
@@ -717,7 +718,8 @@ def deploy_problem(problem_directory,
         instance_list.append((instance_number, instance))
 
     deployment_json_dir = join(DEPLOYED_ROOT,
-                               sanitize_name(problem_object["name"]))
+                               "{}-{}".format(sanitize_name(problem_object["name"]),
+                               get_pid_hash(problem_object, True)))
     if not os.path.isdir(deployment_json_dir):
         os.makedirs(deployment_json_dir)
 
@@ -924,7 +926,7 @@ def deploy_problems(args, config):
                 except subprocess.CalledProcessError:
                     logger.error("An error occurred while installing problem packages.")
                     raise FatalException
-                deploy_location = join(get_problem_root(problem_name, absolute=True))
+                deploy_location = join(get_problem_root_hashed(problem_object, absolute=True))
             else:
                 logger.error("'%s' is neither an installed package, nor a valid problem directory",
                              problem_name)
@@ -987,7 +989,12 @@ def remove_instances(path, instance_list):
         execute(["service", "xinetd", "restart"], timeout=60)
 
 def undeploy_problems(args, config):
-    """ Main entrypoint for problem undeployment """
+    """
+    Main entrypoint for problem undeployment
+    
+    Does not remove the installed packages (apt-get remove [sanitized name with hash]). 
+    Does not remove the problem from the web server (delete it from the mongo db).
+    """
 
     problem_names = args.problem_paths
 
