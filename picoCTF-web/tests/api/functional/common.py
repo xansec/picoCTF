@@ -99,12 +99,12 @@ TEACHER_DEMOGRAPHICS = {
                         'rid': None
                       }
 
-USER_DEMOGRAPHICS = {
-                        'username': 'sampleuser',
-                        'password': 'samplepw',
-                        'firstname': 'Sample',
+STUDENT_DEMOGRAPHICS = {
+                        'username': 'studentuser',
+                        'password': 'studentpw',
+                        'firstname': 'Student',
                         'lastname': 'User',
-                        'email': 'sample@example.com',
+                        'email': 'student@example.com',
                         'country': 'US',
                         'affiliation': 'Sample School',
                         'usertype': 'student',
@@ -116,14 +116,31 @@ USER_DEMOGRAPHICS = {
                         'rid': None
                       }
 
-USER_2_DEMOGRAPHICS = {
-                        'username': 'sampleuser2',
-                        'password': 'samplepw2',
-                        'firstname': 'Sample',
+STUDENT_2_DEMOGRAPHICS = {
+                        'username': 'studentuser2',
+                        'password': 'studentpw2',
+                        'firstname': 'Student',
                         'lastname': 'Usertwo',
-                        'email': 'sample2@example.com',
+                        'email': 'student2@example.com',
                         'country': 'US',
                         'affiliation': 'Sample School',
+                        'usertype': 'student',
+                        'demo': {
+                            'parentemail': 'student2@example.com',
+                            'age': '18+'
+                        },
+                        'gid': None,
+                        'rid': None
+                      }
+
+OTHER_USER_DEMOGRAPHICS = {
+                        'username': 'otheruser',
+                        'password': 'otherpw',
+                        'firstname': 'Other',
+                        'lastname': 'User',
+                        'email': 'other@example.com',
+                        'country': 'US',
+                        'affiliation': 'Sample Organization',
                         'usertype': 'other',
                         'demo': {
                             'age': '18+'
@@ -143,8 +160,9 @@ def register_test_accounts():
     with app().app_context():
         api.user.add_user(ADMIN_DEMOGRAPHICS)
         api.user.add_user(TEACHER_DEMOGRAPHICS)
-        api.user.add_user(USER_DEMOGRAPHICS)
-        api.user.add_user(USER_2_DEMOGRAPHICS)
+        api.user.add_user(STUDENT_DEMOGRAPHICS)
+        api.user.add_user(STUDENT_2_DEMOGRAPHICS)
+        api.user.add_user(OTHER_USER_DEMOGRAPHICS)
 
 
 sample_shellserver_publish_output = r'''

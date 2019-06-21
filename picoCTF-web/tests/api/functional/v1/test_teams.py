@@ -8,7 +8,7 @@ from ..common import ( # noqa (fixture)
   get_csrf_token,
   register_test_accounts,
   TEACHER_DEMOGRAPHICS,
-  USER_DEMOGRAPHICS,
+  STUDENT_DEMOGRAPHICS,
   get_conn
 )
 
@@ -34,8 +34,8 @@ def test_create_team(mongo_proc, client): # noqa (fixture)
 
     # Attempt to create a team with a name previously used by a user
     client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     res = client.post('/api/v1/teams', json={
         'team_name': ADMIN_DEMOGRAPHICS['username'],
@@ -66,8 +66,8 @@ def test_create_team(mongo_proc, client): # noqa (fixture)
     new_tid = res.json['tid']
 
     # Check that membership has been transferred
-    user = db.users.find_one({'username': USER_DEMOGRAPHICS['username']})
-    old_team = db.teams.find_one({'team_name': USER_DEMOGRAPHICS['username']})
+    user = db.users.find_one({'username': STUDENT_DEMOGRAPHICS['username']})
+    old_team = db.teams.find_one({'team_name': STUDENT_DEMOGRAPHICS['username']})
     new_team = db.teams.find_one({'tid': new_tid})
     assert user['tid'] == new_tid
     assert old_team['size'] == 0

@@ -8,8 +8,9 @@ from ..common import ( # noqa (fixture)
   get_csrf_token,
   register_test_accounts,
   TEACHER_DEMOGRAPHICS,
-  USER_DEMOGRAPHICS,
-  USER_2_DEMOGRAPHICS,
+  STUDENT_DEMOGRAPHICS,
+  STUDENT_2_DEMOGRAPHICS,
+  OTHER_USER_DEMOGRAPHICS,
   get_conn
 )
 import api
@@ -20,13 +21,13 @@ def test_get_my_team(mongo_proc, client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
 
     expected_fields = {
         'achievements': [],
-        'affiliation': 'Sample School',
+        'affiliation': STUDENT_DEMOGRAPHICS['affiliation'],
         'competition_active': False,
         'country': 'US',
         'eligible': True,
@@ -36,15 +37,14 @@ def test_get_my_team(mongo_proc, client): # noqa (fixture)
         'score': 0,
         'size': 1,
         'solved_problems': [],
-        'team_name': 'sampleuser'
+        'team_name': STUDENT_DEMOGRAPHICS['username']
         }
     expected_member_fields = {
-        'affiliation': 'None',
-        'country': 'US',
-        'email': 'sample@example.com',
-        'firstname': 'Sample',
-        'lastname': 'User',
-        'username': 'sampleuser',
+        'country': STUDENT_DEMOGRAPHICS['country'],
+        'email': STUDENT_DEMOGRAPHICS['email'],
+        'firstname': STUDENT_DEMOGRAPHICS['firstname'],
+        'lastname': STUDENT_DEMOGRAPHICS['lastname'],
+        'username': STUDENT_DEMOGRAPHICS['username'],
         'usertype': 'student'
     }
     res = client.get('/api/v1/team')
@@ -57,7 +57,7 @@ def test_get_my_team(mongo_proc, client): # noqa (fixture)
         assert res.json['members'][0][k] == v
 
     db = get_conn()
-    uid = db.users.find_one({'username': USER_DEMOGRAPHICS['username']})['uid']
+    uid = db.users.find_one({'username': STUDENT_DEMOGRAPHICS['username']})['uid']
     assert res.json['members'][0]['uid'] == uid
 
 
@@ -67,8 +67,8 @@ def test_get_my_team_score(mongo_proc, client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
 
     res = client.get('/api/v1/team/score')
@@ -81,8 +81,8 @@ def test_update_team_password(mongo_proc, client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     csrf_t = get_csrf_token(res)
 
@@ -128,8 +128,8 @@ def test_team_score_progression(mongo_proc, client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
 
     # Test without category argument
@@ -154,8 +154,8 @@ def test_join_team(mongo_proc, client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
 
     # Create the new team that we will try to join
@@ -181,8 +181,8 @@ def test_join_team(mongo_proc, client): # noqa (fixture)
     # Attempt to join a nonexistant team
     client.get('/api/v1/user/logout')
     client.post('/api/v1/user/login', json={
-        'username': USER_2_DEMOGRAPHICS['username'],
-        'password': USER_2_DEMOGRAPHICS['password']
+        'username': STUDENT_2_DEMOGRAPHICS['username'],
+        'password': STUDENT_2_DEMOGRAPHICS['password']
     })
     res = client.post('/api/v1/team/join', json={
         'team_name': 'invalid',
@@ -214,7 +214,7 @@ def test_join_team(mongo_proc, client): # noqa (fixture)
 
     # Join the new team
     user = db.users.find_one(
-        {'username': USER_2_DEMOGRAPHICS['username']})
+        {'username': STUDENT_2_DEMOGRAPHICS['username']})
     uid = user['uid']
     previous_tid = user['tid']
     res = client.post('/api/v1/team/join', json={
@@ -229,8 +229,8 @@ def test_join_team(mongo_proc, client): # noqa (fixture)
 
     # Attempt to switch back to old team
     res = client.post('/api/v1/team/join', json={
-        'team_name': USER_2_DEMOGRAPHICS['username'],
-        'team_password': USER_2_DEMOGRAPHICS['password']
+        'team_name': STUDENT_2_DEMOGRAPHICS['username'],
+        'team_password': STUDENT_2_DEMOGRAPHICS['password']
     })
     assert res.status_code == 403
     assert res.json['message'] == 'You can not switch teams once you ' + \
@@ -255,8 +255,8 @@ def test_join_group(mongo_proc, client): # noqa (fixture)
     # Attempt to join a nonexistent group
     client.get('/api/v1/user/logout')
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     csrf_t = get_csrf_token(res)
     res = client.post('/api/v1/team/join_group', json={
@@ -285,7 +285,7 @@ def test_join_group(mongo_proc, client): # noqa (fixture)
     assert res.status_code == 403
     assert res.json['message'] == "{}'s email does not belong to the " + \
         "whitelist for that classroom. Your team may not join this " + \
-        "classroom at this time.".format(USER_DEMOGRAPHICS['username'])
+        "classroom at this time.".format(STUDENT_DEMOGRAPHICS['username'])
     db.groups.find_one_and_update({'name': 'newgroup'}, {'$set': {
         'settings.email_filter': []
     }})
@@ -298,7 +298,7 @@ def test_join_group(mongo_proc, client): # noqa (fixture)
     assert res.status_code == 200
     assert res.json['success'] is True
     user_team = db.users.find_one({
-        'username': USER_DEMOGRAPHICS['username']})['tid']
+        'username': STUDENT_DEMOGRAPHICS['username']})['tid']
     group = db.groups.find_one({'name': 'newgroup'})
     assert user_team in group['members']
 
