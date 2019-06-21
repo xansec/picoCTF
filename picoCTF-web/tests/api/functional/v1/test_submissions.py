@@ -8,8 +8,8 @@ from ..common import ( # noqa (fixture)
   get_csrf_token,
   register_test_accounts,
   TEACHER_DEMOGRAPHICS,
-  USER_DEMOGRAPHICS,
-  USER_2_DEMOGRAPHICS,
+  STUDENT_DEMOGRAPHICS,
+  OTHER_USER_DEMOGRAPHICS,
   load_sample_problems,
   get_conn,
   ensure_within_competition,
@@ -27,8 +27,8 @@ def test_submission(mongo_proc, client): # noqa (fixture)
     enable_sample_problems()
     ensure_within_competition()
     res =client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password'],
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password'],
     })
     csrf_t = get_csrf_token(res)
 
@@ -60,7 +60,7 @@ def test_submission(mongo_proc, client): # noqa (fixture)
     db = get_conn()
     flags = {}
     for pid in unlocked_pids:
-        flags[pid] = get_problem_key(pid, USER_DEMOGRAPHICS['username'])
+        flags[pid] = get_problem_key(pid, STUDENT_DEMOGRAPHICS['username'])
     correct_key = flags[unlocked_pids[0]]
 
     res = client.post('/api/v1/submissions', json={
@@ -105,8 +105,8 @@ def test_submission(mongo_proc, client): # noqa (fixture)
 
     client.get('/api/v1/user/logout')
     res = client.post('/api/v1/user/login', json={
-        'username': USER_2_DEMOGRAPHICS['username'],
-        'password': USER_2_DEMOGRAPHICS['password'],
+        'username': OTHER_USER_DEMOGRAPHICS['username'],
+        'password': OTHER_USER_DEMOGRAPHICS['password'],
     })
     csrf_t = get_csrf_token(res)
     client.post('/api/v1/team/join', json={
@@ -133,8 +133,8 @@ def test_submission(mongo_proc, client): # noqa (fixture)
     # Test incorrect & previously solved by another team member
     client.get('/api/v1/user/logout')
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     csrf_t = get_csrf_token(res)
 

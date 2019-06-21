@@ -8,8 +8,9 @@ from ..common import ( # noqa (fixture)
   get_csrf_token,
   register_test_accounts,
   TEACHER_DEMOGRAPHICS,
-  USER_DEMOGRAPHICS,
-  USER_2_DEMOGRAPHICS,
+  STUDENT_DEMOGRAPHICS,
+  STUDENT_2_DEMOGRAPHICS,
+  OTHER_USER_DEMOGRAPHICS,
   load_sample_problems,
   get_conn,
   ensure_within_competition,
@@ -26,12 +27,13 @@ def test_registration_stats(mongo_proc, client):
     # Get the initial registration count
     res = client.get('/api/v1/stats/registration')
     assert res.status_code == 200
-    assert res.json == {
+    expected_response = {
         'groups': 0,
         'teamed_users': 0,
         'teams': 0,
-        'users': 4
+        'users': 5
     }
+    assert res.json == expected_response
 
     # Try adding a new user
     res = client.post('/api/v1/users', json={
@@ -50,17 +52,13 @@ def test_registration_stats(mongo_proc, client):
     assert res.status_code == 201
     res = client.get('/api/v1/stats/registration')
     assert res.status_code == 200
-    assert res.json == {
-        'groups': 0,
-        'teamed_users': 0,
-        'teams': 0,
-        'users': 5
-    }
+    expected_response['users'] += 1
+    assert res.json == expected_response
 
     # Have a user create a team
     client.post('api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     res = client.post('/api/v1/teams', json={
         'team_name': 'newteam',
@@ -70,12 +68,9 @@ def test_registration_stats(mongo_proc, client):
 
     res = client.get('/api/v1/stats/registration')
     assert res.status_code == 200
-    assert res.json == {
-        'groups': 0,
-        'teamed_users': 1,
-        'teams': 1,
-        'users': 5
-    }
+    expected_response['teams'] += 1
+    expected_response['teamed_users'] += 1
+    assert res.json == expected_response
 
     # Have another user join that team
     api.config.get_settings()
@@ -83,8 +78,8 @@ def test_registration_stats(mongo_proc, client):
     db.settings.find_one_and_update({}, {'$set': {'max_team_size': 2}})
     client.get('/api/v1/user/logout')
     client.post('/api/v1/user/login', json={
-        'username': USER_2_DEMOGRAPHICS['username'],
-        'password': USER_2_DEMOGRAPHICS['password']
+        'username': STUDENT_2_DEMOGRAPHICS['username'],
+        'password': STUDENT_2_DEMOGRAPHICS['password']
     })
     res = client.post('/api/v1/team/join', json={
         'team_name': 'newteam',
@@ -94,12 +89,8 @@ def test_registration_stats(mongo_proc, client):
 
     res = client.get('/api/v1/stats/registration')
     assert res.status_code == 200
-    assert res.json == {
-        'groups': 0,
-        'teamed_users': 2,
-        'teams': 1,
-        'users': 5
-    }
+    expected_response['teamed_users'] += 1
+    assert res.json == expected_response
 
     # Create a group
     client.get('/api/v1/user/logout')
@@ -116,12 +107,8 @@ def test_registration_stats(mongo_proc, client):
 
     res = client.get('/api/v1/stats/registration')
     assert res.status_code == 200
-    assert res.json == {
-        'groups': 1,
-        'teamed_users': 2,
-        'teams': 1,
-        'users': 5
-    }
+    expected_response['groups'] += 1
+    assert res.json == expected_response
 
 def test_scoreboard(mongo_proc, client):
     """Test the /stats/scoreboard endpoint."""
@@ -147,8 +134,8 @@ def test_scoreboard(mongo_proc, client):
 
     # Get the scoreboard when logged in
     client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     res = client.get('/api/v1/stats/scoreboard')
     expected_structure = {
