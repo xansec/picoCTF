@@ -84,10 +84,11 @@ problem_schema = Schema({
     Required("description"): str,
     Required("category"): All(str, Length(min=1, max=32)),
     Required("hints"): list,
+    Required("organization"): All(str, Length(min=1, max=32)),
+    Required("event"): All(str, Length(min=1, max=32)),
     "walkthrough": All(str, Length(min=1, max=512)),
     "version": All(str, Length(min=1, max=8)),
     "tags": list,
-    "organization": All(str, Length(min=1, max=32)),
     "pkg_description": All(str, Length(min=1, max=256)),
     "pkg_name": All(str, Length(min=1, max=32)),
     "pkg_dependencies": list,
@@ -440,7 +441,7 @@ def get_pid_hash(problem, short=False):
         logger.critical(e)
         raise FatalException
     
-    input = "{}-{}-{}".format(problem["name"], problem["author"], problem["organization"])
+    input = "{}-{}-{}-{}".format(problem["name"], problem["author"], problem["organization"], problem["event"])
     output = md5(input.encode("utf-8")).hexdigest()
 
     if short:

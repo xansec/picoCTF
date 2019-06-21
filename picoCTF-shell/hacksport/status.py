@@ -78,6 +78,7 @@ def publish(args, config):
         logger.debug("Finding instances of %s", name_with_hash)
         problem["instances"] = get_all_problem_instances(name_with_hash)
         problem["sanitized_name"] = sanitize_name(problem["name"])
+        problem["unique_name"] = name_with_hash
         output["problems"].append(problem)
 
     for _, bundle in bundles.items():
