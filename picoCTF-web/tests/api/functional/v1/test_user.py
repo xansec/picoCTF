@@ -51,7 +51,7 @@ def test_login(mongo_proc, client): # noqa (fixture)
         'password': USER_DEMOGRAPHICS['password']
     })
     assert res.status_code == 403
-    assert res.json['message'] == 'This account has been disabled.'
+    assert res.json['message'] == 'This account has been deleted.'
     db.users.update({'username': USER_DEMOGRAPHICS['username']},
                     {'$set': {'disabled': False}})
 
