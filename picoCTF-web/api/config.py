@@ -1,8 +1,8 @@
 """Stores and retrieves runtime settings from the database."""
 
 import datetime
+from copy import deepcopy
 from functools import wraps
-
 
 import api
 from api import PicoException
@@ -122,14 +122,6 @@ default_settings = {
         "reCAPTCHA_private_key": "",
     },
 
-    # LOGGING
-    # Will be emailed any severe internal exceptions!
-    # Requires email block to be setup.
-    "logging": {
-        "admin_emails": ["ben@example.com", "joe@example.com"],
-        "critical_error_timeout": 600
-    },
-
     # SHELL SERVERS
     "shell_servers": {
         "enable_sharding": False,
@@ -172,6 +164,23 @@ def get_settings():
         api.db.index_mongo()
         return default_settings
     return settings
+
+
+def merge_new_settings():
+    """Add any new default_settings into the database."""
+    def merge(a, b):
+        """Merge new keys from nested dict a into b."""
+        out = deepcopy(b)
+        for k, v in a.items():
+            if k not in out:
+                out[k] = v
+            elif isinstance(v, dict):
+                out[k] = merge(v, out[k])
+        return out
+    db_settings = get_settings()
+    merged = merge(default_settings, db_settings)
+    db = api.db.get_conn()
+    db.settings.find_one_and_update({}, {'$set': merged})
 
 
 def change_settings(changes):

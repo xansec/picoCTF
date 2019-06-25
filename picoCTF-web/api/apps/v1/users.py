@@ -88,3 +88,14 @@ class User(Resource):
         if not res:
             raise PicoException('User not found', status_code=404)
         return res, 200
+
+    @require_admin
+    def delete(self, user_id):
+        """Disable a specific user."""
+        user = api.user.get_user(uid=user_id)
+        if not user:
+            raise PicoException('User not found', status_code=404)
+        api.user.disable_account(user_id)
+        return jsonify({
+            'success': True
+        })

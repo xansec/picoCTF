@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 import api
-from api import PicoException, require_login
+from api import PicoException, require_admin, require_login
 
 from .schemas import team_req
 
@@ -12,7 +12,7 @@ ns = Namespace('teams', description='Team management')
 
 @ns.route('')
 class TeamList(Resource):
-    """Create and join a new team."""
+    """The set of all teams."""
 
     @require_login
     @ns.response(201, 'Success')
@@ -41,3 +41,32 @@ class TeamList(Resource):
         })
         res.status_code = 201
         return res
+
+
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Permission denied')
+@ns.response(404, 'Team not found')
+@ns.route('/<string:team_id>/recalculate_eligibility')
+class RecalculateEligibilityResponse(Resource):
+    """Force recalculation of a team's eligibility status."""
+
+    @require_admin
+    def get(self, team_id):
+        """
+        Force recalculation of a team's eligibility status.
+
+        Once a team has been found to be ineligible once, they are permanently
+        flagged as such. This admin-only endpoint can potentially reverse this,
+        if the competition's eligiblity conditions have been updated or the
+        member(s) previously causing ineligiblity have been deleted.
+        """
+        team = api.team.get_team(team_id)
+        if not team:
+            raise PicoException('Team not found', 404)
+        eligibility = api.team.is_eligible(team_id)
+        api.team.mark_eligiblity(team_id, eligibility)
+        return jsonify({
+            'success': True,
+            'eligible': eligibility
+        })

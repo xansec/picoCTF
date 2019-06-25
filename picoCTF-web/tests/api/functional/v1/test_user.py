@@ -8,7 +8,7 @@ from ..common import ( # noqa (fixture)
   get_csrf_token,
   register_test_accounts,
   TEACHER_DEMOGRAPHICS,
-  USER_DEMOGRAPHICS,
+  STUDENT_DEMOGRAPHICS,
   get_conn
 )
 import api
@@ -36,7 +36,7 @@ def test_login(mongo_proc, client): # noqa (fixture)
 
     # Attempt to login with an incorrect password
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
+        'username': STUDENT_DEMOGRAPHICS['username'],
         'password': 'invalid'
     })
     assert res.status_code == 401
@@ -44,38 +44,38 @@ def test_login(mongo_proc, client): # noqa (fixture)
 
     # Force-disable account and attempt to login
     db = get_conn()
-    db.users.update({'username': USER_DEMOGRAPHICS['username']},
+    db.users.update({'username': STUDENT_DEMOGRAPHICS['username']},
                     {'$set': {'disabled': True}})
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     assert res.status_code == 403
-    assert res.json['message'] == 'This account has been disabled.'
-    db.users.update({'username': USER_DEMOGRAPHICS['username']},
+    assert res.json['message'] == 'This account has been deleted.'
+    db.users.update({'username': STUDENT_DEMOGRAPHICS['username']},
                     {'$set': {'disabled': False}})
 
     # Force un-verify account and attempt to login
     db = get_conn()
-    db.users.update({'username': USER_DEMOGRAPHICS['username']},
+    db.users.update({'username': STUDENT_DEMOGRAPHICS['username']},
                     {'$set': {'verified': False}})
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     assert res.status_code == 403
     assert res.json['message'] == 'This account has not been verified yet.'
-    db.users.update({'username': USER_DEMOGRAPHICS['username']},
+    db.users.update({'username': STUDENT_DEMOGRAPHICS['username']},
                     {'$set': {'verified': True}})
 
     # Successfully log in
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     assert res.status_code == 200
     assert res.json['success'] is True
-    assert res.json['username'] == USER_DEMOGRAPHICS['username']
+    assert res.json['username'] == STUDENT_DEMOGRAPHICS['username']
 
 
 def test_logout(mongo_proc, client): # noqa (fixture)
@@ -90,8 +90,8 @@ def test_logout(mongo_proc, client): # noqa (fixture)
 
     # Successfully log out
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     res = client.get('/api/v1/user/logout')
     assert res.status_code == 200
@@ -136,8 +136,8 @@ def test_authorize(mongo_proc, client): # noqa (fixture)
         'admin': False
     }
     client.post('/api/v1/user/login', json={
-                        'username': USER_DEMOGRAPHICS['username'],
-                        'password': USER_DEMOGRAPHICS['password']
+                        'username': STUDENT_DEMOGRAPHICS['username'],
+                        'password': STUDENT_DEMOGRAPHICS['password']
                       })
     res = client.get('/api/v1/user/authorize/user')
     assert res.status_code == 200
@@ -209,8 +209,8 @@ def test_disable_account(mongo_proc, client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     csrf_t = get_csrf_token(res)
 
@@ -224,15 +224,15 @@ def test_disable_account(mongo_proc, client): # noqa (fixture)
     # Successfully disable account
     db = get_conn()
     user_before_disabling = db.users.find_one(
-        {'username': USER_DEMOGRAPHICS['username']})
+        {'username': STUDENT_DEMOGRAPHICS['username']})
     assert user_before_disabling['disabled'] is False
     res = client.post('/api/v1/user/disable_account', json={
-                    'password': USER_DEMOGRAPHICS['password']
+                    'password': STUDENT_DEMOGRAPHICS['password']
                 }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 200
     assert res.json['success'] is True
     user_after_disabling = db.users.find_one(
-        {'username': USER_DEMOGRAPHICS['username']})
+        {'username': STUDENT_DEMOGRAPHICS['username']})
     assert user_after_disabling['disabled'] is True
 
 
@@ -240,8 +240,8 @@ def test_update_password(mongo_proc, client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     csrf_t = get_csrf_token(res)
 
@@ -256,7 +256,7 @@ def test_update_password(mongo_proc, client): # noqa (fixture)
 
     # Attempt to update password but the passwords don't match
     res = client.post('/api/v1/user/update_password', json={
-        'current_password': USER_DEMOGRAPHICS['password'],
+        'current_password': STUDENT_DEMOGRAPHICS['password'],
         'new_password': 'newpassword1',
         'new_password_confirmation': 'newpassword2'
     }, headers=[('X-CSRF-Token', csrf_t)])
@@ -265,7 +265,7 @@ def test_update_password(mongo_proc, client): # noqa (fixture)
 
     # Successfully update password and log in
     res = client.post('/api/v1/user/update_password', json={
-        'current_password': USER_DEMOGRAPHICS['password'],
+        'current_password': STUDENT_DEMOGRAPHICS['password'],
         'new_password': 'newpassword',
         'new_password_confirmation': 'newpassword'
     }, headers=[('X-CSRF-Token', csrf_t)])
@@ -274,7 +274,7 @@ def test_update_password(mongo_proc, client): # noqa (fixture)
 
     client.get('/api/v1/user/logout')
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
+        'username': STUDENT_DEMOGRAPHICS['username'],
         'password': 'newpassword'
     })
     assert res.status_code == 200
@@ -295,29 +295,29 @@ def test_get_user(mongo_proc, client): # noqa (fixture)
 
     # Test after logging in
     client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
 
     expected_body = {
         'admin': False,
         'completed_minigames': [],
-        'country': 'US',
+        'country': STUDENT_DEMOGRAPHICS['country'],
         'demo': {
-            'age': '13-17',
-            'parentemail': 'student@example.com'},
+            'age': STUDENT_DEMOGRAPHICS['demo']['age'],
+            'parentemail': STUDENT_DEMOGRAPHICS['demo']['parentemail']},
         'disabled': False,
-        'email': 'sample@example.com',
+        'email': STUDENT_DEMOGRAPHICS['email'],
         'extdata': {},
-        'firstname': 'Sample',
-        'lastname': 'User',
+        'firstname': STUDENT_DEMOGRAPHICS['firstname'],
+        'lastname': STUDENT_DEMOGRAPHICS['lastname'],
         'logged_in': True,
         'teacher': False,
         'tid': '8b19b0478dcc43e7a448a4e500584c10',
         'tokens': 0,
         'uid': 'dc7089e279d24b70b989cd53665eb49c',
         'unlocked_walkthroughs': [],
-        'username': 'sampleuser',
+        'username': STUDENT_DEMOGRAPHICS['username'],
         'usertype': 'student',
         'verified': True
         }
@@ -333,8 +333,8 @@ def test_patch_user(mongo_proc, client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
     csrf_t = get_csrf_token(res)
 
@@ -361,7 +361,7 @@ def test_reset_password(mongo_proc, client): # noqa (fixture)
 
         # Send the password reset request
         res = client.post('/api/v1/user/reset_password/request', json={
-            'username': USER_DEMOGRAPHICS['username'],
+            'username': STUDENT_DEMOGRAPHICS['username'],
             })
         assert res.status_code == 200
         assert res.json['success'] is True
@@ -400,7 +400,7 @@ def test_reset_password(mongo_proc, client): # noqa (fixture)
     # Log in with the new password
     client.get('/api/v1/user/logout')
     res = client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
+        'username': STUDENT_DEMOGRAPHICS['username'],
         'password': 'newpassword',
         })
     assert res.status_code == 200
@@ -412,14 +412,14 @@ def test_verify(mongo_proc, client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     client.post('/api/v1/user/login', json={
-        'username': USER_DEMOGRAPHICS['username'],
-        'password': USER_DEMOGRAPHICS['password']
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
     })
 
     # Force user to unverified status and set a token
     db = get_conn()
     test_user = db.users.find_one_and_update(
-        {'username': USER_DEMOGRAPHICS['username']},
+        {'username': STUDENT_DEMOGRAPHICS['username']},
         {'$set': {
             'verified': False
         }})
@@ -439,7 +439,7 @@ def test_verify(mongo_proc, client): # noqa (fixture)
     assert res.headers['Location'] == \
         'http://localhost/#status=verification_error'
 
-    test_user = db.users.find_one({'username': USER_DEMOGRAPHICS['username']})
+    test_user = db.users.find_one({'username': STUDENT_DEMOGRAPHICS['username']})
     assert test_user['verified'] is False
 
     # Successfully verify user
@@ -450,7 +450,7 @@ def test_verify(mongo_proc, client): # noqa (fixture)
     assert res.headers['Location'] == \
         'http://localhost/#status=verified'
 
-    test_user = db.users.find_one({'username': USER_DEMOGRAPHICS['username']})
+    test_user = db.users.find_one({'username': STUDENT_DEMOGRAPHICS['username']})
     assert test_user['verified'] is True
 
     # Check that the token has been deleted from the database

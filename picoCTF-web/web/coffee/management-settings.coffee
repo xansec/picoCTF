@@ -42,6 +42,16 @@ GeneralTab = React.createClass
       $set:
         end_time: value
 
+  updateMaxTeamSize: (e) ->
+    @setState update @state,
+      $set:
+        max_team_size: parseInt(e.target.value)
+
+  updateUsernameBlacklist: (e) ->
+    @setState update @state,
+      $set:
+        username_blacklist: e.target.value.split('\n')
+
   pushUpdates: ->
     data = {
       enable_feedback: @state.enable_feedback
@@ -49,6 +59,8 @@ GeneralTab = React.createClass
       competition_url: @state.competition_url
       start_time: new Date(@state.start_time).toISOString()
       end_time: new Date(@state.end_time).toISOString()
+      max_team_size: @state.max_team_size
+      username_blacklist: @state.username_blacklist
     }
     apiCall "PATCH", "/api/v1/settings", data
     .success ((data) ->
@@ -69,13 +81,17 @@ GeneralTab = React.createClass
     startTimeDescription = "Before the competition has started, users will be able to register without viewing the problems."
     endTimeDescription = "After the competition has ended, users will no longer be able to submit keys to the challenges."
 
+    maxTeamSizeDescription = "Maximum number of users that can join a single team."
+    usernameBlacklistDescription = "Usernames that are unavailable for registration."
+
     <Well>
       <BooleanEntry name="Receive Problem Feedback" value={@state.enable_feedback} onChange=@toggleFeedbackEnabled description={feedbackDescription}/>
       <TextEntry name="Competition Name" value={@state.competition_name} type="text" onChange=@updateCompetitionName description={competitionNameDescription}/>
       <TextEntry name="Competition URL" value={@state.competition_url} type="text" onChange=@updateCompetitionURL description={competitionURLDescription}/>
       <TimeEntry name="Competition Start Time" value={@state.start_time} onChange=@updateStartTime description={startTimeDescription}/>
       <TimeEntry name="Competition End Time" value={@state.end_time} onChange=@updateEndTime description={endTimeDescription}/>
-
+      <TextEntry name="Max Team Size" value={@state.max_team_size} type="number" onChange=@updateMaxTeamSize description={maxTeamSizeDescription} />
+      <TextEntry name="Username Blacklist" value={@state.username_blacklist.join('\n')} type="textarea" onChange=@updateUsernameBlacklist description={usernameBlacklistDescription}/>
       <Row>
         <div className="text-center">
           <ButtonToolbar>
@@ -89,12 +105,10 @@ EmailTab = React.createClass
   propTypes:
     refresh: React.PropTypes.func.isRequired
     emailSettings: React.PropTypes.object.isRequired
-    loggingSettings: React.PropTypes.object.isRequired
     emailFilterSettings: React.PropTypes.array.isRequired
 
   getInitialState: ->
     settings = @props.emailSettings
-    $.extend settings, @props.loggingSettings
     settings.email_filter = @props.emailFilterSettings
     settings
 
@@ -132,6 +146,11 @@ EmailTab = React.createClass
       $set:
         from_name: e.target.value
 
+  updateMaxVerificationEmails: (e) ->
+    @setState update @state,
+      $set:
+        max_verification_emails: parseInt(e.target.value)
+
   toggleEnabled: ->
     @setState update @state,
       $set:
@@ -142,11 +161,18 @@ EmailTab = React.createClass
       $set:
         email_verification: !@state.email_verification
 
+  toggleSendParentVerificationEmail: ->
+    @setState update @state,
+      $set:
+        parent_verification_email: !@state.parent_verification_email
+
   pushUpdates: (makeChange) ->
     pushData =
       email:
         enable_email: @state.enable_email
         email_verification: @state.email_verification
+        max_verification_emails: @state.max_verification_emails
+        parent_verification_email: @state.parent_verification_email
         smtp_url: @state.smtp_url
         smtp_port: @state.smtp_port
         email_username: @state.email_username
@@ -154,8 +180,6 @@ EmailTab = React.createClass
         from_addr: @state.from_addr
         from_name: @state.from_name
         smtp_security: @state.smtp_security
-      logging:
-        admin_emails: @state.admin_emails
       email_filter: @state.email_filter
 
     if typeof(makeChange) == "function"
@@ -172,6 +196,8 @@ EmailTab = React.createClass
   render: ->
     emailDescription = "Emails must be sent in order for users to reset their passwords."
     emailVerificationDescription = "Mandate email verification for new users"
+    MaxVerificationEmailsDescription = "The number of times a verification email can be resent before the account is locked"
+    parentEmailVerificationDescription = "Send an email to the parent's email address (if provided) upon registration"
     SMTPDescription = "The URL of the STMP server you are using"
     SMTPPortDescription = "The port of the running SMTP server"
     usernameDescription = "The username of the email account"
@@ -218,6 +244,8 @@ EmailTab = React.createClass
           <TextEntry name="From Address" value={@state.from_addr} type="text" onChange=@updateFromAddr description={fromAddressDescription}/>
           <TextEntry name="From Name" value={@state.from_name} type="text" onChange=@updateFromName description={fromNameDescription}/>
           <BooleanEntry name="Email Verification" value={@state.email_verification} onChange=@toggleEmailVerification description={emailVerificationDescription}/>
+          <TextEntry name="Max Verification Emails" value={@state.max_verification_emails} type="number" onChange=@updateMaxVerificationEmails description={MaxVerificationEmailsDescription} />
+          <BooleanEntry name="Parent Verification Email" value={@state.parent_verification_email} onChange=@toggleSendParentVerificationEmail description={parentEmailVerificationDescription}/>
           {SMTPSecuritySelect}
           <Row>
             <div className="text-center">
@@ -327,6 +355,123 @@ ShardingTab = React.createClass
       </Row>
     </Well>
 
+CaptchaTab = React.createClass
+  propTypes:
+    refresh: React.PropTypes.func.isRequired
+    captchaSettings: React.PropTypes.object.isRequired
+
+  getInitialState: ->
+    settings = @props.captchaSettings
+
+  toggleEnableCaptcha: ->
+    @setState update @state,
+      $set:
+        enable_captcha: !@state.enable_captcha
+
+  updateCaptchaURL: (e) ->
+    @setState update @state,
+      $set:
+        captcha_url: e.target.value
+
+  updateRecaptchaPublicKey: (e) ->
+    @setState update @state,
+      $set:
+        reCAPTCHA_public_key: e.target.value
+
+  updateRecaptchaPrivateKey: (e) ->
+    @setState update @state,
+      $set:
+        reCAPTCHA_private_key: e.target.value
+
+  pushUpdates: (makeChange) ->
+    pushData =
+      captcha:
+        enable_captcha: @state.enable_captcha
+        captcha_url: @state.captcha_url
+        reCAPTCHA_public_key: @state.reCAPTCHA_public_key
+        reCAPTCHA_private_key: @state.reCAPTCHA_private_key
+
+    if typeof(makeChange) == "function"
+      pushData = makeChange pushData
+
+    apiCall "PATCH", "/api/v1/settings", pushData
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Settings updated successfully"}
+      @props.refresh()
+    ).bind(this)
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
+
+  render: ->
+    enableCaptchaDescription = "Require users to solve a CAPTCHA when registering an account. Does not apply to invited or batch-registered accounts"
+    captchaURLDescription = "URL to request a CAPTCHA"
+    reCaptchaPublicKeyDescription = "Public key for the reCAPTCHA API"
+    reCaptchaPrivateKeyDescription = "Private key for the reCAPTCHA API"
+
+    <Well>
+      <Row>
+        <Col sm={8}>
+          <BooleanEntry name="Enable CAPTCHA" value={@state.enable_captcha} onChange=@toggleEnableCaptcha description={enableCaptchaDescription}/>
+          <TextEntry name="CAPTCHA URL" type="text" value={@state.captcha_url} onChange=@updateCaptchaURL description={captchaURLDescription}/>
+          <TextEntry name="reCAPTCHA Public Key" type="textarea" value={@state.reCAPTCHA_public_key} onChange=@updateRecaptchaPublicKey description={reCaptchaPublicKeyDescription}/>
+          <TextEntry name="reCAPTCHA Private Key" type="textarea" value={@state.reCAPTCHA_private_key} onChange=@updateRecaptchaPrivateKey description={reCaptchaPrivateKeyDescription}/>
+          <Row>
+            <div className="text-center">
+              <ButtonToolbar>
+                <Button onClick={@pushUpdates}>Update</Button>
+              </ButtonToolbar>
+            </div>
+          </Row>
+        </Col>
+      </Row>
+    </Well>
+
+EligibilityTab = React.createClass
+  propTypes:
+    refresh: React.PropTypes.func.isRequired
+    eligibilitySettings: React.PropTypes.object.isRequired
+
+  getInitialState: ->
+    settings = @props.eligibilitySettings
+
+  updateCountry: (e) ->
+    @setState update @state,
+      $set:
+        country: e.target.value
+
+  pushUpdates: (makeChange) ->
+    pushData =
+      eligibility:
+        country: @state.country
+
+    if typeof(makeChange) == "function"
+      pushData = makeChange pushData
+
+    apiCall "PATCH", "/api/v1/settings", pushData
+    .success ((data) ->
+      apiNotify {"status": 1, "message": "Settings updated successfully"}
+      @props.refresh()
+    ).bind(this)
+    .error (jqXHR) ->
+      apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
+
+  render: ->
+    countryDescription = "2-character code of the country considered eligible for this competition"
+
+    <Well>
+      <Row>
+        <Col sm={8}>
+          <TextEntry name="Country" type="text" value={@state.country} onChange=@updateCountry description={countryDescription}/>
+          <Row>
+            <div className="text-center">
+              <ButtonToolbar>
+                <Button onClick={@pushUpdates}>Update</Button>
+              </ButtonToolbar>
+            </div>
+          </Row>
+        </Col>
+      </Row>
+    </Well>
 
 SettingsTab = React.createClass
   getInitialState: ->
@@ -336,8 +481,12 @@ SettingsTab = React.createClass
       competition_name: ""
       competition_url: ""
       enable_feedback: true
+      max_team_size: 1
+      username_blacklist: []
       email:
         email_verification: false
+        parent_verification_email: false
+        max_verification_emails: 3
         enable_email: false
         from_addr: ""
         smtp_url: ""
@@ -345,14 +494,20 @@ SettingsTab = React.createClass
         email_username: ""
         email_password: ""
         from_name: ""
-      logging:
-        admin_emails: []
       email_filter: []
       shell_servers:
         enable_sharding: false
         default_stepping: 1
         steps: ""
         limit_added_range: false
+      captcha:
+        enable_captcha: false
+        captcha_url: ""
+        reCAPTCHA_public_key: ""
+        reCAPTCHA_private_key: ""
+      eligibility:
+        usertype: "student"
+        country: "US"
 
     tabKey: "general"
 
@@ -379,6 +534,8 @@ SettingsTab = React.createClass
       competition_url: @state.settings.competition_url
       start_time: @state.settings.start_time
       end_time: @state.settings.end_time
+      max_team_size: @state.settings.max_team_size
+      username_blacklist: @state.settings.username_blacklist
     <Well>
       <Grid>
         <Row>
@@ -394,8 +551,15 @@ SettingsTab = React.createClass
           </TabPane>
 
           <TabPane eventKey='email' tab='Email'>
-            <EmailTab refresh={@refresh} emailSettings={@state.settings.email} emailFilterSettings={@state.settings.email_filter}
-              loggingSettings={@state.settings.logging} key={Math.random()}/>
+            <EmailTab refresh={@refresh} emailSettings={@state.settings.email} emailFilterSettings={@state.settings.email_filter} key={Math.random()}/>
+          </TabPane>
+
+          <TabPane eventKey='captcha' tab='CAPTCHA'>
+            <CaptchaTab refresh={@refresh} captchaSettings={@state.settings.captcha} key={Math.random()}/>
+          </TabPane>
+
+          <TabPane eventKey='eligibility' tab='Eligibility'>
+            <EligibilityTab refresh={@refresh} eligibilitySettings={@state.settings.eligibility} key={Math.random()}/>
           </TabPane>
         </TabbedArea>
       </Grid>

@@ -3,19 +3,19 @@
   "author": "Christopher Ganas",
   "description": "This is the set of example challenges provided in the picoCTF-Problems repository.",
   "categories": ["Binary Exploitation", "Cryptography", "Web Exploitation"],
-  "problems": ["buffer-overflow-1", "ecb-1", "sql-injection-1"],
+  "problems": ["buffer-overflow-1-35e6d9d", "ecb-1-b06174a", "sql-injection-1-0c436d0"],
   "dependencies": {
-    "ecb-1": {
+    "ecb-1-b06174a": {
       "threshold": 1,
       "weightmap": {
-        "buffer-overflow-1": 1
+        "buffer-overflow-1-35e6d9d": 1
       }
     },
-    "sql-injection-1": {
+    "sql-injection-1-0c436d0": {
       "threshold": 1,
       "weightmap": {
-        "buffer-overflow-1": 1,
-        "ecb-1": 1
+        "buffer-overflow-1-35e6d9d": 1,
+        "ecb-1-b06174a": 1
       }
     }
   }

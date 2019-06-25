@@ -8,7 +8,9 @@ from ..common import ( # noqa (fixture)
   get_csrf_token,
   register_test_accounts,
   TEACHER_DEMOGRAPHICS,
-  USER_DEMOGRAPHICS,
+  STUDENT_DEMOGRAPHICS,
+  STUDENT_2_DEMOGRAPHICS,
+  OTHER_USER_DEMOGRAPHICS,
   get_conn
 )
 import api
@@ -25,8 +27,14 @@ def test_get_users(mongo_proc, client): # noqa (fixture)
 
     res = client.get('/api/v1/users')
     assert res.status_code == 200
-    assert len(res.json) == 4
-    for username in ['sampleuser', 'teacheruser', 'adminuser']:
+    assert len(res.json) == 5
+    for username in [
+        ADMIN_DEMOGRAPHICS['username'],
+        STUDENT_DEMOGRAPHICS['username'],
+        STUDENT_2_DEMOGRAPHICS['username'],
+        OTHER_USER_DEMOGRAPHICS['username'],
+        TEACHER_DEMOGRAPHICS['username']
+        ]:
         assert username in str(res.json)
 
 
@@ -200,7 +208,7 @@ def test_get_one_user(mongo_proc, client): # noqa (fixture)
 
     db = get_conn()
     test_account_uid = db.users.find_one({
-        'username': USER_DEMOGRAPHICS['username']})['uid']
+        'username': STUDENT_DEMOGRAPHICS['username']})['uid']
 
     # Attempt to get nonexistent user
     res = client.get('/api/v1/users/invalid')
@@ -210,4 +218,4 @@ def test_get_one_user(mongo_proc, client): # noqa (fixture)
     # Get a valid user
     res = client.get(f'/api/v1/users/{test_account_uid}')
     assert res.status_code == 200
-    assert USER_DEMOGRAPHICS['username'] in str(res.json)
+    assert STUDENT_DEMOGRAPHICS['username'] in str(res.json)

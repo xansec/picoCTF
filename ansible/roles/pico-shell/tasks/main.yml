@@ -27,6 +27,12 @@
     state: started
     enabled: yes
 
+- name: Hidepid
+  command: mount -o remount,hidepid=2 /proc
+
+- name: Hidepid persistence
+  command: echo "proc   /proc   proc  defaults,hidepid=2  0   0"  >> /etc/fstab
+
 - name: Copy over 99-motd
   copy:
     src: 99-motd

@@ -23,6 +23,12 @@ problem_schema = Schema({
     check(("The instances must be a list.", [list])),
     Required("hints"):
     check(("Hints must be a list.", [list])),
+    Required("organization"):
+    check(("Organization must be string.", [str])),
+    Required("event"):
+    check(("Event must be string.", [str])),
+    Required("unique_name"):
+    check(("The problems's unique name must be a string.", [str])),
     "walkthrough":
     check(("The problem walkthrough must be a string.", [str])),
     "description":
@@ -31,8 +37,6 @@ problem_schema = Schema({
     check(("A version must be a string.", [str])),
     "tags":
     check(("Tags must be described as a list.", [list])),
-    "organization":
-    check(("Organization must be string.", [str])),
     "pkg_architecture":
     check(("Package architecture must be string.", [str])),
     "pkg_description":
@@ -98,8 +102,8 @@ def upsert_problem(problem, sid):
     for instance in problem["instances"]:
         validate(instance_schema, instance)
 
-    problem["pid"] = api.common.hash("{}-{}".format(problem["name"],
-                                                    problem["author"]))
+    problem["pid"] = problem["unique_name"]
+    
     # Initially disable problems
     problem["disabled"] = True
 
@@ -360,13 +364,13 @@ def is_problem_unlocked(problem, solved):
     unlocked = True
 
     for bundle in api.bundles.get_all_bundles():
-        if problem["sanitized_name"] in bundle["problems"]:
+        if problem["unique_name"] in bundle["problems"]:
             if "dependencies" in bundle and bundle["dependencies_enabled"]:
-                if problem["sanitized_name"] in bundle["dependencies"]:
+                if problem["unique_name"] in bundle["dependencies"]:
                     dependency = bundle["dependencies"][
-                        problem["sanitized_name"]]
+                        problem["unique_name"]]
                     weightsum = sum(
-                        dependency['weightmap'].get(p['sanitized_name'], 0)
+                        dependency['weightmap'].get(p['unique_name'], 0)
                         for p in solved)
                     if weightsum < dependency['threshold']:
                         unlocked = False

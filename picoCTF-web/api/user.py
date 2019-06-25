@@ -341,6 +341,8 @@ def update_password_request(params, uid=None, check_current=False):
 @log_action
 def disable_account(uid):
     """
+    Note: The original disable account has now been updated to perform delete account instead.
+
     Disables a user account.
 
     Disabled user accounts can't login or consume space on a team.
@@ -351,13 +353,21 @@ def disable_account(uid):
     db = api.db.get_conn()
     db.users.find_one_and_update({
         "uid": uid,
+        "disabled": False
     }, {"$set": {
-        "disabled": True
+        "disabled": True,
+        "firstname": "",
+        "lastname": "",
+        "email": "",
+        "country": "",
+        "demo" : "{}"
     }})
 
+    # Drop them from their team
+    former_tid = api.user.get_team(uid=uid)["tid"]
     db.teams.find_one_and_update(
         {
-            "tid": api.user.get_team(uid=uid)["tid"],
+            "tid": former_tid,
             "size": {
                 "$gt": 0
             }
@@ -366,7 +376,16 @@ def disable_account(uid):
             "size": -1
         }})
 
-    api.user.logout()
+    # Recalculate team country
+    former_team_members = api.team.get_team_members(
+        tid=former_tid, show_disabled=False)
+    member_countries = set()
+    for member in former_team_members:
+        member_countries.add(member.get("country", "??"))
+    if len(member_countries) == 1:
+        db.teams.find_one_and_update(
+            {"tid": former_tid},
+            {"$set": {"country": member_countries.pop()}})
 
 
 def update_extdata(params):
@@ -433,7 +452,7 @@ def login(username, password):
         raise PicoException('Incorrect username.', 401)
 
     if user['disabled']:
-        raise PicoException('This account has been disabled.', 403)
+        raise PicoException('This account has been deleted.', 403)
 
     if not user['verified']:
         raise PicoException('This account has not been verified yet.', 403)

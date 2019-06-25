@@ -264,8 +264,12 @@ def get_team_information(tid):
         solved_problem.pop("organization", None)
         team_info["solved_problems"].append(solved_problem)
 
-    team_info["eligible"] = is_eligible(tid)
-
+    # Teams flagged as ineligible once will not recalculate their eligibility
+    if team_info.get("eligible", True):
+        eligiblity = is_eligible(tid)
+        team_info["eligible"] = eligiblity
+        if eligiblity is False:  # No point in storing positive results
+            mark_eligiblity(tid, eligiblity)
     return team_info
 
 
@@ -278,7 +282,7 @@ def is_eligible(tid):
     Returns:
         True or False
     """
-    members = get_team_members(tid)
+    members = get_team_members(tid, show_disabled=False)
     conditions = api.config.get_settings()['eligibility']
     for member in members:
         is_eligible = all(
@@ -286,6 +290,14 @@ def is_eligible(tid):
         if not is_eligible:
             return False
     return True
+
+
+def mark_eligiblity(tid, status):
+    """Store a team's eligiblity status within their team document."""
+    db = api.db.get_conn()
+    db.teams.find_one_and_update(
+        {'tid': tid}, {'$set': {'eligible': status}}
+    )
 
 
 def get_all_teams(include_ineligible=False, country=None):

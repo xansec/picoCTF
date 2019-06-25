@@ -11,7 +11,8 @@ from shutil import copy, rmtree
 
 import spur
 from shell_manager.util import (FatalException, full_copy, get_problem,
-                                get_problem_root, move, sanitize_name)
+                                get_problem_root, move, sanitize_name,
+                                get_problem_root_hashed, get_pid_hash)
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ def problem_to_control(problem, debian_path):
 
     # a-z, digits 0-9, plus + and minus - signs, and periods
     package_name = problem.get("pkg_name", problem["name"])
-    sanitized_name = sanitize_name(package_name)
+    sanitized_name = "{}-{}".format(sanitize_name(package_name), get_pid_hash(problem, True))
     control = deepcopy(DEB_DEFAULTS)
     control.update(
         **{
@@ -76,10 +77,10 @@ def postinst_dependencies(problem, problem_path, debian_path, install_path):
     staging_requirements_path = join(install_path, "requirements.txt")
 
     deployed_requirements_path = join(
-        get_problem_root(problem["name"], absolute=True), "__files",
+        get_problem_root_hashed(problem, absolute=True), "__files",
         "requirements.txt")
     deployed_setup_path = join(
-        get_problem_root(problem["name"], absolute=True), "__files",
+        get_problem_root_hashed(problem, absolute=True), "__files",
         "install_dependencies")
 
     listed_requirements = problem.get("pip_requirements", [])
@@ -180,7 +181,7 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
     else:
         paths["staging"] = join(staging_path, "__staging")
     paths["debian"] = join(paths["staging"], "DEBIAN")
-    paths["data"] = join(paths["staging"], get_problem_root(problem["name"]))
+    paths["data"] = join(paths["staging"], get_problem_root_hashed(problem))
     paths["install_data"] = join(paths["data"], "__files")
     for path in paths.values():
         if not isdir(path):
