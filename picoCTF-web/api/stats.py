@@ -334,7 +334,8 @@ def get_top_teams_score_progressions(
     else:
         scoreboard_cache = get_group_scores(gid=gid)
 
-    team_items = scoreboard_cache.range(0, limit, with_scores=True, desc=True)
+    team_items = scoreboard_cache.range(0, limit - 1, with_scores=True,
+                                        desc=True)
     return [output_item(team_item) for team_item in team_items]
 
 
@@ -424,7 +425,8 @@ def get_initial_scoreboard():
         'scoreboard': [],
     }
     if user is None:
-        raw_board = global_board.range(0, pagelen, with_scores=True, desc=True)
+        raw_board = global_board.range(0, pagelen - 1, with_scores=True,
+                                       desc=True)
         result['global']['scoreboard'] = [decode_scoreboard_item(item) for
                                           item in raw_board]
     else:
@@ -434,7 +436,7 @@ def get_initial_scoreboard():
         global_pos = global_board.rank(get_scoreboard_key(team),
                                        reverse=True) or 0
         start_slice = math.floor(global_pos / pagelen) * pagelen
-        raw_board = global_board.range(start_slice, start_slice + pagelen,
+        raw_board = global_board.range(start_slice, start_slice + pagelen - 1,
                                        with_scores=True, desc=True)
         result['global']['scoreboard'] = [decode_scoreboard_item(item) for
                                           item in raw_board]
@@ -448,7 +450,7 @@ def get_initial_scoreboard():
                                          reverse=True) or 0
         start_slice = math.floor(student_pos / pagelen) * pagelen
         raw_student_board = student_board.range(start_slice,
-                                                start_slice + pagelen,
+                                                start_slice + pagelen - 1,
                                                 with_scores=True,
                                                 desc=True)
         result['student'] = {
@@ -466,7 +468,7 @@ def get_initial_scoreboard():
                                          reverse=True) or 0
             start_slice = math.floor(group_pos / pagelen) * pagelen
             raw_group_board = group_board.range(start_slice,
-                                                start_slice + pagelen,
+                                                start_slice + pagelen - 1,
                                                 with_scores=True,
                                                 desc=True)
             result['groups'].append({
@@ -500,7 +502,7 @@ def get_scoreboard_page(board, page_number):
 
     """
     start = SCOREBOARD_PAGE_LEN * (page_number - 1)
-    end = start + SCOREBOARD_PAGE_LEN
+    end = start + SCOREBOARD_PAGE_LEN - 1
     result = []
     if board == "groups":
         user = api.user.get_user()
