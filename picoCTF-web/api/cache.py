@@ -114,6 +114,20 @@ def decode_scoreboard_item(item, with_weight=False):
     }
 
 
+@memoize(timeout=180)
+def search_scoreboard(scoreboard, pattern):
+    """
+    :param scoreboard: scoreboard cache Zset
+    :param pattern: text pattern to search team names and affiliations,
+                    not including wildcards
+    :return: sorted list of scoreboard entries
+    """
+    # Trailing '*>' avoids search on last token, tid
+    results = [decode_scoreboard_item(item) for
+               item in list(scoreboard.search("*{}*>*".format(pattern)))]
+    return sorted(results, key=lambda item: item["score"], reverse=True)
+
+
 def invalidate(f, *args, **kwargs):
     """
     Clunky way to replicate busting behavior due to awkward wrapping of walrus cached decorator
