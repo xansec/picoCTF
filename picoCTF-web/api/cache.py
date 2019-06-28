@@ -101,7 +101,7 @@ def decode_scoreboard_item(item, with_weight=False):
     :param with_weight: keep decimal weighting of score, or return as int
     :return: dict of scoreboard item
     """
-    key = item[0]
+    key = item[0].decode('utf-8')
     data = key.split(">")
     score = item[1]
     if not with_weight:
