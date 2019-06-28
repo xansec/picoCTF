@@ -95,21 +95,21 @@ def get_scoreboard_key(team):
                              team['tid'])
 
 
-def decode_scoreboard_entry(entry, with_weight=False):
+def decode_scoreboard_item(item, with_weight=False):
     """
-    :param entry: tuple of ZSet (key, score)
-    :param keep_weight: keep decimal weighting of score, or return as int
-    :return: dict of scoreboard entry
+    :param item: tuple of ZSet (key, score)
+    :param with_weight: keep decimal weighting of score, or return as int
+    :return: dict of scoreboard item
     """
-    key = entry[0]
-    entry_data = key.split(">")
-    score = entry[1]
+    key = item[0]
+    data = key.split(">")
+    score = item[1]
     if not with_weight:
         score = int(score)
     return {
-        'name': entry_data[0],
-        'affiliation': entry_data[1],
-        'tid': entry_data[2],
+        'name': data[0],
+        'affiliation': data[1],
+        'tid': data[2],
         'score': score
     }
 

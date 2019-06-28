@@ -5,7 +5,7 @@ import math
 import pymongo
 
 import api
-from api.cache import (decode_scoreboard_entry, get_score_cache,
+from api.cache import (decode_scoreboard_item, get_score_cache,
                        get_scoreboard_cache, get_scoreboard_key, memoize)
 
 
@@ -130,7 +130,7 @@ def get_group_average_score(gid=None, name=None):
     """
     group_scoreboard = get_group_scores(gid=gid, name=name)
     group_scores = group_scoreboard.as_items()
-    total_score = sum([int(entry[1]) for entry in group_scores])
+    total_score = sum([int(item[1]) for item in group_scores])
     return int(total_score / len(group_scores)) if len(group_scores) > 0 else 0
 
 
@@ -193,7 +193,7 @@ def get_all_user_scores():
             "score": int(get_score(uid=user['uid']))
         })
 
-    return sorted(result, key=lambda entry: entry['score'], reverse=True)
+    return sorted(result, key=lambda item: item['score'], reverse=True)
 
 
 @memoize(timeout=120)
@@ -322,8 +322,8 @@ def get_top_teams_score_progressions(
         A dict of {name: name, score_progression: score_progression}
 
     """
-    def output_entry(entry):
-        data = decode_scoreboard_entry(entry)
+    def output_item(item):
+        data = decode_scoreboard_item(item)
         return {
             'name': data['name'],
             'affiliation': data['affiliation'],
@@ -336,8 +336,8 @@ def get_top_teams_score_progressions(
     else:
         scoreboard_cache = get_group_scores(gid=gid)
 
-    team_entries = scoreboard_cache.range(0, limit, with_scores=True, desc=True)
-    return [output_entry(team_entry) for team_entry in team_entries]
+    team_items = scoreboard_cache.range(0, limit, with_scores=True, desc=True)
+    return [output_item(team_item) for team_item in team_items]
 
 
 @memoize(timeout=300)
@@ -426,8 +426,8 @@ def get_initial_scoreboard():
     }
     if user is None:
         raw_board = global_board.range(0, pagelen, with_scores=True, desc=True)
-        result['global']['scoreboard'] = [decode_scoreboard_entry(entry) for
-                                          entry in raw_board]
+        result['global']['scoreboard'] = [decode_scoreboard_item(item) for
+                                          item in raw_board]
     else:
         result['tid'] = team['tid']
 
@@ -437,8 +437,8 @@ def get_initial_scoreboard():
         start_slice = math.floor(global_pos / pagelen) * pagelen
         raw_board = global_board.range(start_slice, start_slice + pagelen,
                                        with_scores=True, desc=True)
-        result['global']['scoreboard'] = [decode_scoreboard_entry(entry) for
-                                          entry in raw_board]
+        result['global']['scoreboard'] = [decode_scoreboard_item(item) for
+                                          item in raw_board]
         result['global']['start_page'] = math.ceil((global_pos + 1) / pagelen)
 
         # Eligible student board, starting at first page
@@ -454,8 +454,8 @@ def get_initial_scoreboard():
         result['student'] = {
             'name': 'student',
             'pages': math.ceil(len(student_board) / pagelen),
-            'scoreboard': [decode_scoreboard_entry(entry) for
-                           entry in raw_student_board],
+            'scoreboard': [decode_scoreboard_item(item) for
+                           item in raw_student_board],
             'start_page': math.ceil((student_pos + 1) / pagelen),
         }
 
@@ -475,7 +475,7 @@ def get_initial_scoreboard():
                 'name':
                 group['name'],
                 'scoreboard':
-                [decode_scoreboard_entry(entry) for entry in raw_group_board],
+                [decode_scoreboard_item(item) for item in raw_group_board],
                 'pages':
                 math.ceil(len(group_board) / pagelen),
                 'start_page':
@@ -511,19 +511,19 @@ def get_scoreboard_page(board, page_number):
             result.append({
                 'gid': group['gid'],
                 'name': group['name'],
-                'scoreboard': [decode_scoreboard_entry(entry) for
-                               entry in raw_board]
+                'scoreboard': [decode_scoreboard_item(item) for
+                               item in raw_board]
             })
     elif board == "global":
         global_board = get_scoreboard_cache(include_ineligible=True)
         raw_board = global_board.range(start, end, with_scores=True,
                                        reverse=True)
-        result = [decode_scoreboard_entry(entry) for entry in raw_board]
+        result = [decode_scoreboard_item(item) for item in raw_board]
     elif board == "student":
         student_board = get_scoreboard_cache(include_ineligible=True)
         raw_board = student_board.range(start, end, with_scores=True,
                                         reverse=True)
-        result = [decode_scoreboard_entry(entry) for entry in raw_board]
+        result = [decode_scoreboard_item(item) for item in raw_board]
     return result
 
 def get_demographic_data():
