@@ -100,6 +100,7 @@ def get_group_scores(gid=None, name=None):
     """
     key_args = {'gid': gid}
     scoreboard_cache = get_scoreboard_cache(**key_args)
+    scoreboard_cache.clear()
 
     member_teams = [
         api.team.get_team(tid=tid)
@@ -151,6 +152,7 @@ def get_all_team_scores(country=None, include_ineligible=False):
     key_args = {'country': country, 'include_ineligible': include_ineligible}
     teams = api.team.get_all_teams(**key_args)
     scoreboard_cache = get_scoreboard_cache(**key_args)
+    scoreboard_cache.clear()
 
     result = {}
     all_groups = api.group.get_all_groups()
