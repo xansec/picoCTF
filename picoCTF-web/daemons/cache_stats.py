@@ -3,7 +3,9 @@
 
 import api
 import api.group
-import api.stats
+from api.stats import (get_all_team_scores, get_group_scores,
+                       get_problem_solves, get_registration_count,
+                       get_top_teams_score_progressions)
 
 
 def run():
@@ -14,32 +16,27 @@ def run():
             return result
 
         print("Caching registration stats.")
-        cache(api.stats.get_registration_count)
+        cache(get_registration_count)
 
         print("Caching the public scoreboard entries...")
-        cache(api.stats.get_all_team_scores)
-        cache(api.stats.get_all_team_scores, include_ineligible=True)
+        get_all_team_scores()
+        get_all_team_scores(include_ineligible=True)
 
         print("Caching the public scoreboard graph...")
-        cache(api.stats.get_top_teams_score_progressions)
-        cache(api.stats.get_top_teams_score_progressions,
-              include_ineligible=True)
+        cache(get_top_teams_score_progressions)
+        cache(get_top_teams_score_progressions, include_ineligible=True)
 
         print("Caching the scoreboard graph for each group...")
         for group in api.group.get_all_groups():
-            # cache(
-            #      api.stats.get_top_teams_score_progressions,
-            #      gid=group['gid'])
-            cache(
-                  api.stats.get_top_teams_score_progressions,
+            get_group_scores(gid=group['gid'])
+            cache(get_top_teams_score_progressions,
                   gid=group['gid'],
                   include_ineligible=True)
-            cache(api.stats.get_group_scores, gid=group['gid'])
 
         print("Caching number of solves for each problem.")
         for problem in api.problem.get_all_problems():
             print(problem["name"],
-                  cache(api.stats.get_problem_solves, problem["pid"]))
+                  cache(get_problem_solves, problem["pid"]))
 
 
 if __name__ == '__main__':
