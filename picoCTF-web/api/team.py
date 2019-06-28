@@ -4,6 +4,7 @@ from voluptuous import Length, Required, Schema
 
 import api
 from api import cache, check, log_action, PicoException
+from api.cache import memoize
 
 new_team_schema = Schema({
     Required("team_name"):
@@ -47,6 +48,7 @@ def get_team(tid=None, name=None):
     return db.teams.find_one(match, {"_id": 0})
 
 
+@memoize
 def get_groups(tid):
     """
     Get the group membership for a team.
@@ -75,8 +77,8 @@ def get_groups(tid):
         # Replace the owner tid with the team's name
         group['owner'] = api.team.get_team(tid=group['owner'])['team_name']
 
-        # Add the group's average score
-        group['score'] = api.stats.get_group_average_score(gid=group['gid'])
+        # Add the group's average score - WHY???
+        # group['score'] = api.stats.get_group_average_score(gid=group['gid'])
 
     return associated_groups
 
@@ -232,7 +234,7 @@ def get_team_information(tid):
     # @TODO there is a LOT of stuff being added here - expensive. all needed?
     #       ideally combine/replace this w/ get_team()
     # Add additional information
-    team_info["score"] = api.stats.get_score(tid=tid)
+    team_info["score"] = int(api.stats.get_score(tid=tid))
     team_info["members"] = [{
         "username": member["username"],
         "firstname": member["firstname"],
@@ -306,6 +308,7 @@ def get_all_teams(include_ineligible=False, country=None):
 
     Args:
         include_ineligible: include ineligible teams in result
+        country: optional country filter
 
     Returns:
         A list of all of the teams.
