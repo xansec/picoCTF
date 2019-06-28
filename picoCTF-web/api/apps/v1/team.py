@@ -37,7 +37,7 @@ class Score(Resource):
         """Get your team's score."""
         current_tid = api.user.get_user()['tid']
         return jsonify({
-            'score': api.stats.get_score(tid=current_tid)
+            'score': int(api.stats.get_score(tid=current_tid))
         })
 
 

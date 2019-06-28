@@ -13,38 +13,60 @@ from api import PicoException
 
 log = logging.getLogger(__name__)
 
-__walrus = None
-__cache = None
+__redis = {
+    "walrus": None,
+    "cache": None,
+    "zsets": {
+        "scores": None,
+    },
+}
 
 
 def get_conn():
     """Get a redis connection, reusing one if it exists."""
-    global __walrus
-    if not __walrus:
+    global __redis
+    if __redis.get("walrus") is None:
         conf = current_app.config
         try:
-            __walrus = Walrus(host=conf["REDIS_ADDR"], port=conf["REDIS_PORT"],
-                              password=conf["REDIS_PW"], db=conf["REDIS_DB_NUMBER"])
+            __redis["walrus"] = Walrus(host=conf["REDIS_ADDR"],
+                                       port=conf["REDIS_PORT"],
+                                       password=conf["REDIS_PW"],
+                                       db=conf["REDIS_DB_NUMBER"])
         except Exception as error:
             raise PicoException(
                 'Internal server error. ' +
                 'Please contact a system administrator.',
                 data={'original_error': error})
-    return __walrus
+    return __redis["walrus"]
 
 
 def get_cache():
     """Get a walrus cache, reusing one if it exists."""
-    global __cache
-    if not __cache:
-        __cache = get_conn().cache(default_timeout=0)
-    return __cache
+    global __redis
+    if __redis.get("cache") is None:
+        __redis["cache"] = get_conn().cache(default_timeout=0)
+    return __redis["cache"]
+
+
+def get_score_cache():
+    global __redis
+    if __redis["zsets"].get("scores") is None:
+        __redis["zsets"]["scores"] = get_conn().ZSet('scores')
+    return __redis["zsets"]["scores"]
+
+
+def get_scoreboard_cache(**kwargs):
+    global __redis
+    scoreboard_name = "scoreboard:{}".format(_hash_key((), kwargs))
+    if __redis["zsets"].get(scoreboard_name) is None:
+        __redis["zsets"][scoreboard_name] = get_conn().ZSet(scoreboard_name)
+    return __redis["zsets"][scoreboard_name]
 
 
 def clear():
-    global __cache
-    if __cache:
-        __cache.flush()
+    global __redis
+    if __redis.get("walrus") is not None:
+        __redis["walrus"].flushdb()
 
 
 def memoize(_f=None, **cached_kwargs):
@@ -65,6 +87,31 @@ def memoize(_f=None, **cached_kwargs):
 
 def _hash_key(a, k):
     return hashlib.md5(pickle.dumps((a, k))).hexdigest()
+
+
+def get_scoreboard_key(team):
+    # For lack of better idea of delimiter, use '>' illegal team name char
+    return "{}>{}>{}".format(team['team_name'], team['affiliation'],
+                             team['tid'])
+
+
+def decode_scoreboard_entry(entry, with_weight=False):
+    """
+    :param entry: tuple of ZSet (key, score)
+    :param keep_weight: keep decimal weighting of score, or return as int
+    :return: dict of scoreboard entry
+    """
+    key = entry[0]
+    entry_data = key.split(">")
+    score = entry[1]
+    if not with_weight:
+        score = int(score)
+    return {
+        'name': entry_data[0],
+        'affiliation': entry_data[1],
+        'tid': entry_data[2],
+        'score': score
+    }
 
 
 def invalidate(f, *args, **kwargs):
