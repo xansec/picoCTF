@@ -526,6 +526,7 @@ def get_scoreboard_page(board, page_number):
         result = [decode_scoreboard_item(item) for item in raw_board]
     return result
 
+
 def get_demographic_data():
     """Get demographic information used in analytics"""
     users = api.user.get_all_users()
@@ -542,3 +543,7 @@ def get_demographic_data():
         })
 
     return result
+
+
+def search_scoreboard(board, pattern, page=1):
+    pass

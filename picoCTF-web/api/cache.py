@@ -115,9 +115,9 @@ def decode_scoreboard_item(item, with_weight=False):
 
 
 @memoize(timeout=180)
-def search_scoreboard(scoreboard, pattern):
+def search_scoreboard_cache(scoreboard, pattern):
     """
-    :param scoreboard: scoreboard cache Zset
+    :param scoreboard: scoreboard cache ZSet
     :param pattern: text pattern to search team names and affiliations,
                     not including wildcards
     :return: sorted list of scoreboard entries

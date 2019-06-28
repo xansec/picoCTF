@@ -519,6 +519,22 @@ scoreboard_page_req.add_argument(
     error='page must be a positive integer'
 )
 
+
+# Scoreboard search request
+scoreboard_search_req = reqparse.RequestParser()
+scoreboard_search_req.add_argument(
+    'board', required=False, choices=['groups', 'global', 'student'],
+    type=str, location='args', help='Choose which scoreboard to return'
+)
+scoreboard_search_req.add_argument(
+    'pattern', required=True, type=str, location='args'
+)
+scoreboard_search_req.add_argument(
+    'page', required=False, default=1, type=inputs.positive, location='args',
+    help='Scoreboard page to return'
+)
+
+
 # Top teams score progression request
 top_teams_score_progression_req = reqparse.RequestParser()
 top_teams_score_progression_req.add_argument(
