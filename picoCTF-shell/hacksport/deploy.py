@@ -904,9 +904,9 @@ def deploy_problems(args, config):
 
     try:
         for problem_name in problem_names:
-            if isdir(join(get_problem_root(problem_name, absolute=True))):
+            if isdir(get_problem_root(problem_name, absolute=True)):
                 # problem_name is already an installed package
-                deploy_location = join(get_problem_root(problem_name, absolute=True))
+                deploy_location = get_problem_root(problem_name, absolute=True)
             elif isdir(problem_name) and args.dry:
                 # dry run - avoid installing package
                 deploy_location = problem_name
@@ -926,7 +926,7 @@ def deploy_problems(args, config):
                 except subprocess.CalledProcessError:
                     logger.error("An error occurred while installing problem packages.")
                     raise FatalException
-                deploy_location = join(get_problem_root_hashed(problem_object, absolute=True))
+                deploy_location = get_problem_root_hashed(get_problem(problem_name), absolute=True)
             else:
                 logger.error("'%s' is neither an installed package, nor a valid problem directory",
                              problem_name)
@@ -991,8 +991,8 @@ def remove_instances(path, instance_list):
 def undeploy_problems(args, config):
     """
     Main entrypoint for problem undeployment
-    
-    Does not remove the installed packages (apt-get remove [sanitized name with hash]). 
+
+    Does not remove the installed packages (apt-get remove [sanitized name with hash]).
     Does not remove the problem from the web server (delete it from the mongo db).
     """
 
