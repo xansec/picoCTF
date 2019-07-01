@@ -98,8 +98,8 @@ def submit_key(tid, pid, key, method, uid, ip=None):
 
     if correct and not previously_solved_by_team:
         # Immediately invalidate some caches
-        cache.invalidate(api.stats.get_score, tid=tid)
-        cache.invalidate(api.stats.get_score, uid=uid)
+        cache.invalidate(api.stats.get_score, tid)
+        cache.invalidate(api.stats.get_score, uid)
         cache.invalidate(api.problem.get_unlocked_pids, tid)
         cache.invalidate(
             api.problem.get_solved_problems, tid=tid, uid=uid, category=None)

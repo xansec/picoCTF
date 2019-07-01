@@ -523,7 +523,7 @@ scoreboard_page_req.add_argument(
 # Scoreboard search request
 scoreboard_search_req = reqparse.RequestParser()
 scoreboard_search_req.add_argument(
-    'board', required=False, choices=['groups', 'global', 'student'],
+    'board', required=False, choices=['group', 'global', 'student'],
     type=str, location='args', help='Choose which scoreboard to return'
 )
 scoreboard_search_req.add_argument(
@@ -532,6 +532,10 @@ scoreboard_search_req.add_argument(
 scoreboard_search_req.add_argument(
     'page', required=False, default=1, type=inputs.positive, location='args',
     help='Scoreboard page to return'
+)
+scoreboard_search_req.add_argument(
+    'gid', required=False, type=str, location='args',
+    help='Classroom id'
 )
 
 

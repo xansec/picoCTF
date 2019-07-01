@@ -6,7 +6,8 @@ import pymongo
 
 import api
 from api.cache import (decode_scoreboard_item, get_score_cache,
-                       get_scoreboard_cache, get_scoreboard_key, memoize)
+                       get_scoreboard_cache, get_scoreboard_key, memoize,
+                       search_scoreboard_cache)
 
 
 SCOREBOARD_PAGE_LEN = 50
@@ -551,5 +552,18 @@ def get_demographic_data():
     return result
 
 
-def search_scoreboard(board, pattern, page=1):
-    pass
+def search_scoreboard(board, pattern, gid=None, page=1):
+    if board == "student":
+        key_args = {'country': None, 'include_ineligible': False}
+    elif board == "group":
+        if gid is None:
+            return []
+        else:
+            key_args = {'gid': gid}
+    else:  # default to global
+        key_args = {'country': None, 'include_ineligible': True}
+    scoreboard = get_scoreboard_cache(**key_args)
+    results = search_scoreboard_cache(scoreboard, pattern)
+    start = SCOREBOARD_PAGE_LEN * (page - 1)
+    end = start + SCOREBOARD_PAGE_LEN - 1
+    return results[start:end]

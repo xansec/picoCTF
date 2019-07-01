@@ -114,7 +114,6 @@ def decode_scoreboard_item(item, with_weight=False):
     }
 
 
-@memoize(timeout=180)
 def search_scoreboard_cache(scoreboard, pattern):
     """
     :param scoreboard: scoreboard cache ZSet
@@ -130,8 +129,12 @@ def search_scoreboard_cache(scoreboard, pattern):
 
 def invalidate(f, *args, **kwargs):
     """
-    Clunky way to replicate busting behavior due to awkward wrapping of walrus cached decorator
+    Clunky way to replicate busting behavior due to awkward wrapping of walrus
+    cached decorator
     """
-    cache = get_cache()
-    key = '%s:%s' % (f.__name__, _hash_key(args, kwargs))
-    cache.delete(key)
+    if f == api.stats.get_score:
+        key = args[0]
+        get_score_cache().remove(key)
+    else:
+        key = '%s:%s' % (f.__name__, _hash_key(args, kwargs))
+        get_cache().delete(key)

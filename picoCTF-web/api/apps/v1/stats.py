@@ -77,7 +77,7 @@ class ScoreboardPage(Resource):
         if len(pattern) < 3:
             return jsonify([])
         return jsonify(api.stats.search_scoreboard(
-            req['board'], pattern, req['page']
+            req['board'], req['pattern'], req['gid'], req['page']
         ))
 
 
