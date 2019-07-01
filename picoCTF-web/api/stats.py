@@ -481,3 +481,23 @@ def get_scoreboard_page(board, page_number):
     elif board == "student":
         result = api.stats.get_all_team_scores()[start:end]
     return result
+
+def get_demographic_data():
+    """Get demographic information used in analytics"""
+    users = api.user.get_all_users()
+
+    result = []
+    for user in users:
+        result.append({
+            "usertype": user['usertype'],
+            "country": user['country'],
+            "gender": user['demo'].get('gender',''),
+            "residencecountry": user['demo'].get('residencecountry',''),
+            "age": user['demo']['age'],
+            "zipcode": user['demo'].get('zipcode',''),
+            "schoolcountry": user['demo'].get('schoolcountry',''),
+            "grade": user['demo'].get('grade',''),
+            "score": get_score(uid=user['uid'])
+        })
+
+    return result

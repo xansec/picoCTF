@@ -81,3 +81,12 @@ class SubmissionStatistics(Resource):
             p['name']: api.stats.get_problem_submission_stats(p['pid'])
             for p in api.problem.get_all_problems(show_disabled=True)
         })
+
+@ns.route('/demographics')
+class DemographicInformation(Resource):
+    """Get demographic information used in analytics."""
+
+    @require_admin
+    def get(self):
+        """Get demographic information used in analytics."""
+        return jsonify(api.stats.get_demographic_data())
