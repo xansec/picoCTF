@@ -168,8 +168,7 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
         ignore_files (list of str, optional): filenames to exclude
             when packaging this problem.
     Returns:
-        tuple (str, str): the name of the package,
-            the absolute path to the packaged problem
+        str: the absolute path to the packaged problem
     """
     problem = get_problem(problem_path)
     logger.debug("Starting to package: '%s'.", problem["name"])
@@ -233,8 +232,7 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
                  paths["staging"])
     rmtree(paths["staging"])
 
-    return (sanitize_name(problem.get("pkg_name", problem["name"])),
-            os.path.abspath(deb_path))
+    return os.path.abspath(deb_path)
 
 
 def problem_builder(args, config):

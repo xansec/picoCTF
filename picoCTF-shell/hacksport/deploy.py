@@ -915,7 +915,7 @@ def deploy_problems(args, config):
                 try:
                     if not os.path.isdir(TEMP_DEB_DIR):
                         os.mkdir(TEMP_DEB_DIR)
-                    problem_name, generated_deb_path = package_problem(problem_name, out_path=TEMP_DEB_DIR)
+                    generated_deb_path = package_problem(problem_name, out_path=TEMP_DEB_DIR)
                 except FatalException:
                     logger.error("An error occurred while packaging %s.", problem_name)
                     raise
