@@ -227,3 +227,19 @@ class UserVerificationResponse(Resource):
         else:
             return redirect(settings['competition_url'] +
                             "/#status=verification_error")
+
+@ns.route('/export')
+class UserDataExport(Resource):
+    """Export all data of the logged in user."""
+
+    @require_login
+    def get(self):
+        """Export all data of the logged in user."""
+        user_data = api.user.get_user()
+        submissions = api.submissions.get_submissions(uid=user_data['uid'])
+        feedbacks = api.problem_feedback.get_problem_feedback(uid=user_data['uid'])
+        return jsonify({
+            'user': user_data,
+            'submissions': submissions,
+            'feedback': feedbacks
+        })
