@@ -14,7 +14,6 @@ TEMP_DEB_DIR = "/tmp/picoctf_debs/"
 # will be set to the configuration module during deployment
 deploy_config = None
 port_map = {}
-inv_port_map = {}
 current_problem = None
 current_instance = None
 
@@ -25,12 +24,11 @@ def get_deploy_context():
     config, port_map, problem, instance
     """
 
-    global deploy_config, port_map, inv_port_map, current_problem, current_instance
+    global deploy_config, port_map, current_problem, current_instance
 
     return {
         "config": deploy_config,
         "port_map": port_map,
-        "inv_port_map": inv_port_map,
         "problem": current_problem,
         "instance": current_instance
     }
@@ -76,8 +74,8 @@ def give_port():
         port_random = Random(context["config"].deploy_secret)
 
     # if this instance already has a port, reuse it
-    if (context["problem"], context["instance"]) in inv_port_map:
-        return inv_port_map[(context["problem"], context["instance"])]
+    if (context["problem"], context["instance"]) in port_map:
+        return port_map[(context["problem"], context["instance"])]
 
     if len(context["port_map"].items()) + len(
             context["config"].banned_ports_parsed) == HIGHEST_PORT + 1:
@@ -85,7 +83,7 @@ def give_port():
             "All usable ports are taken. Cannot deploy any more instances.")
 
     # Added used ports to banned_ports_parsed.
-    for port in port_map:
+    for port in port_map.values():
         context["config"].banned_ports_parsed.append(port)
 
     # in case the port chosen is in use, try again.
@@ -100,7 +98,8 @@ def give_port():
             loop_var -= 1
             context["config"].banned_ports_parsed.append(port)
             continue
-        context["port_map"][port] = (context["problem"], context["instance"])
+        context["port_map"][
+            (context["problem"], context["instance"])] = port
         return port
     raise Exception(
         "Unable to assigned a port to this problem. All ports are either taken or used by the system."
@@ -830,7 +829,7 @@ def deploy_problem(problem_directory,
 def deploy_problems(args, config):
     """ Main entrypoint for problem deployment """
 
-    global deploy_config, port_map, inv_port_map
+    global deploy_config, port_map
     deploy_config = config
 
     need_restart_xinetd = False
@@ -881,9 +880,7 @@ def deploy_problems(args, config):
         for instance in get_all_problem_instances(path):
             already_deployed[path].append(instance["instance_number"])
             if "port" in instance:
-                port_map[instance["port"]] = (problem["name"],
-                                              instance["instance_number"])
-                inv_port_map[(problem["name"],
+                port_map[(problem["name"],
                               instance["instance_number"])] = instance["port"]
 
     lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
