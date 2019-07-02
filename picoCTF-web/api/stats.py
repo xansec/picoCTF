@@ -492,10 +492,7 @@ def get_demographic_data():
             "usertype": user['usertype'],
             "country": user['country'],
             "gender": user['demo'].get('gender',''),
-            "residencecountry": user['demo'].get('residencecountry',''),
-            "age": user['demo']['age'],
             "zipcode": user['demo'].get('zipcode',''),
-            "schoolcountry": user['demo'].get('schoolcountry',''),
             "grade": user['demo'].get('grade',''),
             "score": get_score(uid=user['uid'])
         })
