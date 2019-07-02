@@ -507,7 +507,7 @@ def get_scoreboard_page(board, page_number, gid=None):
     """
     start = SCOREBOARD_PAGE_LEN * (page_number - 1)
     end = start + SCOREBOARD_PAGE_LEN - 1
-    result = []
+    scoreboard = []
     if board == "groups":
         user = api.user.get_user()
         group = api.group.get_group(gid=gid)
@@ -520,20 +520,25 @@ def get_scoreboard_page(board, page_number, gid=None):
         group_board = get_scoreboard_cache(gid=gid)
         raw_board = group_board.range(start, end, with_scores=True,
                                       reverse=True)
-        return [decode_scoreboard_item(item) for item in raw_board]
+        scoreboard = [decode_scoreboard_item(item) for item in raw_board]
     elif board == "global":
         global_board = get_scoreboard_cache(country=None,
                                             include_ineligible=True)
         raw_board = global_board.range(start, end, with_scores=True,
                                        reverse=True)
-        result = [decode_scoreboard_item(item) for item in raw_board]
+        scoreboard = [decode_scoreboard_item(item) for item in raw_board]
     elif board == "student":
         student_board = get_scoreboard_cache(country=None,
                                              include_ineligible=False)
         raw_board = student_board.range(start, end, with_scores=True,
                                         reverse=True)
-        result = [decode_scoreboard_item(item) for item in raw_board]
-    return result
+        scoreboard = [decode_scoreboard_item(item) for item in raw_board]
+    return {
+        'name': board,
+        'pages': math.ceil(len(scoreboard) / SCOREBOARD_PAGE_LEN),
+        'start_page': 1,
+        'scoreboard': scoreboard
+    }
 
 
 def get_demographic_data():
@@ -554,18 +559,22 @@ def get_demographic_data():
     return result
 
 
-def search_scoreboard(board, pattern, gid=None, page=1):
+def search_scoreboard(board, pattern, page=1):
     if board == "student":
         key_args = {'country': None, 'include_ineligible': False}
-    elif board == "groups":
-        if gid is None:
-            return []
-        else:
-            key_args = {'gid': gid}
     else:  # default to global
         key_args = {'country': None, 'include_ineligible': True}
     scoreboard = get_scoreboard_cache(**key_args)
     results = search_scoreboard_cache(scoreboard, pattern)
     start = SCOREBOARD_PAGE_LEN * (page - 1)
-    end = start + SCOREBOARD_PAGE_LEN - 1
-    return results[start:end]
+    end = start + SCOREBOARD_PAGE_LEN
+    boardlist = results[start:end]
+    for item in boardlist:
+        item['rank'] = scoreboard.rank(item['key'], reverse=True) + 1
+        item.pop('key')
+    return {
+        'name': board,
+        'pages': math.ceil(len(results) / SCOREBOARD_PAGE_LEN),
+        'start_page': page,
+        'scoreboard': boardlist
+    }

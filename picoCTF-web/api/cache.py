@@ -95,10 +95,11 @@ def get_scoreboard_key(team):
                              team['tid'])
 
 
-def decode_scoreboard_item(item, with_weight=False):
+def decode_scoreboard_item(item, with_weight=False, include_key=False):
     """
     :param item: tuple of ZSet (key, score)
     :param with_weight: keep decimal weighting of score, or return as int
+    :param include_key: whether to include to raw key
     :return: dict of scoreboard item
     """
     key = item[0].decode('utf-8')
@@ -106,12 +107,15 @@ def decode_scoreboard_item(item, with_weight=False):
     score = item[1]
     if not with_weight:
         score = int(score)
-    return {
+    output = {
         'name': data[0],
         'affiliation': data[1],
         'tid': data[2],
         'score': score
     }
+    if include_key:
+        output['key'] = key
+    return output
 
 
 def search_scoreboard_cache(scoreboard, pattern):
@@ -122,7 +126,7 @@ def search_scoreboard_cache(scoreboard, pattern):
     :return: sorted list of scoreboard entries
     """
     # Trailing '*>' avoids search on last token, tid
-    results = [decode_scoreboard_item(item) for
+    results = [decode_scoreboard_item(item, include_key=True) for
                item in list(scoreboard.search("*{}*>*".format(pattern)))]
     return sorted(results, key=lambda item: item["score"], reverse=True)
 

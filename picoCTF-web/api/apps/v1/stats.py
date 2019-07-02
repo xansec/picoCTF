@@ -66,18 +66,13 @@ class ScoreboardPage(Resource):
     def get(self):
         """Retrieve a page of a specific scoreboard."""
         req = scoreboard_search_req.parse_args(strict=True)
-        if req['board'] == 'groups' and not api.user.is_logged_in():
-            raise PicoException(
-                'You must be logged in to retrieve pages from the ' +
-                'groups scoreboard.', 401
-            )
         # Strip chars: redis pattern wildcard and key delimiter
         pattern = req['pattern'].replace('*', '').replace('>', '')
         # At least 3 characters
         if len(pattern) < 3:
             return jsonify([])
         return jsonify(api.stats.search_scoreboard(
-            req['board'], req['pattern'], req['gid'], req['page']
+            board=req['board'], pattern=req['pattern'], page=req['page']
         ))
 
 
