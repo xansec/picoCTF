@@ -103,6 +103,8 @@ def submit_key(tid, pid, key, method, uid, ip=None):
         cache.invalidate(api.problem.get_unlocked_pids, tid)
         cache.invalidate(
             api.problem.get_solved_problems, tid=tid, uid=uid, category=None)
+        cache.invalidate(
+            api.problem.get_solved_problems, tid=tid, uid=None, category=None)
         cache.invalidate(api.problem.get_solved_problems, tid=tid, uid=uid)
         cache.invalidate(api.problem.get_solved_problems, tid=tid)
         cache.invalidate(api.problem.get_solved_problems, uid=uid)

@@ -23,15 +23,17 @@ def run():
         get_all_team_scores(include_ineligible=True)
 
         print("Caching the public scoreboard graph...")
-        cache(get_top_teams_score_progressions)
-        cache(get_top_teams_score_progressions, include_ineligible=True)
+        cache(get_top_teams_score_progressions, include_ineligible=False,
+              gid=None)
+        cache(get_top_teams_score_progressions, include_ineligible=True,
+              gid=None)
 
         print("Caching the scoreboard graph for each group...")
         for group in api.group.get_all_groups():
             get_group_scores(gid=group['gid'])
             cache(get_top_teams_score_progressions,
-                  gid=group['gid'],
-                  include_ineligible=True)
+                  include_ineligible=True,
+                  gid=group['gid'])
 
         print("Caching number of solves for each problem.")
         for problem in api.problem.get_all_problems():

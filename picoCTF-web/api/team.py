@@ -416,6 +416,12 @@ def join_team(team_name, password, user):
     cache.invalidate(
         api.problem.get_solved_problems,
         tid=desired_team['tid'],
+        uid=None,
+        category=None
+    )
+    cache.invalidate(
+        api.problem.get_solved_problems,
+        tid=desired_team['tid'],
         uid=user['uid'])
     cache.invalidate(api.problem.get_solved_problems, tid=desired_team['tid'])
     cache.invalidate(api.problem.get_solved_problems, uid=user['uid'])
