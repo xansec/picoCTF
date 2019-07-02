@@ -106,7 +106,7 @@ class User(Resource):
 @ns.response(403, 'Not authorized')
 @ns.response(404, 'User not found')
 @ns.route('/<string:user_id>/export')
-class User(Resource):
+class UserDataExport(Resource):
     """Export all data of a given user."""
 
     @require_admin
