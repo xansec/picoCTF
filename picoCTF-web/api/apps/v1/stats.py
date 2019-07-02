@@ -50,7 +50,7 @@ class ScoreboardPage(Resource):
                 'groups scoreboard.', 401
             )
         return jsonify(api.stats.get_scoreboard_page(
-            req['board'], req['page']
+            req['board'], req['page'], req['gid']
         ))
 
 

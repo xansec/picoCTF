@@ -23,13 +23,19 @@ load_teamscore = ->
 
   setTimeout reload, 100
 
-load_scoreboard_page = (boardname, page, tid) ->
-  apiCall "GET", "/api/v1/stats/scoreboard/page?board=" + boardname + "&page=" + page
+load_scoreboard_page = (boardname, page, tid, gid="") ->
+  if !gid
+    targetid = boardname
+  else
+    boardname = "groups"
+    targetid = gid
+  console.log(boardname)
+  apiCall "GET", "/api/v1/stats/scoreboard/page?board=" + boardname + "&page=" + page + "&gid=" + gid
     .success (data) ->
-      $('#' + boardname + " tbody").html(
+      $('#' + targetid + " tbody").html(
         renderScorepage({
           scorepage: data
-          page:page
+          page: page
           tid: tid
         })
       )
@@ -44,7 +50,6 @@ load_scoreboard = ->
       data: data,
       renderScoreboard: renderScoreboard
     })).promise().then( ->
-      data = data;
       paginate = ((board) ->
         $('#' + board.name + '-pagination').bootstrapPaginator({
           totalPages: board.pages,
@@ -52,7 +57,7 @@ load_scoreboard = ->
           numberOfPages: 10,
           currentPage: board.start_page,
           onPageClicked: ((e, eOriginal, type, page) ->
-            load_scoreboard_page(board.name, page, data.tid)
+            load_scoreboard_page(board.name, page, data.tid, board.gid)
           )
         })
       )

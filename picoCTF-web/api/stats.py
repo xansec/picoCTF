@@ -8,6 +8,7 @@ import api
 from api.cache import (decode_scoreboard_item, get_score_cache,
                        get_scoreboard_cache, get_scoreboard_key, memoize,
                        search_scoreboard_cache)
+from api import PicoException
 
 
 SCOREBOARD_PAGE_LEN = 50
@@ -489,7 +490,7 @@ def get_initial_scoreboard():
     return result
 
 
-def get_scoreboard_page(board, page_number):
+def get_scoreboard_page(board, page_number, gid=None):
     """
     Retrieve a specific scoreboard page.
 
@@ -509,16 +510,17 @@ def get_scoreboard_page(board, page_number):
     result = []
     if board == "groups":
         user = api.user.get_user()
-        for group in api.team.get_groups(user['tid']):
-            group_board = get_scoreboard_cache(gid=group['gid'])
-            raw_board = group_board.range(start, end, with_scores=True,
-                                          reverse=True)
-            result.append({
-                'gid': group['gid'],
-                'name': group['name'],
-                'scoreboard': [decode_scoreboard_item(item) for
-                               item in raw_board]
-            })
+        group = api.group.get_group(gid=gid)
+        if not (user["tid"] in group["members"] or
+                user["tid"] in group["teachers"] or
+                user["tid"] == group["owner"]):
+            raise PicoException(
+                    "You are not a member of this class",
+                    status_code=401)
+        group_board = get_scoreboard_cache(gid=gid)
+        raw_board = group_board.range(start, end, with_scores=True,
+                                      reverse=True)
+        return [decode_scoreboard_item(item) for item in raw_board]
     elif board == "global":
         global_board = get_scoreboard_cache(country=None,
                                             include_ineligible=True)
@@ -555,7 +557,7 @@ def get_demographic_data():
 def search_scoreboard(board, pattern, gid=None, page=1):
     if board == "student":
         key_args = {'country': None, 'include_ineligible': False}
-    elif board == "group":
+    elif board == "groups":
         if gid is None:
             return []
         else:
