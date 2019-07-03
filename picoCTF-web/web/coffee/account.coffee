@@ -37,6 +37,14 @@ disableAccount = (e) ->
     .error (jqXHR) ->
       apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
+downloadData = (e) ->
+  e.preventDefault()
+  apiCall "GET", "/api/v1/user/export"
+  .success (data) ->
+    download( JSON.stringify(data, null, 2), "Account Data.txt", "application/json")
+  .error (jqXHR) ->
+    apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
+
 Input = ReactBootstrap.Input
 Row = ReactBootstrap.Row
 Col = ReactBootstrap.Col
@@ -159,5 +167,6 @@ $ ->
   $("#password-update-form").on "submit", updatePassword
   $("#password-reset-form").on "submit", resetPassword
   $("#disable-account-form").on "submit", disableAccount
+  $("#download-data-form").on "submit", downloadData
 
   React.render <TeamManagementForm/>, document.getElementById("team-management")

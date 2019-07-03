@@ -99,3 +99,26 @@ class User(Resource):
         return jsonify({
             'success': True
         })
+
+
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Not authorized')
+@ns.response(404, 'User not found')
+@ns.route('/<string:user_id>/export')
+class UserDataExport(Resource):
+    """Export all data of a given user."""
+
+    @require_admin
+    def get(self, user_id):
+        """Export all data of a given user."""        
+        user_data = api.user.get_user(uid=user_id)
+        if not user_data:
+            raise PicoException('User not found', status_code=404)
+        submissions = api.submissions.get_submissions(uid=user_id)
+        feedbacks = api.problem_feedback.get_problem_feedback(uid=user_id)
+        return jsonify({
+            'user': user_data,
+            'submissions': submissions,
+            'feedback': feedbacks
+        })
