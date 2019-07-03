@@ -41,7 +41,7 @@ downloadData = (e) ->
   e.preventDefault()
   apiCall "GET", "/api/v1/user/export"
   .success (data) ->
-    download( JSON.stringify(data), "Account Data.txt", "application/json")
+    download( JSON.stringify(data, null, 2), "Account Data.txt", "application/json")
   .error (jqXHR) ->
     apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 
