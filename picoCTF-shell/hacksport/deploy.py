@@ -939,16 +939,15 @@ def deploy_problems(args, config):
                 raise FatalException
 
             # Avoid redeploying already-deployed instances
-            if args.redeploy:
-                todo_instance_list = instance_list
-            else:
-                todo_instance_list = [
-                    instance_num for instance_num in instance_list
-                    if (problem_name, instance_num) not in port_map.keys()]
+            if not args.redeploy:
+                already_deployed = set()
+                for instance in get_all_problem_instances(problem_name):
+                    already_deployed.add(instance["instance_number"])
+                instance_list = list(set(instance_list) - already_deployed)
 
             need_restart_xinetd = deploy_problem(
                 deploy_location,
-                instances=todo_instance_list,
+                instances=instance_list,
                 test=args.dry,
                 deployment_directory=args.deployment_directory,
                 debug=args.debug,
