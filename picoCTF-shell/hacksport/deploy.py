@@ -74,16 +74,17 @@ def give_port():
         port_random = Random(context["config"].deploy_secret)
 
     # if this instance already has a port, reuse it
-    if (context["problem"], context["instance"]) in port_map:
-        return port_map[(context["problem"], context["instance"])]
+    if (context["problem"], context["instance"]) in context["port_map"]:
+        return context["port_map"][(context["problem"], context["instance"])]
 
-    if len(context["port_map"].items()) + len(
+    used_ports = [port for port in context["port_map"].values() if port is not None]
+    if len(used_ports) + len(
             context["config"].banned_ports_parsed) == HIGHEST_PORT + 1:
         raise Exception(
             "All usable ports are taken. Cannot deploy any more instances.")
 
     # Added used ports to banned_ports_parsed.
-    for port in port_map.values():
+    for port in used_ports:
         context["config"].banned_ports_parsed.append(port)
 
     # in case the port chosen is in use, try again.
@@ -98,8 +99,6 @@ def give_port():
             loop_var -= 1
             context["config"].banned_ports_parsed.append(port)
             continue
-        context["port_map"][
-            (context["problem"], context["instance"])] = port
         return port
     raise Exception(
         "Unable to assigned a port to this problem. All ports are either taken or used by the system."
@@ -114,6 +113,7 @@ import shutil
 import subprocess
 import traceback
 from abc import ABCMeta
+from ast import literal_eval
 from copy import copy, deepcopy
 from grp import getgrnam
 from hashlib import md5, sha1
@@ -688,11 +688,11 @@ def deploy_problem(problem_directory,
 
     if instances is None:
         instances = [0]
-    global current_problem, current_instance
+    global current_problem, current_instance, port_map
 
     problem_object = get_problem(problem_directory)
 
-    current_problem = problem_object["name"]
+    current_problem = problem_object["unique_name"]
 
     instance_list = []
 
@@ -804,6 +804,9 @@ def deploy_problem(problem_directory,
             deployment_info["port"] = problem.port
             logger.debug("...Port %d has been allocated.", problem.port)
 
+        port_map[(current_problem, instance_number)] = deployment_info.get(
+            "port", None)
+
         instance_info_path = os.path.join(deployment_json_dir,
                                           "{}.json".format(instance_number))
         with open(instance_info_path, "w") as f:
@@ -870,11 +873,24 @@ def deploy_problems(args, config):
                     raise FatalException
         problem_names = bundle_problems
 
-    # before deploying problems, load in port_map
-    for path, problem in get_all_problems().items():
-        for instance in get_all_problem_instances(path):
-            port_map[(problem["unique_name"],
-                      instance["instance_number"])] = instance.get("port", None)
+    # Attempt to load the port_map from file
+    try:
+        port_map_path = join(HACKSPORTS_ROOT, 'port_map.json')
+        with open(port_map_path, 'r') as f:
+            port_map = json.load(f)
+            port_map = {literal_eval(k): v for k, v in port_map.items()}
+    except FileNotFoundError:
+        # If it does not exist, create it
+        for path, problem in get_all_problems().items():
+            for instance in get_all_problem_instances(path):
+                port_map[(problem["unique_name"],
+                          instance["instance_number"])] = instance.get("port", None)
+        with open(port_map_path, 'w') as f:
+            stringified_port_map = {repr(k): v for k, v in port_map.items()}
+            json.dump(stringified_port_map, f)
+    except IOError:
+        logger.error(f"Error loading port map from {port_map_path}")
+        raise
 
     lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
     if os.path.isfile(lock_file):
@@ -941,6 +957,11 @@ def deploy_problems(args, config):
         # Restart xinetd unless specified. Service must be manually restarted
         if not args.no_restart and need_restart_xinetd:
             execute(["service", "xinetd", "restart"], timeout=60)
+
+        # Write out updated port map
+        with open(port_map_path, 'w') as f:
+            stringified_port_map = {repr(k): v for k, v in port_map.items()}
+            json.dump(stringified_port_map, f)
 
         logger.debug("Releasing lock file %s", lock_file)
         os.remove(lock_file)
