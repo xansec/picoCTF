@@ -86,6 +86,7 @@ problem_schema = Schema({
     Required("hints"): list,
     Required("organization"): All(str, Length(min=1, max=32)),
     Required("event"): All(str, Length(min=1, max=32)),
+    "unique_name": str,
     "walkthrough": All(str, Length(min=1, max=512)),
     "version": All(str, Length(min=1, max=8)),
     "tags": list,
@@ -260,7 +261,7 @@ def get_problem(problem_path):
 
     json_path = join(problem_path, "problem.json")
     problem = json.loads(open(json_path, "r").read())
-
+    problem['unique_name'] = "{}-{}".format(sanitize_name(problem["name"]), get_pid_hash(problem, True))
     try:
         problem_schema(problem)
     except MultipleInvalid as e:
@@ -440,7 +441,7 @@ def get_pid_hash(problem, short=False):
         logger.critical("Error validating problem object!")
         logger.critical(e)
         raise FatalException
-    
+
     input = "{}-{}-{}-{}".format(problem["name"], problem["author"], problem["organization"], problem["event"])
     output = md5(input.encode("utf-8")).hexdigest()
 

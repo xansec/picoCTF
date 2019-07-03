@@ -522,7 +522,7 @@ def generate_instance(problem_object,
     """
 
     logger.debug("Generating instance %d of problem '%s'.", instance_number,
-                 problem_object["name"])
+                 problem_object["unique_name"])
     logger.debug("...Using staging directory %s", staging_directory)
 
     username, new = create_instance_user(problem_object['name'],
@@ -774,9 +774,6 @@ def deploy_problem(problem_directory,
             if not debug:
                 shutil.rmtree(instance["staging_directory"])
 
-        unique = problem_object["name"] + problem_object["author"] + str(
-            instance_number) + deploy_config.deploy_secret
-
         deployment_info = {
             "user":
             problem.user,
@@ -822,7 +819,7 @@ def deploy_problem(problem_directory,
         execute(["service", "xinetd", "restart"], timeout=60)
 
     logger.info("Problem instances %s were successfully deployed for '%s'.",
-                instances, problem_object["name"])
+                instances, problem_object["unique_name"])
     return need_restart_xinetd
 
 
@@ -873,15 +870,11 @@ def deploy_problems(args, config):
                     raise FatalException
         problem_names = bundle_problems
 
-    # before deploying problems, load in port_map and already_deployed instances
-    already_deployed = {}
+    # before deploying problems, load in port_map
     for path, problem in get_all_problems().items():
-        already_deployed[path] = []
         for instance in get_all_problem_instances(path):
-            already_deployed[path].append(instance["instance_number"])
-            if "port" in instance:
-                port_map[(problem["name"],
-                              instance["instance_number"])] = instance["port"]
+            port_map[(problem["unique_name"],
+                      instance["instance_number"])] = instance.get("port", None)
 
     lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
     if os.path.isfile(lock_file):
@@ -933,9 +926,9 @@ def deploy_problems(args, config):
             if args.redeploy:
                 todo_instance_list = instance_list
             else:
-                todo_instance_list = list(
-                    set(instance_list) -
-                    set(already_deployed.get(problem_name, [])))
+                todo_instance_list = [
+                    instance_num for instance_num in instance_list
+                    if (problem_name, instance_num) not in port_map.keys()]
 
             need_restart_xinetd = deploy_problem(
                 deploy_location,
