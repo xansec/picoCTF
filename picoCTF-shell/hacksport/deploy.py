@@ -1,3 +1,5 @@
+import logging
+
 """
 Problem deployment.
 """
@@ -17,6 +19,7 @@ port_map = {}
 current_problem = None
 current_instance = None
 
+logger = logging.getLogger(__name__)
 
 def get_deploy_context():
     """
@@ -75,7 +78,9 @@ def give_port():
 
     # if this instance already has a port, reuse it
     if (context["problem"], context["instance"]) in context["port_map"]:
-        return context["port_map"][(context["problem"], context["instance"])]
+        assigned_port = context['port_map'][(context['problem'], context['instance'])]
+        logger.debug(f"This problem instance ({context['problem']}: {str(context['instance'])}) already has an assigned port: {str(assigned_port)}")
+        return assigned_port
 
     used_ports = [port for port in context["port_map"].values() if port is not None]
     if len(used_ports) + len(
@@ -107,7 +112,6 @@ def give_port():
 
 import functools
 import json
-import logging
 import os
 import shutil
 import subprocess
@@ -139,7 +143,6 @@ from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_pid_hash)
 from spur import RunProcessError
 
-logger = logging.getLogger(__name__)
 
 
 def challenge_meta(attributes):
