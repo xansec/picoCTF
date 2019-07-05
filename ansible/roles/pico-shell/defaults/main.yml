@@ -8,7 +8,7 @@ shell_manager_dir:  "{{pico_base_dir}}/picoCTF-shell"
 ###
 # wetty configuration
 ###
-wetty_js_path: "/opt/hacksports/wetty/node_modules/wetty.js"
+wetty_js_path: "/opt/wetty/node_modules/wetty.js"
 
 # configure nginx
 shell_site_config_name: "shell"
