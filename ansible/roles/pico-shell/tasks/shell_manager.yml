@@ -60,3 +60,10 @@
   copy:
     src:  "securebashrc"
     dest: "/opt/hacksports/config/securebashrc"
+
+- name: Ensure debs directory exists
+  file:
+    path: /opt/hacksports/debs
+    state: directory
+    owner: root
+    group: root

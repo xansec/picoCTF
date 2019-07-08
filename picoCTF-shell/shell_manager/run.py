@@ -7,6 +7,7 @@ import logging
 from argparse import ArgumentParser
 
 import coloredlogs
+from hacksport.install import install_problem
 from hacksport.deploy import deploy_problems, undeploy_problems
 from hacksport.status import clean, publish, status
 from shell_manager.bundle import bundle_problems
@@ -133,30 +134,36 @@ def main():
         "problem_paths", nargs="*", type=str, help="paths to problems.")
     deploy_parser.set_defaults(func=deploy_problems)
 
-    undeploy_parser = subparsers.add_parser(
-        "undeploy",
-        help=
-        "problem undeployment. cannot guarantee full removal of problem files")
-    undeploy_parser.add_argument(
-        "-n",
-        "--num-instances",
-        type=int,
-        default=1,
-        help="number of instances to undeploy (numbers 0 through n-1).")
-    undeploy_parser.add_argument(
-        "-i",
-        "--instances",
-        action="append",
-        type=int,
-        help="particular instance(s) to generate.")
-    undeploy_parser.add_argument(
-        "-b",
-        "--bundle",
-        action="store_true",
-        help="specify a bundle of problems to undeploy.")
-    undeploy_parser.add_argument(
-        "problem_paths", nargs="*", type=str, help="paths to problems.")
-    undeploy_parser.set_defaults(func=undeploy_problems)
+    install_parser = subparsers.add_parser("install",
+                                           help="problem installation")
+    install_parser.add_argument(
+        "problem_path", type=str, help="path to problem source directory")
+    install_parser.set_defaults(func=install_problem)
+
+    # undeploy_parser = subparsers.add_parser(
+    #     "undeploy",
+    #     help=
+    #     "problem undeployment. cannot guarantee full removal of problem files")
+    # undeploy_parser.add_argument(
+    #     "-n",
+    #     "--num-instances",
+    #     type=int,
+    #     default=1,
+    #     help="number of instances to undeploy (numbers 0 through n-1).")
+    # undeploy_parser.add_argument(
+    #     "-i",
+    #     "--instances",
+    #     action="append",
+    #     type=int,
+    #     help="particular instance(s) to generate.")
+    # undeploy_parser.add_argument(
+    #     "-b",
+    #     "--bundle",
+    #     action="store_true",
+    #     help="specify a bundle of problems to undeploy.")
+    # undeploy_parser.add_argument(
+    #     "problem_paths", nargs="*", type=str, help="paths to problems.")
+    # undeploy_parser.set_defaults(func=undeploy_problems)
 
     clean_parser = subparsers.add_parser(
         "clean",

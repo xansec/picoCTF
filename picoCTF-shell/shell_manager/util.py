@@ -24,6 +24,7 @@ EXTRA_ROOT = join(HACKSPORTS_ROOT, "extra")
 STAGING_ROOT = join(HACKSPORTS_ROOT, "staging")
 DEPLOYED_ROOT = join(HACKSPORTS_ROOT, "deployed")
 BUNDLE_ROOT = join(HACKSPORTS_ROOT, "bundles")
+DEB_ROOT = join(HACKSPORTS_ROOT, "debs")
 
 
 class ConfigDict(dict):
