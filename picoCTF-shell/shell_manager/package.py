@@ -210,9 +210,8 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
 
         raw_package_name = "{}-{}-{}.deb".format(
             sanitize_name(problem.get("organization", "ctf")),
-            sanitize_name(problem.get("pkg_name", problem["name"])),
+            sanitize_name(problem["unique_name"]),
             sanitize_name(problem.get("version", "1.0-0")))
-
         return raw_package_name
 
     deb_directory = out_path if out_path is not None else getcwd()

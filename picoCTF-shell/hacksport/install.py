@@ -47,7 +47,7 @@ def install_problem(args, config):
         raise FatalException
 
     problem_obj = get_problem(problem_path)
-    if os.path.isdir(get_problem_root_hashed(problem_obj)):
+    if os.path.isdir(get_problem_root_hashed(problem_obj, absolute=True)):
         logger.error(f"Problem {problem_obj['unique_name']} is already installed")
         raise FatalException
     logger.info(f"Installing problem {problem_obj['unique_name']}...")
