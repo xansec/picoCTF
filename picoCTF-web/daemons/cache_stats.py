@@ -3,8 +3,9 @@
 
 import api
 import api.group
-from api.stats import (get_all_team_scores, get_group_scores,
-                       get_problem_solves, get_registration_count,
+from api.stats import (check_invalid_instance_submissions, get_all_team_scores,
+                       get_group_scores, get_problem_solves,
+                       get_registration_count,
                        get_top_teams_score_progressions)
 
 
@@ -39,6 +40,9 @@ def run():
         for problem in api.problem.get_all_problems():
             print(problem["name"],
                   cache(get_problem_solves, problem["pid"]))
+
+        print("Caching Invalid Instance Submissions.")
+        cache(check_invalid_instance_submissions)
 
 
 if __name__ == '__main__':
