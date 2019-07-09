@@ -214,4 +214,4 @@ Brumley a line.
 - Bug Reports: [GitHub Issues](https://github.com/picoCTF/picoCTF/issues)
 - Contributors (in no particular order): David Brumley, Tim Becker, Chris Ganas,
   Roy Ragsdale, Peter Chapman, Jonathan Burket, Collin Petty, Tyler Nighswander,
-  Garrett Barboza
+  Garrett Barboza, Mong-Yah "Max" Hsieh
