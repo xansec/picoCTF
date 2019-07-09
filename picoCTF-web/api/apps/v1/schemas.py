@@ -1,7 +1,7 @@
 """Validation schemas for API requests."""
 import werkzeug.datastructures
-from flask_restplus import inputs, reqparse
-
+from flask_restplus import inputs
+import api.reqparse as reqparse
 
 def object_type(value):
     """To make the openAPI object type show up in the docs."""
@@ -519,4 +519,16 @@ batch_registration_req.add_argument(
     'csv', type=werkzeug.datastructures.FileStorage,
     location='files', required=True,
     help="Modified copy of the provided batch import CSV"
+)
+
+# User search schema
+user_search_req = reqparse.RequestParser()
+user_search_req.add_argument(
+    'field', required=True, type=str,
+    choices=['email', 'parentemail'],
+    location='json', help='The field to be searched'
+)
+user_search_req.add_argument(
+    'query', required=True, location='json', type=str,
+    help="Body of the query", error="Query field is empty!"
 )
