@@ -7,7 +7,7 @@ import logging
 from argparse import ArgumentParser
 
 import coloredlogs
-from hacksport.install import install_problem
+from hacksport.install import install_problem, install_bundle
 from hacksport.deploy import deploy_problems, undeploy_problems
 from hacksport.status import clean, publish, status
 from shell_manager.bundle import bundle_problems
@@ -139,6 +139,12 @@ def main():
     install_parser.add_argument(
         "problem_path", type=str, help="path to problem source directory")
     install_parser.set_defaults(func=install_problem)
+
+    install_bundle_parser = subparsers.add_parser("install-bundle",
+                                                  help="bundle installation")
+    install_bundle_parser.add_argument(
+        "bundle_path", type=str, help="path to bundle file")
+    install_bundle_parser.set_defaults(func=install_bundle)
 
     # undeploy_parser = subparsers.add_parser(
     #     "undeploy",

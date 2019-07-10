@@ -319,6 +319,29 @@ def get_bundle(bundle_path):
     return bundle
 
 
+def get_bundle2(bundle_path):
+    """
+    Returns a bundle spec from a bundle JSON file.
+
+    Args:
+        bundle_path: path to the bundle JSON file.
+
+    Returns:
+        A bundle object.
+    """
+
+    bundle = json.loads(open(bundle_path, "r").read())
+
+    try:
+        bundle_schema(bundle)
+    except MultipleInvalid as e:
+        logger.critical("Error validating bundle object at '%s'!", bundle_path)
+        logger.critical(e)
+        raise FatalException
+
+    return bundle
+
+
 def verify_config(config_object):
     """
     Verifies the given configuration dict against the config_schema and the

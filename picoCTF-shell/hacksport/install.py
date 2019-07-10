@@ -18,8 +18,9 @@ been fulfilled on the current shell server.
 import logging
 import subprocess
 import os
+import shutil
 from shell_manager.package import package_problem
-from shell_manager.util import get_problem, DEB_ROOT, FatalException, join, HACKSPORTS_ROOT, get_problem_root_hashed
+from shell_manager.util import get_problem, DEB_ROOT, FatalException, join, HACKSPORTS_ROOT, get_problem_root_hashed, get_bundle2, PROBLEM_ROOT, BUNDLE_ROOT, sanitize_name
 from hacksport.deploy import generate_staging_directory
 
 logger = logging.getLogger(__name__)
@@ -76,3 +77,36 @@ def install_problem(args, config):
         logger.debug(f"{problem_obj['unique_name']}: released deployment lock file ({str(lock_file)})")
     logger.debug(f"{problem_obj['unique_name']}: installed package")
     logger.info(f"{problem_obj['unique_name']} installed successfully")
+
+
+def install_bundle(args, config):
+    """
+    "Installs" a bundle (validates it and stores a copy).
+
+    "Bundles" are just JSON problem unlock weightmaps which are exposed to
+    and used by the web server.
+
+    All problems specified in a bundle must already be installed.
+    """
+    if not args.bundle_path:
+        logger.error("No problem source path specified")
+        raise FatalException
+    bundle_path = args.bundle_path
+    bundle_obj = get_bundle2(bundle_path)
+
+    if os.path.isdir(join(BUNDLE_ROOT, sanitize_name(bundle_obj['name']))):
+        logger.error(f"A bundle with name {bundle_obj['name']} is " +
+                     "already installed")
+        raise FatalException
+
+    for problem_name in bundle_obj['problems']:
+        if not os.path.isdir(join(PROBLEM_ROOT, problem_name)):
+            logger.error(f"Problem {problem_name} must be installed " +
+                         "before installing bundle")
+            raise FatalException
+
+    bundle_destination = join(
+        BUNDLE_ROOT, sanitize_name(bundle_obj['name']), 'bundle.json')
+    os.makedirs(os.path.dirname(bundle_destination), exist_ok=True)
+    shutil.copy(bundle_path, bundle_destination)
+    logger.info(f"Installed bundle {bundle_obj['name']}")
