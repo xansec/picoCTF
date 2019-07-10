@@ -895,33 +895,10 @@ def deploy_problems(args, config):
 
     try:
         for problem_name in problem_names:
-            if isdir(get_problem_root(problem_name, absolute=True)):
-                # problem_name is already an installed package
-                deploy_location = get_problem_root(problem_name, absolute=True)
-            elif isdir(problem_name) and args.dry:
-                # dry run - avoid installing package
-                deploy_location = problem_name
-            elif isdir(problem_name):
-                # problem_name is a source dir - convert to .deb and install
-                try:
-                    if not os.path.isdir(TEMP_DEB_DIR):
-                        os.mkdir(TEMP_DEB_DIR)
-                    generated_deb_path = package_problem(problem_name, out_path=TEMP_DEB_DIR)
-                except FatalException:
-                    logger.error("An error occurred while packaging %s.", problem_name)
-                    raise
-                try:
-                    # reinstall flag ensures package will be overwritten if version is the same,
-                    # maintaining previous 'dpkg -i' behavior
-                    subprocess.run('apt-get install --reinstall {}'.format(generated_deb_path), shell=True, check=True, stdout=subprocess.PIPE)
-                except subprocess.CalledProcessError:
-                    logger.error("An error occurred while installing problem packages.")
-                    raise FatalException
-                deploy_location = get_problem_root_hashed(get_problem(problem_name), absolute=True)
-            else:
-                logger.error("'%s' is neither an installed package, nor a valid problem directory",
-                             problem_name)
+            if not isdir(get_problem_root(problem_name, absolute=True)):
+                logger.error(f"'{problem_name}' is not an installed problem")
                 raise FatalException
+            deploy_location = get_problem_root(problem_name, absolute=True)
 
             # Avoid redeploying already-deployed instances
             if not args.redeploy:
