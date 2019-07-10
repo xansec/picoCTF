@@ -1,7 +1,20 @@
 import logging
 
 """
-Problem deployment.
+Handles deployment of an installed problem.
+
+Deploying a problem means creating one or more instances, which are each
+templated with flags, the shell server URL, etc., and assigned a port
+(if required for their problem type).
+
+Flags and assigned ports will remain consistent for (problem, instance) pairs
+across any shell servers that share the HACKSPORTS_ROOT/shared directory.
+
+However, instances must still be created individually on each shell server,
+as server URLs must be templated appropriately, dependencies potentially
+need to be installed on each server, and the underlying files, users and
+service definitions that make up a deployed instance are specific to each
+shell server.
 """
 
 HIGHEST_PORT = 65535
@@ -843,37 +856,7 @@ def deploy_problems(args, config):
                     deploy_config.default_user)
         create_user(deploy_config.default_user)
 
-    if args.deployment_directory is not None and (len(args.problem_paths) > 1 or
-                                                  args.num_instances > 1):
-        logger.error(
-            "Cannot specify deployment directory if deploying multiple problems or instances."
-        )
-        raise FatalException
-
-    if args.secret:
-        deploy_config.deploy_secret = args.secret
-        logger.warning(
-            "Overriding deploy_secret with user supplied secret '%s'.",
-            args.secret)
-
     problem_names = args.problem_paths
-
-    if args.bundle:
-        bundle_problems = []
-        for bundle_path in args.problem_paths:
-            if os.path.isfile(bundle_path):
-                bundle = get_bundle(bundle_path)
-                bundle_problems.extend(bundle["problems"])
-            else:
-                bundle_sources_path = get_bundle_root(
-                    bundle_path, absolute=True)
-                if os.path.isdir(bundle_sources_path):
-                    bundle = get_bundle(bundle_sources_path)
-                    bundle_problems.extend(bundle["problems"])
-                else:
-                    logger.error("Could not find bundle at '%s'.", bundle_path)
-                    raise FatalException
-        problem_names = bundle_problems
 
     # Attempt to load the port_map from file
     try:
@@ -951,7 +934,6 @@ def deploy_problems(args, config):
                 deploy_location,
                 instances=instance_list,
                 test=args.dry,
-                deployment_directory=args.deployment_directory,
                 debug=args.debug,
                 restart_xinetd=False)
     finally:

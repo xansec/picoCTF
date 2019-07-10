@@ -80,23 +80,6 @@ def main():
         action="store_true",
         help="redeploy instances that have already been deployed")
     deploy_parser.add_argument(
-        "-s",
-        "--secret",
-        action="store",
-        type=str,
-        help="use a different deployment secret for this invocation.")
-    deploy_parser.add_argument(
-        "-D",
-        "--deployment-directory",
-        type=str,
-        default=None,
-        help="the directory to deploy to")
-    deploy_parser.add_argument(
-        "-b",
-        "--bundle",
-        action="store_true",
-        help="specify a bundle of problems to deploy.")
-    deploy_parser.add_argument(
         "-nr",
         "--no-restart",
         action="store_true",
