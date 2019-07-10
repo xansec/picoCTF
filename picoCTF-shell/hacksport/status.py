@@ -138,7 +138,10 @@ def status(args, config):
         return status
 
     def get_problem_status(name_with_hash, problem):
-        problem_status = {"name": problem["name"]}
+        problem_status = {
+            "name": problem["name"],
+            "unique_name": problem["unique_name"]
+            }
         instances = get_all_problem_instances(name_with_hash)
         instance_statuses = []
         for instance in instances:
@@ -148,13 +151,14 @@ def status(args, config):
 
         return problem_status
 
-    def print_problem_status(problem, path, prefix=""):
+    def print_problem_status(problem, prefix=""):
 
         def pprint(string):
             print("{}{}".format(prefix, string))
 
         pprint("* [{}] {} ({})".format(
-            len(problem["instances"]), problem['name'], path))
+            len(problem["instances"]), problem['name'],
+            problem['unique_name']))
 
         if args.all:
             for instance in problem["instances"]:
@@ -197,7 +201,7 @@ def status(args, config):
         if args.json:
             print(json.dumps(problem_status, indent=4))
         else:
-            print_problem_status(problem_status, args.problem, prefix="")
+            print_problem_status(problem_status, prefix="")
 
     elif args.bundle is not None:
         bundle = bundles.get(args.bundle, None)
@@ -228,7 +232,7 @@ def status(args, config):
                 # Determine if any problem instance is offline
                 for instance_status in problem_status["instances"]:
                     if not instance_status["service"]:
-                        print_problem_status(problem_status, path, prefix="  ")
+                        print_problem_status(problem_status, prefix="  ")
                         return_code = 1
         else:
             print("** Installed Bundles [{}] **".format(len(bundles)))
@@ -245,7 +249,7 @@ def status(args, config):
                     if not instance_status["service"]:
                         return_code = 1
 
-                print_problem_status(problem_status, path, prefix="  ")
+                print_problem_status(problem_status, prefix="  ")
 
         if return_code != 0:
             exit(return_code)
