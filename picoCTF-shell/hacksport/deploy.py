@@ -897,7 +897,7 @@ def deploy_problems(args, config):
         for problem_name in problem_names:
             if not isdir(get_problem_root(problem_name, absolute=True)):
                 logger.error(f"'{problem_name}' is not an installed problem")
-                raise FatalException
+                continue
             deploy_location = get_problem_root(problem_name, absolute=True)
 
             # Avoid redeploying already-deployed instances
