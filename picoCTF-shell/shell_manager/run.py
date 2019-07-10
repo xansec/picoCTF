@@ -14,7 +14,6 @@ from shell_manager.bundle import bundle_problems
 from shell_manager.config import (new_configuration_file, print_configuration,
                                   set_configuration_option)
 from shell_manager.package import problem_builder
-from shell_manager.problem_repo import update_repo
 from shell_manager.util import (FatalException, get_hacksports_config,
                                 place_default_config)
 
@@ -57,21 +56,6 @@ def main():
     problem_package_parser.add_argument(
         "problem_paths", nargs="*", type=str, help="paths to problems.")
     problem_package_parser.set_defaults(func=problem_builder)
-
-    publish_repo_parser = subparsers.add_parser(
-        "publish_repo", help="publish packaged problems")
-    publish_repo_parser.add_argument(
-        "-r",
-        "--repository",
-        default="/usr/local/ctf-packages",
-        help="Location of problem repository.")
-    publish_repo_parser.add_argument("repo_type", choices=["local", "remote"])
-    publish_repo_parser.add_argument(
-        "package_paths",
-        nargs="+",
-        type=str,
-        help="problem packages to publish.")
-    publish_repo_parser.set_defaults(func=update_repo)
 
     bundle_parser = subparsers.add_parser(
         "bundle", help="create a bundle of problems")
