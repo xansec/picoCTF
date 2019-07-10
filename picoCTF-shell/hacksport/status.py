@@ -6,10 +6,9 @@ import socket
 from os.path import join
 
 from hacksport.operations import execute
-from shell_manager.bundle import get_bundle, get_bundle_root
 from shell_manager.util import (BUNDLE_ROOT, DEPLOYED_ROOT, get_problem,
                                 get_problem_root, HACKSPORTS_ROOT, PROBLEM_ROOT,
-                                STAGING_ROOT, get_pid_hash, sanitize_name)
+                                STAGING_ROOT, get_pid_hash, sanitize_name, get_bundle, get_bundle_root)
 
 logger = logging.getLogger(__name__)
 

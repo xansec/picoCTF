@@ -10,7 +10,6 @@ import coloredlogs
 from hacksport.install import install_problem, install_bundle
 from hacksport.deploy import deploy_problems, undeploy_problems
 from hacksport.status import clean, publish, status
-from shell_manager.bundle import bundle_problems
 from shell_manager.config import (new_configuration_file, print_configuration,
                                   set_configuration_option)
 from shell_manager.package import problem_builder
@@ -56,18 +55,6 @@ def main():
     problem_package_parser.add_argument(
         "problem_paths", nargs="*", type=str, help="paths to problems.")
     problem_package_parser.set_defaults(func=problem_builder)
-
-    bundle_parser = subparsers.add_parser(
-        "bundle", help="create a bundle of problems")
-    bundle_parser.add_argument(
-        "bundle_path", type=str, help="the name of the bundle.")
-    bundle_parser.add_argument(
-        "-s",
-        "--staging-dir",
-        help="use an explicit directory for problem staging.")
-    bundle_parser.add_argument(
-        "-o", "--out", type=str, help="folder to store the bundle.")
-    bundle_parser.set_defaults(func=bundle_problems)
 
     deploy_parser = subparsers.add_parser("deploy", help="problem deployment")
     deploy_parser.add_argument(

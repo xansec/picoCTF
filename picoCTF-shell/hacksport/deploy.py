@@ -135,12 +135,11 @@ from hacksport.problem import (Compiled, Directory, ExecutableFile, File,
                                ProtectedFile, Remote, Service)
 from hacksport.status import get_all_problem_instances, get_all_problems
 from jinja2 import Environment, FileSystemLoader, Template
-from shell_manager.bundle import get_bundle, get_bundle_root
 from shell_manager.package import package_problem
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_problem, get_problem_root, HACKSPORTS_ROOT,
                                 sanitize_name, STAGING_ROOT, get_problem_root_hashed,
-                                get_pid_hash)
+                                get_pid_hash, get_bundle, get_bundle_root)
 from spur import RunProcessError
 
 
