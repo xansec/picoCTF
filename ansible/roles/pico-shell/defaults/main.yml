@@ -28,11 +28,7 @@ problem_source_dirs:
   - "{{ pico_base_dir }}/problems/examples"
 
 bundles:
-  - {
-    source: "{{ pico_base_dir }}/problems/bundles/challenge-sampler.json",
-    name: "challenge-sampler",
-    instances: 2
-  }
+  - "{{ pico_base_dir }}/problems/bundles/challenge-sampler.json"
 
 # SSL requires cert and vault-encrypted key
 enable_shell_ssl: False
