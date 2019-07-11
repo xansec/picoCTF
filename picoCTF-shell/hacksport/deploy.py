@@ -718,7 +718,8 @@ def deploy_problem(problem_directory,
     problem_deb_location = os.path.join(
         DEB_ROOT, sanitize_name(problem_object['unique_name'])) + '.deb'
     try:
-        subprocess.run(f'apt-get install --reinstall {problem_deb_location}',
+        subprocess.run('DEBIAN_FRONTEND=noninteractive apt-get -y install ' +
+                       f'--reinstall {problem_deb_location}',
                        shell=True, check=True, stdout=subprocess.PIPE)
     except subprocess.CalledProcessError:
         logger.error("An error occurred while installing problem packages.")

@@ -60,7 +60,8 @@ def install_problem(problem_path):
     logger.debug(f"{problem_obj['unique_name']}: created debian package")
 
     try:
-        subprocess.run(f'apt-get install --reinstall {generated_deb_path}',
+        subprocess.run('DEBIAN_FRONTEND=noninteractive apt-get -y install ' +
+                       f'--reinstall {generated_deb_path}',
                        shell=True, check=True, stdout=subprocess.PIPE)
     except subprocess.CalledProcessError:
         logger.error("An error occurred while installing problem packages.")
