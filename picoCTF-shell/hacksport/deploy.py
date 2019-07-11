@@ -890,13 +890,13 @@ def deploy_problems(args, config):
     lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
     if os.path.isfile(lock_file):
         logger.error(
-            "Cannot deploy while other deployment in progress. If you believe this is an error, "
+            "Another problem installation or deployment appears in progress. If you believe this to be an error, "
             "run 'shell_manager clean'")
         raise FatalException
 
-    logger.debug("Obtaining deployment lock file %s", lock_file)
     with open(lock_file, "w") as f:
         f.write("1")
+    logger.debug(f"Obtained lock file ({str(lock_file)})")
 
     if args.instances:
         instance_list = args.instances
@@ -933,8 +933,8 @@ def deploy_problems(args, config):
             stringified_port_map = {repr(k): v for k, v in port_map.items()}
             json.dump(stringified_port_map, f)
 
-        logger.debug("Releasing lock file %s", lock_file)
         os.remove(lock_file)
+        logger.debug(f"Released lock file ({str(lock_file)})")
 
 
 def remove_instances(path, instance_list):

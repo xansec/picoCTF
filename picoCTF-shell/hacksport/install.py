@@ -26,20 +26,13 @@ from hacksport.deploy import generate_staging_directory
 logger = logging.getLogger(__name__)
 
 
-def install_problem(args, config):
+def install_problem(problem_path):
     """
-    Installs a problem from a source directory.
+    Install a problem from a source directory.
 
     Args:
-        args: argparse Namespace
-            problem_path: path to the problem source directory
-        config: unused, passed by argparse – @todo remove
+        problem_path: path to the problem source directory
     """
-    if not args.problem_path:
-        logger.error("No problem source path specified")
-        raise FatalException
-    problem_path = args.problem_path
-
     lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
     if os.path.isfile(lock_file):
         logger.error(
@@ -53,7 +46,7 @@ def install_problem(args, config):
         raise FatalException
     logger.info(f"Installing problem {problem_obj['unique_name']}...")
 
-    logger.debug(f"{problem_obj['unique_name']}: obtained deployment lock file ({str(lock_file)})")
+    logger.debug(f"{problem_obj['unique_name']}: obtained lock file ({str(lock_file)})")
     with open(lock_file, "w") as f:
         f.write("1")
 
@@ -77,6 +70,42 @@ def install_problem(args, config):
         logger.debug(f"{problem_obj['unique_name']}: released lock file ({str(lock_file)})")
     logger.debug(f"{problem_obj['unique_name']}: installed package")
     logger.info(f"{problem_obj['unique_name']} installed successfully")
+
+
+def find_problem_sources(root_path):
+    """
+    Find all problem source directories that exist under the given root.
+
+    Any directory with a problem.json is considered a source directory.
+
+    Args:
+        root_path: the problem directory
+    Returns:
+        A list of problem paths.
+    """
+    problem_source_paths = []
+    for dir_path, _, files in os.walk(root_path):
+        if "problem.json" in files and "__staging" not in dir_path:
+            problem_source_paths.append(dir_path)
+    return problem_source_paths
+
+
+def install_problems(args, config):
+    """
+    Entrypoint for problem installation.
+
+    Allows for installation of multiple/nested problem source folders.
+    """
+    if not args.problem_paths:
+        logger.error("No problem source path(s) specified")
+        raise FatalException
+
+    problem_paths = []
+    for base_path in args.problem_paths:
+        problem_paths.extend(find_problem_sources(base_path))
+
+    for problem_path in problem_paths:
+        install_problem(problem_path)
 
 
 def install_bundle(args, config):

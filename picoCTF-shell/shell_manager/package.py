@@ -222,7 +222,7 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
         logger.error(result.output)
         raise FatalException
     else:
-        logger.info("Problem '%s' packaged successfully.", problem["name"])
+        logger.debug("Problem '%s' packaged successfully.", problem["unique_name"])
 
     # Remove the staging directory
     logger.debug("Cleaning up '%s' staging directory '%s'.", problem["name"],
