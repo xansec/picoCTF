@@ -74,7 +74,7 @@ def install_problem(args, config):
         raise FatalException
     finally:
         os.remove(lock_file)
-        logger.debug(f"{problem_obj['unique_name']}: released deployment lock file ({str(lock_file)})")
+        logger.debug(f"{problem_obj['unique_name']}: released lock file ({str(lock_file)})")
     logger.debug(f"{problem_obj['unique_name']}: installed package")
     logger.info(f"{problem_obj['unique_name']} installed successfully")
 

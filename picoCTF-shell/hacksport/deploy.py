@@ -152,7 +152,7 @@ from shell_manager.package import package_problem
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_problem, get_problem_root, HACKSPORTS_ROOT,
                                 sanitize_name, STAGING_ROOT, get_problem_root_hashed,
-                                get_pid_hash, get_bundle, get_bundle_root)
+                                get_pid_hash, get_bundle, get_bundle_root, DEB_ROOT)
 from spur import RunProcessError
 
 
@@ -714,6 +714,16 @@ def deploy_problem(problem_directory,
     need_restart_xinetd = False
 
     logger.debug("Beginning to deploy problem '%s'.", problem_object["name"])
+
+    problem_deb_location = os.path.join(
+        DEB_ROOT, sanitize_name(problem_object['unique_name'])) + '.deb'
+    try:
+        subprocess.run(f'apt-get install --reinstall {problem_deb_location}',
+                       shell=True, check=True, stdout=subprocess.PIPE)
+    except subprocess.CalledProcessError:
+        logger.error("An error occurred while installing problem packages.")
+        raise FatalException
+    logger.debug("Reinstalled problem's deb package to fulfill dependencies")
 
     for instance_number in instances:
         current_instance = instance_number
