@@ -1,5 +1,8 @@
 """
-Packaging operations for the shell manager.
+Handles packaging problems into debian packages.
+
+These are used behind-the-scenes during problem deployment to handle
+dependency management.
 """
 
 import logging
@@ -134,27 +137,6 @@ def postinst_dependencies(problem, problem_path, debian_path, install_path):
             logger.debug("post install:\n%s", contents)
 
 
-def find_problems(problem_path):
-    """
-    Find all problems that exist under the given root.
-    We consider any directory with a problem.json to be an intended problem
-    directory.
-
-    Args:
-        problem_path: the problem directory
-    Returns:
-        A list of problem paths.
-    """
-
-    problem_paths = []
-
-    for root, _, files in os.walk(problem_path):
-        if "problem.json" in files and "__staging" not in root:
-            problem_paths.append(root)
-
-    return problem_paths
-
-
 def package_problem(problem_path, staging_path=None, out_path=None, ignore_files=[]):
     """
     Does the work of packaging a single problem.
@@ -230,26 +212,3 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
     rmtree(paths["staging"])
 
     return os.path.abspath(deb_path)
-
-
-def problem_builder(args, config):
-    """
-    Main entrypoint for package building operations.
-    Handles nested problems and multiple problem roots.
-    """
-
-    if not args.problem_paths:
-        print("usage: shell_manager package [-h] [-s STAGING_DIR] [-o OUT] [-i IGNORE] problem_path [problem_paths...]")
-        print("shell_manager bundle: error: the following arguments are required: problem_path")
-        raise FatalException
-
-    problem_paths = []
-    for base_path in args.problem_paths:
-        problems_in_base = find_problems(base_path)
-        if len(problems_in_base) == 0:
-            logging.critical("No problems found under '%s'!", base_path)
-            raise FatalException
-        problem_paths.extend(problems_in_base)
-
-    for problem_path in problem_paths:
-        package_problem(problem_path, args.staging_dir, args.out, args.ignore)

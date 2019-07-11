@@ -12,7 +12,6 @@ from hacksport.deploy import deploy_problems, undeploy_problems
 from hacksport.status import clean, publish, status
 from shell_manager.config import (new_configuration_file, print_configuration,
                                   set_configuration_option)
-from shell_manager.package import problem_builder
 from shell_manager.util import (FatalException, get_hacksports_config,
                                 place_default_config)
 
@@ -36,25 +35,6 @@ def main():
         choices=["auto", "never"],
         help="support colored output")
     subparsers = parser.add_subparsers()
-
-    problem_package_parser = subparsers.add_parser(
-        "package", help="problem package management")
-    problem_package_parser.add_argument(
-        "-s",
-        "--staging-dir",
-        help="use an explicit directory for problem staging.")
-    problem_package_parser.add_argument(
-        "-o", "--out", help="folder to store problem package.")
-    problem_package_parser.add_argument(
-        "-i",
-        "--ignore",
-        dest="ignore",
-        default=[],
-        action="append",
-        help="list of files to ignore adding to the deb")
-    problem_package_parser.add_argument(
-        "problem_paths", nargs="*", type=str, help="paths to problems.")
-    problem_package_parser.set_defaults(func=problem_builder)
 
     deploy_parser = subparsers.add_parser("deploy", help="problem deployment")
     deploy_parser.add_argument(
