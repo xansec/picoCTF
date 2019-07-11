@@ -140,3 +140,22 @@ def install_bundle(args, config):
     os.makedirs(os.path.dirname(bundle_destination), exist_ok=True)
     shutil.copy(bundle_path, bundle_destination)
     logger.info(f"Installed bundle {bundle_obj['name']}")
+
+
+def uninstall_bundle(args, config):
+    """
+    Uninstall a bundle by deleting it from the shell servers.
+
+    Problems referenced within the bundle are not affected.
+    """
+    if not args.bundle_name:
+        logger.error("No bundle name specified")
+        raise FatalException
+    bundle_name = args.bundle_name
+
+    bundle_dir = join(BUNDLE_ROOT, sanitize_name(bundle_name))
+    if not os.path.isdir(bundle_dir):
+        logger.error(f"Bundle '{bundle_name}' is not installed")
+    else:
+        shutil.rmtree(bundle_dir)
+        logger.info(f"Bundle '{bundle_name}' successfully removed")
