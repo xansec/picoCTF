@@ -129,11 +129,16 @@ def install_bundle(args, config):
                      "already installed")
         raise FatalException
 
-    for problem_name in bundle_obj['problems']:
+    for problem_name, info in bundle_obj['dependencies'].items():
         if not os.path.isdir(join(PROBLEM_ROOT, problem_name)):
             logger.error(f"Problem {problem_name} must be installed " +
                          "before installing bundle")
             raise FatalException
+        for dependency_name in info['weightmap']:
+            if not os.path.isdir(join(PROBLEM_ROOT, dependency_name)):
+                logger.error(f"Problem {dependency_name} must be installed " +
+                             "before installing bundle")
+                raise FatalException
 
     bundle_destination = join(
         BUNDLE_ROOT, sanitize_name(bundle_obj['name']), 'bundle.json')

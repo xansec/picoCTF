@@ -175,13 +175,7 @@ def status(args, config):
         def pprint(string):
             print("{}{}".format(prefix, string))
 
-        pprint("[{} ({})]".format(bundle["name"], path))
-        for name_with_hash in bundle["problems"]:
-            problem = problems.get(name_with_hash, None)
-            if problem is None:
-                pprint("  ! Invalid problem '{}' !".format(name_with_hash))
-                continue
-            pprint("  {} ({})".format(problem['name'], name_with_hash))
+        pprint("* {} ({})".format(bundle["name"], path))
 
     def get_bundle_status(bundle):
         problem_statuses = []

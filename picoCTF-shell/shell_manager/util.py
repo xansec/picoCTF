@@ -100,15 +100,9 @@ problem_schema = Schema({
 
 bundle_schema = Schema({
     Required("author"): All(str, Length(min=1, max=32)),
-    Required("problems"): list,
     Required("name"): All(str, Length(min=1, max=32)),
     Required("description"): str,
-    Required("categories"): list,
-    "version": All(str, Length(min=1, max=8)),
-    "tags": list,
-    "organization": All(str, Length(min=1, max=32)),
-    "dependencies": dict,
-    "pkg_dependencies": list
+    "dependencies": dict
 })
 
 config_schema = Schema(
