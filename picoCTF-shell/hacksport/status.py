@@ -7,7 +7,7 @@ from os.path import join
 
 from hacksport.operations import execute
 from shell_manager.util import (BUNDLE_ROOT, DEPLOYED_ROOT, get_problem,
-                                get_problem_root, HACKSPORTS_ROOT, PROBLEM_ROOT,
+                                get_problem_root, SHARED_ROOT, PROBLEM_ROOT,
                                 STAGING_ROOT, get_pid_hash, sanitize_name, get_bundle, get_bundle_root)
 
 logger = logging.getLogger(__name__)
@@ -89,7 +89,7 @@ def publish(args, config):
 def clean(args, config):
     """ Main entrypoint for clean """
 
-    lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
+    lock_file = join(SHARED_ROOT, "deploy.lock")
 
     # remove staging directories
     if os.path.isdir(STAGING_ROOT):

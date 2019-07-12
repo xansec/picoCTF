@@ -9,7 +9,7 @@ from os.path import join
 import requests
 
 DEFAULT_USER = "nobody"
-HACKSPORTS_ROOT = "/opt/hacksports/"
+HACKSPORTS_ROOT = "/opt/hacksports/shared/"
 COMPETITORS_GROUP = "competitors"
 
 config_file = join(HACKSPORTS_ROOT, "config.json")
@@ -76,7 +76,7 @@ def secure_user(user):
 
     # Secure bashrc
     subprocess.check_output([
-        'cp', '/opt/hacksports/config/securebashrc',
+        'cp', '/opt/hacksports/shared/config/securebashrc',
         os.path.join(home, '.bashrc')
     ])
     subprocess.check_output(

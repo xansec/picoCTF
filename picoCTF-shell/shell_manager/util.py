@@ -17,14 +17,24 @@ from voluptuous import (All, ALLOW_EXTRA, Length, MultipleInvalid, Range,
 
 logger = logging.getLogger(__name__)
 
-# the root of the hacksports local store
-HACKSPORTS_ROOT = "/opt/hacksports/"
-PROBLEM_ROOT = join(HACKSPORTS_ROOT, "sources")
-EXTRA_ROOT = join(HACKSPORTS_ROOT, "extra")
-STAGING_ROOT = join(HACKSPORTS_ROOT, "staging")
-DEPLOYED_ROOT = join(HACKSPORTS_ROOT, "deployed")
-BUNDLE_ROOT = join(HACKSPORTS_ROOT, "bundles")
-DEB_ROOT = join(HACKSPORTS_ROOT, "debs")
+# Directories used to store server state.
+
+# Most resources (installed problems and bundles, config, etc.) are stored
+# within the SHARED_ROOT directory, which can be located on a network
+# filesystem and mounted onto several shell servers to sync state.
+
+# Deployed problem instances, however, are separate to each server
+# (although the same problem instance will share its flag/port across servers).
+SHARED_ROOT = '/opt/hacksports/shared/'
+LOCAL_ROOT = '/opt/hacksports/local/'
+
+PROBLEM_ROOT = join(SHARED_ROOT, "sources")
+EXTRA_ROOT = join(SHARED_ROOT, "extra")
+STAGING_ROOT = join(SHARED_ROOT, "staging")
+BUNDLE_ROOT = join(SHARED_ROOT, "bundles")
+DEB_ROOT = join(SHARED_ROOT, "debs")
+
+DEPLOYED_ROOT = join(LOCAL_ROOT, "deployed")
 
 
 class ConfigDict(dict):
@@ -395,10 +405,10 @@ def get_config(path):
 
 def get_hacksports_config():
     """
-    Returns the global configuration options from the file in HACKSPORTS_ROOT.
+    Returns the global configuration options from the file in SHARED_ROOT.
     """
 
-    return get_config(join(HACKSPORTS_ROOT, "config.json"))
+    return get_config(join(SHARED_ROOT, "config.json"))
 
 
 def write_configuration_file(path, config_dict):
@@ -426,16 +436,16 @@ def write_global_configuration(config_dict):
         config_dict: the configuration dictionary
     """
 
-    write_configuration_file(join(HACKSPORTS_ROOT, "config.json"), config_dict)
+    write_configuration_file(join(SHARED_ROOT, "config.json"), config_dict)
 
 
-def place_default_config(destination=join(HACKSPORTS_ROOT, "config.json")):
+def place_default_config(destination=join(SHARED_ROOT, "config.json")):
     """
     Places a default configuration file in the destination.
 
     Args:
         destination: Where to place the default configuration. Defaults to
-            HACKSPORTS_ROOT/config.json
+            SHARED_ROOT/config.json
     """
 
     write_configuration_file(destination, default_config)

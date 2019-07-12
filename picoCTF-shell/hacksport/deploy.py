@@ -8,7 +8,7 @@ templated with flags, the shell server URL, etc., and assigned a port
 (if required for their problem type).
 
 Flags and assigned ports will remain consistent for (problem, instance) pairs
-across any shell servers that share the HACKSPORTS_ROOT/shared directory.
+across any shell servers that share the SHARED_ROOT directory.
 
 However, instances must still be created individually on each shell server,
 as server URLs must be templated appropriately, dependencies potentially
@@ -150,9 +150,9 @@ from hacksport.status import get_all_problem_instances, get_all_problems
 from jinja2 import Environment, FileSystemLoader, Template
 from shell_manager.package import package_problem
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
-                                get_problem, get_problem_root, HACKSPORTS_ROOT,
+                                get_problem, get_problem_root,
                                 sanitize_name, STAGING_ROOT, get_problem_root_hashed,
-                                get_pid_hash, get_bundle, get_bundle_root, DEB_ROOT)
+                                get_pid_hash, get_bundle, get_bundle_root, DEB_ROOT, SHARED_ROOT)
 from spur import RunProcessError
 
 
@@ -343,7 +343,7 @@ def generate_staging_directory(root=STAGING_ROOT,
     Creates a random, empty staging directory
 
     Args:
-        root: The parent directory for the new directory. Defaults to join(HACKSPORTS_ROOT, "staging")
+        root: The parent directory for the new directory. Defaults to join(SHARED_ROOT, "staging")
 
         Optional prefixes to help identify the staging directory: problem_name, instance_number
 
@@ -871,7 +871,7 @@ def deploy_problems(args, config):
 
     # Attempt to load the port_map from file
     try:
-        port_map_path = join(HACKSPORTS_ROOT, 'port_map.json')
+        port_map_path = join(SHARED_ROOT, 'port_map.json')
         with open(port_map_path, 'r') as f:
             port_map = json.load(f)
             port_map = {literal_eval(k): v for k, v in port_map.items()}
@@ -888,7 +888,7 @@ def deploy_problems(args, config):
         logger.error(f"Error loading port map from {port_map_path}")
         raise
 
-    lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
+    lock_file = join(SHARED_ROOT, "deploy.lock")
     if os.path.isfile(lock_file):
         logger.error(
             "Another problem installation or deployment appears in progress. If you believe this to be an error, "
@@ -1004,7 +1004,7 @@ def undeploy_problems(args, config):
         for instance in get_all_problem_instances(path):
             already_deployed[problem["name"]].append(
                 instance["instance_number"])
-    lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
+    lock_file = join(SHARED_ROOT, "deploy.lock")
     if os.path.isfile(lock_file):
         logger.error(
             "Cannot undeploy while other deployment in progress. If you believe this is an error, "

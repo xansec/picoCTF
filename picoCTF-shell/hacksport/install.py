@@ -3,13 +3,13 @@ Handles installation of problems onto the shell server(s).
 
 When a problem is _installed_, this means that the problem source files have
 been parsed and converted into a debian package stored at
-HACKSPORTS_ROOT/shared/debs.
+SHARED_ROOT/debs.
 
 Additionally, the source files of the problem will be copied (via the debian
-package) into HACKSPORTS_ROOT/shared/sources.
+package) into SHARED_ROOT/sources.
 
 The problem will then appear in the list of available problems, which is
-determined by traversing the HACKSPORTS_ROOT/shared/sources directory.
+determined by traversing the SHARED_ROOT/sources directory.
 
 When this problem is _deployed_, shell_manager will attempt to reinstall the
 debian package first, in case the problem has dependencies that have not
@@ -20,7 +20,7 @@ import subprocess
 import os
 import shutil
 from shell_manager.package import package_problem
-from shell_manager.util import get_problem, DEB_ROOT, FatalException, join, HACKSPORTS_ROOT, get_problem_root_hashed, get_bundle2, PROBLEM_ROOT, BUNDLE_ROOT, sanitize_name
+from shell_manager.util import get_problem, DEB_ROOT, FatalException, join, SHARED_ROOT, get_problem_root_hashed, get_bundle2, PROBLEM_ROOT, BUNDLE_ROOT, sanitize_name
 from hacksport.deploy import generate_staging_directory
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def install_problem(problem_path):
     Args:
         problem_path: path to the problem source directory
     """
-    lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
+    lock_file = join(SHARED_ROOT, "deploy.lock")
     if os.path.isfile(lock_file):
         logger.error(
             "Another problem installation or deployment appears in progress. If you believe this to be an error, "
@@ -43,7 +43,7 @@ def install_problem(problem_path):
     problem_obj = get_problem(problem_path)
     if os.path.isdir(get_problem_root_hashed(problem_obj, absolute=True)):
         logger.error(f"Problem {problem_obj['unique_name']} is already installed")
-        raise FatalException
+        return
     logger.info(f"Installing problem {problem_obj['unique_name']}...")
 
     logger.debug(f"{problem_obj['unique_name']}: obtained lock file ({str(lock_file)})")

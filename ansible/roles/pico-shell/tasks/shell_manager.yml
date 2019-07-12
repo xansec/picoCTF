@@ -21,9 +21,16 @@
     dest: "/usr/local/bin/shell_manager"
     state: link
 
-- name: Ensure /opt/hacksports directory exists
+- name: Ensure /opt/hacksports/shared directory exists
   file:
-    path: /opt/hacksports
+    path: /opt/hacksports/shared
+    state: directory
+    owner: root
+    group: root
+
+- name: Ensure /opt/hacksports/local directory exists
+  file:
+    path: /opt/hacksports/local
     state: directory
     owner: root
     group: root
@@ -31,7 +38,7 @@
 - name: Add configuration for shell_manager
   template:
     src: config.json.j2
-    dest: "/opt/hacksports/config.json"
+    dest: "/opt/hacksports/shared/config.json"
     owner: root
     group: root
     mode: 0600
@@ -39,7 +46,7 @@
 # From shell_manager  setup.py data_files
 - name: Ensure extra directory exists
   file:
-    path: /opt/hacksports/extra
+    path: /opt/hacksports/shared/extra
     state: directory
     owner: root
     group: root
@@ -47,11 +54,11 @@
 - name: Copy no_aslr_wrapper.c to deployed location
   copy:
     src:  "no_aslr_wrapper.c"
-    dest: "/opt/hacksports/extra/"
+    dest: "/opt/hacksports/shared/extra/"
 
 - name: Ensure config directory exists
   file:
-    path: /opt/hacksports/config
+    path: /opt/hacksports/shared/config
     state: directory
     owner: root
     group: root
@@ -59,11 +66,11 @@
 - name: Copy securebashrc to deployed location
   copy:
     src:  "securebashrc"
-    dest: "/opt/hacksports/config/securebashrc"
+    dest: "/opt/hacksports/shared/config/securebashrc"
 
 - name: Ensure debs directory exists
   file:
-    path: /opt/hacksports/debs
+    path: /opt/hacksports/shared/debs
     state: directory
     owner: root
     group: root
