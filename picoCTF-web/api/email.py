@@ -69,9 +69,11 @@ def request_password_reset(username):
 
     settings = api.config.get_settings()
 
-    body = """We recently received a request to reset the password for the following {0} account:\n\n\t{2}\n\nOur records show that this is the email address used to register the above account.  If you did not request to reset the password for the above account then you need not take any further steps.  If you did request the password reset please follow the link below to set your new password. \n\n {1}/reset#{3} \n\n Best of luck! \n The {0} Team""".format(  # noqa:E501
-        settings["competition_name"], settings["competition_url"], username,
-        token_value)
+    body = settings["email"]["reset_password_body"].format(  # noqa:E501
+        competition_name = settings["competition_name"],
+        competition_url = settings["competition_url"], 
+        username = username,
+        token_value = token_value)
 
     subject = "{} Password Reset".format(settings["competition_name"])
 
@@ -127,20 +129,9 @@ def send_user_verification_email(username):
     verification_link = "{}/api/v1/user/verify?uid={}&token={}".\
         format(settings["competition_url"], user["uid"], token_value)
 
-    body = """
-Welcome to {0}!
-
-You will need to visit the verification link below and then login to finalize
-your account's creation.
-
-If you believe this to be a mistake, and you haven't recently created an account
-for {0} then you can safely ignore this email.
-
-Verification link: {1}
-
-Good luck and have fun!
-The {0} Team.
-    """.format(settings["competition_name"], verification_link) # noqa (79char)
+    body = settings["email"]["verification_body"].format(
+        competition_name = settings["competition_name"],
+        verification_link = verification_link) # noqa (79char)
 
     subject = "{} Account Verification".format(settings["competition_name"])
 
@@ -152,22 +143,10 @@ The {0} Team.
     # Also send parent verification email if neccessary
     if (settings["email"]["parent_verification_email"] and
             previous_key is None and user['demo']['age'] == "13-17"):
-        body = """
-Welcome to {0}!
-
-An user account has just been created on our platform and your email address was
-submitted by the user as the email address of the user's parent.
-
-Thank you for authorizing the participation of your child age 13-17 in
-{0} and providing your email address as part of the account registration process
-for your child. As a reminder, the Terms of Service, Privacy Statement and
-Competition Rules for {0} can be found at {1}.
-
-If you received this email in error because you did not authorize your child's
-registration for {0}, you are not the child's parent or legal guardian,
-or your child is under age 13, please email us immediately at {2}.
-        """.format(settings["competition_name"], "https://url", # noqa (79char)
-                   "admin@email.com")
+        body = settings["email"]["verification_parent_body"].format(
+            competition_name = settings["competition_name"],
+            competition_url = settings["competition_url"],
+            admin_email = settings["admin_email"])
 
         subject = "{} Parent Account Verification".format(
             settings["competition_name"])
@@ -201,17 +180,10 @@ def send_email_invite(gid, email, teacher=False):
     registration_link = "{}/#g={}&r={}".\
         format(settings["competition_url"], group["gid"], token_value)
 
-    body = """
-You have been invited by the staff of the {1} organization to compete in {0}.
-You will need to follow the registration link below to finish the account creation process.
-
-If you believe this to be a mistake you can safely ignore this email.
-
-Registration link: {2}
-
-Good luck!
-  The {0} Team.
-    """.format(settings["competition_name"], group["name"], registration_link) # noqa (79char)
+    body = settings["email"]["verification_parent_body"].format(
+        competition_name = settings["competition_name"],
+        group_name = group["name"],
+        registration_link = registration_link) # noqa (79char)
 
     subject = "{} Registration".format(settings["competition_name"])
 

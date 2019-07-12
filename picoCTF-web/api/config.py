@@ -23,6 +23,7 @@ default_settings = {
     # COMPETITION INFORMATION
     "competition_name": "",
     "competition_url": "",
+    "admin_email": "", # Contact given to parents
 
     # EMAIL WHITELIST
     "email_filter": [],
@@ -111,7 +112,60 @@ default_settings = {
         "from_addr": "",
         "from_name": "",
         "max_verification_emails": 3,
-        "smtp_security": "TLS"
+        "smtp_security": "TLS",
+        "reset_password_body": """
+We recently received a request to reset the password for the following {competition_name} account:
+
+\t{username}
+
+Our records show that this is the email address used to register the above account.
+If you did not request to reset the password for the above account then you need not take any further steps.
+If you did request the password reset please follow the link below to set your new password.
+
+{competition_url}/reset#{token_value}
+
+Best of luck!
+The {competition_name} Team""", # noqa (79char)
+        "verification_body": """
+Welcome to {competition_name}!
+
+You will need to visit the verification link below and then login to finalize
+your account's creation.
+
+If you believe this to be a mistake, and you haven't recently created an account
+for {competition_name} then you can safely ignore this email.
+
+Verification link: {verification_link}
+
+Good luck and have fun!
+The {competition_name} Team.
+    """, # noqa (79char)
+        "verification_parent_body": """
+Welcome to {competition_name}!
+
+An user account has just been created on our platform and your email address was
+submitted by the user as the email address of the user's parent.
+
+Thank you for authorizing the participation of your child age 13-17 in
+{competition_name} and providing your email address as part of the account registration process
+for your child. As a reminder, the Terms of Service, Privacy Statement and
+Competition Rules for {competition_name} can be found at {competition_url}.
+
+If you received this email in error because you did not authorize your child's
+registration for {competition_name}, you are not the child's parent or legal guardian,
+or your child is under age 13, please email us immediately at {admin_email}.
+        """, # noqa (79char)
+        "invite_body": """
+You have been invited by the teacher of classroom {group_name} to compete in {competition_name}.
+You will need to follow the registration link below to finish the account creation process.
+
+If you believe this to be a mistake you can safely ignore this email.
+
+Registration link: {registration_link}
+
+Good luck!
+The {competition_name} Team.
+    """ # noqa (79char)
     },
 
     # CAPTCHA
