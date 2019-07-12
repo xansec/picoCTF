@@ -496,8 +496,8 @@ team_change_req.add_argument(
 # Team request
 team_req = reqparse.RequestParser()
 team_req.add_argument(
-    'team_name', required=True, type=str, location='json',
-    help='Name of the new team',
+    'team_name', required=True, type=length_restricted(3, 100, str),
+    location='json', help='Name of the new team',
     error='A name for the new team is required'
 )
 team_req.add_argument(
