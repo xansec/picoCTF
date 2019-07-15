@@ -96,17 +96,3 @@ def set_configuration_option(args, global_config):
 
     logger.info("Set %s = %s", field, value)
 
-
-def new_configuration_file(args, global_config):
-    """
-    Entry point for config new subcommand
-    """
-
-    for path in args.files:
-        if not args.overwrite and os.path.exists(path):
-            logger.warning(
-                "'%s' already exists. Not placing new configuration.", path)
-            continue
-
-        place_default_config(path)
-        logger.info("Default configuration file '%s' was created", path)

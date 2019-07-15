@@ -10,7 +10,7 @@ import coloredlogs
 from hacksport.install import install_problems, install_bundle, uninstall_bundle
 from hacksport.deploy import deploy_problems, undeploy_problems
 from hacksport.status import clean, publish, status
-from shell_manager.config import (new_configuration_file, print_configuration,
+from shell_manager.config import (print_configuration,
                                   set_configuration_option)
 from shell_manager.util import (FatalException, get_hacksports_config,
                                 place_default_config)
@@ -198,17 +198,6 @@ def main():
         default=False,
         help="Allow the supplied field to change types if already specified")
     config_set_parser.set_defaults(func=set_configuration_option)
-
-    config_new_parser = config_subparsers.add_parser(
-        "new", help="Make a new configuration files with defaults")
-    config_new_parser.add_argument(
-        "files", nargs="+", help="Configuration files to make")
-    config_new_parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        default=False,
-        help="whether to overwrite files that already exist")
-    config_new_parser.set_defaults(func=new_configuration_file)
 
     args = parser.parse_args()
 
