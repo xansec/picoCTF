@@ -21,9 +21,9 @@ default_settings = {
     "end_time": datetime.datetime.utcnow(),
 
     # COMPETITION INFORMATION
-    "competition_name": "",
-    "competition_url": "",
-    "admin_email": "", # Contact given to parents
+    "competition_name": "CTF Placeholder",
+    "competition_url": "http://192.168.2.2/",
+    "admin_email": "email@example.com", # Contact given to parents
 
     # EMAIL WHITELIST
     "email_filter": [],
