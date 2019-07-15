@@ -375,7 +375,7 @@ def test_reset_password(mongo_proc, client): # noqa (fixture)
 
         # Verify that the email is in the outbox
         assert len(outbox) == 1
-        assert outbox[0].subject == ' Password Reset'
+        assert outbox[0].subject == 'CTF Placeholder Password Reset'
         assert db_token in outbox[0].body
 
     # Attempt to confirm the reset with the wrong token
@@ -436,7 +436,7 @@ def test_verify(mongo_proc, client): # noqa (fixture)
     ))
     assert res.status_code == 302
     assert res.headers['Location'] == \
-        'http://localhost/#status=verification_error'
+        'http://192.168.2.2/#status=verification_error'
 
     test_user = db.users.find_one({'username': STUDENT_DEMOGRAPHICS['username']})
     assert test_user['verified'] is False
@@ -447,7 +447,7 @@ def test_verify(mongo_proc, client): # noqa (fixture)
     ))
     assert res.status_code == 302
     assert res.headers['Location'] == \
-        'http://localhost/#status=verified'
+        'http://192.168.2.2/#status=verified'
 
     test_user = db.users.find_one({'username': STUDENT_DEMOGRAPHICS['username']})
     assert test_user['verified'] is True

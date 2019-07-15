@@ -22,7 +22,7 @@ default_settings = {
 
     # COMPETITION INFORMATION
     "competition_name": "CTF Placeholder",
-    "competition_url": "http://192.168.2.2/",
+    "competition_url": "http://192.168.2.2",
     "admin_email": "email@example.com", # Contact given to parents
 
     # EMAIL WHITELIST
