@@ -126,6 +126,7 @@ If you did request the password reset please follow the link below to set your n
 
 Best of luck!
 The {competition_name} Team""", # noqa (79char)
+############ Readablity spacing ############
         "verification_body": """
 Welcome to {competition_name}!
 
@@ -139,8 +140,8 @@ for {competition_name} then you can safely ignore this email.
 Verification link: {verification_link}
 
 Good luck and have fun!
-The {competition_name} Team.
-    """, # noqa (79char)
+The {competition_name} Team""", # noqa (79char)
+############ Readablity spacing ############
         "verification_parent_body": """
 Welcome to {competition_name}!
 
@@ -155,7 +156,9 @@ Competition Rules for {competition_name} can be found at {competition_url}.
 If you received this email in error because you did not authorize your child's
 registration for {competition_name}, you are not the child's parent or legal guardian,
 or your child is under age 13, please email us immediately at {admin_email}.
-        """, # noqa (79char)
+
+The {competition_name} Team""", # noqa (79char)
+############ Readablity spacing ############
         "invite_body": """
 You have been invited by the teacher of classroom {group_name} to compete in {competition_name}.
 You will need to follow the registration link below to finish the account creation process.
@@ -165,8 +168,19 @@ If you believe this to be a mistake you can safely ignore this email.
 Registration link: {registration_link}
 
 Good luck!
-The {competition_name} Team.
-    """ # noqa (79char)
+The {competition_name} Team""", # noqa (79char)
+############ Readablity spacing ############
+        "deletion_notification_body": """
+This is a notification that the following {competition_name} account associated with this 
+email address has been deleted:
+
+\t{username}
+
+Due to the following reason:
+
+\t{delete_reason}
+
+The {competition_name} Team""" # noqa (79char)
     },
 
     # CAPTCHA

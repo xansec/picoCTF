@@ -339,7 +339,7 @@ def update_password_request(params, uid=None, check_current=False):
 
 
 @log_action
-def disable_account(uid):
+def disable_account(uid, disable_reason=None):
     """
     Note: The original disable account has now been updated to perform delete account instead.
 
@@ -350,7 +350,13 @@ def disable_account(uid):
     Args:
         uid: ID of the user to disable
     """
+    if disable_reason is not None:
+        disable_reason = "Not specified"
+
     db = api.db.get_conn()
+    user = db.users.find_one({"uid": uid})
+    api.email.send_deletion_notification(user['username'], user['email'], disable_reason)
+
     db.users.find_one_and_update({
         "uid": uid,
         "disabled": False
@@ -360,7 +366,8 @@ def disable_account(uid):
         "lastname": "",
         "email": "",
         "country": "",
-        "demo" : "{}"
+        "demo" : "{}",
+        "disable_reason" : disable_reason
     }})
 
     # Drop them from their team
