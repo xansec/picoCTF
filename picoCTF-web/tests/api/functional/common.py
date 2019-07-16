@@ -9,6 +9,7 @@ import pytest
 
 import api
 
+RATE_LIMIT_BYPASS = "test_bypass"
 TESTING_DB_NAME = 'ctf_test'
 db = None
 
@@ -50,7 +51,8 @@ def client():
     app = api.create_app({
         'TESTING': True,
         'MONGO_DB_NAME': TESTING_DB_NAME,
-        'MONGO_PORT': 27018
+        'MONGO_PORT': 27018,
+        'RATE_LIMIT_BYPASS': RATE_LIMIT_BYPASS
     })
     return app.test_client()
 
@@ -63,6 +65,18 @@ def app():
         'MONGO_PORT': 27018
     })
     return app
+
+
+def cache(f, *args, **kwargs):
+    result = f(reset_cache=True, *args, **kwargs)
+    return result
+
+
+def update_all_scoreboards():
+    api.stats.get_all_team_scores()
+    api.stats.get_all_team_scores(include_ineligible=True)
+    for group in api.group.get_all_groups():
+        api.stats.get_group_scores(gid=group['gid'])
 
 
 ADMIN_DEMOGRAPHICS = {
