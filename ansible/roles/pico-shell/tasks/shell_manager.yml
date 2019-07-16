@@ -35,10 +35,18 @@
     owner: root
     group: root
 
-- name: Add configuration for shell_manager
+- name: Add shared configuration for shell_manager
   template:
-    src: config.json.j2
-    dest: "/opt/hacksports/shared/config.json"
+    src: shared_config.json.j2
+    dest: "/opt/hacksports/shared/shared_config.json"
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Add local configuration for shell_manager
+  template:
+    src: local_config.json.j2
+    dest: "/opt/hacksports/local/local_config.json"
     owner: root
     group: root
     mode: 0600

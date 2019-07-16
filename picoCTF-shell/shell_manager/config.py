@@ -5,10 +5,9 @@ Utilities for dealing with configuration commands
 import json
 import logging
 
-from shell_manager.util import (FatalException, get_config,
-                                place_default_config, write_configuration_file,
-                                write_global_configuration,
-                                get_hacksports_config)
+from shell_manager.util import (FatalException,
+                                get_shared_config, get_local_config,
+                                set_shared_config, set_local_config)
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,10 @@ def print_configuration(args):
     Entry point for config subcommand
     """
 
-    config = get_hacksports_config()
+    if args.config_type == 'shared':
+        config = get_shared_config()
+    elif args.config_type == 'local':
+        config = get_local_config()
 
     if args.json:
         print("Configuration options (in JSON):")
@@ -52,7 +54,10 @@ def set_configuration_option(args):
     Entry point for config set subcommand
     """
 
-    config = get_hacksports_config()
+    if args.config_type == 'shared':
+        config = get_shared_config()
+    elif args.config_type == 'local':
+        config = get_local_config()
 
     field = args.field
     value = args.value
@@ -75,7 +80,9 @@ def set_configuration_option(args):
 
     config[field] = value
 
-    write_global_configuration(config)
+    if args.config_type == 'shared':
+        set_shared_config(config)
+    elif args.config_type == 'local':
+        set_local_config(config)
 
     logger.info("Set %s = %s", field, value)
-

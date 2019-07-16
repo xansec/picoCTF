@@ -46,18 +46,10 @@ class ConfigDict(dict):
         self[attr] = value
 
 
-default_config = ConfigDict({
+default_shared_config = ConfigDict({
     # secret used for deterministic deployment
     "deploy_secret":
     "qwertyuiop",
-
-    # the externally accessible address of this server
-    "hostname":
-    "127.0.0.1",
-
-    # the url of the web server
-    "web_server":
-    "http://127.0.0.1",
 
     # the default username for files to be owned by
     "default_user":
@@ -88,6 +80,16 @@ default_config = ConfigDict({
     }]
 })
 
+default_local_config = ConfigDict({
+    # the externally accessible address of this server
+    "hostname":
+    "127.0.0.1",
+
+    # the url of the web server
+    "web_server":
+    "http://127.0.0.1",
+})
+
 problem_schema = Schema({
     Required("author"): All(str, Length(min=1, max=32)),
     Required("score"): All(int, Range(min=0)),
@@ -115,18 +117,23 @@ bundle_schema = Schema({
     "dependencies": dict
 })
 
-config_schema = Schema(
+shared_config_schema = Schema(
     {
         Required("deploy_secret"): str,
-        Required("hostname"): str,
-        Required("web_server"): str,
         Required("default_user"): str,
         Required("web_root"): str,
         Required("problem_directory_root"): str,
         Required("obfuscate_problem_directories"): bool,
         Required("banned_ports"): list
     },
-    extra=True)
+    extra=False)
+
+local_config_schema = Schema(
+    {
+        Required("hostname"): str,
+        Required("web_server"): str,
+    },
+    extra=False)
 
 port_range_schema = Schema({
     Required("start"):
@@ -346,32 +353,32 @@ def get_bundle2(bundle_path):
     return bundle
 
 
-def verify_config(config_object):
+def verify_shared_config(shared_config_object):
     """
-    Verifies the given configuration dict against the config_schema and the
-    port_range_schema.
+    Verifies the given shared configuration dict against
+    the shared_config_schema and the port_range_schema.
 
     Args:
-        config_object: The configuration options in a dict
+        shared_config_object: The configuration options in a dict
 
     Raises:
          FatalException: if failed.
     """
 
     try:
-        config_schema(config_object)
+        shared_config_schema(shared_config_object)
     except MultipleInvalid as e:
-        logger.critical("Error validating config file at '%s'!", path)
+        logger.critical("Error validating shared config file!")
         logger.critical(e)
         raise FatalException
 
-    for port_range in config_object["banned_ports"]:
+    for port_range in shared_config_object["banned_ports"]:
         try:
             port_range_schema(port_range)
             assert port_range["start"] <= port_range["end"]
         except MultipleInvalid as e:
             logger.critical(
-                "Error validating port range in config file at '%s'!", path)
+                "Error validating port range in shared config file!")
             logger.critical(e)
             raise FatalException
         except AssertionError:
@@ -380,43 +387,23 @@ def verify_config(config_object):
             raise FatalException
 
 
-def get_config(path):
+def verify_local_config(local_config_object):
     """
-    Returns a configuration object from the given path.
+    Verifies the given local configuration dict against
+    the local_config_schema.
 
     Args:
-        path: the full path to the json file
+        local_config_object: The configuration options in a dict
 
-    Returns:
-        A python object containing the fields within
+    Raises:
+         FatalException: if failed.
     """
 
-    with open(path) as f:
-        config_object = json.loads(f.read())
-
-    verify_config(config_object)
-
-    config = ConfigDict()
-    for key, value in config_object.items():
-        config[key] = value
-
-    return config
-
-
-def get_hacksports_config():
-    """
-    Returns the global configuration options from the file in SHARED_ROOT.
-    """
     try:
-        return get_config(join(SHARED_ROOT, "config.json"))
-    except PermissionError:
-        logger.error("You must run shell_manager with sudo.")
-        raise FatalException
-    except FileNotFoundError:
-        place_default_config()
-        logger.info(
-            "There was no default configuration. One has been created for you. Please edit it accordingly using the 'shell_manager config' subcommand before deploying any instances."
-        )
+        local_config_schema(local_config_object)
+    except MultipleInvalid as e:
+        logger.critical("Error validating local config file!")
+        logger.critical(e)
         raise FatalException
 
 
@@ -429,36 +416,85 @@ def write_configuration_file(path, config_dict):
         config_dict: the configuration dictionary
     """
 
-    verify_config(config_dict)
-
     with open(path, "w") as f:
         json_data = json.dumps(
             config_dict, sort_keys=True, indent=4, separators=(',', ': '))
         f.write(json_data)
 
 
-def write_global_configuration(config_dict):
+def get_shared_config():
     """
-    Writes the options in config_dict to the global config file.
+    Returns the shared configuration options from the file in SHARED_ROOT.
+    """
+    shared_config_location = join(SHARED_ROOT, "shared_config.json")
+    try:
+        with open(shared_config_location) as f:
+            config_object = json.loads(f.read())
+        verify_shared_config(config_object)
+        config = ConfigDict()
+        for key, value in config_object.items():
+            config[key] = value
+        return config
+    except PermissionError:
+        logger.error("You must run shell_manager with sudo.")
+        raise FatalException
+    except FileNotFoundError:
+        write_configuration_file(shared_config_location, default_shared_config)
+        chmod(shared_config_location, 0o640)
+        logger.info(
+            "There was no default configuration. One has been created for you. Please edit it accordingly using the 'shell_manager config' subcommand before deploying any instances."
+        )
+        raise FatalException
+
+
+def get_local_config():
+    """
+    Returns the local configuration options from the file in LOCAL_ROOT.
+    """
+    local_config_location = join(LOCAL_ROOT, "local_config.json")
+    try:
+        with open(local_config_location) as f:
+            config_object = json.loads(f.read())
+        verify_local_config(config_object)
+        config = ConfigDict()
+        for key, value in config_object.items():
+            config[key] = value
+        return config
+    except PermissionError:
+        logger.error("You must run shell_manager with sudo.")
+        raise FatalException
+    except FileNotFoundError:
+        write_configuration_file(local_config_location, default_local_config)
+        chmod(local_config_location, 0o640)
+        logger.info(
+            "There was no default configuration. One has been created for you. Please edit it accordingly using the 'shell_manager config' subcommand before deploying any instances."
+        )
+        raise FatalException
+
+
+def set_shared_config(config_dict):
+    """
+    Validates and writes the options in config_dict to the shared config file.
 
     Args:
         config_dict: the configuration dictionary
     """
+    verify_shared_config(config_dict)
+    write_configuration_file(
+        join(SHARED_ROOT, "shared_config.json"), config_dict)
 
-    write_configuration_file(join(SHARED_ROOT, "config.json"), config_dict)
 
-
-def place_default_config(destination=join(SHARED_ROOT, "config.json")):
+def set_local_config(config_dict):
     """
-    Places a default configuration file in the destination.
+    Validates and writes the options in config_dict to the local config file.
 
     Args:
-        destination: Where to place the default configuration. Defaults to
-            SHARED_ROOT/config.json
+        config_dict: the configuration dictionary
     """
+    verify_local_config(config_dict)
+    write_configuration_file(
+        join(LOCAL_ROOT, "local_config.json"), config_dict)
 
-    write_configuration_file(destination, default_config)
-    chmod(destination, 0o640)
 
 def get_pid_hash(problem, short=False):
     """

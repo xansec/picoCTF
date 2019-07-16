@@ -27,7 +27,8 @@ XINETD_SERVICE_PATH = "/etc/xinetd.d/"
 TEMP_DEB_DIR = "/tmp/picoctf_debs/"
 
 # will be set to the configuration module during deployment
-deploy_config = None
+shared_config = None
+local_config = None
 port_map = {}
 current_problem = None
 current_instance = None
@@ -40,10 +41,11 @@ def get_deploy_context():
     config, port_map, problem, instance
     """
 
-    global deploy_config, port_map, current_problem, current_instance
+    global shared_config, local_config, port_map, current_problem, current_instance
 
     return {
-        "config": deploy_config,
+        "shared_config": shared_config,
+        "local_config": local_config,
         "port_map": port_map,
         "problem": current_problem,
         "instance": current_instance
@@ -74,20 +76,20 @@ def give_port():
 
     context = get_deploy_context()
     # default behavior
-    if context["config"] is None:
+    if context["shared_config"] is None:
         return randint(LOWEST_PORT, HIGHEST_PORT)
 
-    if "banned_ports_parsed" not in context["config"]:
+    if "banned_ports_parsed" not in context["shared_config"]:
         banned_ports_result = []
-        for port_range in context["config"].banned_ports:
+        for port_range in context["shared_config"].banned_ports:
             banned_ports_result.extend(
                 list(range(port_range["start"], port_range["end"] + 1)))
 
-        context["config"]["banned_ports_parsed"] = banned_ports_result
+        context["shared_config"]["banned_ports_parsed"] = banned_ports_result
 
     # during real deployment, let's register a port
     if port_random is None:
-        port_random = Random(context["config"].deploy_secret)
+        port_random = Random(context["shared_config"].deploy_secret)
 
     # if this instance already has a port, reuse it
     if (context["problem"], context["instance"]) in context["port_map"]:
@@ -97,25 +99,25 @@ def give_port():
 
     used_ports = [port for port in context["port_map"].values() if port is not None]
     if len(used_ports) + len(
-            context["config"].banned_ports_parsed) == HIGHEST_PORT + 1:
+            context["shared_config"].banned_ports_parsed) == HIGHEST_PORT + 1:
         raise Exception(
             "All usable ports are taken. Cannot deploy any more instances.")
 
     # Added used ports to banned_ports_parsed.
     for port in used_ports:
-        context["config"].banned_ports_parsed.append(port)
+        context["shared_config"].banned_ports_parsed.append(port)
 
     # in case the port chosen is in use, try again.
-    loop_var = HIGHEST_PORT - len(context["config"].banned_ports_parsed) + 1
+    loop_var = HIGHEST_PORT - len(context["shared_config"].banned_ports_parsed) + 1
     while loop_var > 0:
         # Get a random port that is random, not in the banned list, not in use, and not assigned before.
         port = port_random.choice([
             i for i in range(LOWEST_PORT, HIGHEST_PORT)
-            if i not in context["config"].banned_ports_parsed
+            if i not in context["shared_config"].banned_ports_parsed
         ])
         if check_if_port_in_use(port):
             loop_var -= 1
-            context["config"].banned_ports_parsed.append(port)
+            context["shared_config"].banned_ports_parsed.append(port)
             continue
         return port
     raise Exception(
@@ -152,7 +154,8 @@ from shell_manager.package import package_problem
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_problem, get_problem_root,
                                 sanitize_name, STAGING_ROOT, get_problem_root_hashed,
-                                get_pid_hash, get_bundle, get_bundle_root, DEB_ROOT, SHARED_ROOT, get_hacksports_config)
+                                get_pid_hash, get_bundle, get_bundle_root, DEB_ROOT, SHARED_ROOT,
+                                get_shared_config, get_local_config)
 from spur import RunProcessError
 
 
@@ -199,13 +202,14 @@ def update_problem_class(Class, problem_object, seed, user, instance_directory):
     attributes = deepcopy(problem_object)
 
     # pass configuration options in as class fields
-    attributes.update(dict(deploy_config))
+    attributes.update(dict(shared_config))
+    attributes.update(dict(local_config))
 
     attributes.update({
         "random": random,
         "user": user,
         "directory": instance_directory,
-        "server": deploy_config.hostname
+        "server": local_config.hostname
     })
 
     return challenge_meta(attributes)(Class.__name__, Class.__bases__,
@@ -310,11 +314,11 @@ def generate_instance_deployment_directory(username):
     """
 
     directory = username
-    if deploy_config.obfuscate_problem_directories:
+    if shared_config.obfuscate_problem_directories:
         directory = username + "_" + md5(
-            (username + deploy_config.deploy_secret).encode()).hexdigest()
+            (username + shared_config.deploy_secret).encode()).hexdigest()
 
-    root_dir = deploy_config.problem_directory_root
+    root_dir = shared_config.problem_directory_root
 
     if not isdir(root_dir):
         os.makedirs(root_dir)
@@ -459,7 +463,7 @@ def deploy_files(staging_directory, instance_directory, file_list, username,
 
     # get uid and gid for default and problem user
     user = getpwnam(username)
-    default = getpwnam(deploy_config.default_user)
+    default = getpwnam(shared_config.default_user)
 
     for f in file_list:
         # copy the file over, making the directories as needed
@@ -551,7 +555,7 @@ def generate_instance(problem_object,
         deployment_directory = generate_instance_deployment_directory(username)
     logger.debug("...Using deployment directory '%s'.", deployment_directory)
 
-    seed = generate_seed(problem_object['name'], deploy_config.deploy_secret,
+    seed = generate_seed(problem_object['name'], shared_config.deploy_secret,
                          str(instance_number))
     logger.debug("...Generated random seed '%s' for deployment.", seed)
 
@@ -598,7 +602,7 @@ def generate_instance(problem_object,
         else:
             source_path = join(copy_path, source_name)
 
-        problem_hash = problem_object["name"] + deploy_config.deploy_secret + str(
+        problem_hash = problem_object["name"] + shared_config.deploy_secret + str(
             instance_number)
         problem_hash = md5(problem_hash.encode("utf-8")).hexdigest()
 
@@ -607,10 +611,10 @@ def generate_instance(problem_object,
         link_template = "<a href='{}'>{}</a>"
 
         web_accessible_files.append((source_path,
-                                     join(deploy_config.web_root,
+                                     join(shared_config.web_root,
                                           destination_path)))
         uri_prefix = "//"
-        uri = join(uri_prefix, deploy_config.hostname, destination_path)
+        uri = join(uri_prefix, local_config.hostname, destination_path)
 
         if not raw:
             return link_template.format(
@@ -855,17 +859,18 @@ def deploy_problem(problem_directory,
 def deploy_problems(args):
     """ Main entrypoint for problem deployment """
 
-    global deploy_config, port_map
-    deploy_config = get_hacksports_config()
+    global shared_config, local_config, port_map
+    shared_config = get_shared_config()
+    local_config = get_local_config()
 
     need_restart_xinetd = False
 
     try:
-        user = getpwnam(deploy_config.default_user)
+        user = getpwnam(shared_config.default_user)
     except KeyError as e:
         logger.info("default_user '%s' does not exist. Creating the user now.",
-                    deploy_config.default_user)
-        create_user(deploy_config.default_user)
+                    shared_config.default_user)
+        create_user(shared_config.default_user)
 
     problem_names = args.problem_paths
 

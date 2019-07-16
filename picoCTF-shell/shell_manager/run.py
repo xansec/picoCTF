@@ -12,8 +12,7 @@ from hacksport.deploy import deploy_problems, undeploy_problems
 from hacksport.status import clean, publish, status
 from shell_manager.config import (print_configuration,
                                   set_configuration_option)
-from shell_manager.util import (FatalException, get_hacksports_config,
-                                place_default_config)
+from shell_manager.util import FatalException
 
 coloredlogs.DEFAULT_LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s: %(message)s"
 coloredlogs.DEFAULT_DATE_FORMAT = "%H:%M:%S"
@@ -168,6 +167,12 @@ def main():
         help=
         "Whether to display the configuration options in JSON form or pretty printed. Defaults to False."
     )
+    config_parser.add_argument(
+        'config_type',
+        choices=['shared', 'local'],
+        help='Which configuration settings to access: shared (across all ' +
+             'shell servers), or local (to this shell server)'
+    )
     config_parser.set_defaults(func=print_configuration)
     config_subparsers = config_parser.add_subparsers()
 
@@ -176,7 +181,7 @@ def main():
     config_set_parser.add_argument(
         "-f", "--field", type=str, required=True, help="which field to set")
     config_set_parser.add_argument(
-        "-v", "--value", type=str, required=True, help="options's new value")
+        "-v", "--value", type=str, required=True, help="option's new value")
     config_set_parser.add_argument(
         "-j",
         "--json",
@@ -187,7 +192,7 @@ def main():
         "--allow-type-change",
         action="store_true",
         default=False,
-        help="Allow the supplied field to change types if already specified")
+        help="allow the supplied field to change types if already specified")
     config_set_parser.set_defaults(func=set_configuration_option)
 
     args = parser.parse_args()
