@@ -65,7 +65,7 @@ def get_all_problem_instances(problem_path):
     return instances
 
 
-def publish(args, config):
+def publish(args):
     """ Main entrypoint for publish """
 
     problems = get_all_problems()
@@ -86,7 +86,7 @@ def publish(args, config):
     print(json.dumps(output, indent=2))
 
 
-def clean(args, config):
+def clean(args):
     """ Main entrypoint for clean """
 
     lock_file = join(SHARED_ROOT, "deploy.lock")
@@ -104,7 +104,7 @@ def clean(args, config):
     # TODO: potentially perform more cleaning
 
 
-def status(args, config):
+def status(args):
     """ Main entrypoint for status """
 
     bundles = get_all_bundles()

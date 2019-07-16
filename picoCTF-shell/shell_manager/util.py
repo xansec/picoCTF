@@ -407,8 +407,17 @@ def get_hacksports_config():
     """
     Returns the global configuration options from the file in SHARED_ROOT.
     """
-
-    return get_config(join(SHARED_ROOT, "config.json"))
+    try:
+        return get_config(join(SHARED_ROOT, "config.json"))
+    except PermissionError:
+        logger.error("You must run shell_manager with sudo.")
+        raise FatalException
+    except FileNotFoundError:
+        place_default_config()
+        logger.info(
+            "There was no default configuration. One has been created for you. Please edit it accordingly using the 'shell_manager config' subcommand before deploying any instances."
+        )
+        raise FatalException
 
 
 def write_configuration_file(path, config_dict):

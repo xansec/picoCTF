@@ -7,7 +7,8 @@ import logging
 
 from shell_manager.util import (FatalException, get_config,
                                 place_default_config, write_configuration_file,
-                                write_global_configuration)
+                                write_global_configuration,
+                                get_hacksports_config)
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +23,12 @@ def banned_ports_to_str(banned_ports):
     return "[" + ", ".join(map(port_range_to_str, banned_ports)) + "]"
 
 
-def print_configuration(args, global_config):
+def print_configuration(args):
     """
     Entry point for config subcommand
     """
 
-    config = global_config
+    config = get_hacksports_config()
 
     if args.json:
         print("Configuration options (in JSON):")
@@ -46,19 +47,12 @@ def print_configuration(args, global_config):
         print("  %s = %s" % (option.ljust(50), value_string))
 
 
-def set_configuration_option(args, global_config):
+def set_configuration_option(args):
     """
     Entry point for config set subcommand
     """
 
-    if args.file is None:
-        config = global_config
-    else:
-        try:
-            config = get_config(args.file)
-        except FileNotFoundError:
-            logger.fatal("Could not find configuration file '%s'", args.file)
-            raise FatalException
+    config = get_hacksports_config()
 
     field = args.field
     value = args.value
@@ -81,10 +75,7 @@ def set_configuration_option(args, global_config):
 
     config[field] = value
 
-    if args.file:
-        write_configuration_file(args.file, config)
-    else:
-        write_global_configuration(config)
+    write_global_configuration(config)
 
     logger.info("Set %s = %s", field, value)
 

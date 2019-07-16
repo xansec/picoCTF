@@ -91,7 +91,7 @@ def find_problem_sources(root_path):
     return problem_source_paths
 
 
-def install_problems(args, config):
+def install_problems(args):
     """
     Entrypoint for problem installation.
 
@@ -109,7 +109,7 @@ def install_problems(args, config):
         install_problem(problem_path)
 
 
-def install_bundle(args, config):
+def install_bundle(args):
     """
     "Installs" a bundle (validates it and stores a copy).
 
@@ -147,7 +147,7 @@ def install_bundle(args, config):
     logger.info(f"Installed bundle {bundle_obj['name']}")
 
 
-def uninstall_bundle(args, config):
+def uninstall_bundle(args):
     """
     Uninstall a bundle by deleting it from the shell servers.
 

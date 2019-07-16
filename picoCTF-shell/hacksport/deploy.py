@@ -152,7 +152,7 @@ from shell_manager.package import package_problem
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_problem, get_problem_root,
                                 sanitize_name, STAGING_ROOT, get_problem_root_hashed,
-                                get_pid_hash, get_bundle, get_bundle_root, DEB_ROOT, SHARED_ROOT)
+                                get_pid_hash, get_bundle, get_bundle_root, DEB_ROOT, SHARED_ROOT, get_hacksports_config)
 from spur import RunProcessError
 
 
@@ -852,11 +852,11 @@ def deploy_problem(problem_directory,
     return need_restart_xinetd
 
 
-def deploy_problems(args, config):
+def deploy_problems(args):
     """ Main entrypoint for problem deployment """
 
     global deploy_config, port_map
-    deploy_config = config
+    deploy_config = get_hacksports_config()
 
     need_restart_xinetd = False
 

@@ -75,14 +75,14 @@ def main():
         help="paths to problem source directories")
     install_parser.set_defaults(func=install_problems)
 
-    install_bundle_parser = subparsers.add_parser("install-bundle",
-                                                  help="bundle installation")
+    install_bundle_parser = subparsers.add_parser(
+        "install-bundle", help="bundle installation")
     install_bundle_parser.add_argument(
         "bundle_path", type=str, help="path to bundle file")
     install_bundle_parser.set_defaults(func=install_bundle)
 
-    uninstall_bundle_parser = subparsers.add_parser("uninstall-bundle",
-                                                    help="bundle removal")
+    uninstall_bundle_parser = subparsers.add_parser(
+        "uninstall-bundle", help="bundle removal")
     uninstall_bundle_parser.add_argument(
         "bundle_name", type=str, help="name of installed bundle")
     uninstall_bundle_parser.set_defaults(func=uninstall_bundle)
@@ -113,14 +113,13 @@ def main():
     # undeploy_parser.set_defaults(func=undeploy_problems)
 
     clean_parser = subparsers.add_parser(
-        "clean",
-        help="Clean up the intermediate staging data stored during deployments")
+        "clean", help="Clean up the intermediate staging data stored during " +
+                      "deployments")
     clean_parser.set_defaults(func=clean)
 
     status_parser = subparsers.add_parser(
-        "status",
-        help=
-        "List the installed problems and bundles and any instances associated with them."
+        "status", help="List the installed problems and bundles " +
+                       "and any instances associated with them."
     )
     status_parser.add_argument(
         "-a",
@@ -202,21 +201,8 @@ def main():
     if args.debug:
         coloredlogs.set_level(logging.DEBUG)
     try:
-        try:
-            config = get_hacksports_config()
-        except PermissionError:
-            logger.error("You must run shell_manager with sudo.")
-            raise FatalException
-        except FileNotFoundError:
-            place_default_config()
-            logger.info(
-                "There was no default configuration. One has been created for you. Please edit it accordingly using the 'shell_manager config' subcommand before deploying any instances."
-            )
-            raise FatalException
-
-        # Call the default function
         if "func" in args:
-            args.func(args, config)
+            args.func(args)
         else:
             parser.print_help()
     except FatalException:
