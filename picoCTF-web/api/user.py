@@ -557,9 +557,9 @@ def rate_limit(limit=5, duration=60, by_ip=False, allow_bypass=False):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            if allow_bypass:
+            conf = current_app.config
+            if allow_bypass or conf.get('TESTING', False):
                 bypass_header = request.headers.get('Limit-Bypass')
-                conf = current_app.config
                 if bypass_header == conf["RATE_LIMIT_BYPASS"]:
                     return f(*args, **kwargs)
 
