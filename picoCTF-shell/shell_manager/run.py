@@ -162,14 +162,6 @@ def main():
     config_parser = subparsers.add_parser(
         "config", help="View or modify configuration options")
     config_parser.add_argument(
-        "-f",
-        "--file",
-        type=str,
-        default=None,
-        help=
-        "Which configuration file to access. If none is provided, the system wide configuration file will be used."
-    )
-    config_parser.add_argument(
         "-j",
         "--json",
         action="store_true",

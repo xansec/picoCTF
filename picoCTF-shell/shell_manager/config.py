@@ -4,7 +4,6 @@ Utilities for dealing with configuration commands
 
 import json
 import logging
-import os
 
 from shell_manager.util import (FatalException, get_config,
                                 place_default_config, write_configuration_file,
@@ -28,14 +27,7 @@ def print_configuration(args, global_config):
     Entry point for config subcommand
     """
 
-    if args.file is None:
-        config = global_config
-    else:
-        try:
-            config = get_config(args.file)
-        except FileNotFoundError:
-            logger.fatal("Could not find configuration file '%s'", args.file)
-            raise FatalException
+    config = global_config
 
     if args.json:
         print("Configuration options (in JSON):")
