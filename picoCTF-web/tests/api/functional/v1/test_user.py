@@ -79,6 +79,37 @@ def test_login(mongo_proc, redis_proc, client): # noqa (fixture)
     assert res.json['username'] == STUDENT_DEMOGRAPHICS['username']
 
 
+def test_login_rate_limit(mongo_proc, redis_proc, client): # noqa (fixture)
+    # Repeated attempts to login with an incorrect password
+    res = None
+    for _ in range(21):
+        res = client.post('/api/v1/user/login', json={
+            'username': STUDENT_DEMOGRAPHICS['username'],
+            'password': 'invalid'
+        })
+    assert res.status_code == 429
+    assert res.json['message'] == 'Too many requests, slow down!'
+
+    # Repeated attempts to login with an incorrect password, wrong bypass
+    for _ in range(21):
+        res = client.post('/api/v1/user/login', json={
+            'username': STUDENT_DEMOGRAPHICS['username'],
+            'password': 'invalid'
+        }, headers=[('Limit-Bypass', "invalid")])
+    assert res.status_code == 429
+    assert res.json['message'] == 'Too many requests, slow down!'
+
+    # Attempt to login with an incorrect password, correct bypass,
+    # immediately following rate_limit state
+
+    res = client.post('/api/v1/user/login', json={
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    assert res.status_code == 200
+    assert res.json['success'] is True
+
+
 def test_logout(mongo_proc, redis_proc, client): # noqa (fixture)
     """Test the /user/logout endpont."""
     clear_db()
