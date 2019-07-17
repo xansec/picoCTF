@@ -64,7 +64,7 @@ def main():
         action="store_true",
         help="do not restart xinetd after deployment.")
     deploy_parser.add_argument(
-        "problem_paths", nargs="*", type=str, help="paths to problems.")
+        "problem_names", nargs="*", type=str, help="installed problem names")
     deploy_parser.set_defaults(func=deploy_problems)
 
     install_parser = subparsers.add_parser(

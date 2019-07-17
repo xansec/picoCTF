@@ -872,7 +872,11 @@ def deploy_problems(args):
                     shared_config.default_user)
         create_user(shared_config.default_user)
 
-    problem_names = args.problem_paths
+    problem_names = args.problem_names
+
+    if len(problem_names) == 1 and problem_names[0] == 'all':
+        # Shortcut to deploy n instances of all problems
+        problem_names = [v['unique_name'] for k, v in get_all_problems().items()]
 
     # Attempt to load the port_map from file
     try:
