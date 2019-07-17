@@ -301,7 +301,7 @@ def get_bundle_root(bundle_name, absolute=False):
         The tentative installation location.
     """
 
-    bundle_root = join(BUNDLE_ROOT, sanitize_name(bundle_name))
+    bundle_root = join(BUNDLE_ROOT, sanitize_name(bundle_name), "bundle.json")
 
     assert bundle_root.startswith(sep)
     if absolute:
@@ -311,31 +311,6 @@ def get_bundle_root(bundle_name, absolute=False):
 
 
 def get_bundle(bundle_path):
-    """
-    Returns a bundle spec from a given bundle directory.
-
-    Args:
-        bundle_path: path to the root of the bundle directory.
-
-    Returns:
-        A bundle object.
-    """
-
-    json_path = join(bundle_path, "bundle.json")
-
-    bundle = json.loads(open(json_path, "r").read())
-
-    try:
-        bundle_schema(bundle)
-    except MultipleInvalid as e:
-        logger.critical("Error validating bundle object at '%s'!", json_path)
-        logger.critical(e)
-        raise FatalException
-
-    return bundle
-
-
-def get_bundle2(bundle_path):
     """
     Returns a bundle spec from a bundle JSON file.
 

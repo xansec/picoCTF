@@ -20,7 +20,7 @@ import subprocess
 import os
 import shutil
 from shell_manager.package import package_problem
-from shell_manager.util import get_problem, DEB_ROOT, FatalException, join, SHARED_ROOT, get_problem_root_hashed, get_bundle2, PROBLEM_ROOT, BUNDLE_ROOT, sanitize_name
+from shell_manager.util import get_problem, DEB_ROOT, FatalException, join, SHARED_ROOT, get_problem_root_hashed, get_bundle, PROBLEM_ROOT, BUNDLE_ROOT, sanitize_name
 from hacksport.deploy import generate_staging_directory
 
 logger = logging.getLogger(__name__)
@@ -122,7 +122,7 @@ def install_bundle(args):
         logger.error("No problem source path specified")
         raise FatalException
     bundle_path = args.bundle_path
-    bundle_obj = get_bundle2(bundle_path)
+    bundle_obj = get_bundle(bundle_path)
 
     if os.path.isdir(join(BUNDLE_ROOT, sanitize_name(bundle_obj['name']))):
         logger.error(f"A bundle with name {bundle_obj['name']} is " +

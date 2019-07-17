@@ -154,7 +154,7 @@ from shell_manager.package import package_problem
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_problem, get_problem_root,
                                 sanitize_name, STAGING_ROOT, get_problem_root_hashed,
-                                get_pid_hash, get_bundle, get_bundle_root, DEB_ROOT, SHARED_ROOT,
+                                get_pid_hash, get_bundle, DEB_ROOT, SHARED_ROOT,
                                 get_shared_config, get_local_config)
 from spur import RunProcessError
 
@@ -989,23 +989,6 @@ def undeploy_problems(args, config):
     """
 
     problem_names = args.problem_paths
-
-    if args.bundle:
-        bundle_problems = []
-        for bundle_path in args.problem_paths:
-            if isfile(bundle_path):
-                bundle = get_bundle(bundle_path)
-                bundle_problems.extend(bundle["problems"])
-            else:
-                bundle_sources_path = get_bundle_root(
-                    bundle_path, absolute=True)
-                if isdir(bundle_sources_path):
-                    bundle = get_bundle(bundle_sources_path)
-                    bundle_problems.extend(bundle["problems"])
-                else:
-                    logger.error("Could not find bundle at '%s'.", bundle_path)
-                    raise FatalException
-        problem_names = bundle_problems
 
     # before undeploying problems, load in already_deployed instances
     already_deployed = {}

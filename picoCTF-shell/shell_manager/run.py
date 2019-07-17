@@ -103,11 +103,6 @@ def main():
     #     type=int,
     #     help="particular instance(s) to generate.")
     # undeploy_parser.add_argument(
-    #     "-b",
-    #     "--bundle",
-    #     action="store_true",
-    #     help="specify a bundle of problems to undeploy.")
-    # undeploy_parser.add_argument(
     #     "problem_paths", nargs="*", type=str, help="paths to problems.")
     # undeploy_parser.set_defaults(func=undeploy_problems)
 
