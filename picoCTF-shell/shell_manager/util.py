@@ -272,7 +272,12 @@ def get_problem(problem_path):
     """
 
     json_path = join(problem_path, "problem.json")
-    problem = json.loads(open(json_path, "r").read())
+    try:
+        problem = json.loads(open(json_path, "r").read())
+    except json.decoder.JSONDecodeError as e:
+        logger.critical(f"Error reading JSON file {json_path}")
+        logger.critical(e)
+        raise FatalException
     problem['unique_name'] = "{}-{}".format(sanitize_name(problem["name"]), get_pid_hash(problem, True))
     try:
         problem_schema(problem)
