@@ -922,14 +922,15 @@ def deploy_problems(args):
 
             # Avoid redeploying already-deployed instances
             if not args.redeploy:
+                problem_instance_list = copy(instance_list)
                 already_deployed = set()
                 for instance in get_all_problem_instances(problem_name):
                     already_deployed.add(instance["instance_number"])
-                instance_list = list(set(instance_list) - already_deployed)
+                problem_instance_list = list(set(problem_instance_list) - already_deployed)
 
             need_restart_xinetd = deploy_problem(
                 deploy_location,
-                instances=instance_list,
+                instances=problem_instance_list,
                 test=args.dry,
                 debug=args.debug,
                 restart_xinetd=False)
