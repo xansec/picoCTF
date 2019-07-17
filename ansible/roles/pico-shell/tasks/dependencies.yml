@@ -28,6 +28,7 @@
       'libffi-dev',
       'libssl-dev',
       'netfilter-persistent',
+      'nfs-common',
       'nginx',
       'nginx-extras',
       'nodejs',
