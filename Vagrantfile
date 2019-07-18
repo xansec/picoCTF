@@ -78,6 +78,9 @@ Vagrant.configure("2") do |config|
       ansible.verbose = ENV['V']
     end
 
+    web.vm.provision "shell", run: "always", inline: "systemctl restart gunicorn.service"
+    web.vm.provision "shell", run: "always", inline: "systemctl restart ctf-daemon.service"
+
     web.vm.provider "virtualbox" do |vb|
       vb.name = "picoCTF-web-dev" + compute_auto_name_suffix()
       # Overridable settings
