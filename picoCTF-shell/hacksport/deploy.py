@@ -918,19 +918,19 @@ def deploy_problems(args):
             if not isdir(get_problem_root(problem_name, absolute=True)):
                 logger.error(f"'{problem_name}' is not an installed problem")
                 continue
-            deploy_location = get_problem_root(problem_name, absolute=True)
+            source_location = get_problem_root(problem_name, absolute=True)
 
             # Avoid redeploying already-deployed instances
             if not args.redeploy:
-                problem_instance_list = copy(instance_list)
+                instances_to_deploy = copy(instance_list)
                 already_deployed = set()
                 for instance in get_all_problem_instances(problem_name):
                     already_deployed.add(instance["instance_number"])
-                problem_instance_list = list(set(problem_instance_list) - already_deployed)
+                instances_to_deploy = list(set(instances_to_deploy) - already_deployed)
 
             need_restart_xinetd = deploy_problem(
-                deploy_location,
-                instances=problem_instance_list,
+                source_location,
+                instances=instances_to_deploy,
                 test=args.dry,
                 debug=args.debug,
                 restart_xinetd=False)
@@ -948,39 +948,39 @@ def deploy_problems(args):
         logger.debug(f"Released lock file ({str(lock_file)})")
 
 
-def remove_instances(path, instance_list):
-    """ Remove all files under deployment directory and metdata for a given list of instances """
-    path = path.lower().replace(" ", "-")
-    problem_instances = get_all_problem_instances(path)
-    deployment_json_dir = join(DEPLOYED_ROOT, path)
+def remove_instances(problem_name, instances_to_remove):
+    """Remove all files and metadata for a given list of instances."""
+    deployed_instances = get_all_problem_instances(problem_name)
+    deployment_json_dir = join(DEPLOYED_ROOT, problem_name)
 
-    for instance in problem_instances:
+    for instance in deployed_instances:
         instance_number = instance["instance_number"]
-        if instance["instance_number"] in instance_list:
-            logger.debug("Removing instance {} of '{}'.".format(
-                instance_number, path))
+        if instance["instance_number"] in instances_to_remove:
+            logger.debug(
+                f"Removing instance {instance_number} of {problem_name}")
+
+            service = instance["service"]
+            if service:
+                logger.debug("...Removing xinetd service '%s'.", service)
+                os.remove(join(XINETD_SERVICE_PATH, service))
 
             directory = instance["deployment_directory"]
-            user = instance["user"]
-            service = instance["service"]
-            socket = instance["socket"]
-            deployment_json_path = join(deployment_json_dir,
-                                        "{}.json".format(instance_number))
-
-            logger.debug("...Removing xinetd service '%s'.", service)
-            os.remove(join(XINETD_SERVICE_PATH, service))
-
             logger.debug("...Removing deployment directory '%s'.", directory)
             shutil.rmtree(directory)
-            os.remove(deployment_json_path)
 
+            user = instance["user"]
             logger.debug("...Removing problem user '%s'.", user)
             execute(["userdel", user])
 
-    if problem_instances:
-        execute(["service", "xinetd", "restart"], timeout=60)
+            deployment_json_path = join(deployment_json_dir,
+                                        "{}.json".format(instance_number))
+            logger.debug(
+                "...Removing instance metadata '%s'.", deployment_json_path)
+            os.remove(deployment_json_path)
+    logger.info("Problem instances %s were successfully removed for '%s'.",
+                instances_to_remove, problem_name)
 
-def undeploy_problems(args, config):
+def undeploy_problems(args):
     """
     Main entrypoint for problem undeployment
 
@@ -988,25 +988,22 @@ def undeploy_problems(args, config):
     Does not remove the problem from the web server (delete it from the mongo db).
     """
 
-    problem_names = args.problem_paths
+    problem_names = args.problem_names
 
-    # before undeploying problems, load in already_deployed instances
-    already_deployed = {}
-    for path, problem in get_all_problems().items():
-        already_deployed[problem["name"]] = []
-        for instance in get_all_problem_instances(path):
-            already_deployed[problem["name"]].append(
-                instance["instance_number"])
+    if len(problem_names) == 1 and problem_names[0] == 'all':
+        # Shortcut to undeploy n instances of all problems
+        problem_names = [v['unique_name'] for k, v in get_all_problems().items()]
+
     lock_file = join(SHARED_ROOT, "deploy.lock")
     if os.path.isfile(lock_file):
         logger.error(
-            "Cannot undeploy while other deployment in progress. If you believe this is an error, "
+            "Another problem installation or deployment appears in progress. If you believe this to be an error, "
             "run 'shell_manager clean'")
         raise FatalException
 
-    logger.debug("Obtaining deployment lock file %s", lock_file)
     with open(lock_file, "w") as f:
         f.write("1")
+    logger.debug(f"Obtained lock file ({str(lock_file)})")
 
     if args.instances:
         instance_list = args.instances
@@ -1015,26 +1012,26 @@ def undeploy_problems(args, config):
 
     try:
         for problem_name in problem_names:
-            problem_root = get_problem_root(problem_name, absolute=True)
-            if isdir(problem_root):
-                problem = get_problem(problem_root)
-                instances = list(
-                    filter(lambda x: x in already_deployed[problem["name"]],
-                           instance_list))
-                if len(instances) == 0:
-                    logger.warning(
-                        "No deployed instances %s were found for problem '%s'.",
-                        instance_list, problem["name"])
-                else:
-                    logger.debug("Undeploying problem '%s'.", problem["name"])
-                    remove_instances(problem_name, instance_list)
-                    logger.info(
-                        "Problem instances %s were successfully removed from '%s'.",
-                        instances, problem["name"])
-            else:
-                logger.error("Problem '%s' doesn't appear to be installed.",
-                             problem_name)
-                raise FatalException
+            if not isdir(get_problem_root(problem_name, absolute=True)):
+                logger.error(f"'{problem_name}' is not an installed problem")
+                continue
+
+            instances_to_remove = copy(instance_list)
+            deployed_instances = set()
+            for instance in get_all_problem_instances(problem_name):
+                deployed_instances.add(instance["instance_number"])
+            instances_to_remove = list(
+                set(instances_to_remove).intersection(deployed_instances))
+
+            if len(instances_to_remove) == 0:
+                logger.warning(
+                    f"No deployed instances found for {problem_name}")
+                continue
+
+            remove_instances(problem_name, instances_to_remove)
+            logger.info("Problem instances %s were successfully removed for " +
+                        "'%s'.", instances_to_remove, problem_name)
     finally:
-        logger.debug("Releasing lock file %s", lock_file)
+        execute(["service", "xinetd", "restart"], timeout=60)
         os.remove(lock_file)
+        logger.debug(f"Released lock file ({str(lock_file)})")

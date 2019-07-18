@@ -41,13 +41,13 @@ def main():
         "--num-instances",
         type=int,
         default=1,
-        help="number of instances to generate (numbers 0 through n-1).")
+        help="number of instances to deploy (numbers 0 through n-1).")
     deploy_parser.add_argument(
         "-i",
         "--instances",
         action="append",
         type=int,
-        help="particular instance(s) to generate.")
+        help="particular instance(s) to deploy.")
     deploy_parser.add_argument(
         "-d",
         "--dry",
@@ -86,25 +86,25 @@ def main():
         "bundle_name", type=str, help="name of installed bundle")
     uninstall_bundle_parser.set_defaults(func=uninstall_bundle)
 
-    # undeploy_parser = subparsers.add_parser(
-    #     "undeploy",
-    #     help=
-    #     "problem undeployment. cannot guarantee full removal of problem files")
-    # undeploy_parser.add_argument(
-    #     "-n",
-    #     "--num-instances",
-    #     type=int,
-    #     default=1,
-    #     help="number of instances to undeploy (numbers 0 through n-1).")
-    # undeploy_parser.add_argument(
-    #     "-i",
-    #     "--instances",
-    #     action="append",
-    #     type=int,
-    #     help="particular instance(s) to generate.")
-    # undeploy_parser.add_argument(
-    #     "problem_paths", nargs="*", type=str, help="paths to problems.")
-    # undeploy_parser.set_defaults(func=undeploy_problems)
+    undeploy_parser = subparsers.add_parser(
+        "undeploy",
+        help=
+        "problem undeployment")
+    undeploy_parser.add_argument(
+        "-n",
+        "--num-instances",
+        type=int,
+        default=1,
+        help="number of instances to undeploy (numbers 0 through n-1).")
+    undeploy_parser.add_argument(
+        "-i",
+        "--instances",
+        action="append",
+        type=int,
+        help="particular instance(s) to undeploy.")
+    undeploy_parser.add_argument(
+        "problem_names", nargs="*", type=str, help="deployed problem names")
+    undeploy_parser.set_defaults(func=undeploy_problems)
 
     clean_parser = subparsers.add_parser(
         "clean", help="Clean up the intermediate staging data stored during " +

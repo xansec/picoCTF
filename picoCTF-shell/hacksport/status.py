@@ -41,16 +41,16 @@ def get_all_bundles():
     return bundles
 
 
-def get_all_problem_instances(problem_path):
+def get_all_problem_instances(problem_name):
     """
     Returns a list of instances for a given problem
 
     Args:
-        problem_path: Sanitized problem name with hash.
+        problem_name: Sanitized problem name with hash.
     """
 
     instances = []
-    instances_dir = join(DEPLOYED_ROOT, problem_path)
+    instances_dir = join(DEPLOYED_ROOT, problem_name)
     if os.path.isdir(instances_dir):
         for name in os.listdir(instances_dir):
             if name.endswith(".json"):
