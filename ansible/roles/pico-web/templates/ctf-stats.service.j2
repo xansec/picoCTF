@@ -1,0 +1,8 @@
+[Unit]
+Description=ctf stats cache updater
+After=network.target
+
+[Service]
+Type=oneshot
+Environment="APP_SETTINGS_FILE={{ web_config_dir }}/deploy_settings.py"
+ExecStart={{ virtualenv_dir }}/bin/python {{ daemon_src_dir }}/cache_stats.py

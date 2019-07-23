@@ -7,16 +7,39 @@
     dest: "/etc/systemd/system/ctf-daemon.service"
     owner: root
     group: root
+  when: false
 
-- name: Get systemd to pickup ctf-daemon.service
+- name: Template ctf-stats.service
+  template:
+    src: ctf-stats.service.j2
+    dest: "/etc/systemd/system/ctf-stats.service"
+    owner: root
+    group: root
+
+- name: Template ctf-stats.timer
+  template:
+    src: ctf-stats.timer.j2
+    dest: "/etc/systemd/system/ctf-stats.timer"
+    owner: root
+    group: root
+
+- name: Get systemd to pickup new configs
   command: systemctl daemon-reload
 
 - name: Ensure ctf-daemon is enabled
   service:
     name: ctf-daemon
     enabled: yes
+  when: false
+
+- name: Ensure ctf-stats timer is enabled
+  systemd:
+    name: ctf-stats.timer
+    state: started
+    enabled: yes
 
 - name: Ensure ctf-daemon is restarted
   service:
     name: ctf-daemon
     state: restarted
+  when: false
