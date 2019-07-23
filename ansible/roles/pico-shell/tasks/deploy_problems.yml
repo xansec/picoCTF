@@ -13,13 +13,8 @@
   command: "{{ virtualenv_dir }}/bin/shell_manager install {{ item }}"
   with_items: "{{ problem_source_dirs }}"
 
-- name: Get a list of installed problems
-  shell: "shell_manager status -j | jq -r '.problems[] | .unique_name'"
-  register: problem_names
-
 - name: Deploy problems
-  command: "{{ virtualenv_dir }}/bin/shell_manager deploy -n 3 {{ item }}"
-  with_items: "{{ problem_names.stdout_lines }}"
+  command: "{{ virtualenv_dir }}/bin/shell_manager deploy -n 2 all"
 
 - name: Install bundles
   command: "{{ virtualenv_dir }}/bin/shell_manager install-bundle {{ item }}"
