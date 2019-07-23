@@ -15,10 +15,12 @@ When this problem is _deployed_, shell_manager will attempt to reinstall the
 debian package first, in case the problem has dependencies that have not
 been fulfilled on the current shell server.
 """
+from ast import literal_eval
 import logging
 import subprocess
 import os
 import shutil
+import json
 from shell_manager.package import package_problem
 from shell_manager.util import get_problem, DEB_ROOT, FatalException, join, SHARED_ROOT, get_problem_root_hashed, get_bundle, PROBLEM_ROOT, BUNDLE_ROOT, sanitize_name
 from hacksport.deploy import generate_staging_directory
@@ -107,6 +109,74 @@ def install_problems(args):
 
     for problem_path in problem_paths:
         install_problem(problem_path)
+
+
+def uninstall_problem(problem_name):
+    """
+    Uninstalls a given problem, which means that the generated debian package
+    and source files within the SHARED_ROOT directory are removed.
+
+    An uninstalled problem will no longer appear when listing problems, even
+    if deployed instances remain (undeploying all instances of a problem
+    before uninstallation is recommended.)
+
+    Additionally, any assigned instance ports for the problem will be
+    removed from the port map.
+    """
+    lock_file = join(SHARED_ROOT, "deploy.lock")
+    if os.path.isfile(lock_file):
+        logger.error(
+            "Another problem installation or deployment appears in progress. If you believe this to be an error, "
+            "run 'shell_manager clean'")
+        raise FatalException
+    logger.debug(f"{problem_name}: obtained lock file ({str(lock_file)})")
+    with open(lock_file, "w") as f:
+        f.write("1")
+
+    try:
+        # Remove .deb package used to install dependencies on deployment
+        os.remove(join(DEB_ROOT, problem_name + '.deb'))
+
+        # Remove problem source used for templating instances
+        shutil.rmtree(join(PROBLEM_ROOT, problem_name))
+
+        # Remove any ports assigned to this problem from the port map
+        port_map_path = join(SHARED_ROOT, 'port_map.json')
+        with open(port_map_path, 'r') as f:
+            port_map = json.load(f)
+            port_map = {literal_eval(k): v for k, v in port_map.items()}
+
+        port_map = {k: v for k, v in port_map.items() if k[0] != problem_name}
+
+        with open(port_map_path, 'w') as f:
+            stringified_port_map = {repr(k): v for k, v in port_map.items()}
+            json.dump(stringified_port_map, f)
+
+    except Exception as e:
+        logger.error(
+            f"An error occurred while uninstalling {problem_name}:")
+        logger.error(f'{str(e)}')
+        raise FatalException
+
+    logger.info(f"{problem_name} removed successfully")
+    os.remove(lock_file)
+    logger.debug(f"{problem_name}: released lock file ({str(lock_file)})")
+
+
+def uninstall_problems(args):
+    """
+    Entrypoint for problem removal.
+
+    All shell servers' instances of a problem should be undeployed prior
+    to use, as this command will remove the problem source files and
+    its listing within shell_manager, stranding any remaining instances.
+    """
+    if not args.problem_names:
+        logger.error("No problem name(s) specified")
+        raise FatalException
+
+    for problem_name in args.problem_names:
+        uninstall_problem(problem_name)
 
 
 def install_bundle(args):

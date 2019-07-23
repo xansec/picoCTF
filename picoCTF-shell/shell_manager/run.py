@@ -7,7 +7,7 @@ import logging
 from argparse import ArgumentParser
 
 import coloredlogs
-from hacksport.install import install_problems, install_bundle, uninstall_bundle
+from hacksport.install import install_problems, uninstall_problems, install_bundle, uninstall_bundle
 from hacksport.deploy import deploy_problems, undeploy_problems
 from hacksport.status import clean, publish, status
 from shell_manager.config import (print_configuration,
@@ -35,7 +35,21 @@ def main():
         help="support colored output")
     subparsers = parser.add_subparsers()
 
-    deploy_parser = subparsers.add_parser("deploy", help="problem deployment")
+    install_parser = subparsers.add_parser(
+        "install", help="problem installation")
+    install_parser.add_argument(
+        "problem_paths", nargs="*", type=str,
+        help="paths to problem source directories")
+    install_parser.set_defaults(func=install_problems)
+
+    uninstall_parser = subparsers.add_parser(
+        "uninstall", help="problem removal - undeploy instances first")
+    uninstall_parser.add_argument(
+        "problem_names", nargs="*", type=str,
+        help="installed problem names")
+    uninstall_parser.set_defaults(func=uninstall_problems)
+
+    deploy_parser = subparsers.add_parser("deploy", help="problem instance deployment")
     deploy_parser.add_argument(
         "-n",
         "--num-instances",
@@ -67,29 +81,10 @@ def main():
         "problem_names", nargs="*", type=str, help="installed problem names")
     deploy_parser.set_defaults(func=deploy_problems)
 
-    install_parser = subparsers.add_parser(
-        "install", help="problem installation")
-    install_parser.add_argument(
-        "problem_paths", nargs="*", type=str,
-        help="paths to problem source directories")
-    install_parser.set_defaults(func=install_problems)
-
-    install_bundle_parser = subparsers.add_parser(
-        "install-bundle", help="bundle installation")
-    install_bundle_parser.add_argument(
-        "bundle_path", type=str, help="path to bundle file")
-    install_bundle_parser.set_defaults(func=install_bundle)
-
-    uninstall_bundle_parser = subparsers.add_parser(
-        "uninstall-bundle", help="bundle removal")
-    uninstall_bundle_parser.add_argument(
-        "bundle_name", type=str, help="name of installed bundle")
-    uninstall_bundle_parser.set_defaults(func=uninstall_bundle)
-
     undeploy_parser = subparsers.add_parser(
         "undeploy",
         help=
-        "problem undeployment")
+        "problem instance undeployment")
     undeploy_parser.add_argument(
         "-n",
         "--num-instances",
@@ -106,14 +101,20 @@ def main():
         "problem_names", nargs="*", type=str, help="deployed problem names")
     undeploy_parser.set_defaults(func=undeploy_problems)
 
-    clean_parser = subparsers.add_parser(
-        "clean", help="Clean up the intermediate staging data stored during " +
-                      "deployments")
-    clean_parser.set_defaults(func=clean)
+    install_bundle_parser = subparsers.add_parser(
+        "install-bundle", help="bundle installation")
+    install_bundle_parser.add_argument(
+        "bundle_path", type=str, help="path to bundle file")
+    install_bundle_parser.set_defaults(func=install_bundle)
+
+    uninstall_bundle_parser = subparsers.add_parser(
+        "uninstall-bundle", help="bundle removal")
+    uninstall_bundle_parser.add_argument(
+        "bundle_name", type=str, help="name of installed bundle")
+    uninstall_bundle_parser.set_defaults(func=uninstall_bundle)
 
     status_parser = subparsers.add_parser(
-        "status", help="List the installed problems and bundles " +
-                       "and any instances associated with them."
+        "status", help="list installed problems and bundles"
     )
     status_parser.add_argument(
         "-a",
@@ -145,15 +146,19 @@ def main():
         help="Only print problems with failing service status.")
     status_parser.set_defaults(func=status)
 
+    clean_parser = subparsers.add_parser(
+        "clean", help="clean up problem staging data")
+    clean_parser.set_defaults(func=clean)
+
     publish_parser = subparsers.add_parser(
         "publish",
         help=
-        "Generate the information needed by the web server for this deployment."
+        "export this shell server's state"
     )
     publish_parser.set_defaults(func=publish)
 
     config_parser = subparsers.add_parser(
-        "config", help="View or modify configuration options")
+        "config", help="view or modify configuration options")
     config_parser.add_argument(
         "-j",
         "--json",
