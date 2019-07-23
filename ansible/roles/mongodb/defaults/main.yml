@@ -34,6 +34,16 @@ mongodb_conf_logpath: /var/log/mongodb/{{ mongodb_daemon_name }}.log  # Log to f
 mongodb_conf_dbpath: "{{ db_data_path }}"                             # Directory for datafiles (Static)
 
 ###
+# Redis Configuration variables
+###
+redis_conf_auth: True                                               # Run with security
+redis_db_number: 0
+redis_conf_bind_ip: "0.0.0.0"                                       # IP addresses to listen on (Static)
+redis_conf_port: 6379                                              # Port number
+
+redis_daemon_name: redis-server
+
+###
 # AWS specific mount points (defined in Terraform - static)
 ##
 on_aws: False

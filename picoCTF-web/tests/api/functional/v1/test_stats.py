@@ -1,5 +1,6 @@
 """Tests for the /api/v1/stats endpoints."""
 from pytest_mongo import factories
+from pytest_redis import factories
 from ..common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -15,11 +16,15 @@ from ..common import ( # noqa (fixture)
   get_conn,
   ensure_within_competition,
   enable_sample_problems,
-  get_problem_key
+  get_problem_key,
+  cache,
+  RATE_LIMIT_BYPASS,
+  update_all_scoreboards
 )
 import api
 
-def test_registration_stats(mongo_proc, client):
+
+def test_registration_stats(mongo_proc, redis_proc, client):
     """Test the /stats/registration endpoint."""
     clear_db()
     register_test_accounts()
@@ -50,6 +55,7 @@ def test_registration_stats(mongo_proc, client):
         }
     })
     assert res.status_code == 201
+    cache(api.stats.get_registration_count)
     res = client.get('/api/v1/stats/registration')
     assert res.status_code == 200
     expected_response['users'] += 1
@@ -66,6 +72,7 @@ def test_registration_stats(mongo_proc, client):
     })
     assert res.status_code == 201
 
+    cache(api.stats.get_registration_count)
     res = client.get('/api/v1/stats/registration')
     assert res.status_code == 200
     expected_response['teams'] += 1
@@ -87,6 +94,7 @@ def test_registration_stats(mongo_proc, client):
     })
     assert res.status_code == 200
 
+    cache(api.stats.get_registration_count)
     res = client.get('/api/v1/stats/registration')
     assert res.status_code == 200
     expected_response['teamed_users'] += 1
@@ -105,18 +113,21 @@ def test_registration_stats(mongo_proc, client):
     print(res.json)
     assert res.status_code == 201
 
+    cache(api.stats.get_registration_count)
     res = client.get('/api/v1/stats/registration')
     assert res.status_code == 200
     expected_response['groups'] += 1
     assert res.json == expected_response
 
-def test_scoreboard(mongo_proc, client):
+
+def test_scoreboard(mongo_proc, redis_proc, client):
     """Test the /stats/scoreboard endpoint."""
     clear_db()
     register_test_accounts()
     load_sample_problems()
     enable_sample_problems()
     ensure_within_competition()
+    update_all_scoreboards()
 
     # Get the scoreboard when not logged in
     res = client.get('/api/v1/stats/scoreboard')
@@ -139,7 +150,6 @@ def test_scoreboard(mongo_proc, client):
     })
     res = client.get('/api/v1/stats/scoreboard')
     expected_structure = {
-        'country': 'US',
         'global': {
             'name': 'global',
             'pages': 0,

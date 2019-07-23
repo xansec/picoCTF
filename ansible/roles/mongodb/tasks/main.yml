@@ -14,6 +14,8 @@
 
 - include: configure_mongo.yml
 
+- include: configure_redis.yml
+
 # Default to running the database with authentication.  The development
 # environment is the only place `mongodb_conf_auth` should be false
 - include: configure_auth.yml

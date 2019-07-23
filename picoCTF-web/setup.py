@@ -83,6 +83,7 @@ setup(
         'pymongo==3.8.0',
         'spur==0.3.21',
         'voluptuous==0.11.5',
+        'walrus==0.7.1',
     ],
     extras_require={
         'dev': [

@@ -1,5 +1,6 @@
 """Tests for the /api/v1/user endpoints."""
 from pytest_mongo import factories
+from pytest_redis import factories
 from ..common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -9,12 +10,13 @@ from ..common import ( # noqa (fixture)
   register_test_accounts,
   TEACHER_DEMOGRAPHICS,
   STUDENT_DEMOGRAPHICS,
-  get_conn
+  get_conn,
+  RATE_LIMIT_BYPASS,
 )
 import api
 
 
-def test_login(mongo_proc, client): # noqa (fixture)
+def test_login(mongo_proc, redis_proc, client): # noqa (fixture)
     """Test the /user/login endpoint."""
     clear_db()
     register_test_accounts()
@@ -22,14 +24,14 @@ def test_login(mongo_proc, client): # noqa (fixture)
     # Attempt to login with a malformed request
     res = client.post('/api/v1/user/login', json={
         'username': 'invalid'
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 400
 
     # Attempt to login with an invalid username
     res = client.post('/api/v1/user/login', json={
         'username': 'invalid',
         'password': 'invalid'
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 401
     assert res.json['message'] == 'Incorrect username.'
 
@@ -37,7 +39,7 @@ def test_login(mongo_proc, client): # noqa (fixture)
     res = client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': 'invalid'
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 401
     assert res.json['message'] == 'Incorrect password'
 
@@ -48,7 +50,7 @@ def test_login(mongo_proc, client): # noqa (fixture)
     res = client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': STUDENT_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 403
     assert res.json['message'] == 'This account has been deleted.'
     db.users.update({'username': STUDENT_DEMOGRAPHICS['username']},
@@ -61,7 +63,7 @@ def test_login(mongo_proc, client): # noqa (fixture)
     res = client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': STUDENT_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 403
     assert res.json['message'] == 'This account has not been verified yet.'
     db.users.update({'username': STUDENT_DEMOGRAPHICS['username']},
@@ -71,13 +73,44 @@ def test_login(mongo_proc, client): # noqa (fixture)
     res = client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': STUDENT_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 200
     assert res.json['success'] is True
     assert res.json['username'] == STUDENT_DEMOGRAPHICS['username']
 
 
-def test_logout(mongo_proc, client): # noqa (fixture)
+def test_login_rate_limit(mongo_proc, redis_proc, client): # noqa (fixture)
+    # Repeated attempts to login with an incorrect password
+    res = None
+    for _ in range(21):
+        res = client.post('/api/v1/user/login', json={
+            'username': STUDENT_DEMOGRAPHICS['username'],
+            'password': 'invalid'
+        })
+    assert res.status_code == 429
+    assert res.json['message'] == 'Too many requests, slow down!'
+
+    # Repeated attempts to login with an incorrect password, wrong bypass
+    for _ in range(21):
+        res = client.post('/api/v1/user/login', json={
+            'username': STUDENT_DEMOGRAPHICS['username'],
+            'password': 'invalid'
+        }, headers=[('Limit-Bypass', "invalid")])
+    assert res.status_code == 429
+    assert res.json['message'] == 'Too many requests, slow down!'
+
+    # Attempt to login with an incorrect password, correct bypass,
+    # immediately following rate_limit state
+
+    res = client.post('/api/v1/user/login', json={
+        'username': STUDENT_DEMOGRAPHICS['username'],
+        'password': STUDENT_DEMOGRAPHICS['password']
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    assert res.status_code == 200
+    assert res.json['success'] is True
+
+
+def test_logout(mongo_proc, redis_proc, client): # noqa (fixture)
     """Test the /user/logout endpont."""
     clear_db()
     register_test_accounts()
@@ -91,13 +124,13 @@ def test_logout(mongo_proc, client): # noqa (fixture)
     res = client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': STUDENT_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     res = client.get('/api/v1/user/logout')
     assert res.status_code == 200
     assert res.json['success'] is True
 
 
-def test_authorize(mongo_proc, client): # noqa (fixture)
+def test_authorize(mongo_proc, redis_proc, client): # noqa (fixture)
     """Test the /user/authorize endpoint."""
     clear_db()
     register_test_accounts()
@@ -135,9 +168,9 @@ def test_authorize(mongo_proc, client): # noqa (fixture)
         'admin': False
     }
     client.post('/api/v1/user/login', json={
-                        'username': STUDENT_DEMOGRAPHICS['username'],
-                        'password': STUDENT_DEMOGRAPHICS['password']
-                      })
+                  'username': STUDENT_DEMOGRAPHICS['username'],
+                  'password': STUDENT_DEMOGRAPHICS['password']
+                }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     res = client.get('/api/v1/user/authorize/user')
     assert res.status_code == 200
     assert res.json == expected_body
@@ -160,9 +193,9 @@ def test_authorize(mongo_proc, client): # noqa (fixture)
         'admin': False
     }
     client.post('/api/v1/user/login', json={
-                        'username': TEACHER_DEMOGRAPHICS['username'],
-                        'password': TEACHER_DEMOGRAPHICS['password']
-                      })
+                    'username': TEACHER_DEMOGRAPHICS['username'],
+                    'password': TEACHER_DEMOGRAPHICS['password']
+                }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     res = client.get('/api/v1/user/authorize/user')
     assert res.status_code == 200
     assert res.json == expected_body
@@ -187,7 +220,7 @@ def test_authorize(mongo_proc, client): # noqa (fixture)
     client.post('/api/v1/user/login', json={
         'username': ADMIN_DEMOGRAPHICS['username'],
         'password': ADMIN_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     res = client.get('/api/v1/user/authorize/user')
     assert res.status_code == 200
     assert res.json == expected_body
@@ -203,20 +236,23 @@ def test_authorize(mongo_proc, client): # noqa (fixture)
     client.get('/api/v1/user/logout')
 
 
-def test_disable_account(mongo_proc, client): # noqa (fixture)
+def test_disable_account(mongo_proc, redis_proc, client): # noqa (fixture)
     """Tests the /user/disable_account endpoint."""
     clear_db()
     register_test_accounts()
     res = client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': STUDENT_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     csrf_t = get_csrf_token(res)
 
     # Attempt to disable account with an incorrect password
     res = client.post('/api/v1/user/disable_account', json={
-                    'password': 'invalid'
-                }, headers=[('X-CSRF-Token', csrf_t)])
+          'password': 'invalid'
+        }, headers=[
+          ('X-CSRF-Token', csrf_t),
+          ('Limit-Bypass', RATE_LIMIT_BYPASS)
+        ])
     assert res.status_code == 422
     assert res.json['message'] == 'The provided password is not correct.'
 
@@ -226,8 +262,11 @@ def test_disable_account(mongo_proc, client): # noqa (fixture)
         {'username': STUDENT_DEMOGRAPHICS['username']})
     assert user_before_disabling['disabled'] is False
     res = client.post('/api/v1/user/disable_account', json={
-                    'password': STUDENT_DEMOGRAPHICS['password']
-                }, headers=[('X-CSRF-Token', csrf_t)])
+          'password': STUDENT_DEMOGRAPHICS['password']
+        }, headers=[
+          ('X-CSRF-Token', csrf_t),
+          ('Limit-Bypass', RATE_LIMIT_BYPASS)
+    ])
     assert res.status_code == 200
     assert res.json['success'] is True
     user_after_disabling = db.users.find_one(
@@ -235,13 +274,13 @@ def test_disable_account(mongo_proc, client): # noqa (fixture)
     assert user_after_disabling['disabled'] is True
 
 
-def test_update_password(mongo_proc, client): # noqa (fixture)
+def test_update_password(mongo_proc, redis_proc, client): # noqa (fixture)
     clear_db()
     register_test_accounts()
     res = client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': STUDENT_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     csrf_t = get_csrf_token(res)
 
     # Attempt to update password with incorrect current password
@@ -249,7 +288,10 @@ def test_update_password(mongo_proc, client): # noqa (fixture)
         'current_password': 'invalid',
         'new_password': 'newpassword',
         'new_password_confirmation': 'newpassword'
-    }, headers=[('X-CSRF-Token', csrf_t)])
+    }, headers=[
+        ('X-CSRF-Token', csrf_t),
+        ('Limit-Bypass', RATE_LIMIT_BYPASS)
+    ])
     assert res.status_code == 422
     assert res.json['message'] == 'Your current password is incorrect.'
 
@@ -258,7 +300,10 @@ def test_update_password(mongo_proc, client): # noqa (fixture)
         'current_password': STUDENT_DEMOGRAPHICS['password'],
         'new_password': 'newpassword1',
         'new_password_confirmation': 'newpassword2'
-    }, headers=[('X-CSRF-Token', csrf_t)])
+    }, headers=[
+        ('X-CSRF-Token', csrf_t),
+        ('Limit-Bypass', RATE_LIMIT_BYPASS)
+    ])
     assert res.status_code == 422
     assert res.json['message'] == 'Your passwords do not match.'
 
@@ -267,7 +312,10 @@ def test_update_password(mongo_proc, client): # noqa (fixture)
         'current_password': STUDENT_DEMOGRAPHICS['password'],
         'new_password': 'newpassword',
         'new_password_confirmation': 'newpassword'
-    }, headers=[('X-CSRF-Token', csrf_t)])
+    }, headers=[
+        ('X-CSRF-Token', csrf_t),
+        ('Limit-Bypass', RATE_LIMIT_BYPASS)
+    ])
     assert res.status_code == 200
     assert res.json['success'] is True
 
@@ -275,12 +323,12 @@ def test_update_password(mongo_proc, client): # noqa (fixture)
     res = client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': 'newpassword'
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 200
     assert res.json['success'] is True
 
 
-def test_get_user(mongo_proc, client): # noqa (fixture)
+def test_get_user(mongo_proc, redis_proc, client): # noqa (fixture)
     """Tests the GET /user endpoint."""
     clear_db()
     register_test_accounts()
@@ -296,7 +344,7 @@ def test_get_user(mongo_proc, client): # noqa (fixture)
     client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': STUDENT_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
 
     expected_body = {
         'admin': False,
@@ -327,14 +375,14 @@ def test_get_user(mongo_proc, client): # noqa (fixture)
             assert res.json[k] == expected_body[k]
 
 
-def test_patch_user(mongo_proc, client): # noqa (fixture)
+def test_patch_user(mongo_proc, redis_proc, client): # noqa (fixture)
     """Tests the PATCH /user endpoint."""
     clear_db()
     register_test_accounts()
     res = client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': STUDENT_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     csrf_t = get_csrf_token(res)
 
     updated_extdata = {
@@ -350,7 +398,7 @@ def test_patch_user(mongo_proc, client): # noqa (fixture)
     assert res.json['extdata'] == updated_extdata
 
 
-def test_reset_password(mongo_proc, client): # noqa (fixture)
+def test_reset_password(mongo_proc, redis_proc, client): # noqa (fixture)
     """Tests the password reset endpoints."""
     clear_db()
     register_test_accounts()
@@ -360,8 +408,8 @@ def test_reset_password(mongo_proc, client): # noqa (fixture)
 
         # Send the password reset request
         res = client.post('/api/v1/user/reset_password/request', json={
-            'username': STUDENT_DEMOGRAPHICS['username'],
-            })
+              'username': STUDENT_DEMOGRAPHICS['username'],
+            }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
         assert res.status_code == 200
         assert res.json['success'] is True
 
@@ -383,7 +431,7 @@ def test_reset_password(mongo_proc, client): # noqa (fixture)
             'reset_token': 'wrongtoken',
             'new_password': 'newpassword',
             'new_password_confirmation': 'newpassword'
-            })
+        }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 422
     assert res.json['message'] == 'Invalid password reset token'
 
@@ -392,7 +440,7 @@ def test_reset_password(mongo_proc, client): # noqa (fixture)
             'reset_token': db_token,
             'new_password': 'newpassword',
             'new_password_confirmation': 'newpassword'
-            })
+        }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 200
     assert res.json['success'] is True
 
@@ -401,19 +449,19 @@ def test_reset_password(mongo_proc, client): # noqa (fixture)
     res = client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': 'newpassword',
-        })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 200
     assert res.json['success'] is True
 
 
-def test_verify(mongo_proc, client): # noqa (fixture)
+def test_verify(mongo_proc, redis_proc, client): # noqa (fixture)
     """Tests the /user/verify endpoint."""
     clear_db()
     register_test_accounts()
     client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': STUDENT_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
 
     # Force user to unverified status and set a token
     db = get_conn()

@@ -1,5 +1,6 @@
 """Tests for the /api/v1/users endpoints."""
 from pytest_mongo import factories
+from pytest_redis import factories
 from ..common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -11,19 +12,20 @@ from ..common import ( # noqa (fixture)
   STUDENT_DEMOGRAPHICS,
   STUDENT_2_DEMOGRAPHICS,
   OTHER_USER_DEMOGRAPHICS,
-  get_conn
+  get_conn,
+  RATE_LIMIT_BYPASS
 )
 import api
 
 
-def test_get_users(mongo_proc, client): # noqa (fixture)
+def test_get_users(mongo_proc, redis_proc, client): # noqa (fixture)
     """Tests the GET /users endpoint."""
     clear_db()
     register_test_accounts()
     client.post('/api/v1/user/login', json={
         'username': ADMIN_DEMOGRAPHICS['username'],
         'password': ADMIN_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
 
     res = client.get('/api/v1/users')
     assert res.status_code == 200
@@ -38,7 +40,7 @@ def test_get_users(mongo_proc, client): # noqa (fixture)
         assert username in str(res.json)
 
 
-def test_add_user(mongo_proc, client): # noqa (fixture)
+def test_add_user(mongo_proc, redis_proc, client): # noqa (fixture)
     """Tests the POST /users endpoint."""
     clear_db()
 
@@ -55,7 +57,7 @@ def test_add_user(mongo_proc, client): # noqa (fixture)
         'demo': {
             'age': 'invalid'
         }
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 400
     assert res.json['message'] == \
         "'age' must be specified in the 'demo' object. Valid values " + \
@@ -79,7 +81,7 @@ def test_add_user(mongo_proc, client): # noqa (fixture)
         'demo': {
             'age': '13-17'
         }
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 400
     assert res.json['message'] == \
         "Must provide a valid parent email address under the key " + \
@@ -99,7 +101,7 @@ def test_add_user(mongo_proc, client): # noqa (fixture)
             'age': '13-17',
             'parentemail': 'parent@sample.com'
         }
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 400
     assert res.json['message'] == "Usernames must be alphanumeric."
 
@@ -117,7 +119,7 @@ def test_add_user(mongo_proc, client): # noqa (fixture)
             'age': '13-17',
             'parentemail': 'parent@sample.com'
         }
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 201
     assert res.json['success'] is True
     uid = res.json['uid']
@@ -167,7 +169,7 @@ def test_add_user(mongo_proc, client): # noqa (fixture)
         'demo': {
             'age': '18+'
         }
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 201
     assert res.json['success'] is True
     uid = res.json['uid']
@@ -188,7 +190,7 @@ def test_add_user(mongo_proc, client): # noqa (fixture)
         'demo': {
             'age': '18+'
         }
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
     assert res.status_code == 201
     assert res.json['success'] is True
     uid = res.json['uid']
@@ -197,14 +199,14 @@ def test_add_user(mongo_proc, client): # noqa (fixture)
     assert teacher_user['admin'] is False
 
 
-def test_get_one_user(mongo_proc, client): # noqa (fixture)
+def test_get_one_user(mongo_proc, redis_proc, client): # noqa (fixture)
     """Tests the GET /users/<uid> endpoint."""
     clear_db()
     register_test_accounts()
     client.post('/api/v1/user/login', json={
         'username': ADMIN_DEMOGRAPHICS['username'],
         'password': ADMIN_DEMOGRAPHICS['password']
-    })
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
 
     db = get_conn()
     test_account_uid = db.users.find_one({

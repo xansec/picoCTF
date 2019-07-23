@@ -4,7 +4,7 @@ from flask_restplus import Namespace, Resource
 
 import api
 from api import (PicoException, block_before_competition, check_csrf,
-                 require_login)
+                 rate_limit, require_login)
 
 from .schemas import (join_group_req, score_progression_req, team_change_req,
                       update_team_password_req)
@@ -37,7 +37,7 @@ class Score(Resource):
         """Get your team's score."""
         current_tid = api.user.get_user()['tid']
         return jsonify({
-            'score': api.stats.get_score(current_tid)
+            'score': int(api.stats.get_score(tid=current_tid))
         })
 
 
@@ -96,11 +96,13 @@ class TeamJoinResponse(Resource):
     """Join a team."""
 
     @require_login
+    @rate_limit(limit=2, duration=15)
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Ineligible to join team')
     @ns.response(404, 'Team not found')
+    @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(team_change_req)
     def post(self):
         """Join a team by providing its name and password."""

@@ -1,5 +1,6 @@
 """Tests for the /api/v1/submissions endpoints."""
 from pytest_mongo import factories
+from pytest_redis import factories
 from ..common import ( # noqa (fixture)
   ADMIN_DEMOGRAPHICS,
   clear_db,
@@ -14,12 +15,13 @@ from ..common import ( # noqa (fixture)
   get_conn,
   ensure_within_competition,
   enable_sample_problems,
-  get_problem_key
+  get_problem_key,
+  RATE_LIMIT_BYPASS,
 )
 import api
 
 
-def test_submission(mongo_proc, client): # noqa (fixture)
+def test_submission(mongo_proc, redis_proc, client): # noqa (fixture)
     """Test the POST /submissions endpoint."""
     clear_db()
     register_test_accounts()
@@ -126,7 +128,10 @@ def test_submission(mongo_proc, client): # noqa (fixture)
         'pid': unlocked_pids[1],
         'key': correct_key,
         'method': 'testing'
-    }, headers=[('X-CSRF-Token', csrf_t)])
+    }, headers=[
+        ('X-CSRF-Token', csrf_t),
+        ('Limit-Bypass', RATE_LIMIT_BYPASS)
+    ])
     assert res.status_code == 201
     assert res.json['correct'] is True
 
@@ -142,7 +147,10 @@ def test_submission(mongo_proc, client): # noqa (fixture)
         'pid': unlocked_pids[1],
         'key': 'invalid',
         'method': 'testing'
-    }, headers=[('X-CSRF-Token', csrf_t)])
+    }, headers=[
+        ('X-CSRF-Token', csrf_t),
+        ('Limit-Bypass', RATE_LIMIT_BYPASS)
+    ])
     assert res.status_code == 201
     assert res.json['correct'] is False
     assert res.json['message'] == 'Flag incorrect: please note that ' + \
@@ -153,14 +161,17 @@ def test_submission(mongo_proc, client): # noqa (fixture)
         'pid': unlocked_pids[1],
         'key': correct_key,
         'method': 'testing'
-    }, headers=[('X-CSRF-Token', csrf_t)])
+    }, headers=[
+        ('X-CSRF-Token', csrf_t),
+        ('Limit-Bypass', RATE_LIMIT_BYPASS)
+    ])
     assert res.status_code == 201
     assert res.json['correct'] is True
     assert res.json['message'] == 'Flag correct: however, your team has ' + \
         'already received points for this flag.'
 
 
-def test_clear_all_submissions(mongo_proc, client): # noqa (fixture)
+def test_clear_all_submissions(mongo_proc, redis_proc, client): # noqa (fixture)
     """Test the DELETE /submissions endpoint."""
     clear_db()
     register_test_accounts()
@@ -186,12 +197,18 @@ def test_clear_all_submissions(mongo_proc, client): # noqa (fixture)
             'pid': pid,
             'key': 'invalid',
             'method': 'testing'
-        }, headers=[('X-CSRF-Token', csrf_t)])
+        }, headers=[
+            ('X-CSRF-Token', csrf_t),
+            ('Limit-Bypass', RATE_LIMIT_BYPASS)
+        ])
         res = client.post('/api/v1/submissions', json={
             'pid': pid,
             'key': flags[pid],
             'method': 'testing'
-        }, headers=[('X-CSRF-Token', csrf_t)])
+        }, headers=[
+            ('X-CSRF-Token', csrf_t),
+            ('Limit-Bypass', RATE_LIMIT_BYPASS)
+        ])
     db = get_conn()
     assert db.submissions.count_documents({}) == 6
 

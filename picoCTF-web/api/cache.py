@@ -1,129 +1,144 @@
-"""Caching Library."""
+"""Caching Library using redis."""
 
 import logging
 from functools import wraps
 
-from bson import datetime
+from flask import current_app
+from walrus import Walrus
 
 import api
+import hashlib
+import pickle
+from api import PicoException
 
 log = logging.getLogger(__name__)
 
-"""
-@TODO
-Per internal discussion, caching (@memoize) is currently disabled
-pending a move towards per-function caches in Redis.
-"""
+__redis = {
+    "walrus": None,
+    "cache": None,
+    "zsets": {
+        "scores": None,
+    },
+}
 
 
-def _get_hash_key(f, args, kwargs):
-    """
-    Return a hash for a given function invocation.
-
-    Args:
-        f: the function
-        args: positional arguments (list)
-        kwargs: keyword arguments (dict)
-
-    Returns:
-        a hashed key (int), or None if any argument was unhashable
-
-    """
-    try:
-        return hash((f.__module__, f.__name__,
-                    tuple(args),
-                    tuple(sorted(kwargs.items()))))
-    except TypeError:
-        return None
+def get_conn():
+    """Get a redis connection, reusing one if it exists."""
+    global __redis
+    if __redis.get("walrus") is None:
+        conf = current_app.config
+        try:
+            __redis["walrus"] = Walrus(host=conf["REDIS_ADDR"],
+                                       port=conf["REDIS_PORT"],
+                                       password=conf["REDIS_PW"],
+                                       db=conf["REDIS_DB_NUMBER"])
+        except Exception as error:
+            raise PicoException(
+                'Internal server error. ' +
+                'Please contact a system administrator.',
+                data={'original_error': error})
+    return __redis["walrus"]
 
 
-def _get(key):
-    """
-    Get a result from the cache.
-
-    Args:
-        key: cache key
-    Returns:
-        The result from the cache, or None
-    """
-    db = api.db.get_conn()
-    cached_result = db.cache.find_one({'key': key})
-
-    if cached_result:
-        return cached_result["value"]
+def get_cache():
+    """Get a walrus cache, reusing one if it exists."""
+    global __redis
+    if __redis.get("cache") is None:
+        __redis["cache"] = get_conn().cache(default_timeout=0)
+    return __redis["cache"]
 
 
-def _set(key, value, timeout=None):
-    """
-    Set a key in the cache.
-
-    Args:
-        key: The cache key
-        timeout: Time the key is valid (seconds)
-    """
-    db = api.db.get_conn()
-    cache_obj = {
-        '$set': {
-            'key': key,
-            'value': value,
-        }
-    }
-
-    if timeout is not None:
-        cache_obj['$set']['expireAt'] = (
-            datetime.datetime.now() + datetime.timedelta(seconds=timeout))
-    db.cache.find_one_and_update({'key': key}, cache_obj, upsert=True)
+def get_score_cache():
+    global __redis
+    if __redis["zsets"].get("scores") is None:
+        __redis["zsets"]["scores"] = get_conn().ZSet('scores')
+    return __redis["zsets"]["scores"]
 
 
-def memoize(*args, **kwargs):
-    """
-    Memoize a function by caching its results.
-
-    To force a cache update, set the kwarg 'recache=True' when calling
-    the decorated function.
-
-    Function calls containing unhashable arguments will not be cached.
-
-    Args (optionally specify as kwargs to the decorator):
-        timeout: Time the result stays valid in the cache (seconds, default 60)
-    Returns:
-        The function's result.
-
-    """
-    # Allow use of decorator without () if no kwargs specified
-    f = None
-    if len(args) == 1 and callable(args[0]):
-        f = args[0]
-    timeout = kwargs.get('timeout', 60)
-
-    def decorator(f):
-        """Inner decorator."""
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            """Cache a function result."""
-            # Force a cache update if the "recache" kwarg is provided
-            if kwargs.get('recache', None) is not None:
-                kwargs.pop('recache', None)
-                key = _get_hash_key(f, args, kwargs)
-                function_result = f(*args, **kwargs)
-                _set(key, function_result, timeout=timeout)
-                return function_result
-
-            key = _get_hash_key(f, args, kwargs)
-            if key is None:
-                # Invokation contains an unhashable argument
-                return f(*args, **kwargs)
-            cached_result = _get(key)
-            if cached_result is None:
-                function_result = f(*args, **kwargs)
-                _set(key, function_result, timeout=timeout)
-                return function_result
-            return cached_result
-        return wrapper
-    return decorator(f) if f else decorator
+def get_scoreboard_cache(**kwargs):
+    global __redis
+    scoreboard_name = "scoreboard:{}".format(_hash_key((), kwargs))
+    if __redis["zsets"].get(scoreboard_name) is None:
+        __redis["zsets"][scoreboard_name] = get_conn().ZSet(scoreboard_name)
+    return __redis["zsets"][scoreboard_name]
 
 
 def clear():
-    """Clear the cache."""
-    db = api.db.get_conn()
-    db.cache.remove()
+    global __redis
+    if __redis.get("walrus") is not None:
+        __redis["walrus"].flushdb()
+
+
+def memoize(_f=None, **cached_kwargs):
+    """walrus.Cache.cached wrapper that reuses shared cache."""
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            if kwargs.get("reset_cache", False):
+                kwargs.pop("reset_cache", None)
+                invalidate(f, *args, **kwargs)
+            return get_cache().cached(**cached_kwargs)(f)(*args, **kwargs)
+        return wrapper
+    if _f is None:
+        return decorator
+    else:
+        return decorator(_f)
+
+
+def _hash_key(a, k):
+    return hashlib.md5(pickle.dumps((a, k))).hexdigest()
+
+
+def get_scoreboard_key(team):
+    # For lack of better idea of delimiter, use '>' illegal team name char
+    return "{}>{}>{}".format(team['team_name'], team['affiliation'],
+                             team['tid'])
+
+
+def decode_scoreboard_item(item, with_weight=False, include_key=False):
+    """
+    :param item: tuple of ZSet (key, score)
+    :param with_weight: keep decimal weighting of score, or return as int
+    :param include_key: whether to include to raw key
+    :return: dict of scoreboard item
+    """
+    key = item[0].decode('utf-8')
+    data = key.split(">")
+    score = item[1]
+    if not with_weight:
+        score = int(score)
+    output = {
+        'name': data[0],
+        'affiliation': data[1],
+        'tid': data[2],
+        'score': score
+    }
+    if include_key:
+        output['key'] = key
+    return output
+
+
+def search_scoreboard_cache(scoreboard, pattern):
+    """
+    :param scoreboard: scoreboard cache ZSet
+    :param pattern: text pattern to search team names and affiliations,
+                    not including wildcards
+    :return: sorted list of scoreboard entries
+    """
+    # Trailing '*>' avoids search on last token, tid
+    results = [decode_scoreboard_item(item, include_key=True) for
+               item in list(scoreboard.search("*{}*>*".format(pattern)))]
+    return sorted(results, key=lambda item: item["score"], reverse=True)
+
+
+def invalidate(f, *args, **kwargs):
+    """
+    Clunky way to replicate busting behavior due to awkward wrapping of walrus
+    cached decorator
+    """
+    if f == api.stats.get_score:
+        key = args[0]
+        get_score_cache().remove(key)
+    else:
+        key = '%s:%s' % (f.__name__, _hash_key(args, kwargs))
+        get_cache().delete(key)

@@ -18,6 +18,7 @@ web_address: "http://10.0.5.10"
 nginx_server_name: "_"
 flask_app_server_name: "{{ web_fqdn }}"
 web_address_internal: "{{ web_address }}"
+flask_app_rate_limit_bypass: "INSECURE_DEFAULT_CHANGE_ME"
 
 # optional web automation
 enable_basic_auth:      False
@@ -45,6 +46,7 @@ shell_admin_password_crypt: "$6$0GcSqMClzx$qEKEiL78VE/Xe0gzuGGuWyUqAlZMObkGnRYwH
 ##
 db_private_ip: 10.0.5.20
 mongodb_conf_auth: True
+redis_conf_auth: True
 picoAdmin_db_password:  "insecure-password"
 picoWeb_db_password:    "insecure-password"
 

@@ -5,7 +5,8 @@ from flask_restplus import Namespace, Resource
 import api
 from api import block_before_competition, PicoException, require_admin
 
-from .schemas import scoreboard_page_req, top_teams_score_progression_req
+from .schemas import (scoreboard_page_req, scoreboard_search_req,
+                      top_teams_score_progression_req)
 
 ns = Namespace('stats', 'Statistical aggregations and reports')
 
@@ -49,7 +50,29 @@ class ScoreboardPage(Resource):
                 'groups scoreboard.', 401
             )
         return jsonify(api.stats.get_scoreboard_page(
-            req['board'], req['page']
+            req['board'], req['page'], req['gid']
+        ))
+
+
+@ns.route('/scoreboard/search')
+class ScoreboardPage(Resource):
+    """Search team names and affiliation, return initial result scoreboard."""
+
+    @block_before_competition
+    @ns.response(200, 'Success')
+    @ns.response(401, 'Must be logged in to retrieve groups board')
+    @ns.response(422, 'Competition has not started')
+    @ns.expect(scoreboard_search_req)
+    def get(self):
+        """Retrieve a page of a specific scoreboard."""
+        req = scoreboard_search_req.parse_args(strict=True)
+        # Strip chars: redis pattern wildcard and key delimiter
+        pattern = req['pattern'].replace('*', '').replace('>', '')
+        # At least 3 characters
+        if len(pattern) < 3:
+            return jsonify([])
+        return jsonify(api.stats.search_scoreboard(
+            board=req['board'], pattern=req['pattern'], page=req['page']
         ))
 
 
@@ -63,7 +86,7 @@ class TopTeamsScoreProgressions(Resource):
         """Get score progressions for the top n teams, optionally filtered."""
         req = top_teams_score_progression_req.parse_args(strict=True)
         return jsonify(api.stats.get_top_teams_score_progressions(
-            req['limit'], req['include_ineligible'], req['gid']
+            include_ineligible=req['include_ineligible'], gid=req['gid']
         ))
 
 

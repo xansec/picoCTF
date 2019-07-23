@@ -23,13 +23,18 @@ load_teamscore = ->
 
   setTimeout reload, 100
 
-load_scoreboard_page = (boardname, page, tid) ->
-  apiCall "GET", "/api/v1/stats/scoreboard/page?board=" + boardname + "&page=" + page
+load_scoreboard_page = (boardname, page, tid, gid="") ->
+  if !gid
+    targetid = boardname
+  else
+    boardname = "groups"
+    targetid = gid
+  apiCall "GET", "/api/v1/stats/scoreboard/page?board=" + boardname + "&page=" + page + "&gid=" + gid
     .success (data) ->
-      $('#' + boardname + " tbody").html(
+      $('#' + targetid + " tbody").html(
         renderScorepage({
-          scorepage: data
-          page:page
+          scorepage: data.scoreboard
+          page: page
           tid: tid
         })
       )
@@ -44,7 +49,7 @@ load_scoreboard = ->
       data: data,
       renderScoreboard: renderScoreboard
     })).promise().then( ->
-      data = data;
+      tid = data.tid
       paginate = ((board) ->
         $('#' + board.name + '-pagination').bootstrapPaginator({
           totalPages: board.pages,
@@ -52,7 +57,7 @@ load_scoreboard = ->
           numberOfPages: 10,
           currentPage: board.start_page,
           onPageClicked: ((e, eOriginal, type, page) ->
-            load_scoreboard_page(board.name, page, data.tid)
+            load_scoreboard_page(board.name, page, data.tid, board.gid)
           )
         })
       )
@@ -61,6 +66,52 @@ load_scoreboard = ->
           data[e].forEach(paginate)
         else if typeof(data[e]) == 'object'
           paginate(data[e])
+      )
+      timeoutID_global = null;
+      timeoutID_student = null;
+      paginateSearch = ((pattern, board) ->
+        $('#' + board.name + '-pagination').bootstrapPaginator({
+          totalPages: Math.max(board.pages, 1),
+          bootstrapMajorVersion: 3,
+          numberOfPages: 10,
+          currentPage: board.start_page,
+          onPageClicked: ((e, eOriginal, type, page) ->
+            searchBoard(pattern, board.name, page)
+          )
+        })
+      )
+      searchBoard = (pattern, board, page=0) ->
+         if page == 0
+           repaginate = true
+           page = 1
+         apiCall "GET", "/api/v1/stats/scoreboard/search?pattern=" + pattern + "&board=" + board + "&page=" + page
+          .success (searchdata) ->
+            $('#' + board + " tbody").html(
+              renderScorepage({
+                scorepage: searchdata.scoreboard
+                page: page
+                tid: tid
+              })
+             )
+            if repaginate
+              paginateSearch(pattern, searchdata)
+      $('#global-search').keyup((e) ->
+        if e.target.value.length > 2
+          clearTimeout(timeoutID_global);
+          timeoutID_global = setTimeout((() -> searchBoard(e.target.value, "global")), 250);
+        else if e.target.value == ""
+          load_scoreboard()
+          reloadGraph()
+      )
+      $('#student-search').keyup((e) ->
+        if e.target.value.length > 2
+          clearTimeout(timeoutID_student);
+          timeoutID_student = setTimeout((() -> searchBoard(e.target.value, "student")), 250);
+        else if e.target.value == ""
+          load_scoreboard().promise().then( ->
+            $('#scoreboard-tabs a[href="#student"]').tab('show')
+            reloadGraph()
+          )
       )
     )
     reloadGraph()

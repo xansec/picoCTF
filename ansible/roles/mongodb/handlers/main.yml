@@ -10,3 +10,8 @@
   service:
     name: "{{ mongodb_daemon_name }}"
     state: restarted
+
+- name: redis-server restart
+  service:
+    name: "{{ redis_daemon_name }}"
+    state: restarted

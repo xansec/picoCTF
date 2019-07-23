@@ -33,11 +33,11 @@ class TeamList(Resource):
                 'Teachers may not create teams', 403
             )
         if not all([
-                c in string.digits + string.ascii_lowercase + " ()+-,#'*&!?"
+                c in string.digits + string.ascii_lowercase + " ()+-,#'&!?"
                 for c in req['team_name'].lower()]):
             raise PicoException(
                 "Team names cannot contain special characters other than "+
-                "()+-,#'*&!?", status_code=400
+                "()+-,#'&!?", status_code=400
             )
 
         new_tid = api.team.create_and_join_new_team(

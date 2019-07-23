@@ -15,6 +15,7 @@ COMPETITORS_GROUP = "competitors"
 config_file = join(HACKSPORTS_ROOT, "config.json")
 config = json.loads(open(config_file).read())
 SERVER = config["web_server"]
+LIMIT_BYPASS = config['rate_limit_bypass']
 TIMEOUT = 5
 
 pamh = None
@@ -28,6 +29,10 @@ def competition_active():
 def run_login(user, password):
     r = requests.post(
         SERVER + "/api/v1/user/login",
+        headers={
+            "user-agent": 'picoCTF Shell Server',
+            'Limit-Bypass': LIMIT_BYPASS
+        },
         json={
             "username": user,
             "password": password
