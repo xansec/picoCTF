@@ -990,6 +990,10 @@ def undeploy_problems(args):
 
     problem_names = args.problem_names
 
+    if len(problem_names) == 0:
+        logger.error("No problem name(s) specified")
+        raise FatalException
+
     if len(problem_names) == 1 and problem_names[0] == 'all':
         # Shortcut to undeploy n instances of all problems
         problem_names = [v['unique_name'] for k, v in get_all_problems().items()]
