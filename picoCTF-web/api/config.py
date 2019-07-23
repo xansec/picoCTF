@@ -129,8 +129,9 @@ The {competition_name} Team""", # noqa (79char)
         "verification_body": """
 Welcome to {competition_name}!
 
-You will need to visit the verification link below and then login to finalize
-your account's creation.
+Your account has been registered with username {user_name}. You will need to
+visit the verification link below and then login to finalize your account's
+creation.
 
 If you believe this to be a mistake, and you haven't recently created an account
 for {competition_name} then you can safely ignore this email.

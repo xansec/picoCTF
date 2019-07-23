@@ -130,8 +130,10 @@ def send_user_verification_email(username):
         format(settings["competition_url"], user["uid"], token_value)
 
     body = settings["email"]["verification_body"].format(
-        competition_name = settings["competition_name"],
-        verification_link = verification_link) # noqa (79char)
+        competition_name=settings["competition_name"],
+        verification_link=verification_link,
+        user_name=username
+    )  # noqa (79char)
 
     subject = "{} Account Verification".format(settings["competition_name"])
 
