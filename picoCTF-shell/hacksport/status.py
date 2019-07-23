@@ -8,7 +8,8 @@ from os.path import join
 from hacksport.operations import execute
 from shell_manager.util import (BUNDLE_ROOT, DEPLOYED_ROOT, get_problem,
                                 get_problem_root, SHARED_ROOT, PROBLEM_ROOT,
-                                STAGING_ROOT, get_pid_hash, sanitize_name, get_bundle, get_bundle_root)
+                                STAGING_ROOT, get_pid_hash, sanitize_name,
+                                get_bundle, get_bundle_root, release_lock)
 
 logger = logging.getLogger(__name__)
 
@@ -88,20 +89,13 @@ def publish(args):
 
 def clean(args):
     """ Main entrypoint for clean """
-
-    lock_file = join(SHARED_ROOT, "deploy.lock")
-
     # remove staging directories
     if os.path.isdir(STAGING_ROOT):
         logger.info("Removing the staging directories")
         shutil.rmtree(STAGING_ROOT)
 
     # remove lock file
-    if os.path.isfile(lock_file):
-        logger.info("Removing the stale lock file")
-        os.remove(lock_file)
-
-    # TODO: potentially perform more cleaning
+    release_lock()
 
 
 def status(args):

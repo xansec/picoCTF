@@ -4,6 +4,7 @@ Common utilities for the shell manager.
 
 import json
 import logging
+import os
 import re
 import shutil
 import string
@@ -502,3 +503,25 @@ def get_pid_hash(problem, short=False):
         return output[:7]
 
     return output
+
+
+def acquire_lock():
+    """Acquire the problem installation/deployment lock."""
+    lock_file = join(SHARED_ROOT, "deploy.lock")
+    if isfile(lock_file):
+        logger.error(
+            "Another problem installation or deployment appears in progress. If you believe this to be an error, "
+            "run 'shell_manager clean'")
+        raise FatalException
+
+    with open(lock_file, "w") as f:
+        f.write("1")
+    logger.debug(f"Obtained lock file ({str(lock_file)})")
+
+
+def release_lock():
+    """Release the problem installation/deployment lock."""
+    lock_file = join(SHARED_ROOT, "deploy.lock")
+    if isfile(lock_file):
+        os.remove(lock_file)
+        logger.debug(f"Released lock file ({str(lock_file)})")

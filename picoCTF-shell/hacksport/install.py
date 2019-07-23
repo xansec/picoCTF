@@ -22,7 +22,7 @@ import os
 import shutil
 import json
 from shell_manager.package import package_problem
-from shell_manager.util import get_problem, DEB_ROOT, FatalException, join, SHARED_ROOT, get_problem_root_hashed, get_bundle, PROBLEM_ROOT, BUNDLE_ROOT, sanitize_name
+from shell_manager.util import get_problem, DEB_ROOT, FatalException, join, SHARED_ROOT, get_problem_root_hashed, get_bundle, PROBLEM_ROOT, BUNDLE_ROOT, sanitize_name, acquire_lock, release_lock
 from hacksport.deploy import generate_staging_directory
 
 logger = logging.getLogger(__name__)
@@ -35,22 +35,13 @@ def install_problem(problem_path):
     Args:
         problem_path: path to the problem source directory
     """
-    lock_file = join(SHARED_ROOT, "deploy.lock")
-    if os.path.isfile(lock_file):
-        logger.error(
-            "Another problem installation or deployment appears in progress. If you believe this to be an error, "
-            "run 'shell_manager clean'")
-        raise FatalException
-
     problem_obj = get_problem(problem_path)
     if os.path.isdir(get_problem_root_hashed(problem_obj, absolute=True)):
         logger.error(f"Problem {problem_obj['unique_name']} is already installed")
         return
     logger.info(f"Installing problem {problem_obj['unique_name']}...")
 
-    logger.debug(f"{problem_obj['unique_name']}: obtained lock file ({str(lock_file)})")
-    with open(lock_file, "w") as f:
-        f.write("1")
+    acquire_lock()
 
     staging_dir_path = generate_staging_directory(
         problem_name=problem_obj['unique_name'])
@@ -69,8 +60,7 @@ def install_problem(problem_path):
         logger.error("An error occurred while installing problem packages.")
         raise FatalException
     finally:
-        os.remove(lock_file)
-        logger.debug(f"{problem_obj['unique_name']}: released lock file ({str(lock_file)})")
+        release_lock()
     logger.debug(f"{problem_obj['unique_name']}: installed package")
     logger.info(f"{problem_obj['unique_name']} installed successfully")
 
@@ -123,15 +113,7 @@ def uninstall_problem(problem_name):
     Additionally, any assigned instance ports for the problem will be
     removed from the port map.
     """
-    lock_file = join(SHARED_ROOT, "deploy.lock")
-    if os.path.isfile(lock_file):
-        logger.error(
-            "Another problem installation or deployment appears in progress. If you believe this to be an error, "
-            "run 'shell_manager clean'")
-        raise FatalException
-    logger.debug(f"{problem_name}: obtained lock file ({str(lock_file)})")
-    with open(lock_file, "w") as f:
-        f.write("1")
+    acquire_lock()
 
     try:
         # Remove .deb package used to install dependencies on deployment
@@ -159,8 +141,7 @@ def uninstall_problem(problem_name):
         raise FatalException
 
     logger.info(f"{problem_name} removed successfully")
-    os.remove(lock_file)
-    logger.debug(f"{problem_name}: released lock file ({str(lock_file)})")
+    release_lock()
 
 
 def uninstall_problems(args):

@@ -155,7 +155,8 @@ from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
                                 get_problem, get_problem_root,
                                 sanitize_name, STAGING_ROOT, get_problem_root_hashed,
                                 get_pid_hash, get_bundle, DEB_ROOT, SHARED_ROOT,
-                                get_shared_config, get_local_config)
+                                get_shared_config, get_local_config,
+                                acquire_lock, release_lock)
 from spur import RunProcessError
 
 
@@ -897,16 +898,7 @@ def deploy_problems(args):
         logger.error(f"Error loading port map from {port_map_path}")
         raise
 
-    lock_file = join(SHARED_ROOT, "deploy.lock")
-    if os.path.isfile(lock_file):
-        logger.error(
-            "Another problem installation or deployment appears in progress. If you believe this to be an error, "
-            "run 'shell_manager clean'")
-        raise FatalException
-
-    with open(lock_file, "w") as f:
-        f.write("1")
-    logger.debug(f"Obtained lock file ({str(lock_file)})")
+    acquire_lock()
 
     if args.instances:
         instance_list = args.instances
@@ -944,8 +936,7 @@ def deploy_problems(args):
             stringified_port_map = {repr(k): v for k, v in port_map.items()}
             json.dump(stringified_port_map, f)
 
-        os.remove(lock_file)
-        logger.debug(f"Released lock file ({str(lock_file)})")
+        release_lock()
 
 
 def remove_instances(problem_name, instances_to_remove):
@@ -998,16 +989,7 @@ def undeploy_problems(args):
         # Shortcut to undeploy n instances of all problems
         problem_names = [v['unique_name'] for k, v in get_all_problems().items()]
 
-    lock_file = join(SHARED_ROOT, "deploy.lock")
-    if os.path.isfile(lock_file):
-        logger.error(
-            "Another problem installation or deployment appears in progress. If you believe this to be an error, "
-            "run 'shell_manager clean'")
-        raise FatalException
-
-    with open(lock_file, "w") as f:
-        f.write("1")
-    logger.debug(f"Obtained lock file ({str(lock_file)})")
+    acquire_lock()
 
     if args.instances:
         instance_list = args.instances
@@ -1033,9 +1015,6 @@ def undeploy_problems(args):
                 continue
 
             remove_instances(problem_name, instances_to_remove)
-            logger.info("Problem instances %s were successfully removed for " +
-                        "'%s'.", instances_to_remove, problem_name)
     finally:
         execute(["service", "xinetd", "restart"], timeout=60)
-        os.remove(lock_file)
-        logger.debug(f"Released lock file ({str(lock_file)})")
+        release_lock()
