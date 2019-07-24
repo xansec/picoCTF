@@ -133,6 +133,7 @@ local_config_schema = Schema(
     {
         Required("hostname"): str,
         Required("web_server"): str,
+        Required("rate_limit_bypass"): str,
     },
     extra=False)
 
