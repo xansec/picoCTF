@@ -920,7 +920,7 @@ def deploy_problems(args):
                     already_deployed.add(instance["instance_number"])
                 instances_to_deploy = list(set(instances_to_deploy) - already_deployed)
 
-            need_restart_xinetd = deploy_problem(
+            deploy_problem(
                 source_location,
                 instances=instances_to_deploy,
                 test=args.dry,
@@ -928,7 +928,7 @@ def deploy_problems(args):
                 restart_xinetd=False)
     finally:
         # Restart xinetd unless specified. Service must be manually restarted
-        if not args.no_restart and need_restart_xinetd:
+        if not args.no_restart:
             execute(["service", "xinetd", "restart"], timeout=60)
 
         # Write out updated port map
