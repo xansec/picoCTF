@@ -1,10 +1,11 @@
 (function() {
-  var React = typeof window !== 'undefined' && window.React || require('react');
+  var React = (typeof window !== 'undefined' && window.React) ? window.React : require('react');
+  var ReactDOM = (typeof window !== 'undefined' && window.ReactDOM) ? window.ReactDOM : require('react-dom');
 
   var RATE_LIMIT = 25;
 
   var ComponentVisibilityMixin = {
-    setComponentVisbilityRateLimit: function(milliseconds) {
+    setComponentVisibilityRateLimit: function(milliseconds) {
       RATE_LIMIT = milliseconds;
     },
 
@@ -13,11 +14,11 @@
     },
 
     componentDidMount: function() {
-      this.enableVisbilityHandling(true);
+      this.enableVisibilityHandling(true);
     },
 
     componentWillUnmount: function() {
-      this.disableVisbilityHandling();
+      this.disableVisibilityHandling();
     },
 
     /**
@@ -28,20 +29,20 @@
      */
     checkComponentVisibility: function() {
       var domnode = this._dom_node,
-          gcs = window.getComputedStyle(domnode, false),
-          dims = domnode.getBoundingClientRect(),
-          h = window.innerHeight,
-          w = window.innerWidth,
-          // are we vertically visible?
-          topVisible = 0 < dims.top && dims.top < h,
-          bottomVisible = 0 < dims.bottom && dims.bottom < h,
-          verticallyVisible = topVisible || bottomVisible,
-          // also, are we horizontally visible?
-          leftVisible = 0 < dims.left && dims.left < w,
-          rightVisible = 0 < dims.right && dims.right < w,
-          horizontallyVisible = leftVisible || rightVisible,
-          // we're only visible if both of those are true.
-          visible = horizontallyVisible && verticallyVisible;
+        gcs = window.getComputedStyle(domnode, false),
+        dims = domnode.getBoundingClientRect(),
+        h = window.innerHeight,
+        w = window.innerWidth,
+        // are we vertically visible?
+        topVisible = 0 < dims.top && dims.top < h,
+        bottomVisible = 0 < dims.bottom && dims.bottom < h,
+        verticallyVisible = topVisible || bottomVisible,
+        // also, are we horizontally visible?
+        leftVisible = 0 < dims.left && dims.left < w,
+        rightVisible = 0 < dims.right && dims.right < w,
+        horizontallyVisible = leftVisible || rightVisible,
+        // we're only visible if both of those are true.
+        visible = horizontallyVisible && verticallyVisible;
 
       // but let's be fair: if we're opacity: 0 or
       // visibility: hidden, or browser window is minimized we're not visible at all.
@@ -61,12 +62,12 @@
       if(visible !== this.state.visible) {
         // set State first:
         this.setState({ visible: visible },
-        // then notify the component the value was changed:
-        function() {
-          if (this.componentVisibilityChanged) {
-            this.componentVisibilityChanged();
-          }
-        });
+          // then notify the component the value was changed:
+          function() {
+            if (this.componentVisibilityChanged) {
+              this.componentVisibilityChanged();
+            }
+          });
       }
     },
 
@@ -76,7 +77,7 @@
      * listening on, or with argument "true" to turn listening on and
      * immediately check whether this element is already visible or not.
      */
-    enableVisbilityHandling: function(checkNow) {
+    enableVisibilityHandling: function(checkNow) {
       if (typeof window === "undefined") {
         return console.error("This environment lacks 'window' support.");
       }
@@ -86,7 +87,7 @@
       }
 
       if (!this._dom_node) {
-        this._dom_node = React.findDOMNode(this);
+        this._dom_node = ReactDOM.findDOMNode(this);
       }
       var domnode = this._dom_node;
 
@@ -125,7 +126,7 @@
      * and you only really need to do something once, like loading in
      * static assets on first-time-in-view-ness (that's a word, right?).
      */
-    disableVisbilityHandling: function() {
+    disableVisibilityHandling: function() {
       clearTimeout(this._rcv_timeout);
       if (this._rcv_fn) {
         var domnode = this._dom_node;
