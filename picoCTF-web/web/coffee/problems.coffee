@@ -30,13 +30,10 @@ submitProblem = (e) ->
     if data.correct
       ga('send', 'event', 'Problem', 'Solve', 'Basic')
       apiNotify {"status": 1, "message": data.message}
+      loadProblems()
     else
       ga('send', 'event', 'Problem', 'Wrong', 'Basic')
       apiNotify {"status": 0, "message": data.message}
-    loadProblems()
-    setTimeout( ->
-      $("div[data-target='#" + input.data("pid") + "']").click()
-    , 500)
   .error (jqXHR) ->
     apiNotify {"status": 0, "message": jqXHR.responseJSON.message}
 

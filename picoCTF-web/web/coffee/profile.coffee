@@ -150,7 +150,7 @@ ProblemInfo = React.createClass
 
 $ ->
   #load_team_info()
-  React.render <ProblemInfo/>, document.getElementById("progress-info")
+  ReactDOM.render <ProblemInfo/>, document.getElementById("progress-info")
   load_group_info()
   # load_achievement_info()
   window.drawTeamProgressionGraph("#team-progression-graph", "#team-progression-graph-container")

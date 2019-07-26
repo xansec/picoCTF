@@ -9,7 +9,7 @@ PanelGroup = ReactBootstrap.PanelGroup
 Row = ReactBootstrap.Row
 ListGroup = ReactBootstrap.ListGroup
 ListGroupItem = ReactBootstrap.ListGroupItem
-CollapsibleMixin = ReactBootstrap.CollapsibleMixin
+Collapse = ReactBootstrap.Collapse
 Table = ReactBootstrap.Table
 
 update = React.addons.update
@@ -157,34 +157,21 @@ ProblemClassifier = React.createClass
     </Panel>
 
 CollapsibleInformation = React.createClass
-  mixins: [CollapsibleMixin]
+  getInitialState: ->
+    {open:false}
 
-  classNames: (styles) ->
-    _.reduce styles, ((memo, val, key) ->
-      if val
-        memo += " #{key}"
-      memo), ""
-
-  getCollapsibleDOMNode: ->
-    React.findDOMNode @refs.panel
-
-  getCollapsibleDimensionValue: ->
-    (React.findDOMNode @refs.panel).scrollHeight;
-
-  onHandleToggle: (e) ->
-    e.preventDefault()
-    @setState {expanded: !@state.expanded}
+  toggleCollapse: ->
+    @setState {open:!@state.open}
 
   render: ->
-    styles = @getCollapsibleClassSet()
-    glyph = if @state.expanded then "chevron-down" else "chevron-right"
+    glyph = if @state.open then "chevron-down" else "chevron-right"
     <div className="collapsible-information">
-      <a onClick={this.onHandleToggle}>
+      <a onClick={@toggleCollapse}>
         {@props.title} <Glyphicon glyph={glyph} className="collapsible-information-chevron"/>
       </a>
-      <div ref="panel" className={@classNames styles}>
+      <Collapse in={@state.open}>
         {this.props.children}
-      </div>
+      </Collapse>
     </div>
 
 ProblemFlagTable = React.createClass
@@ -349,7 +336,7 @@ ProblemList = React.createClass
       return <h4>No problems have been loaded. Click <a href='#'>here</a> to get started.</h4>
 
     problemComponents = @props.problems.map ((problem, i) ->
-      <Col xs={12}>
+      <Col key={i} xs={12}>
         <Problem key={problem.name} onProblemChange={@props.onProblemChange} submissions={@props.submissions[problem.name]} {...problem}/>
       </Col>
     ).bind this

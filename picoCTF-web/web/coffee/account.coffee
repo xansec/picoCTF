@@ -169,4 +169,4 @@ $ ->
   $("#disable-account-form").on "submit", disableAccount
   $("#download-data-form").on "submit", downloadData
 
-  React.render <TeamManagementForm/>, document.getElementById("team-management")
+  ReactDOM.render <TeamManagementForm/>, document.getElementById("team-management")

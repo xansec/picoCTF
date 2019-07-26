@@ -14,9 +14,10 @@ update = React.addons.update
 Hint = React.createClass
   propTypes:
     text: React.PropTypes.string.isRequired
+    id: React.PropTypes.string.isRequired
 
   render: ->
-    tooltip = <Tooltip>{@props.text}</Tooltip>
+    tooltip = <Tooltip id={@props.id}>{@props.text}</Tooltip>
     <OverlayTrigger placement="top" overlay={tooltip}>
       <Glyphicon className="pad" glyph="question-sign" style={fontSize:"0.8em"}/>
     </OverlayTrigger>
@@ -94,7 +95,7 @@ FormEntry = React.createClass
 
   render: ->
     if @props.description
-      hint = <Hint text={@props.description} />
+      hint = <Hint id="email-hint" text={@props.description} />
     else
       hint = ""
 
@@ -133,12 +134,12 @@ BooleanEntry = React.createClass
 TimeEntry = React.createClass
   propTypes:
     name: React.PropTypes.string.isRequired
-    value: React.PropTypes.number.isRequired
+    value: React.PropTypes.string.isRequired
     onChange: React.PropTypes.func.isRequired
 
   componentDidMount: ->
     date = new Date(@props.value)
-    node = React.findDOMNode(@refs.datetimepicker)
+    node = ReactDOM.findDOMNode(@refs.datetimepicker)
     $(node).datetimepicker
       defaultDate: date
       inline: true,
@@ -165,7 +166,7 @@ OptionEntry = React.createClass
       ).bind(this)
 
       buttonClass = if option == @props.value then "active" else ""
-      <Button onClick={onClick} className={buttonClass}>{option}</Button>
+      <Button key={option} onClick={onClick} className={buttonClass}>{option}</Button>
     ).bind(this)
 
     buttonGroup =

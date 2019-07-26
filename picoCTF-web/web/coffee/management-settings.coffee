@@ -224,7 +224,7 @@ EmailTab = React.createClass
     <Row>
       <Col md={4}>
         <h4 className="pull-left">
-          <Hint text={SMTPSecurityDescription}/>
+          <Hint id="smtp-hint" text={SMTPSecurityDescription}/>
           Security
         </h4>
       </Col>
@@ -541,26 +541,26 @@ SettingsTab = React.createClass
         <Row>
           <h4> Configure the competition settings by choosing a tab below </h4>
         </Row>
-        <TabbedArea activeKey={@state.tabKey} onSelect={@onTabSelect}>
-          <TabPane eventKey='general' tab='General'>
+        <Tabs activeKey={@state.tabKey} onSelect={@onTabSelect}>
+          <Tab eventKey='general' title='General'>
             <GeneralTab refresh=@refresh settings={generalSettings} key={Math.random()}/>
-          </TabPane>
+          </Tab>
 
-          <TabPane eventKey='sharding' tab='Sharding'>
+          <Tab eventKey='sharding' title='Sharding'>
             <ShardingTab refresh={@refresh} shardingSettings={@state.settings.shell_servers} key={Math.random()}/>
-          </TabPane>
+          </Tab>
 
-          <TabPane eventKey='email' tab='Email'>
+          <Tab eventKey='email' title='Email'>
             <EmailTab refresh={@refresh} emailSettings={@state.settings.email} emailFilterSettings={@state.settings.email_filter} key={Math.random()}/>
-          </TabPane>
+          </Tab>
 
-          <TabPane eventKey='captcha' tab='CAPTCHA'>
+          <Tab eventKey='captcha' title='CAPTCHA'>
             <CaptchaTab refresh={@refresh} captchaSettings={@state.settings.captcha} key={Math.random()}/>
-          </TabPane>
+          </Tab>
 
-          <TabPane eventKey='eligibility' tab='Eligibility'>
+          <Tab eventKey='eligibility' title='Eligibility'>
             <EligibilityTab refresh={@refresh} eligibilitySettings={@state.settings.eligibility} key={Math.random()}/>
-          </TabPane>
-        </TabbedArea>
+          </Tab>
+        </Tabs>
       </Grid>
     </Well>

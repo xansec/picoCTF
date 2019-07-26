@@ -205,7 +205,7 @@ ProblemLoaderTab = React.createClass
     publishArea =
     <div className="form-group">
       <h4>
-        <Hint text="This should be the output of running 'shell_manager publish' on your shell server."/>
+        <Hint id="publisharea-hint" text="This should be the output of running 'shell_manager publish' on your shell server."/>
         Paste your published JSON here:
       </h4>
       <Input className="form-control" type='textarea' rows="10"

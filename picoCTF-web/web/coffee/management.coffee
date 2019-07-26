@@ -1,7 +1,7 @@
-TabbedArea = ReactBootstrap.TabbedArea
-TabPane = ReactBootstrap.TabPane
+Tabs = ReactBootstrap.Tabs
+Tab = ReactBootstrap.Tab
 
-ManagementTabbedArea = React.createClass
+ManagementTabs = React.createClass
   getInitialState: ->
     tab = window.location.hash.substring(1)
     if tab == ""
@@ -65,22 +65,22 @@ ManagementTabbedArea = React.createClass
       @onExceptionModification()
 
   render: ->
-      <TabbedArea activeKey={@state.tabKey} onSelect={@onTabSelect}>
-        <TabPane eventKey='problems' tab='Manage Problems'>
+      <Tabs activeKey={@state.tabKey} onSelect={@onTabSelect}>
+        <Tab eventKey='problems' title='Manage Problems'>
           <ProblemTab problems={@state.problems} onProblemChange={@onProblemChange}
             bundles={@state.bundles} submissions={@state.submissions}/>
-        </TabPane>
-        <TabPane eventKey='exceptions' tab='Exceptions'>
+        </Tab>
+        <Tab eventKey='exceptions' title='Exceptions'>
           <ExceptionTab onExceptionModification={@onExceptionModification}
             exceptions={@state.exceptions}/>
-        </TabPane>
-        <TabPane eventKey='shell-servers' tab='Shell Server'>
+        </Tab>
+        <Tab eventKey='shell-servers' title='Shell Server'>
           <ShellServerTab/>
-        </TabPane>
-        <TabPane eventKey='configuration' tab='Configuration'>
+        </Tab>
+        <Tab eventKey='configuration' title='Configuration'>
           <SettingsTab/>
-        </TabPane>
-      </TabbedArea>
+        </Tab>
+      </Tabs>
 
 $ ->
-  React.render <ManagementTabbedArea/>, document.getElementById("management-tabs")
+  ReactDOM.render <ManagementTabs/>, document.getElementById("management-tabs")

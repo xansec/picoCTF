@@ -7,8 +7,8 @@ Panel = ReactBootstrap.Panel
 ListGroup = ReactBootstrap.ListGroup
 ListGroupItem = ReactBootstrap.ListGroupItem
 Glyphicon = ReactBootstrap.Glyphicon
-TabbedArea = ReactBootstrap.TabbedArea
-TabPane = ReactBootstrap.TabPane
+Tabs = ReactBootstrap.Tabs
+Tab = ReactBootstrap.Tab
 
 update = React.addons.update
 
@@ -249,7 +249,7 @@ GroupManagement = React.createClass
     ).bind this
 
   render: ->
-    <div className="row" style={ "margin-top": "10px"}>
+    <div className="row" style={ marginTop: "10px"}>
       <Col sm={6}>
         <MemberManagement teacherInformation={@state.teacher_information} currentUser={@state.current_user}
           memberInformation={@state.member_information} gid={@props.gid} refresh={@refreshSettings}/>
@@ -372,17 +372,17 @@ TeacherManagement = React.createClass
     ).bind this
 
   render: ->
-    <TabbedArea activeKey={@state.tabKey} onSelect={@onTabSelect}>
+    <Tabs activeKey={@state.tabKey} onSelect={@onTabSelect}>
       {@state.groups.map ((group, i) ->
-        <TabPane eventKey={i} key={i} tab={group.name} className="tab-pane-outline">
+        <Tab eventKey={i} key={i} tab={group.name} className="tab-pane-outline">
           <GroupManagement key={group.name} gid={group.gid}/>
-        </TabPane>
+        </Tab>
       ).bind this}
-    </TabbedArea>
+    </Tabs>
 $ ->
-  React.render <TeacherManagement/>, document.getElementById "group-management"
+  ReactDOM.render <TeacherManagement/>, document.getElementById "group-management"
 
   $(document).on 'shown.bs.tab', 'a[href="#group-management-tab"]', () ->
-    React.unmountComponentAtNode document.getElementById "group-management"
-    React.render <TeacherManagement/>, document.getElementById "group-management"
+    ReactDOM.unmountComponentAtNode document.getElementById "group-management"
+    ReactDOM.render <TeacherManagement/>, document.getElementById "group-management"
 

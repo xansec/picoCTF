@@ -1,7 +1,7 @@
 ProblemSubmissionDoughnut = React.createClass
   componentDidMount: ->
     if @props.visible
-      ctx = @getDOMNode().getContext "2d"
+      ctx = @context
 
       data = {
         datasets: [{
@@ -28,4 +28,4 @@ ProblemSubmissionDoughnut = React.createClass
       margin: "auto"
       display: "block"
 
-    <canvas height="200" width="200" style={style}/>
+    <canvas height="200" ref={(c) => this.context = c.getContext('2d')} width="200" style={style}/>
