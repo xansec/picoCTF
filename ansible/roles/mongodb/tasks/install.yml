@@ -20,9 +20,16 @@
   apt:
     name: [
       'mongodb-org', # from PPA
+    ]
+    state: present
+
+- name: Install redis
+  apt:
+    name: [
       'redis-server',
     ]
     state: present
+  when: not aws_elasticache
 
 - name: Ensure mongodb is running
   service:
@@ -35,3 +42,4 @@
     name: redis-server
     state: restarted
     enabled: yes
+  when: not aws_elasticache
