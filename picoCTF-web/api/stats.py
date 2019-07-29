@@ -58,8 +58,21 @@ def get_score(tid=None, uid=None):
         time_weight = 0
         if score > 0:
             solved_args.update({'correct': True})
-            last_submitted = db.submissions.find(solved_args).limit(1).sort(
-                [('$natural', pymongo.DESCENDING)])[0]['timestamp']
+            last_submitted = datetime.datetime.now()
+            # Search by individual team members, which may include
+            # submissions made before joining current team
+            if tid is not None:
+                members = api.team.get_team_members(tid=tid,
+                                                    show_disabled=False)
+                solved_args = {
+                    "uid": {
+                        "$in": list(map(lambda x: x["uid"], members))
+                    }
+                }
+            query = db.submissions.find(solved_args).limit(1).sort(
+                [('$natural', pymongo.DESCENDING)])
+            if query.count() > 0:
+                last_submitted = query[0]['timestamp']
             # Weight returns a float based on last submission time.
             # Math is safe for next 2 centuries
             time_weight = 1 - (int(last_submitted.strftime("%s")) * 1e-10)
