@@ -11,3 +11,4 @@
     mode: 0644
   notify :
     - redis-server restart
+  when: not aws_elasticache

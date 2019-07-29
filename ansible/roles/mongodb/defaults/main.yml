@@ -40,6 +40,7 @@ redis_conf_auth: True                                               # Run with s
 redis_db_number: 0
 redis_conf_bind_ip: "0.0.0.0"                                       # IP addresses to listen on (Static)
 redis_conf_port: 6379                                              # Port number
+aws_elasticache: False
 
 redis_daemon_name: redis-server
 
