@@ -350,9 +350,11 @@ const LoginForm = React.createClass({
         };
 
         const result = [];
+        let i = 0;
         for (let country in countryList) {
           const abbrev = countryList[country];
-          result.push(<option value={abbrev}>{country}</option>);
+          result.push(<option key={i} value={abbrev}>{country}</option>);
+          i++;
         }
         return result;
       };
@@ -457,7 +459,7 @@ const LoginForm = React.createClass({
                       : "School Name *"
                   }
                   placeholder="Example School, Pittsburgh, PA"
-                  maxlength="50"
+                  maxLength="50"
                   required={true}
                 />
                 <p className="help-block">Your school or organization name may be visible to other users.</p>
