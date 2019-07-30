@@ -985,7 +985,7 @@ const AuthPanel = React.createClass({
             this.setPage("Team Management");
           } else {
             if (data.teacher) {
-              ocument.location.href = "/classroom";
+              document.location.href = "/classroom";
             } else {
               document.location.href = "/profile";
             }
