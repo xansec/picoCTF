@@ -350,7 +350,7 @@ def disable_account(uid, disable_reason=None):
     Args:
         uid: ID of the user to disable
     """
-    if disable_reason is not None:
+    if disable_reason is None:
         disable_reason = "Not specified"
 
     db = api.db.get_conn()

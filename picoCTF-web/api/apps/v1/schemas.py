@@ -644,3 +644,10 @@ user_search_req.add_argument(
     'query', required=True, location='json', type=str,
     help="Body of the query", error="Query field is empty!"
 )
+
+# User deletion schema
+user_delete_req = reqparse.RequestParser()
+user_delete_req.add_argument(
+    'reason', required=False, location='json', type=str,
+    help="Deletion reason", error="The reason must be a string!"
+)
