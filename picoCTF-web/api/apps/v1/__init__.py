@@ -7,6 +7,7 @@ from api import PicoException
 
 from .achievements import ns as achievements_ns
 from .bundles import ns as bundles_ns
+from .events import ns as events_ns
 from .exceptions import ns as exceptions_ns
 from .feedback import ns as feedback_ns
 from .groups import ns as groups_ns
@@ -32,6 +33,7 @@ api = Api(
 for ns in [
     achievements_ns,
     bundles_ns,
+    events_ns,
     exceptions_ns,
     feedback_ns,
     groups_ns,

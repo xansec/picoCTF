@@ -652,3 +652,23 @@ user_search_req.add_argument(
     'query', required=True, location='json', type=str,
     help="Body of the query", error="Query field is empty!"
 )
+
+# Event schema
+event_req = reqparse.RequestParser()
+event_req.add_argument(
+    'name', required=True, type=str, location='json',
+    help='Name of the event', error='Event name must be a string'
+)
+event_req.add_argument(
+    'eligibility_conditions', required=False, type=str, location='json',
+    default='', help='MongoDB query to find eligible users',
+    error='Eligibility conditions must be a MongoDB query string'
+)
+event_req.add_argument(
+    'sponsor', required=False, type=str, location='json', default=None,
+    help='Sponsor of the event', error='Sponsor must be a string'
+)
+event_req.add_argument(
+    'logo', required=False, type=str, location='json', default=None,
+    help='URL of a logo for the event', error='Logo must be an image URL'
+)

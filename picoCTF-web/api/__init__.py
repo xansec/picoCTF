@@ -21,6 +21,7 @@ import api.common
 import api.config
 import api.db
 import api.email
+import api.events
 import api.group
 import api.logger
 import api.problem
