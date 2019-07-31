@@ -138,8 +138,7 @@ window.drawTopTeamsProgressionGraph = function(selector, gid) {
   const div = divFromSelector(selector);
 
   const drawgraph = data =>
-    apiCall("GET", "/api/v1/status")
-      .success(function(statusdata) {
+    addAjaxListener("/api/v1/status", statusdata => {
         let i;
         if (data.length >= 2 && $(selector).is(":visible")) {
           const scoreData = data.map(
@@ -191,10 +190,8 @@ window.drawTopTeamsProgressionGraph = function(selector, gid) {
             });
           }
         }
-      })
-      .error(jqXHR =>
-        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-      );
+      }
+    );
 
   if (gid === "student") {
     apiCall("GET", "/api/v1/stats/top_teams/score_progression")
@@ -245,8 +242,7 @@ window.renderTeamRadarGraph = function(selector, tid) {
 
 window.renderTeamProgressionGraph = function(selector, data) {
   const div = divFromSelector(selector);
-  apiCall("GET", "/api/v1/status")
-    .success(function(statusdata) {
+  addAjaxListener("/api/v1/status", statusdata => {
       if (data.length > 0) {
         let chart;
         const dataPoints = progressionDataToPoints(
@@ -287,10 +283,7 @@ window.renderTeamProgressionGraph = function(selector, data) {
       } else {
         return $(selector).html("<p>No problems have been solved.</p>");
       }
-    })
-    .error(jqXHR =>
-      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-    );
+    });
 };
 
 window.drawTeamProgressionGraph = (selector, container_selector) =>

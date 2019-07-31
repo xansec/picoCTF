@@ -853,16 +853,12 @@ const AuthPanel = React.createClass({
         );
       });
     } else {
-      apiCall("GET", "/api/v1/status").success(data => {
+      addAjaxListener("/api/v1/status", data => {
         this.setState(
           update(this.state, { settings: { $merge: data } })
         );
       });
     }
-
-    apiCall("GET", "/api/v1/user").success(data => {
-      this.setState(update(this.state, { settings: { $merge: data } }));
-    });
 
     apiCall("GET", "/api/v1/stats/registration").success(data => {
       this.setState(update(this.state, { regStats: { $set: data } }));
@@ -1043,14 +1039,11 @@ const AuthPanel = React.createClass({
             </h4>
             <p>
               <strong>{this.state.regStats.users}</strong> users have
-              registered, <strong>{this.state.regStats.teamed_users}</strong>
-              {` of
-which have formed `}
-              <strong>{this.state.regStats.teams}</strong> teams.
+              registered,<strong> {this.state.regStats.teamed_users} </strong>
+              of which have formed<strong> {this.state.regStats.teams} </strong>teams.
               <br />
-              <strong>{this.state.regStats.groups}</strong>
-              {` classrooms have been created by teachers.\
-`}
+              <strong>{this.state.regStats.groups} </strong>
+              classrooms have been created by teachers.
             </p>
           </Panel>
         );
@@ -1102,6 +1095,5 @@ which have formed `}
 });
 
 $(function() {
-  redirectIfLoggedIn();
   ReactDOM.render(<AuthPanel />, document.getElementById("auth-box"));
 });

@@ -132,13 +132,9 @@ const ProblemInfo = React.createClass({
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
 
-    apiCall("GET", "/api/v1/user")
-      .success(data => {
-        this.setState(update(this.state, { user: { $set: data } }));
-      })
-      .error(jqXHR =>
-        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-      );
+    addAjaxListener("/api/v1/user", data => {
+      this.setState(update(this.state, { user: { $set: data } }));
+    });
   },
 
   render() {
@@ -212,6 +208,13 @@ const ProblemInfo = React.createClass({
 });
 
 $(function() {
+  addAjaxListener("/api/v1/user", function (data) {
+    if (data.teacher) {
+      window.isTeacher = true;
+    }
+    window.username = data.username;
+  });
+
   //load_team_info()
   ReactDOM.render(<ProblemInfo />, document.getElementById("progress-info"));
   load_group_info();

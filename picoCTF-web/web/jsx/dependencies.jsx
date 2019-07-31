@@ -27,7 +27,10 @@ window.apiCall = function(method, url, data, ga_event_class, ga_event) {
         }
       }
     },
-    success() {
+    success(data, textStatus, jqXHR) {
+      if (method === "GET") {  // Cache anything all gets
+        window.sessionStorage.setItem(url, JSON.stringify(data));
+      }
       if (ga_event_class && ga_event) {
         ga("send", "event", ga_event_class, ga_event, "Success");
       }
@@ -40,48 +43,62 @@ window.apiCall = function(method, url, data, ga_event_class, ga_event) {
    return $.ajax(params);
 };
 
-window.redirectIfNotLoggedIn = () =>
-  apiCall("GET", "/api/v1/user", null, "Redirect", "NotLoggedIn").success(
-    function(data) {
-      if (!data.logged_in) {
-        window.location.href = "/";
+// Hackish: use primarily for user and status calls which occur every page load
+window.addAjaxListener = (url, onSuccess, onFail, ga_event_class, ga_event) => {
+  // Check session storage first, in case the initial call already returned
+  let sessionValue = JSON.parse(window.sessionStorage.getItem(url));
+  if (sessionValue !== null) {
+    onSuccess(sessionValue);
+  } else { // Not cached in sessionStorage, add to any pending calls
+    $(document).ajaxComplete((event, xhr, settings) => {
+      if (settings.url === url) {
+        if (xhr.statusText === "success" && onSuccess) {
+          onSuccess(xhr.responseJSON);
+          ga("send", "event", ga_event_class, ga_event, "Success");
+        } else if (xhr.statusText === "error") {
+          ga("send", "event", ga_event_class, ga_event, `Failure::${jqXHR.responseJSON.message}`);
+          if (onFail) { onFail(xhr); }
+        }
       }
+    });
+  }
+};
+
+window.redirectIfNotLoggedIn = () =>
+  addAjaxListener("/api/v1/user", (data) => {
+    if (!data.logged_in) {
+      window.location.href = "/";
     }
-  );
+  }, undefined, "Redirect", "NotLoggedIn");
 
 window.redirectIfLoggedIn = () =>
-  apiCall("GET", "/api/v1/user", null, "Redirect", "LoggedIn").success(function(
-    data
-  ) {
+  addAjaxListener("/api/v1/user", (data) => {
     if (data.logged_in) {
       window.location.href = "/news";
     }
-  });
+  }, undefined, "Redirect", "LoggedIn");
 
 window.redirectIfTeacher = () =>
-  apiCall("GET", "/api/v1/user", null, "Redirect", "Teacher").success(function(
-    data
-  ) {
+  addAjaxListener("/api/v1/user", (data) => {
     if (data.teacher) {
       window.location.href = "/classroom";
     }
-  });
+  }, undefined, "Redirect", "Teacher");
+
 
 window.redirectIfNotTeacher = () =>
-  apiCall("GET", "/api/v1/user").success(function(data) {
+  addAjaxListener("/api/v1/user", (data) => {
     if (!data.teacher) {
       window.location.href = "/";
     }
-  });
+  }, undefined, "Redirect", "NotTeacher");
 
 window.redirectIfNotAdmin = () =>
-  apiCall("GET", "/api/v1/user", null, "Redirect", "Admin").success(function(
-    data
-  ) {
+  addAjaxListener("/api/v1/user", (data) => {
     if (!data.admin) {
       window.location.href = "/";
     }
-  });
+  }, undefined, "Redirect", "NotAdmin");
 
 const getStyle = function(data) {
   let style = "info";
@@ -178,7 +195,10 @@ window.logout = () =>
     null,
     "Authentication",
     "LogOut"
-  ).success(data => (document.location.href = "/"));
+  ).success(data => {
+    window.sessionStorage.clear();
+    document.location.href = "/";
+  });
 
 $.fn.apiNotify = function(data, configuration) {
   configuration["className"] = getStyle(data);
@@ -202,8 +222,7 @@ $.fn.serializeObject = function() {
   return o;
 };
 
-$(() =>
-  apiCall("GET", "/api/v1/user").success(
-    data => (document.competition_status = data)
-  )
-);
+// Don't wait for document ready, don't need DOM
+apiCall("GET", "/api/v1/user");
+apiCall("GET", "/api/v1/status");
+

@@ -10,8 +10,6 @@ const renderTeamSelection = _.template(
     .text()
 );
 
-window.groupListCache = [];
-
 String.prototype.hashCode = function () {
   let hash = 0;
   for (let i = 0; i < this.length; i++) {
@@ -100,7 +98,7 @@ const loadGroupOverview = function(groups, showFirstTab, callback) {
     const groupName = $(this).data("group-name");
 
     apiCall("GET", `/api/v1/groups/${$(this).data("gid")}`).success(
-      function(data) {
+      data => {
         ga("send", "event", "Group", "LoadTeacherGroupInformation", "Success");
         for (let group of groups) {
           if (group.name == groupName) {
@@ -166,7 +164,6 @@ const loadGroupOverview = function(groups, showFirstTab, callback) {
 const loadGroupInfo = (showFirstTab, callback) =>
   apiCall("GET", "/api/v1/groups", null, "Group", "GroupListLoad")
     .success(function(data) {
-      window.groupListCache = data;
       loadGroupOverview(data, showFirstTab, callback);
     })
     .error(jqXHR =>
@@ -219,26 +216,16 @@ const groupRequest = function(e) {
 };
 
 $(function() {
-  if (!window.userStatus) {
-    apiCall("GET", "/api/v1/user").success(function(data) {
-      window.userStatus = data;
-      if (!window.userStatus.teacher) {
-        apiNotify(
-          { status: 1, message: "You are no longer a teacher." },
-          "/profile"
-        );
-      }
-    });
-  } else if (!window.userStatus.teacher) {
-    apiNotify(
-      { status: 1, message: "You are no longer a teacher." },
-      "/profile"
-    );
-  }
-
+  addAjaxListener("/api/v1/user", function (data) {
+    if (data.teacher) {
+      window.isTeacher = true;
+    }
+    if (data.admin) {
+      window.isAdmin = true;
+    }
+  });
   loadGroupInfo(true);
-
-  $(document).on("shown.bs.tab", 'a[href="#group-overview-tab"]', () =>
-    loadGroupInfo(true)
-  );
+  $(document).on("shown.bs.tab", 'a[href="#group-overview-tab"]', () => {
+    loadGroupInfo(true);
+  });
 });

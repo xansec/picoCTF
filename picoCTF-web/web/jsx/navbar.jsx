@@ -36,42 +36,38 @@ const loadNavbar = function(renderNavbarLinks, renderNestedNavbarLinks) {
     renderNestedNavbarLinks
   };
 
-  apiCall("GET", "/api/v1/user")
-    .success(userData =>
-      apiCall("GET", "/api/v1/status")
-        .success(function(competitionData) {
-          navbarLayout.links = userNotLoggedIn;
-          navbarLayout.status = userData;
-          navbarLayout.topLevel = true;
-          if (userData["logged_in"]) {
-            if (userData["teacher"]) {
-              if (competitionData["competition_active"]) {
-                navbarLayout.links = teacherLoggedIn;
-              } else {
-                navbarLayout.links = teacherLoggedInNoCompetition;
-              }
+  addAjaxListener("/api/v1/user", userData => {   // onsuccess
+    addAjaxListener("/api/v1/status", competitionData => {  // onsuccess
+        navbarLayout.links = userNotLoggedIn;
+        navbarLayout.status = userData;
+        navbarLayout.topLevel = true;
+        if (userData["logged_in"]) {
+          if (userData["teacher"]) {
+            if (competitionData["competition_active"]) {
+              navbarLayout.links = teacherLoggedIn;
             } else {
-              if (competitionData["competition_active"]) {
-                navbarLayout.links = userLoggedIn;
-              } else {
-                navbarLayout.links = userLoggedInNoCompetition;
-              }
-            }
-            if (userData["admin"]) {
-              $.extend(navbarLayout.links, adminLoggedIn);
+              navbarLayout.links = teacherLoggedInNoCompetition;
             }
           } else {
-            $(".show-when-logged-out").css("display", "inline-block");
+            if (competitionData["competition_active"]) {
+              navbarLayout.links = userLoggedIn;
+            } else {
+              navbarLayout.links = userLoggedInNoCompetition;
+            }
           }
-          $("#navbar-links").html(renderNavbarLinks(navbarLayout));
-          $("#navbar-item-logout").on("click", logout);
-        })
-        .fail(function() {
-          navbarLayout.links = apiOffline;
-          $("#navbar-links").html(renderNavbarLinks(navbarLayout));
-        })
-    )
-    .fail(function() {
+          if (userData["admin"]) {
+            $.extend(navbarLayout.links, adminLoggedIn);
+          }
+        } else {
+          $(".show-when-logged-out").css("display", "inline-block");
+        }
+        $("#navbar-links").html(renderNavbarLinks(navbarLayout));
+        $("#navbar-item-logout").on("click", logout);
+      }, () => {     // on fail
+        navbarLayout.links = apiOffline;
+        $("#navbar-links").html(renderNavbarLinks(navbarLayout));
+      })
+  }, () => {   // on fail
       navbarLayout.links = apiOffline;
       $("#navbar-links").html(renderNavbarLinks(navbarLayout));
     });

@@ -315,18 +315,16 @@ const GroupManagement = React.createClass({
       );
     });
 
+    /*
     apiCall("GET", "/api/v1/user").success(data => {
       this.setState(update(this.state, { current_user: { $set: data } }));
-      if (
-        !data["teacher"] ||
-        (window.userStatus && !window.userStatus.teacher)
-      ) {
+      if (!data["teacher"]) {
         apiNotify(
           { status: 1, message: "You are no longer a teacher." },
           "/profile"
         );
       }
-    });
+    }); */
   },
 
   pushUpdates(modifier) {
@@ -558,8 +556,8 @@ const TeacherManagement = React.createClass({
     this.setState(update(this.state, { tabKey: { $set: tab } }));
   },
 
-  componentWillMount() {
-    apiCall("GET", "/api/v1/groups").success(data => {
+  componentDidMount() {
+    addAjaxListener("/api/v1/groups", data => {
       this.setState(update(this.state, { groups: { $set: data } }));
     });
   },
@@ -572,7 +570,7 @@ const TeacherManagement = React.createClass({
             <Tab
               eventKey={i}
               key={i}
-              tab={group.name}
+              title={group.name}
               className="tab-pane-outline"
             >
               <GroupManagement key={group.name} gid={group.gid} />

@@ -8,6 +8,9 @@ post_scripts:
   - js/progression_graphs.js
   - js/classroom.js
   - js/classroom-management.js
+startup_functions:
+- redirectIfNotLoggedIn()
+- redirectIfNotTeacher()
 ---
 
 <div class="container">
@@ -270,13 +273,13 @@ post_scripts:
                    data-group-name="<%- group.name %>"
                    role="tab" data-toggle="tab">
                   <%- group.name %>
-                  <% if(window.userStatus && window.userStatus.admin) { %>
+                  <% if(window.isAdmin) { %>
                     <span data-group-name="<%- group.name %>" data-gid="<%- group.gid %>" class="glyphicon glyphicon-remove delete-group-span"></span>
                   <% } %>
                 </a>
             </li>
         <% }); %>
-        <% if(window.userStatus && window.userStatus.admin) { %>
+        <% if(window.isAdmin) { %>
           <li><a href="#" id="new-class-tab">New Class</a></li>
         <% } %>
         </ul>
