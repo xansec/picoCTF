@@ -783,9 +783,63 @@ const CaptchaTab = React.createClass({
   }
 });
 
+const User = React.createClass({
+  getInitialState() {
+    return null;
+  },
+
+  render() {
+    return(
+      <Panel>
+        <Row>
+          <Col md={8}>
+            <h4>
+              {this.props.username}
+            </h4>
+          </Col>
+        </Row>
+      </Panel>
+    )
+  }
+})
+
+const UserList = React.createClass({
+  propTypes: {
+    users: React.PropTypes.array.isRequired
+  },
+
+  render() {
+    if (this.props.users.length === 0) {
+      return (
+        <h4>
+          No matching users.
+        </h4>
+      );
+    }
+
+    const userComponents = this.props.users.map((user, i) => {
+      return (
+        <Col key={i} xs={12}>
+          <User
+            {...Object.assign(
+              user
+            )}
+          />
+        </Col>
+      );
+    });
+
+    return <Row>{userComponents}</Row>;
+  }
+})
+
 const UserSearchTab = React.createClass({
   getInitialState() {
-    return {search_field: "email", search_query: "email@example.com"};
+    return {
+      search_field: "email",
+      search_query: "email@example.com",
+      users: []
+    };
   },
 
   updateSearchField(value) {
@@ -820,13 +874,16 @@ const UserSearchTab = React.createClass({
 
     apiCall("POST", "/api/v1/users/search", pushData)
       .success(data => {
-        apiNotify({ status: 1, message: "Search request processed" });
-        alert(JSON.stringify(data));
-        this.props.refresh();
+        this.setState(
+          React.addons.update(this.state, { users: { $set: data } })
+        );
       })
-      .error(jqXHR =>
-        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-      );
+      .error(jqXHR => {
+        apiNotify({ status: 0, message: jqXHR.responseJSON.message });
+        this.setState(
+          React.addons.update(this.state, { users: { $set: [] } })
+        );
+      });
   },
 
   render() {
@@ -858,6 +915,11 @@ const UserSearchTab = React.createClass({
                 </ButtonToolbar>
               </div>
             </Row>
+            <Col>
+              <UserList
+                users={this.state.users}
+              />
+            </Col>
           </Col>
         </Row>
       </Well>
