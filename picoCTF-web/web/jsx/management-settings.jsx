@@ -783,6 +783,88 @@ const CaptchaTab = React.createClass({
   }
 });
 
+const UserSearchTab = React.createClass({
+  getInitialState() {
+    return {search_field: "email", search_query: "email@example.com"};
+  },
+
+  updateSearchField(value) {
+    this.setState(
+      update(this.state, {
+        $set: {
+          search_field: value
+        }
+      })
+    );
+  },
+
+  updateSearchQuery(e) {
+    this.setState(
+      update(this.state, {
+        $set: {
+          search_query: e.target.value
+        }
+      })
+    );
+  },
+
+  pushUpdates(makeChange) {
+    let pushData = {
+      field: this.state.search_field,
+      query: this.state.search_query
+    };
+
+    if (typeof makeChange === "function") {
+      pushData = makeChange(pushData);
+    }
+
+    apiCall("POST", "/api/v1/users/search", pushData)
+      .success(data => {
+        apiNotify({ status: 1, message: "Search request processed" });
+        alert(JSON.stringify(data));
+        this.props.refresh();
+      })
+      .error(jqXHR =>
+        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+      );
+  },
+
+  render() {
+    const searchFieldDescription = "The field to be searched in the user database";
+    const searchQueryDescription = "The text of the query";
+
+    return (
+      <Well>
+        <Row>
+          <Col sm={8}>
+            <OptionEntry
+              name="Field"
+              value={this.state.search_field}
+              options={["email", "parentemail"]}
+              onChange={this.updateSearchField}
+              description={searchFieldDescription}
+            />
+            <TextEntry
+              name="Query"
+              type="text"
+              value={this.state.search_query}
+              onChange={this.updateSearchQuery}
+              description={searchQueryDescription}
+            />
+            <Row>
+              <div className="text-center">
+                <ButtonToolbar>
+                  <Button onClick={this.pushUpdates}>Search</Button>
+                </ButtonToolbar>
+              </div>
+            </Row>
+          </Col>
+        </Row>
+      </Well>
+    );
+  }
+});
+
 const EligibilityTab = React.createClass({
   propTypes: {
     refresh: React.PropTypes.func.isRequired,
@@ -978,6 +1060,12 @@ const SettingsTab = React.createClass({
               <EligibilityTab
                 refresh={this.refresh}
                 eligibilitySettings={this.state.settings.eligibility}
+                key={Math.random()}
+              />
+            </Tab>
+            <Tab eventKey="userSearch" title="User Search">
+              <UserSearchTab
+                refresh={this.refresh}
                 key={Math.random()}
               />
             </Tab>
