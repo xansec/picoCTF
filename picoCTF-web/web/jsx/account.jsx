@@ -200,8 +200,8 @@ const TeamManagementForm = React.createClass({
   },
 
   listMembers() {
-    return this.state.team["members"].map(member => (
-      <li>
+    return this.state.team["members"].map((member, i) => (
+      <li key={i}>
         {member.username} (
         <span className="capitalize">
           {member.usertype} - {member.country}
