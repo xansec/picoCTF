@@ -236,7 +236,7 @@ def get_team_information(tid):
     # @TODO there is a LOT of stuff being added here - expensive. all needed?
     #       ideally combine/replace this w/ get_team()
     # Add additional information
-    team_info["score"] = int(api.stats.get_score(tid=tid))
+    team_info["score"] = api.stats.get_score(tid=tid, time_weighted=False)
     team_info["members"] = [{
         "username": member["username"],
         "firstname": member["firstname"],

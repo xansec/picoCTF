@@ -20,7 +20,7 @@ def _get_problem_names(problems):
 
 
 # @memoize
-def get_score(tid=None, uid=None):
+def get_score(tid=None, uid=None, time_weighted=True):
     """
     Get the score for a user or team. Uses memoization from zset keyed on
     uid/tid. Currently the sorted aspect of this set doesn't exactly serve
@@ -29,6 +29,7 @@ def get_score(tid=None, uid=None):
     Args:
         tid: The team id
         uid: The user id
+        time_weighted: return decimal weight of time of last solved problem
     Returns:
         float score: The users's or team's int score, plus decimal value of
         weighting based last submission time. Cast as int for all
@@ -78,7 +79,10 @@ def get_score(tid=None, uid=None):
             time_weight = 1 - (int(last_submitted.strftime("%s")) * 1e-10)
         score += time_weight
         score_cache.add({cache_key: score})
-    return score
+    if time_weighted:
+        return score
+    else:
+        return int(score)
 
 
 def get_team_review_count(tid=None, uid=None):
@@ -205,7 +209,7 @@ def get_all_user_scores():
     for user in users:
         result.append({
             "name": user['username'],
-            "score": int(get_score(uid=user['uid']))
+            "score": get_score(uid=user['uid'], time_weighted=False)
         })
 
     return sorted(result, key=lambda item: item['score'], reverse=True)
@@ -566,7 +570,7 @@ def get_demographic_data():
             "gender": user['demo'].get('gender',''),
             "zipcode": user['demo'].get('zipcode',''),
             "grade": user['demo'].get('grade',''),
-            "score": get_score(uid=user['uid'])
+            "score": get_score(uid=user['uid'], time_weighted=False)
         })
 
     return result
