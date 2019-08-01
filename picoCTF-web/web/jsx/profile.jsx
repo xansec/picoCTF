@@ -71,7 +71,8 @@ const group_request = function(e) {
   e.preventDefault();
   const form = $(this).closest("form");
   confirmDialog(
-    "By joining a class you are allowing the instructor to see individual statistics concerning your team's performance. Are you sure you want to join this class?",
+    "By joining a class you are allowing the instructor to see statistics concerning your team's performance, " +
+    "as well as information on your team members such as username and email. Are you sure you want to join this class?",
     "Class Confirmation",
     "Join",
     "Cancel",
