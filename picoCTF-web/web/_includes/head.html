@@ -3,7 +3,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>{% if page.title %}{{ site.title }} - {{ page.title }}{% else %}{{ site.title }}{% endif %}</title>
-    {% for css_file in page.css_files %}
+    {% for css_file in page.css_files %}rub
         <link href="{{ css_file }}" rel="stylesheet" media="screen">
     {% endfor %}
 
@@ -13,26 +13,28 @@
         <script language="javascript">var ga = function (a,b,c,d) {}</script>
     {% endif %}
 
-    <script src="/js/libs/jquery.min.js"></script>
-    <script src="/js/libs/jquery-ui.min.js"></script>
-    <script src="/js/libs/bootstrap.min.js"></script>
-    <script src="/js/libs/react-with-addons.js"></script>
-    <script src="/js/libs/react-dom.js"></script>
-    <script src="/js/libs/react-bootstrap.min.js"></script>
+    {% assign time_stamp = site.time | date: "%s" %}
 
-    <link href="/css/main.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/libs/jquery-ui.css">
+    <script src="/js/libs/jquery.min.js?{{ time_stamp }}"></script>
+    <script src="/js/libs/jquery-ui.min.js?{{ time_stamp }}"></script>
+    <script src="/js/libs/bootstrap.min.js?{{ time_stamp }}"></script>
+    <script src="/js/libs/react-with-addons.js?{{ time_stamp }}"></script>
+    <script src="/js/libs/react-dom.js?{{ time_stamp }}"></script>
+    <script src="/js/libs/react-bootstrap.min.js?{{ time_stamp }}"></script>
 
-    <link href="/css/libs/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css?{{ time_stamp }}">
+    <link rel="stylesheet" href="/css/libs/jquery-ui.css?{{ time_stamp }}">
 
-    <script src="/js/libs/underscore-min.js"></script>
-    <script src="/js/libs/jquery.cookie.min.js"></script>
-    <script src="/js/libs/notify.min.js"></script>
-    <script src="/js/libs/es6.js"></script>
-    <script src="/js/dependencies.js"></script>
-    <script src="/js/navbar.js"></script>
+    <link href="/css/libs/bootstrap.min.css?{{ time_stamp }}" rel="stylesheet">
+
+    <script src="/js/libs/underscore-min.js?{{ time_stamp }}"></script>
+    <script src="/js/libs/jquery.cookie.min.js?{{ time_stamp }}"></script>
+    <script src="/js/libs/notify.min.js?{{ time_stamp }}"></script>
+    <script src="/js/libs/es6.js?{{ time_stamp }}"></script>
+    <script src="/js/dependencies.js?{{ time_stamp }}"></script>
+    <script src="/js/navbar.js?{{ time_stamp }}"></script>
 
     {% for js_file in page.pre_scripts %}
-        <script src="{{ js_file }}"></script>
+        <script src="{{ js_file }}?{{ time_stamp }}"></script>
     {% endfor %}
 </head>
