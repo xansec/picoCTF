@@ -118,10 +118,9 @@ const loadGroupOverview = function(groups, showFirstTab, callback) {
           const result = [];
           for (let team of data.members) {
             if (tid === team.tid) {
-              const preparedData = { status: 1, data: team.progression };
               window.renderTeamProgressionGraph(
                 `#visualizer-${tid}`,
-                preparedData
+                 team.progression
               );
               //hack
               result.push(

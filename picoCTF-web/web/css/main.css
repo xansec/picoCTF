@@ -250,6 +250,10 @@ img.logo-landscape {
     cursor: pointer;
 }
 
+canvas.chartjs-render-monitor {
+  min-height: 150px;
+}
+
 .delete-group-span {
     cursor: pointer;
 }
