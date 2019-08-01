@@ -1095,5 +1095,6 @@ const AuthPanel = React.createClass({
 });
 
 $(function() {
+  redirectIfLoggedIn();
   ReactDOM.render(<AuthPanel />, document.getElementById("auth-box"));
 });
