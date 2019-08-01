@@ -660,8 +660,8 @@ event_req.add_argument(
     help='Name of the event', error='Event name must be a string'
 )
 event_req.add_argument(
-    'eligibility_conditions', required=False, type=str, location='json',
-    default='', help='MongoDB query to find eligible users',
+    'eligibility_conditions', required=False, type=object_type,
+    location='json', default='', help='MongoDB query to find eligible users',
     error='Eligibility conditions must be a MongoDB query string'
 )
 event_req.add_argument(
