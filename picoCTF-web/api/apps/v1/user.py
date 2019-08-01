@@ -12,6 +12,9 @@ from .schemas import (disable_account_req, email_verification_req, login_req,
 ns = Namespace('user', description='Authentication and information about ' +
                                    'current user')
 
+USERDATA_FILTER = ['admin', 'extdata', 'completed_minigames', 'logged_in',
+                    'teacher', 'tokens', 'unlocked_walkthroughs', 'username',
+                    'verified']
 
 @ns.route('')
 class User(Resource):
@@ -25,7 +28,9 @@ class User(Resource):
         }
         if api.user.is_logged_in():
             res['logged_in'] = True
-            res.update(api.user.get_user())
+            userdata = {k: v for k, v in api.user.get_user().items() if
+                        k in USERDATA_FILTER}
+            res.update(userdata)
         return jsonify(res)
 
     @check_csrf
