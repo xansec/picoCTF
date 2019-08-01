@@ -785,7 +785,31 @@ const CaptchaTab = React.createClass({
 
 const User = React.createClass({
   getInitialState() {
-    return null;
+    return {
+      deletion_reason: null
+    };
+  },
+
+  updateReason(e) {
+    this.setState(
+      update(this.state, {
+        $set: {
+          deletion_reason: e.target.value
+        }
+      })
+    );
+  },
+
+  disableAccount() {
+    confirmDialog(
+      "User " + this.props.username + " will be deleted for: " + (this.state.deletion_reason ? this.state.deletion_reason : "Not specified"),
+      "Delete Account Confirmation",
+      "Delete Account",
+      "Cancel",
+      function() {
+        alert("Test success");
+      }
+    );
   },
 
   render() {
@@ -796,6 +820,27 @@ const User = React.createClass({
             <h4>
               {this.props.username}
             </h4>
+          </Col>
+          <Col md={4}>
+            <h4>
+              {this.props.email}
+            </h4>
+          </Col>
+        </Row>
+        <Row>
+          <Col md={10}>
+            <TextEntry
+              name="Deletion Reason"
+              type="text"
+              value={this.state.deletion_reason}
+              onChange={this.updateReason}
+              description="Optional reason for account deletion"
+            />
+          </Col>
+          <Col md={2}>
+            <ButtonToolbar>
+              <Button onClick={this.disableAccount} className="btn-danger">Delete</Button>
+            </ButtonToolbar>
           </Col>
         </Row>
       </Panel>
