@@ -853,7 +853,7 @@ const AuthPanel = React.createClass({
         );
       });
     } else {
-      addAjaxListener("/api/v1/status", data => {
+      apiCall("GET", "/api/v1/settings").done(data => {
         this.setState(
           update(this.state, { settings: { $merge: data } })
         );

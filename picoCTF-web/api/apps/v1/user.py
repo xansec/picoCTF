@@ -28,6 +28,7 @@ class User(Resource):
         }
         if api.user.is_logged_in():
             res['logged_in'] = True
+            res['score'] = api.stats.get_score(tid=api.user.get_user()['tid'])
             userdata = {k: v for k, v in api.user.get_user().items() if
                         k in USERDATA_FILTER}
             res.update(userdata)

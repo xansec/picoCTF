@@ -26,20 +26,8 @@ class Status(Resource):
         """
         settings = api.config.get_settings()
         return jsonify({
-            "enable_feedback":
-                settings["enable_feedback"],
-            "enable_captcha":
-                settings["captcha"]["enable_captcha"],
-            "reCAPTCHA_public_key":
-                settings["captcha"]["reCAPTCHA_public_key"],
             "competition_active":
                 api.config.check_competition_active(),
-            "email_verification":
-                settings["email"]["email_verification"],
-            "max_team_size":
-                settings["max_team_size"],
-            "email_filter":
-                settings["email_filter"],
             "time":
                 int(datetime.datetime.utcnow().timestamp())
         })
