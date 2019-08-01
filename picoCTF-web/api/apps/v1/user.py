@@ -142,7 +142,7 @@ class DisableAccountResponse(Resource):
         if not api.user.confirm_password(
                 req['password'], user['password_hash']):
             raise PicoException('The provided password is not correct.', 422)
-        api.user.disable_account(user['uid'])
+        api.user.disable_account(user['uid'], "Deleted at user's request.")
         api.user.logout()
         return jsonify({
             'success': True
