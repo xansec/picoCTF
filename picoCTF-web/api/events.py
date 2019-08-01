@@ -55,3 +55,11 @@ def add_event(name, eligibility_conditions="", sponsor=None, logo=None):
         "logo": logo,
     })
     return eid
+
+
+def is_eligible(user, event):
+    """Determine whether a given user is eligible for an event."""
+    search_query = event['eligibility_conditions']
+    search_query['uid'] = user['uid']
+    db = api.db.get_conn()
+    return db.users.find_one(search_query) is not None

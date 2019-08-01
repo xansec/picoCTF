@@ -395,16 +395,30 @@ def join_team(team_name, password, user):
         raise PicoException(
             'That is not the correct password to join that team.', 403)
 
-    # Make sure joining the team will not impact its eligibility
-    if (desired_team_info['size'] > 0 and
-            desired_team_info['eligible'] is True and
-            not desired_team_info.get('allow_ineligible_members', False)):
-        projected_team_members = [m for m in desired_team_info['members']]
-        projected_team_members.append(api.user.get_user())
-        if not calculate_elegibility(projected_team_members):
+    # Update the team's eligibilities
+    if desired_team_info['size'] == 0:
+        updated_eligible_events = [
+            event for event in api.events.get_all_events()
+            if api.events.is_eligible(user, event)
+        ]
+    else:
+        currently_eligible_events = [
+            api.events.get_event(eid)
+            for eid in desired_team_info['eligibilities']
+        ]
+        updated_eligible_events = [
+            event for event in currently_eligible_events
+            if api.events.is_eligible(user, event)
+        ]
+        lost_eligibilities = [
+            event for event in currently_eligible_events
+            if event not in updated_eligible_events
+        ]
+        if (len(lost_eligibilities) > 0 and
+                not desired_team_info.get('allow_ineligible_members', False)):
             raise PicoException(
                 'You cannot join this team as doing so would make it ' +
-                'ineligible for the competition.', 403
+                f'ineligible for {lost_eligibilities[0]["name"]}', 403
             )
 
     # Join the new team
@@ -421,6 +435,14 @@ def join_team(team_name, password, user):
 
     if not user_team_update:
         raise PicoException("There was an issue switching your team!")
+
+    # Update the eligiblities of the new team
+    db.teams.find_one_and_update(
+        {"tid": desired_team["tid"]},
+        {"$set": {
+            "eligibilities": [e['eid'] for e in updated_eligible_events]
+        }}
+    )
 
     # Update the sizes of the old and new teams
     db.teams.find_one_and_update(
