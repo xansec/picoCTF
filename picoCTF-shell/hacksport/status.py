@@ -6,10 +6,10 @@ import socket
 from os.path import join
 
 from hacksport.operations import execute
-from shell_manager.bundle import get_bundle, get_bundle_root
 from shell_manager.util import (BUNDLE_ROOT, DEPLOYED_ROOT, get_problem,
-                                get_problem_root, HACKSPORTS_ROOT, PROBLEM_ROOT,
-                                STAGING_ROOT, get_pid_hash, sanitize_name)
+                                get_problem_root, SHARED_ROOT, PROBLEM_ROOT,
+                                STAGING_ROOT, get_pid_hash, sanitize_name,
+                                get_bundle, get_bundle_root, release_lock)
 
 logger = logging.getLogger(__name__)
 
@@ -42,16 +42,16 @@ def get_all_bundles():
     return bundles
 
 
-def get_all_problem_instances(problem_path):
+def get_all_problem_instances(problem_name):
     """
     Returns a list of instances for a given problem
 
     Args:
-        problem_path: Sanitized problem name with hash.
+        problem_name: Sanitized problem name with hash.
     """
 
     instances = []
-    instances_dir = join(DEPLOYED_ROOT, problem_path)
+    instances_dir = join(DEPLOYED_ROOT, problem_name)
     if os.path.isdir(instances_dir):
         for name in os.listdir(instances_dir):
             if name.endswith(".json"):
@@ -66,7 +66,7 @@ def get_all_problem_instances(problem_path):
     return instances
 
 
-def publish(args, config):
+def publish(args):
     """ Main entrypoint for publish """
 
     problems = get_all_problems()
@@ -87,25 +87,18 @@ def publish(args, config):
     print(json.dumps(output, indent=2))
 
 
-def clean(args, config):
+def clean(args):
     """ Main entrypoint for clean """
-
-    lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
-
     # remove staging directories
     if os.path.isdir(STAGING_ROOT):
         logger.info("Removing the staging directories")
         shutil.rmtree(STAGING_ROOT)
 
     # remove lock file
-    if os.path.isfile(lock_file):
-        logger.info("Removing the stale lock file")
-        os.remove(lock_file)
-
-    # TODO: potentially perform more cleaning
+    release_lock()
 
 
-def status(args, config):
+def status(args):
     """ Main entrypoint for status """
 
     bundles = get_all_bundles()
@@ -139,7 +132,10 @@ def status(args, config):
         return status
 
     def get_problem_status(name_with_hash, problem):
-        problem_status = {"name": problem["name"]}
+        problem_status = {
+            "name": problem["name"],
+            "unique_name": problem["unique_name"]
+            }
         instances = get_all_problem_instances(name_with_hash)
         instance_statuses = []
         for instance in instances:
@@ -149,13 +145,14 @@ def status(args, config):
 
         return problem_status
 
-    def print_problem_status(problem, path, prefix=""):
+    def print_problem_status(problem, prefix=""):
 
         def pprint(string):
             print("{}{}".format(prefix, string))
 
         pprint("* [{}] {} ({})".format(
-            len(problem["instances"]), problem['name'], path))
+            len(problem["instances"]), problem['name'],
+            problem['unique_name']))
 
         if args.all:
             for instance in problem["instances"]:
@@ -172,13 +169,7 @@ def status(args, config):
         def pprint(string):
             print("{}{}".format(prefix, string))
 
-        pprint("[{} ({})]".format(bundle["name"], path))
-        for name_with_hash in bundle["problems"]:
-            problem = problems.get(name_with_hash, None)
-            if problem is None:
-                pprint("  ! Invalid problem '{}' !".format(name_with_hash))
-                continue
-            pprint("  {} ({})".format(problem['name'], name_with_hash))
+        pprint("* {} ({})".format(bundle["name"], path))
 
     def get_bundle_status(bundle):
         problem_statuses = []
@@ -198,7 +189,7 @@ def status(args, config):
         if args.json:
             print(json.dumps(problem_status, indent=4))
         else:
-            print_problem_status(problem_status, args.problem, prefix="")
+            print_problem_status(problem_status, prefix="")
 
     elif args.bundle is not None:
         bundle = bundles.get(args.bundle, None)
@@ -229,7 +220,7 @@ def status(args, config):
                 # Determine if any problem instance is offline
                 for instance_status in problem_status["instances"]:
                     if not instance_status["service"]:
-                        print_problem_status(problem_status, path, prefix="  ")
+                        print_problem_status(problem_status, prefix="  ")
                         return_code = 1
         else:
             print("** Installed Bundles [{}] **".format(len(bundles)))
@@ -246,7 +237,7 @@ def status(args, config):
                     if not instance_status["service"]:
                         return_code = 1
 
-                print_problem_status(problem_status, path, prefix="  ")
+                print_problem_status(problem_status, prefix="  ")
 
         if return_code != 0:
             exit(return_code)

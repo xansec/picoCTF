@@ -4,11 +4,10 @@ Utilities for dealing with configuration commands
 
 import json
 import logging
-import os
 
-from shell_manager.util import (FatalException, get_config,
-                                place_default_config, write_configuration_file,
-                                write_global_configuration)
+from shell_manager.util import (FatalException,
+                                get_shared_config, get_local_config,
+                                set_shared_config, set_local_config)
 
 logger = logging.getLogger(__name__)
 
@@ -23,19 +22,15 @@ def banned_ports_to_str(banned_ports):
     return "[" + ", ".join(map(port_range_to_str, banned_ports)) + "]"
 
 
-def print_configuration(args, global_config):
+def print_configuration(args):
     """
     Entry point for config subcommand
     """
 
-    if args.file is None:
-        config = global_config
-    else:
-        try:
-            config = get_config(args.file)
-        except FileNotFoundError:
-            logger.fatal("Could not find configuration file '%s'", args.file)
-            raise FatalException
+    if args.config_type == 'shared':
+        config = get_shared_config()
+    elif args.config_type == 'local':
+        config = get_local_config()
 
     if args.json:
         print("Configuration options (in JSON):")
@@ -54,19 +49,15 @@ def print_configuration(args, global_config):
         print("  %s = %s" % (option.ljust(50), value_string))
 
 
-def set_configuration_option(args, global_config):
+def set_configuration_option(args):
     """
     Entry point for config set subcommand
     """
 
-    if args.file is None:
-        config = global_config
-    else:
-        try:
-            config = get_config(args.file)
-        except FileNotFoundError:
-            logger.fatal("Could not find configuration file '%s'", args.file)
-            raise FatalException
+    if args.config_type == 'shared':
+        config = get_shared_config()
+    elif args.config_type == 'local':
+        config = get_local_config()
 
     field = args.field
     value = args.value
@@ -89,24 +80,9 @@ def set_configuration_option(args, global_config):
 
     config[field] = value
 
-    if args.file:
-        write_configuration_file(args.file, config)
-    else:
-        write_global_configuration(config)
+    if args.config_type == 'shared':
+        set_shared_config(config)
+    elif args.config_type == 'local':
+        set_local_config(config)
 
     logger.info("Set %s = %s", field, value)
-
-
-def new_configuration_file(args, global_config):
-    """
-    Entry point for config new subcommand
-    """
-
-    for path in args.files:
-        if not args.overwrite and os.path.exists(path):
-            logger.warning(
-                "'%s' already exists. Not placing new configuration.", path)
-            continue
-
-        place_default_config(path)
-        logger.info("Default configuration file '%s' was created", path)

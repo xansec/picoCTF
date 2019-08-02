@@ -1,9 +1,7 @@
 {
   "name": "Challenge Sampler",
   "author": "Christopher Ganas",
-  "description": "This is the set of example challenges provided in the picoCTF-Problems repository.",
-  "categories": ["Binary Exploitation", "Cryptography", "Web Exploitation"],
-  "problems": ["buffer-overflow-1-35e6d9d", "ecb-1-b06174a", "sql-injection-1-0c436d0"],
+  "description": "Dependency weightmap for the example challenges provided in the picoCTF-Problems repository.",
   "dependencies": {
     "ecb-1-b06174a": {
       "threshold": 1,

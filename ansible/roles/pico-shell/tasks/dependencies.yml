@@ -28,6 +28,7 @@
       'libffi-dev',
       'libssl-dev',
       'netfilter-persistent',
+      'nfs-common',
       'nginx',
       'nginx-extras',
       'nodejs',
@@ -180,7 +181,7 @@
 
 - name: Ensure wetty directory exists
   file:
-    path: /opt/hacksports/wetty/
+    path: /opt/wetty/
     state: directory
     owner: root
     group: root
@@ -191,4 +192,4 @@
     name: wetty.js
     global: no
     production: yes
-    path: /opt/hacksports/wetty
+    path: /opt/wetty

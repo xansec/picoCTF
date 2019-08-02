@@ -196,6 +196,7 @@ sample_shellserver_publish_output = r'''
         "pycrypto"
       ],
       "pip_python_version": "3",
+      "unique_name": "ecb-1-b06174a",
       "instances": [
         {
           "user": "ecb-1_0",
@@ -274,10 +275,48 @@ sample_shellserver_publish_output = r'''
             }
           ],
           "port": 21953
+        },
+        {
+          "user": "ecb-1_2",
+          "deployment_directory": "/problems/ecb-1_2_1998c2cc0f0d17ae54170200f5478b7f",
+          "service": "ecb-1_2",
+          "socket": null,
+          "server": "192.168.2.3",
+          "description": "There is a crypto service running at 192.168.2.3:17648. We were able to recover the source code, which you can download at <a href='//192.168.2.3/static/19e863cba0bf14ad676e4b4799eacc72/ecb.py'>ecb.py</a>.",
+          "flag": "f76d2f6b885255450ed2f7307d96e28e",
+          "flag_sha1": "43cf6f1dab026cf2100e2f663509512416112219",
+          "instance_number": 2,
+          "should_symlink": false,
+          "files": [
+            {
+              "path": "flag",
+              "permissions": 288,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "key",
+              "permissions": 288,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "ecb.py",
+              "permissions": 1517,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "xinet_startup.sh",
+              "permissions": 1517,
+              "user": null,
+              "group": null
+            }
+          ],
+          "port": 17648
         }
       ],
-      "sanitized_name": "ecb-1",
-      "unique_name": "ecb-1-b06174a"
+      "sanitized_name": "ecb-1"
     },
     {
       "name": "SQL Injection 1",
@@ -291,6 +330,7 @@ sample_shellserver_publish_output = r'''
       "author": "Tim Becker",
       "organization": "ForAllSecure",
       "event": "Sample",
+      "unique_name": "sql-injection-1-0c436d0",
       "instances": [
         {
           "user": "sql-injection-1_0",
@@ -298,7 +338,7 @@ sample_shellserver_publish_output = r'''
           "service": "sql-injection-1_0",
           "socket": null,
           "server": "192.168.2.3",
-          "description": "There is a website running at http://192.168.2.3:17648. Try to see if you can login!",
+          "description": "There is a website running at http://192.168.2.3:46984. Try to see if you can login!",
           "flag": "9ac0a74de6bced3cdce8e7fd466f32d0",
           "flag_sha1": "958416d52940e4948eca8d9fb1eca21e4cf7eda1",
           "instance_number": 0,
@@ -341,7 +381,7 @@ sample_shellserver_publish_output = r'''
               "group": null
             }
           ],
-          "port": 17648
+          "port": 46984
         },
         {
           "user": "sql-injection-1_1",
@@ -349,7 +389,7 @@ sample_shellserver_publish_output = r'''
           "service": "sql-injection-1_1",
           "socket": null,
           "server": "192.168.2.3",
-          "description": "There is a website running at http://192.168.2.3:10987. Try to see if you can login!",
+          "description": "There is a website running at http://192.168.2.3:21955. Try to see if you can login!",
           "flag": "28054fef0f362256c78025f82e6572c3",
           "flag_sha1": "f57fa5d3861c22a657eecafe30a43bd4ad7a4a2a",
           "instance_number": 1,
@@ -398,11 +438,73 @@ sample_shellserver_publish_output = r'''
               "group": null
             }
           ],
-          "port": 10987
+          "port": 21955
+        },
+        {
+          "user": "sql-injection-1_2",
+          "deployment_directory": "/problems/sql-injection-1_2_57a103ad26a005f69b4332e62d611372",
+          "service": "sql-injection-1_2",
+          "socket": null,
+          "server": "192.168.2.3",
+          "description": "There is a website running at http://192.168.2.3:17649. Try to see if you can login!",
+          "flag": "6ed19af4c4540d444ae08735aa5664af",
+          "flag_sha1": "19bbc88ca231ddfde8063acdda75a92b1e6fd993",
+          "instance_number": 2,
+          "should_symlink": false,
+          "files": [
+            {
+              "path": "webroot/index.html",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "webroot/login.php",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "webroot/login.phps",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "webroot/config.php",
+              "permissions": 436,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "users.db",
+              "permissions": 288,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "xinet_startup.sh",
+              "permissions": 1517,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "xinet_startup.sh",
+              "permissions": 1517,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "xinet_startup.sh",
+              "permissions": 1517,
+              "user": null,
+              "group": null
+            }
+          ],
+          "port": 17649
         }
       ],
-      "sanitized_name": "sql-injection-1",
-      "unique_name": "sql-injection-1-0c436d0"
+      "sanitized_name": "sql-injection-1"
     },
     {
       "name": "Buffer Overflow 1",
@@ -416,6 +518,7 @@ sample_shellserver_publish_output = r'''
       "author": "Tim Becker",
       "organization": "ForAllSecure",
       "event": "Sample",
+      "unique_name": "buffer-overflow-1-35e6d9d",
       "instances": [
         {
           "user": "buffer-overflow-1_0",
@@ -468,27 +571,42 @@ sample_shellserver_publish_output = r'''
               "group": null
             }
           ]
+        },
+        {
+          "user": "buffer-overflow-1_2",
+          "deployment_directory": "/problems/buffer-overflow-1_2_6c4daed04928f80dd29290060827be61",
+          "service": null,
+          "socket": null,
+          "server": "192.168.2.3",
+          "description": "Exploit the <a href='//192.168.2.3/static/dbeb4d34945e752ea988dcdb4454f57d/vuln'>Buffer Overflow</a> found here: /problems/buffer-overflow-1_2_6c4daed04928f80dd29290060827be61.",
+          "flag": "8dfabcb5c4a18d03ad5ecea19eef27a6",
+          "flag_sha1": "aef4789685665a1bf4994d62ef10941dbce5647a",
+          "instance_number": 2,
+          "should_symlink": true,
+          "files": [
+            {
+              "path": "flag.txt",
+              "permissions": 288,
+              "user": null,
+              "group": null
+            },
+            {
+              "path": "vuln",
+              "permissions": 1517,
+              "user": null,
+              "group": null
+            }
+          ]
         }
       ],
-      "sanitized_name": "buffer-overflow-1",
-      "unique_name": "buffer-overflow-1-35e6d9d"
+      "sanitized_name": "buffer-overflow-1"
     }
   ],
   "bundles": [
     {
       "name": "Challenge Sampler",
       "author": "Christopher Ganas",
-      "description": "This is the set of example challenges provided in the picoCTF-Problems repository.",
-      "categories": [
-        "Binary Exploitation",
-        "Cryptography",
-        "Web Exploitation"
-      ],
-      "problems": [
-        "buffer-overflow-1-35e6d9d",
-        "ecb-1-b06174a",
-        "sql-injection-1-0c436d0"
-      ],
+      "description": "Dependency weightmap for the example challenges provided in the picoCTF-Problems repository.",
       "dependencies": {
         "ecb-1-b06174a": {
           "threshold": 1,

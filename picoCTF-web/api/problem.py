@@ -104,7 +104,7 @@ def upsert_problem(problem, sid):
         validate(instance_schema, instance)
 
     problem["pid"] = problem["unique_name"]
-    
+
     # Initially disable problems
     problem["disabled"] = True
 
@@ -365,16 +365,15 @@ def is_problem_unlocked(problem, solved):
     unlocked = True
 
     for bundle in api.bundles.get_all_bundles():
-        if problem["unique_name"] in bundle["problems"]:
-            if "dependencies" in bundle and bundle["dependencies_enabled"]:
-                if problem["unique_name"] in bundle["dependencies"]:
-                    dependency = bundle["dependencies"][
-                        problem["unique_name"]]
-                    weightsum = sum(
-                        dependency['weightmap'].get(p['unique_name'], 0)
-                        for p in solved)
-                    if weightsum < dependency['threshold']:
-                        unlocked = False
+        if "dependencies" in bundle and bundle["dependencies_enabled"]:
+            if problem["unique_name"] in bundle["dependencies"]:
+                dependency = bundle["dependencies"][
+                    problem["unique_name"]]
+                weightsum = sum(
+                    dependency['weightmap'].get(p['unique_name'], 0)
+                    for p in solved)
+                if weightsum < dependency['threshold']:
+                    unlocked = False
 
     return unlocked
 
