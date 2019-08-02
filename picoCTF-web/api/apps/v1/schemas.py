@@ -636,9 +636,9 @@ batch_registration_req.add_argument(
 user_search_req = reqparse.RequestParser()
 user_search_req.add_argument(
     'field', required=True, type=str,
-    choices=['email', 'parentemail'],
+    choices=['Email', 'Parent Email', 'User Name'],
     location='json', help='The field to be searched',
-    error='Field to search must be one of: "email", "parentemail"'
+    error='Field to search must be one of: "Email", "Parent Email", "User Name"'
 )
 user_search_req.add_argument(
     'query', required=True, location='json', type=str,
