@@ -351,6 +351,7 @@ def test_get_user(mongo_proc, redis_proc, client): # noqa (fixture)
         'completed_minigames': [],
         'extdata': {},
         'logged_in': True,
+        'score': 0,
         'teacher': False,
         'tokens': 0,
         'unlocked_walkthroughs': [],
