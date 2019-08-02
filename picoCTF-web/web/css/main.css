@@ -66,7 +66,10 @@
   #nav-profile-container {
     position: absolute;
     top: 0;
-    right: 10%;
+    right: 0;
+  }
+  .navbar-collapse {
+    position: relative;
   }
 }
 
@@ -93,6 +96,10 @@
 
 .collapsible-information {
     padding-top: 10px !important;
+}
+
+.collapsible-information a {
+  cursor: pointer;
 }
 
 .collapsible-information-chevron {
@@ -151,6 +158,12 @@
 
 a.navbar-brand {
     max-width: 250px;
+}
+
+@media (min-width: 768px) {
+  .navbar-static-top {
+    min-height: 100px !important;
+  }
 }
 
 .header-logo {
@@ -235,6 +248,10 @@ img.logo-landscape {
 
 .team-visualization-enabler {
     cursor: pointer;
+}
+
+canvas.chartjs-render-monitor {
+  min-height: 150px;
 }
 
 .delete-group-span {

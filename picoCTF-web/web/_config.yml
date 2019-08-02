@@ -2,7 +2,7 @@
 title: CTF
 
 destination: /srv/http/ctf
-exclude: ['coffee', 'node_modules']
+exclude: ['jsx', 'node_modules', 'package.json', 'package-lock.json']
 
 mode: development
 

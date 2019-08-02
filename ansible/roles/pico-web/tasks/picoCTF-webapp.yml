@@ -22,8 +22,11 @@
     virtualenv: "{{ virtualenv_dir }}"
     extra_args: "--upgrade"
 
-- name: Compile CoffeeScript
-  command: "cjsx -bc -o {{ pico_web_js_out_path }} {{ pico_web_coffescript_in_path }}"
+- name: Compile JSX
+  command: "babel {{ pico_web_jsx_in_path }} -d {{ pico_web_js_out_path }}
+   --presets=@babel/preset-env,@babel/preset-react"
+  args:
+    chdir: "/usr/lib"
 
 # Copy web to another dir before build; this dir should be native on the host
 - name: Synchronize picoCTF-web to a directory on host
