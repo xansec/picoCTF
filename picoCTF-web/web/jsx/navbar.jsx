@@ -85,5 +85,10 @@ $(function() {
       .text()
   );
 
-  loadNavbar(window.renderNavbarLinks, window.renderNestedNavbarLinks);
+  loadNavbar(renderNavbarLinks, renderNestedNavbarLinks);
+  window.scoreUpdateTimer = setInterval(() => {
+    apiCall("GET", "/api/v1/user").done(() => {
+      loadNavbar(renderNavbarLinks, renderNestedNavbarLinks);
+    })
+  }, 60 * 1000)
 });
