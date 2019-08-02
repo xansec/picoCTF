@@ -146,10 +146,12 @@ class UserSearch(Resource):
         """Search for a given user."""        
         req = user_search_req.parse_args(strict=True)
 
-        if req["field"] == "email":
+        if req["field"] == "Email":
             user_data = api.user.get_users(email=req["query"])
-        elif req["field"] == "parentemail":
+        elif req["field"] == "Parent Email":
             user_data = api.user.get_users(parentemail=req["query"])
+        elif req["field"] == "User Name":
+            user_data = api.user.get_users(username=req["query"])
 
         if not user_data:
             raise PicoException('User not found', status_code=404)

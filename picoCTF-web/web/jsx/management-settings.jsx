@@ -800,51 +800,113 @@ const User = React.createClass({
     );
   },
 
-  disableAccount() {
+  disableAccount(e) {
+    e.preventDefault();
+    let reason = this.state.deletion_reason;
+    let refresh = this.props.onRefresh;
+    let uid = this.props.uid;
     confirmDialog(
-      "User " + this.props.username + " will be deleted for: " + (this.state.deletion_reason ? this.state.deletion_reason : "Not specified"),
+      `User ${this.props.username} will be deleted for: ${reason ? reason : "Not specified"}`,
       "Delete Account Confirmation",
       "Delete Account",
       "Cancel",
       function() {
-        alert("Test success");
+        const data = {
+          reason: reason
+        };
+        apiCall(
+          "POST",
+          `/api/v1/users/${uid}/delete`,
+          data
+        )
+          .success(data => {
+            apiNotify({ status: 1, message: "Account successfully deleted!" });
+            refresh();
+          })
+          .error(jqXHR => {
+            apiNotify({ status: 0, message: jqXHR.responseJSON.message });
+          });
+      },
+      function() {
+        false;
       }
     );
   },
 
   render() {
-    return(
-      <Panel>
-        <Row>
-          <Col md={8}>
-            <h4>
-              {this.props.username}
-            </h4>
-          </Col>
-          <Col md={4}>
-            <h4>
-              {this.props.email}
-            </h4>
-          </Col>
-        </Row>
-        <Row>
-          <Col md={10}>
-            <TextEntry
-              name="Deletion Reason"
-              type="text"
-              value={this.state.deletion_reason}
-              onChange={this.updateReason}
-              description="Optional reason for account deletion"
-            />
-          </Col>
-          <Col md={2}>
-            <ButtonToolbar>
-              <Button onClick={this.disableAccount} className="btn-danger">Delete</Button>
-            </ButtonToolbar>
-          </Col>
-        </Row>
-      </Panel>
-    )
+    if(this.props.disable_reason){
+      return(
+        <Panel>
+          <Row>
+            <Col md={3}>
+              <h4>
+                User Name:
+              </h4>
+            </Col>
+            <Col md={9}>
+              <h4>
+                {this.props.username}
+              </h4>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={3}>
+              <h4>
+                Deletion Reason:
+              </h4>
+            </Col>
+            <Col md={9}>
+              <h4>
+                {this.props.disable_reason}
+              </h4>
+            </Col>
+          </Row>
+        </Panel>
+      );
+    } else {
+      return(
+        <Panel>
+          <Row>
+            <Col md={3}>
+              <h4>
+                User Name:<br/>
+                Email:<br/>
+                Country:<br/>
+                User Type:<br/>
+                Age:<br/>
+                Verified:<br/>
+              </h4>
+            </Col>
+            <Col md={9}>
+              <h4>
+                {this.props.username}<br/>
+                {this.props.email}<br/>
+                {this.props.country}<br/>
+                {this.props.usertype}<br/>
+                {this.props.demo.age}<br/>
+                {this.props.verified ? "Yes" : "No"}<br/>
+              </h4>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={10}>
+              <TextEntry
+                name="Deletion Reason"
+                type="text"
+                value={this.state.deletion_reason}
+                onChange={this.updateReason}
+                description="Optional reason for account deletion"
+              />
+            </Col>
+            <Col md={2}>
+              <ButtonToolbar>
+                <Button onClick={this.disableAccount} className="btn-danger">Delete</Button>
+              </ButtonToolbar>
+            </Col>
+          </Row>
+        </Panel>
+      );
+    }
   }
 })
 
@@ -867,6 +929,9 @@ const UserList = React.createClass({
         <Col key={i} xs={12}>
           <User
             {...Object.assign(
+              {
+                onRefresh: this.props.onRefresh
+              },
               user
             )}
           />
@@ -881,7 +946,7 @@ const UserList = React.createClass({
 const UserSearchTab = React.createClass({
   getInitialState() {
     return {
-      search_field: "email",
+      search_field: "Email",
       search_query: "email@example.com",
       users: []
     };
@@ -942,7 +1007,7 @@ const UserSearchTab = React.createClass({
             <OptionEntry
               name="Field"
               value={this.state.search_field}
-              options={["email", "parentemail"]}
+              options={["Email", "Parent Email", "User Name"]}
               onChange={this.updateSearchField}
               description={searchFieldDescription}
             />
@@ -963,6 +1028,7 @@ const UserSearchTab = React.createClass({
             <Col>
               <UserList
                 users={this.state.users}
+                onRefresh={this.pushUpdates}
               />
             </Col>
           </Col>

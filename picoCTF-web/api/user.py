@@ -95,7 +95,7 @@ def get_user(name=None, uid=None, include_pw_hash=False):
     return db.users.find_one(match, projection)
 
 
-def get_users(email=None, parentemail=None, include_pw_hash=False):
+def get_users(email=None, parentemail=None, username=None, include_pw_hash=False):
     """
     Retrieve all users matching the given property.
 
@@ -119,6 +119,8 @@ def get_users(email=None, parentemail=None, include_pw_hash=False):
         match.update({'email': email})
     elif parentemail is not None:
         match.update({'demo.parentemail': parentemail})
+    elif username is not None:
+        match.update({'username': username})
     else:
         raise PicoException(
             'Could not retrieve user - no argument provided', 400)
