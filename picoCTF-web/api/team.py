@@ -6,6 +6,8 @@ import api
 from api import cache, check, log_action, PicoException
 from api.cache import memoize
 
+PROBLEMSOLVED_FILTER = ['category', 'name', 'score', 'solve_time']
+
 new_team_schema = Schema({
     Required("team_name"):
     check(
@@ -245,7 +247,6 @@ def get_team_information(tid):
         "country": member["country"],
         "usertype": member["usertype"],
     } for member in get_team_members(tid=tid, show_disabled=False)]
-    team_info["competition_active"] = api.config.check_competition_active()
     team_info["progression"] = api.stats.get_score_progression(tid=tid)
     team_info["flagged_submissions"] = [
         sub for sub in api.stats.check_invalid_instance_submissions()
@@ -259,12 +260,9 @@ def get_team_information(tid):
 
     team_info["solved_problems"] = []
     for solved_problem in api.problem.get_solved_problems(tid=tid):
-        solved_problem.pop("instances", None)
-        solved_problem.pop("pkg_dependencies", None)
-        solved_problem.pop("hints", None)
-        solved_problem.pop("author", None)
-        solved_problem.pop("organization", None)
-        team_info["solved_problems"].append(solved_problem)
+        filtered_problem = {k: v for k, v in solved_problem.items() if
+                            k in PROBLEMSOLVED_FILTER}
+        team_info["solved_problems"].append(filtered_problem)
 
     # Teams flagged as ineligible once will not recalculate their eligibility
     if team_info.get("eligible", True):
