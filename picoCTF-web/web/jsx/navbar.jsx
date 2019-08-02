@@ -36,8 +36,8 @@ const loadNavbar = function(renderNavbarLinks, renderNestedNavbarLinks) {
     renderNestedNavbarLinks
   };
 
-  addAjaxListener("/api/v1/user", userData => {   // onsuccess
-    addAjaxListener("/api/v1/status", competitionData => {  // onsuccess
+  addAjaxListener("loadNavBar", "/api/v1/user", userData => {   // onsuccess
+    addAjaxListener("loadNavBar", "/api/v1/status", competitionData => {  // onsuccess
         navbarLayout.links = userNotLoggedIn;
         navbarLayout.status = userData;
         navbarLayout.topLevel = true;
@@ -85,5 +85,5 @@ $(function() {
       .text()
   );
 
-  loadNavbar(renderNavbarLinks, renderNestedNavbarLinks);
+  loadNavbar(window.renderNavbarLinks, window.renderNestedNavbarLinks);
 });

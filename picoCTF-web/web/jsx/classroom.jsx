@@ -215,7 +215,7 @@ const groupRequest = function(e) {
 };
 
 $(function() {
-  addAjaxListener("/api/v1/user", function (data) {
+  addAjaxListener("updateTeacherStatus", "/api/v1/user", function (data) {
     if (data.teacher) {
       window.isTeacher = true;
     }

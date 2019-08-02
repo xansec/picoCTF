@@ -138,7 +138,7 @@ window.drawTopTeamsProgressionGraph = function(selector, gid) {
   const div = divFromSelector(selector);
 
   const drawgraph = data =>
-    addAjaxListener("/api/v1/status", statusdata => {
+    addAjaxListener("drawTopTeamsProgressionGraph", "/api/v1/status", statusdata => {
         let i;
         if (data.length >= 2 && $(selector).is(":visible")) {
           const scoreData = data.map(
@@ -242,7 +242,7 @@ window.renderTeamRadarGraph = function(selector, tid) {
 
 window.renderTeamProgressionGraph = function(selector, data) {
   const div = divFromSelector(selector);
-  addAjaxListener("/api/v1/status", statusdata => {
+  addAjaxListener("renderTeamProgressionGraph", "/api/v1/status", statusdata => {
       if (data.length > 0) {
         let chart;
         const dataPoints = progressionDataToPoints(

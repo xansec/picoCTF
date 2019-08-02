@@ -133,7 +133,7 @@ const ProblemInfo = React.createClass({
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
 
-    addAjaxListener("/api/v1/user", data => {
+    addAjaxListener("problemInfoState", "/api/v1/user", data => {
       this.setState(update(this.state, { user: { $set: data } }));
     });
   },
@@ -209,7 +209,7 @@ const ProblemInfo = React.createClass({
 });
 
 $(function() {
-  addAjaxListener("/api/v1/user", function (data) {
+  addAjaxListener("isTeacher", "/api/v1/user", function (data) {
     if (data.teacher) {
       window.isTeacher = true;
     }

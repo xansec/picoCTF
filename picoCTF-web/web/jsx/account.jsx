@@ -122,7 +122,7 @@ const TeamManagementForm = React.createClass({
   },
 
   componentWillMount() {
-    addAjaxListener("/api/v1/user", data => {
+    addAjaxListener("teamManagementFormState", "/api/v1/user", data => {
       this.setState(update(this.state, { user: { $set: data } }));
     });
 

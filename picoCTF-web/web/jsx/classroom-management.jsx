@@ -557,7 +557,7 @@ const TeacherManagement = React.createClass({
   },
 
   componentDidMount() {
-    addAjaxListener("/api/v1/groups", data => {
+    addAjaxListener("teacherManagementState", "/api/v1/groups", data => {
       this.setState(update(this.state, { groups: { $set: data } }));
     });
   },

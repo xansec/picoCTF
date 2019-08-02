@@ -29,7 +29,7 @@ window.apiCall = function(method, url, data, ga_event_class, ga_event) {
     },
     success(data, textStatus, jqXHR) {
       if (method === "GET") {  // Cache anything all gets
-        window.sessionStorage.setItem(url, JSON.stringify(data));
+        window.localStorage.setItem(url, JSON.stringify(data));
       }
       if (ga_event_class && ga_event) {
         ga("send", "event", ga_event_class, ga_event, "Success");
@@ -44,13 +44,14 @@ window.apiCall = function(method, url, data, ga_event_class, ga_event) {
 };
 
 // Hackish: use primarily for user and status calls which occur every page load
-window.addAjaxListener = (url, onSuccess, onFail, ga_event_class, ga_event) => {
+window.addAjaxListener = (id, url, onSuccess, onFail, ga_event_class, ga_event) => {
   // Check session storage first, in case the initial call already returned
-  let sessionValue = JSON.parse(window.sessionStorage.getItem(url));
-  if (sessionValue !== null) {
-    onSuccess(sessionValue);
+  let localValue = JSON.parse(window.localStorage.getItem(url));
+  if (localValue !== null) {
+    onSuccess(localValue);
   } else { // Not cached in sessionStorage, add to any pending calls
-    $(document).ajaxComplete((event, xhr, settings) => {
+    const eventId = id + '--' + url;
+    const listenHandler = (event, xhr, settings) => {
       if (settings.url === url) {
         if (xhr.statusText === "success" && onSuccess) {
           onSuccess(xhr.responseJSON);
@@ -60,26 +61,31 @@ window.addAjaxListener = (url, onSuccess, onFail, ga_event_class, ga_event) => {
           if (onFail) { onFail(xhr); }
         }
       }
+    };
+    // Avoid adding duplicate listeners
+    $(document).ajaxComplete((event, xhr, settings) => {
+      $(document).unbind(eventId).bind(eventId, listenHandler);
+      $(document).trigger(eventId, [ xhr, settings ]);
     });
   }
 };
 
 window.redirectIfNotLoggedIn = () =>
-  addAjaxListener("/api/v1/user", (data) => {
+  addAjaxListener("redirectIfNotLoggedIn", "/api/v1/user", (data) => {
     if (!data.logged_in) {
       window.location.href = "/";
     }
   }, undefined, "Redirect", "NotLoggedIn");
 
 window.redirectIfLoggedIn = () =>
-  addAjaxListener("/api/v1/user", (data) => {
+  addAjaxListener("redirectIfLoggedIn", "/api/v1/user", (data) => {
     if (data.logged_in) {
       window.location.href = "/news";
     }
   }, undefined, "Redirect", "LoggedIn");
 
 window.redirectIfTeacher = () =>
-  addAjaxListener("/api/v1/user", (data) => {
+  addAjaxListener("redirectIfTeacher", "/api/v1/user", (data) => {
     if (data.teacher) {
       window.location.href = "/classroom";
     }
@@ -87,14 +93,14 @@ window.redirectIfTeacher = () =>
 
 
 window.redirectIfNotTeacher = () =>
-  addAjaxListener("/api/v1/user", (data) => {
+  addAjaxListener("redirectIfNotTeacher", "/api/v1/user", (data) => {
     if (!data.teacher) {
       window.location.href = "/";
     }
   }, undefined, "Redirect", "NotTeacher");
 
 window.redirectIfNotAdmin = () =>
-  addAjaxListener("/api/v1/user", (data) => {
+  addAjaxListener("redirectIfNotAdmin", "/api/v1/user", (data) => {
     if (!data.admin) {
       window.location.href = "/";
     }
@@ -196,7 +202,7 @@ window.logout = () =>
     "Authentication",
     "LogOut"
   ).success(data => {
-    window.sessionStorage.clear();
+    window.localStorage.clear();
     document.location.href = "/";
   });
 
