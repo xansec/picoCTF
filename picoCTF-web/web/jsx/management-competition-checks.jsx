@@ -108,7 +108,7 @@ const CompetitionCheck = React.createClass({
     apiCall(
       "GET",
       "/api/v1/problems?unlocked_only=false&include_disabled=true"
-    ).success(function(data) {
+    ).done(function(data) {
       let status = "failing";
       for (let problem of data) {
         if (problem.disabled === false) {

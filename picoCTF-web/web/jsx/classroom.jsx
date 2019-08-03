@@ -43,7 +43,7 @@ const createGroupSetup = function() {
 
 window.exportProblemCSV = (groupName, teams) =>
   apiCall("GET", "/api/v1/problems?unlocked_only=false")
-    .success(function(data) {
+    .done(function(data) {
       // problems = _.filter resp.data.problems, (problem) -> !problem.disabled
       const problems = data; // non-admin API only returns non-disabled problems as top level data array
       const outputData = [
@@ -82,7 +82,7 @@ window.exportProblemCSV = (groupName, teams) =>
       const csvData = _.map(outputData, fields => fields.join(",")).join("\n");
       download(csvData, `${groupName}.csv`, "text/csv");
     })
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 
@@ -95,9 +95,9 @@ const loadGroupOverview = function(groups, showFirstTab, callback) {
 
   $("#class-tabs").on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
     const tabBody = $(this).attr("href");
-    const groupName = $(this).data("group-name");
+    const groupName = $(this).data("groupName");
 
-    apiCall("GET", `/api/v1/groups/${$(this).data("gid")}`).success(
+    apiCall("GET", `/api/v1/groups/${$(this).data("gid")}`).done(
       data => {
         ga("send", "event", "Group", "LoadTeacherGroupInformation", "Success");
         for (let group of groups) {
@@ -162,24 +162,24 @@ const loadGroupOverview = function(groups, showFirstTab, callback) {
 
 const loadGroupInfo = (showFirstTab, callback) =>
   apiCall("GET", "/api/v1/groups", null, "Group", "GroupListLoad")
-    .success(function(data) {
+    .done(function(data) {
       loadGroupOverview(data, showFirstTab, callback);
     })
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 
 const createGroup = function(groupName) {
   const data = { name: groupName };
   apiCall("POST", "/api/v1/groups", data, "Group", "CreateGroup")
-    .success(function(data) {
+    .done(function(data) {
       closeDialog();
       apiNotify({ status: 1, message: "Successfully created classroom." });
       loadGroupInfo(false, () =>
         $("#class-tabs li:eq(-2) a").tab("show")
       );
     })
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotifyElement($("#new-group-name"), {
         status: 0,
         message: jqXHR.responseJSON.message
@@ -200,7 +200,7 @@ const deleteGroup = gid =>
         null,
         "Group",
         "DeleteGroup"
-      ).success(function(data) {
+      ).done(function(data) {
         apiNotify({ status: 1, message: "Successfully deleted classroom" });
         loadGroupInfo(true);
       }),

@@ -35,11 +35,11 @@ const ServerForm = React.createClass({
 
   addServer() {
     apiCall("POST", "/api/v1/shell_servers", this.state.shellServer)
-      .success(data => {
+      .done(data => {
         apiNotify({ status: 1, message: "Shell server added." });
         this.props.refresh();
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -49,11 +49,11 @@ const ServerForm = React.createClass({
       "DELETE",
       `/api/v1/shell_servers/${this.state.shellServer.sid}`
     )
-      .success(data => {
+      .done(data => {
         apiNotify({ status: 1, message: "Shell server deleted." });
         this.props.refresh();
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -73,11 +73,11 @@ const ServerForm = React.createClass({
       `/api/v1/shell_servers/${this.state.shellServer.sid}`,
       data
     )
-      .success(data => {
+      .done(data => {
         apiNotify({ status: 1, message: "Shell server updated." });
         this.props.refresh();
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -87,11 +87,11 @@ const ServerForm = React.createClass({
       "PATCH",
       `/api/v1/problems?sid=${this.state.shellServer.sid}`
     )
-      .success(data => {
+      .done(data => {
         apiNotify({ status: 1, message: "Successfully loaded problems." });
         this.props.refresh();
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -101,7 +101,7 @@ const ServerForm = React.createClass({
       "GET",
       `/api/v1/shell_servers/${this.state.shellServer.sid}/status`
     )
-      .success(function(data) {
+      .done(function(data) {
         if (data.all_problems_online) {
           apiNotify({ status: 1, message: "All problems are online" });
         } else {
@@ -112,7 +112,7 @@ const ServerForm = React.createClass({
           });
         }
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -322,11 +322,11 @@ const ProblemLoaderTab = React.createClass({
 
   pushData() {
     apiCall("PATCH", "/api/v1/problems", this.state.publishedJSON)
-      .success(data => {
+      .done(data => {
         apiNotify({ status: 1, message: "Successfully loaded problems." });
         this.clearPublishedJSON();
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },

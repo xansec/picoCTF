@@ -12,13 +12,13 @@ const updatePassword = function(e) {
     "Authentication",
     "UpdatePassword"
   )
-    .success(data =>
+    .done(data =>
       apiNotify(
         { status: 1, message: "Your password has been successfully updated!" },
         "/account"
       )
     )
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 };
@@ -46,7 +46,7 @@ const resetPassword = function(e) {
         "/"
       );
     })
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 };
@@ -69,13 +69,13 @@ const disableAccount = function(e) {
         "Authentication",
         "DisableAccount"
       )
-        .success(data =>
+        .done(data =>
           apiNotify(
             { status: 1, message: "Your account has been deleted." },
             "/"
           )
         )
-        .error(jqXHR =>
+        .fail(jqXHR =>
           apiNotify({ status: 0, message: jqXHR.responseJSON.message })
         );
     }
@@ -85,14 +85,14 @@ const disableAccount = function(e) {
 const downloadData = function(e) {
   e.preventDefault();
   apiCall("GET", "/api/v1/user/export")
-    .success(data =>
+    .done(data =>
       download(
         JSON.stringify(data, null, 2),
         "Account Data.txt",
         "application/json"
       )
     )
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 };
@@ -126,7 +126,7 @@ const TeamManagementForm = React.createClass({
       this.setState(update(this.state, { user: { $set: data } }));
     });
 
-    apiCall("GET", "/api/v1/team").success(data => {
+    apiCall("GET", "/api/v1/team").done(data => {
       this.setState(update(this.state, { team: { $set: data } }));
     });
   },
@@ -144,8 +144,8 @@ const TeamManagementForm = React.createClass({
         team_password: this.state.team_password
       };
       apiCall("POST", "/api/v1/teams", data)
-        .success(data => (document.location.href = "/profile"))
-        .error(jqXHR =>
+        .done(data => (document.location.href = "/profile"))
+        .fail(jqXHR =>
           apiNotify({ status: 0, message: jqXHR.responseJSON.message })
         );
     }
@@ -158,8 +158,8 @@ const TeamManagementForm = React.createClass({
       team_password: this.state.team_password
     };
     apiCall("POST", "/api/v1/team/join", data)
-      .success(data => (document.location.href = "/profile"))
-      .error(jqXHR =>
+      .done(data => (document.location.href = "/profile"))
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -182,7 +182,7 @@ const TeamManagementForm = React.createClass({
             new_password_confirmation: newpass_confirm
           };
           apiCall("POST", "/api/v1/team/update_password", data)
-            .success(data =>
+            .done(data =>
               apiNotify(
                 {
                   status: 1,
@@ -191,7 +191,7 @@ const TeamManagementForm = React.createClass({
                 "/account"
               )
             )
-            .error(jqXHR =>
+            .fail(jqXHR =>
               apiNotify({ status: 0, message: jqXHR.responseJSON.message })
             );
         }
