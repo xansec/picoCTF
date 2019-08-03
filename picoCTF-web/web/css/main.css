@@ -160,6 +160,15 @@ a.navbar-brand {
     max-width: 250px;
 }
 
+.navbar-header {
+  position: relative;
+  z-index: 2;
+}
+
+.navbar-nav>li>a {
+  text-align: center;
+}
+
 @media (min-width: 768px) {
   .navbar-static-top {
     min-height: 100px !important;
