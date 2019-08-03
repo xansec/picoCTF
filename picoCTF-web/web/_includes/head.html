@@ -15,18 +15,16 @@
 
     {% assign time_stamp = site.time | date: "%s" %}
 
+    <link href="/css/libs/bootstrap.min.css?{{ time_stamp }}" rel="stylesheet">
+    <link rel="stylesheet" href="/css/libs/jquery-ui.css?{{ time_stamp }}">
+    <link rel="stylesheet" href="/css/main.css?{{ time_stamp }}">
+
     <script src="/js/libs/jquery.min.js?{{ time_stamp }}"></script>
     <script src="/js/libs/jquery-ui.min.js?{{ time_stamp }}"></script>
     <script src="/js/libs/bootstrap.min.js?{{ time_stamp }}"></script>
     <script src="/js/libs/react-with-addons.js?{{ time_stamp }}"></script>
     <script src="/js/libs/react-dom.js?{{ time_stamp }}"></script>
     <script src="/js/libs/react-bootstrap.min.js?{{ time_stamp }}"></script>
-
-    <link rel="stylesheet" href="/css/main.css?{{ time_stamp }}">
-    <link rel="stylesheet" href="/css/libs/jquery-ui.css?{{ time_stamp }}">
-
-    <link href="/css/libs/bootstrap.min.css?{{ time_stamp }}" rel="stylesheet">
-
     <script src="/js/libs/underscore-min.js?{{ time_stamp }}"></script>
     <script src="/js/libs/jquery.cookie.min.js?{{ time_stamp }}"></script>
     <script src="/js/libs/notify.min.js?{{ time_stamp }}"></script>
