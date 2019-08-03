@@ -499,7 +499,7 @@ const Problem = React.createClass({
               <CollapsibleInformation title="Hints">
                 <ProblemHintTable hints={this.props.hints} />
               </CollapsibleInformation>
-              <CollapsibleInformation title="Instance Flags">
+              <CollapsibleInformation title={this.props.static_flag ? "Static Instance Flag" : "Instance Flags"}>
                 <ProblemFlagTable instances={this.props.instances} />
               </CollapsibleInformation>
             </Col>

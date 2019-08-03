@@ -912,20 +912,30 @@ def deploy_problems(args):
                 continue
             source_location = get_problem_root(problem_name, absolute=True)
 
+            problem_object = get_problem(source_location)
+
+            instances_to_deploy = copy(instance_list)
+            is_static_flag = problem_object.get("static_flag", False)
+            if is_static_flag is True:
+                instances_to_deploy = [0]
+
             # Avoid redeploying already-deployed instances
-            if not args.redeploy:
-                instances_to_deploy = copy(instance_list)
+            if not args.redeploy or is_static_flag:
                 already_deployed = set()
                 for instance in get_all_problem_instances(problem_name):
                     already_deployed.add(instance["instance_number"])
                 instances_to_deploy = list(set(instances_to_deploy) - already_deployed)
 
-            deploy_problem(
-                source_location,
-                instances=instances_to_deploy,
-                test=args.dry,
-                debug=args.debug,
-                restart_xinetd=False)
+            if instances_to_deploy:
+                deploy_problem(
+                    source_location,
+                    instances=instances_to_deploy,
+                    test=args.dry,
+                    debug=args.debug,
+                    restart_xinetd=False)
+            else:
+                logger.info("No additional instances to deploy for '%s'.",
+                            problem_object["unique_name"])
     finally:
         # Restart xinetd unless specified. Service must be manually restarted
         if not args.no_restart:
