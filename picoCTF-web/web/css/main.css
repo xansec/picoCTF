@@ -450,6 +450,10 @@ canvas.chartjs-render-monitor {
   cursor: pointer;
 }
 
+#problem-list-holder .panel-title, #problem-list-holder .rating-button {
+  cursor:pointer;
+}
+
 /*** Bootstrap nav style over-ride ***/
 /* Generated https://work.smarchal.com/twbscolor/css/e74c3cc0392becf0f1ffbbbc0 */
 
