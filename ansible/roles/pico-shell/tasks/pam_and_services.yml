@@ -74,6 +74,14 @@
     group: root
     mode: 0644
 
+- name: Copy sshkey_auth.py to deployed location
+  copy:
+    src: sshkey_auth.py
+    dest: "/lib/security/sshkey_auth.py"
+    owner: root
+    group: root
+    mode: 700
+
 - name: Disable user crontab with whitelist
   copy:
     content: ""
