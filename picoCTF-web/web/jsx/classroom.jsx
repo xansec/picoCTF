@@ -55,7 +55,7 @@ window.exportProblemCSV = (groupName, teams) =>
       _.each(teams, function(team) {
         const members = `"${team.members
           .map(function(member) {
-            return this.getName(
+            return getName(
               member.firstname,
               member.lastname,
               member.username

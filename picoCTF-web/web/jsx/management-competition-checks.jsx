@@ -123,7 +123,7 @@ const CompetitionCheck = React.createClass({
 
   checkProblemsAlive(setStatus) {
     apiCall("GET", "/api/v1/shell_servers?assigned_only=false").done(
-      function(data) {
+      data => {
         let status = "passing";
         const servers = data;
 
@@ -150,7 +150,7 @@ const CompetitionCheck = React.createClass({
     apiCall(
       "GET",
       "/api/v1/problems?unlocked_only=false&include_disabled=true"
-    ).done(function(data) {
+    ).done(data => {
       let status = "passing";
       const requests = [];
       for (let problem of data) {

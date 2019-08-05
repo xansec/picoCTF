@@ -976,7 +976,7 @@ const AuthPanel = React.createClass({
     })
       .done(() =>
         // Get teacher status
-        apiCall("GET", "/api/v1/user").done(function(data) {
+        apiCall("GET", "/api/v1/user").done(data => {
           if (document.location.hash === "#team-builder" && !data.teacher) {
             this.setPage("Team Management");
           } else {
