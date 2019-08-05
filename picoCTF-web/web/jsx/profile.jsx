@@ -118,16 +118,9 @@ const ProblemInfo = React.createClass({
     apiCall("GET", "/api/v1/problems")
       .done(data => {
         this.setState(update(this.state, { problems: { $set: data } }));
-      })
-      .fail(jqXHR =>
-        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-      );
-
-    apiCall("GET", "/api/v1/problems?solved_only=true")
-      .done(data => {
-        this.setState(
-          update(this.state, { solvedProblems: { $set: data } })
-        );
+        this.setState(update(this.state, { solvedProblems: {
+          $set: data.filter(problem => problem.solved)
+        }}));
       })
       .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
