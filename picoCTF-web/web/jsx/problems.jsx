@@ -90,7 +90,7 @@ const submitProblem = function(e) {
     key: input.val(),
     method: "web"
   })
-    .success(function(data) {
+    .done(function(data) {
       if (data.correct) {
         ga("send", "event", "Problem", "Solve", "Basic");
         apiNotify({ status: 1, message: data.message });
@@ -100,7 +100,7 @@ const submitProblem = function(e) {
         apiNotify({ status: 0, message: data.message });
       }
     })
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 };
@@ -121,14 +121,14 @@ const addProblemReview = function(e) {
 
   const postData = { feedback, pid };
   apiCall("POST", "/api/v1/feedback", postData)
-    .success(function(data) {
+    .done(function(data) {
       apiNotify({ status: 1, message: "Your feedback has been accepted." });
       const selector = `#${pid}-thumbs${feedback.liked ? "down" : "up"}`;
       $(selector).removeClass("active");
       target.addClass("active");
       ga("send", "event", "Problem", "Review", "Basic");
     })
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 };
@@ -141,16 +141,16 @@ const addProblemReview = function(e) {
 
 const loadProblems = () =>
   apiCall("GET", "/api/v1/problems")
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     )
-    .success(function(data) {
+    .done(function(data) {
       // We want the score to be level with the title, but the title
       // is defined in a template. This solution is therefore a bit
       // of a hack.
       addScoreToTitle("#title");
       apiCall("GET", "/api/v1/feedback")
-        .success(function(reviewData) {
+        .done(function(reviewData) {
           $("#problem-list-holder").html(
             renderProblemList({
               problems: data,
@@ -167,14 +167,14 @@ const loadProblems = () =>
             max: 15,
             step: 1,
             slide(event, ui) {
-              $(`#${$(this).data("label-target")}`).html(
+              $(`#${$(this).data("labelTarget")}`).html(
                 window.timeValues[ui.value]
               );
             }
           });
 
           $(".time-slider").each(function(x) {
-            $(`#${$(this).data("label-target")}`).html(
+            $(`#${$(this).data("labelTarget")}`).html(
               window.timeValues[4]
             );
           });
@@ -187,7 +187,7 @@ const loadProblems = () =>
 
           $(".rating-button").on("click", addProblemReview);
         })
-        .error(jqXHR =>
+        .fail(jqXHR =>
           apiNotify({ status: 0, message: jqXHR.responseJSON.message })
         );
     });

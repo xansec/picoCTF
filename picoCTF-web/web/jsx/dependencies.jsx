@@ -64,7 +64,7 @@ window.addAjaxListener = (id, url, onSuccess, onFail, ga_event_class, ga_event) 
     };
     // Avoid adding duplicate listeners
     $(document).ajaxComplete((event, xhr, settings) => {
-      $(document).unbind(eventId).bind(eventId, listenHandler);
+      $(document).off(eventId).on(eventId, listenHandler);
       $(document).trigger(eventId, [ xhr, settings ]);
     });
   }
@@ -201,7 +201,7 @@ window.logout = () =>
     null,
     "Authentication",
     "LogOut"
-  ).success(data => {
+  ).done(data => {
     window.localStorage.clear();
     document.location.href = "/";
   });

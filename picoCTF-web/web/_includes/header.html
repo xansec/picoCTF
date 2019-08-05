@@ -1,4 +1,4 @@
-<nav class="navbar navbar-inverse navbar-static-top no-margin" role="navigation">
+<nav class="navbar navbar-default navbar-static-top no-margin" role="navigation">
     <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
@@ -22,7 +22,7 @@
 <script type="text/template" id="navbar-links-template">
     <div class="collapse navbar-collapse navbar-ex1-collapse row">
         <div class="col-sm-12">
-            <ul class="nav navbar-nav navbar-right" id="navbar-links">
+            <ul class="nav navbar-nav navbar-right">
             <% _.each(links, function(link, name) { %>
                 <% if(typeof link == "object") {  %>
                     <%= renderNestedNavbarLinks({
@@ -38,7 +38,7 @@
             </ul>
         </div>
         <div class="col-sm-6" id="nav-profile-container">
-            <ul class="nav navbar-nav navbar-right" id="navbar-links">
+            <ul class="nav navbar-nav navbar-right">
                 <% if(status.logged_in) { %>
                 <li>
                     <a href="/account" id="navbar-item-account">

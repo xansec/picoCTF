@@ -767,8 +767,8 @@ const TeamManagementForm = React.createClass({
         team_password: this.state.team_password
       };
       apiCall("POST", "/api/v1/teams", data)
-        .success(data => (document.location.href = "/profile"))
-        .error(jqXHR =>
+        .done(data => (document.location.href = "/profile"))
+        .fail(jqXHR =>
           apiNotify({ status: 0, message: jqXHR.responseJSON.message })
         );
     }
@@ -781,8 +781,8 @@ const TeamManagementForm = React.createClass({
       team_password: this.state.team_password
     };
     apiCall("POST", "/api/v1/team/join", data)
-      .success(data => (document.location.href = "/profile"))
-      .error(jqXHR =>
+      .done(data => (document.location.href = "/profile"))
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -842,7 +842,7 @@ const AuthPanel = React.createClass({
       });
     }
     if (this.state.gid) {
-      apiCall("GET", `/api/v1/groups/${this.state.gid}`).success(data => {
+      apiCall("GET", `/api/v1/groups/${this.state.gid}`).done(data => {
         this.setState(
           update(this.state, {
             groupName: { $set: data.name },
@@ -860,7 +860,7 @@ const AuthPanel = React.createClass({
       });
     }
 
-    apiCall("GET", "/api/v1/stats/registration").success(data => {
+    apiCall("GET", "/api/v1/stats/registration").done(data => {
       this.setState(update(this.state, { regStats: { $set: data } }));
     });
   },
@@ -901,7 +901,7 @@ const AuthPanel = React.createClass({
     form["g-recaptcha-response"] = this.state.captcha;
 
     apiCall("POST", "/api/v1/users", form)
-      .success(data => {
+      .done(data => {
         const verificationAlert = {
           status: 1,
           message:
@@ -924,9 +924,9 @@ const AuthPanel = React.createClass({
             username: this.state.username,
             password: this.state.password
           })
-            .success(loginData => {
+            .done(loginData => {
               apiCall("GET", "/api/v1/user")
-                .success(userData => {
+                .done(userData => {
                   if (data.teacher) {
                     apiNotify(successAlert, "/profile");
                   } else if (this.state.settings.max_team_size > 1) {
@@ -936,16 +936,16 @@ const AuthPanel = React.createClass({
                     apiNotify(successAlert, "/profile");
                   }
                 })
-                .error(jqXHR =>
+                .fail(jqXHR =>
                   apiNotify({ status: 0, message: jqXHR.responseJSON.message })
                 );
             })
-            .error(jqXHR =>
+            .fail(jqXHR =>
               apiNotify({ status: 0, message: jqXHR.responseJSON.message })
             );
         }
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -955,7 +955,7 @@ const AuthPanel = React.createClass({
     apiCall("POST", "/api/v1/user/reset_password/request", {
       username: this.state.username
     })
-      .success(resp => {
+      .done(resp => {
         apiNotify({
           status: 1,
           message:
@@ -963,7 +963,7 @@ const AuthPanel = React.createClass({
         });
         this.setPage("Login");
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -974,9 +974,9 @@ const AuthPanel = React.createClass({
       username: this.state.username,
       password: this.state.password
     })
-      .success(() =>
+      .done(() =>
         // Get teacher status
-        apiCall("GET", "/api/v1/user").success(function(data) {
+        apiCall("GET", "/api/v1/user").done(data => {
           if (document.location.hash === "#team-builder" && !data.teacher) {
             this.setPage("Team Management");
           } else {
@@ -988,7 +988,7 @@ const AuthPanel = React.createClass({
           }
         })
       )
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },

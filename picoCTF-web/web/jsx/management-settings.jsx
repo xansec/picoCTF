@@ -100,11 +100,11 @@ const GeneralTab = React.createClass({
       username_blacklist: this.state.username_blacklist
     };
     apiCall("PATCH", "/api/v1/settings", data)
-      .success(data => {
+      .done(data => {
         apiNotify({ status: 1, message: "Settings updated successfully" });
         this.props.refresh();
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -329,11 +329,11 @@ const EmailTab = React.createClass({
     }
 
     apiCall("PATCH", "/api/v1/settings", pushData)
-      .success(data => {
+      .done(data => {
         apiNotify({ status: 1, message: "Settings updated successfully" });
         this.props.refresh();
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -546,11 +546,11 @@ const ShardingTab = React.createClass({
     }
 
     apiCall("PATCH", "/api/v1/settings", pushData)
-      .success(data => {
+      .done(data => {
         apiNotify({ status: 1, message: "Settings updated successfully" });
         this.props.refresh();
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -563,10 +563,10 @@ const ShardingTab = React.createClass({
       "Cancel",
       () =>
         apiCall("POST", "/api/v1/shell_servers/update_assignments", {})
-          .success(data =>
+          .done(data =>
             apiNotify({ status: 1, message: "Server assignments updated" })
           )
-          .error(jqXHR =>
+          .fail(jqXHR =>
             apiNotify({ status: 0, message: jqXHR.responseJSON.message })
           ),
       function() {}
@@ -583,10 +583,10 @@ const ShardingTab = React.createClass({
         apiCall("POST", "/api/v1/shell_servers/update_assignments", {
           include_assigned: true
         })
-          .success(data =>
+          .done(data =>
             apiNotify({ status: 1, message: "Server assigments updated" })
           )
-          .error(jqXHR =>
+          .fail(jqXHR =>
             apiNotify({ status: 0, message: jqXHR.responseJSON.message })
           ),
       function() {}
@@ -722,11 +722,11 @@ const CaptchaTab = React.createClass({
     }
 
     apiCall("PATCH", "/api/v1/settings", pushData)
-      .success(data => {
+      .done(data => {
         apiNotify({ status: 1, message: "Settings updated successfully" });
         this.props.refresh();
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },
@@ -819,11 +819,11 @@ const User = React.createClass({
           `/api/v1/users/${uid}/delete`,
           data
         )
-          .success(data => {
+          .done(data => {
             apiNotify({ status: 1, message: "Account successfully deleted!" });
             refresh();
           })
-          .error(jqXHR => {
+          .fail(jqXHR => {
             apiNotify({ status: 0, message: jqXHR.responseJSON.message });
           });
       },
@@ -983,12 +983,12 @@ const UserSearchTab = React.createClass({
     }
 
     apiCall("POST", "/api/v1/users/search", pushData)
-      .success(data => {
+      .done(data => {
         this.setState(
           React.addons.update(this.state, { users: { $set: data } })
         );
       })
-      .error(jqXHR => {
+      .fail(jqXHR => {
         apiNotify({ status: 0, message: jqXHR.responseJSON.message });
         this.setState(
           React.addons.update(this.state, { users: { $set: [] } })
@@ -1070,11 +1070,11 @@ const EligibilityTab = React.createClass({
     }
 
     apiCall("PATCH", "/api/v1/settings", pushData)
-      .success(data => {
+      .done(data => {
         apiNotify({ status: 1, message: "Settings updated successfully" });
         this.props.refresh();
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   },

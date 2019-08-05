@@ -16,10 +16,10 @@ const renderAchievementInformation = _.template(
 
 const load_group_info = () =>
   apiCall("GET", "/api/v1/groups", null, "Team", "GroupLoad")
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     )
-    .success(function(data) {
+    .done(function(data) {
       $("#group-info").html(renderGroupInformation({ data }));
 
       $("#join-group").on("click", group_request);
@@ -42,11 +42,11 @@ const load_group_info = () =>
 const join_group = function(group_name, group_owner) {
   const data = { group_name: group_name, group_owner: group_owner };
   apiCall("POST", "/api/v1/team/join_group", data, "Team", "JoinGroup")
-    .success(function(data) {
+    .done(function(data) {
       apiNotify({ status: 1, message: "Successfully joined group" });
       load_group_info();
     })
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 };
@@ -59,11 +59,11 @@ const leave_group = gid =>
     "Team",
     "LeaveGroup"
   )
-    .success(function(data) {
+    .done(function(data) {
       apiNotify({ status: 1, message: "Successfully left group" });
       load_group_info();
     })
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 
@@ -108,28 +108,21 @@ const ProblemInfo = React.createClass({
 
   componentWillMount() {
     apiCall("GET", "/api/v1/team")
-      .success(data => {
+      .done(data => {
         this.setState(update(this.state, { team: { $set: data } }));
       })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
 
     apiCall("GET", "/api/v1/problems")
-      .success(data => {
+      .done(data => {
         this.setState(update(this.state, { problems: { $set: data } }));
+        this.setState(update(this.state, { solvedProblems: {
+          $set: data.filter(problem => problem.solved)
+        }}));
       })
-      .error(jqXHR =>
-        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-      );
-
-    apiCall("GET", "/api/v1/problems?solved_only=true")
-      .success(data => {
-        this.setState(
-          update(this.state, { solvedProblems: { $set: data } })
-        );
-      })
-      .error(jqXHR =>
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
 

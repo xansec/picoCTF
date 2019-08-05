@@ -195,8 +195,8 @@ window.drawTopTeamsProgressionGraph = function(selector, gid) {
 
   if (gid === "student") {
     apiCall("GET", "/api/v1/stats/top_teams/score_progression")
-      .success(drawgraph)
-      .error(jqXHR =>
+      .done(drawgraph)
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   } else if (gid === "global") {
@@ -204,8 +204,8 @@ window.drawTopTeamsProgressionGraph = function(selector, gid) {
       "GET",
       "/api/v1/stats/top_teams/score_progression?include_ineligible=true"
     )
-      .success(drawgraph)
-      .error(jqXHR =>
+      .done(drawgraph)
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   } else {
@@ -213,8 +213,8 @@ window.drawTopTeamsProgressionGraph = function(selector, gid) {
       "GET",
       `/api/v1/stats/top_teams/score_progression?gid=${gid}`
     )
-      .success(drawgraph)
-      .error(jqXHR =>
+      .done(drawgraph)
+      .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
   }
@@ -288,8 +288,8 @@ window.renderTeamProgressionGraph = function(selector, data) {
 
 window.drawTeamProgressionGraph = (selector, container_selector) =>
   apiCall("GET", "/api/v1/team/score_progression")
-    .success(data => renderTeamProgressionGraph(selector, data))
-    .error(jqXHR =>
+    .done(data => renderTeamProgressionGraph(selector, data))
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 

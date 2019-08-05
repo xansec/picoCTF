@@ -6,12 +6,12 @@ const renderShellServers = _.template(
 
 $(() =>
   apiCall("GET", "/api/v1/shell_servers")
-    .success(function(data) {
+    .done(function(data) {
       if (data.length > 0) {
         $("#shell-servers").html(renderShellServers({ servers: data }));
       }
     })
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     )
 );

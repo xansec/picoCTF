@@ -21,14 +21,14 @@ const renderScorepage = _.template(
 
 const load_teamscore = () =>
   apiCall("GET", "/api/v1/team")
-    .success(data =>
+    .done(data =>
       $("#scoreboard-teamscore").html(
         renderScoreboardTeamScore({
           teamscore: data.score
         })
       )
     )
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 
@@ -63,7 +63,7 @@ const load_scoreboard_page = function(boardname, page, tid, gid) {
     "GET",
     `/api/v1/stats/scoreboard/page?board=${boardname}&page=${page}&gid=${gid}`
   )
-    .success(data =>
+    .done(data =>
       $(`#${targetid} tbody`).html(
         renderScorepage({
           scorepage: data.scoreboard,
@@ -72,14 +72,14 @@ const load_scoreboard_page = function(boardname, page, tid, gid) {
         })
       )
     )
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 };
 
 const load_scoreboard = () =>
   apiCall("GET", "/api/v1/stats/scoreboard")
-    .success(function(data) {
+    .done(function(data) {
       $("#scoreboard-tabs")
         .html(
           renderScoreboardTabs({
@@ -136,7 +136,7 @@ const load_scoreboard = () =>
             apiCall(
               "GET",
               `/api/v1/stats/scoreboard/search?pattern=${pattern}&board=${board}&page=${page}`
-            ).success(function(searchdata) {
+            ).done(function(searchdata) {
               $(`#${board} tbody`).html(
                 renderScorepage({
                   scorepage: searchdata.scoreboard,
@@ -180,7 +180,7 @@ const load_scoreboard = () =>
         });
       reloadGraph();
     })
-    .error(jqXHR =>
+    .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
     );
 

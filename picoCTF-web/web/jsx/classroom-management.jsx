@@ -18,14 +18,14 @@ const MemberManagementItem = React.createClass({
       team_id: this.props.tid
     };
     apiCall("POST", `/api/v1/groups/${this.props.gid}/remove_team`, data)
-      .success(data => {
+      .done(data => {
         apiNotify({
           status: 1,
           message: "Team has successfully left the classroom."
         });
         this.props.refresh();
       })
-      .error(jqXHR => {
+      .fail(jqXHR => {
         apiNotify({ status: 0, message: jqXHR.responseJSON.message });
       });
   },
@@ -99,12 +99,12 @@ const MemberInvitePanel = React.createClass({
       as_teacher: this.state.role === "teacher"
     };
     apiCall("POST", `/api/v1/groups/${this.props.gid}/invite`, data)
-      .success(data => {
+      .done(data => {
         apiNotify({ status: 1, message: "Email invitation has been sent." });
         this.setState(update(this.state, { $set: { email: "" } }));
         this.props.refresh();
       })
-      .error(jqXHR => {
+      .fail(jqXHR => {
         apiNotify({ status: 0, message: jqXHR.responseJSON.message });
       });
   },
@@ -160,7 +160,7 @@ const BatchRegistrationPanel = React.createClass({
       processData: false
     };
     $.ajax(params)
-      .success(data => {
+      .done(data => {
         let response_html =
           '<div class="panel panel-success batch-registration-response"><div class="panel-heading"><h4>Accounts successfully created!</h4>' +
           "<p>Usernames and passwords are displayed below in the order of the input CSV.</p>" +
@@ -174,7 +174,7 @@ const BatchRegistrationPanel = React.createClass({
         $("#batch-registration-panel").append(response_html);
         this.props.refresh();
       })
-      .error(jqXHR => {
+      .fail(jqXHR => {
         // If the error is a string
         if (typeof jqXHR.responseJSON.message === "string") {
           apiNotify({ status: 0, message: jqXHR.responseJSON.message });
@@ -305,7 +305,7 @@ const GroupManagement = React.createClass({
   },
 
   refreshSettings() {
-    apiCall("GET", `/api/v1/groups/${this.props.gid}`).success(data => {
+    apiCall("GET", `/api/v1/groups/${this.props.gid}`).done(data => {
       this.setState(update(this.state, { settings: { $set: data.settings } }));
       this.setState(
         update(this.state, { member_information: { $set: data.members } })
@@ -316,7 +316,7 @@ const GroupManagement = React.createClass({
     });
 
     /*
-    apiCall("GET", "/api/v1/user").success(data => {
+    apiCall("GET", "/api/v1/user").done(data => {
       this.setState(update(this.state, { current_user: { $set: data } }));
       if (!data["teacher"]) {
         apiNotify(
@@ -337,14 +337,14 @@ const GroupManagement = React.createClass({
     apiCall("PATCH", `/api/v1/groups/${this.props.gid}`, {
       settings: data.settings
     })
-      .success(data => {
+      .done(data => {
         apiNotify({
           status: 1,
           message: "Classroom settings changed successfully."
         });
         this.refreshSettings();
       })
-      .error(jqXHR => {
+      .fail(jqXHR => {
         apiNotify({ status: 0, message: jqXHR.responseJSON.message });
       });
   },
