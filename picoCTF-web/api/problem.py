@@ -30,6 +30,8 @@ problem_schema = Schema({
     check(("Event must be string.", [str])),
     Required("unique_name"):
     check(("The problems's unique name must be a string.", [str])),
+    "static_flag":
+    check(("The static_flag setting must be a bool.", [bool])),
     "walkthrough":
     check(("The problem walkthrough must be a string.", [str])),
     "description":
@@ -447,6 +449,7 @@ def sanitize_problem_data(data):
         "service",
         "should_symlink",
         "sid",
+        "static_flag",
         "tags",
         "user",
         "walkthrough",

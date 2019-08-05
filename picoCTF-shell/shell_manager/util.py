@@ -101,6 +101,7 @@ problem_schema = Schema({
     Required("organization"): All(str, Length(min=1, max=32)),
     Required("event"): All(str, Length(min=1, max=32)),
     "unique_name": str,
+    "static_flag": bool,
     "walkthrough": All(str, Length(min=1, max=512)),
     "version": All(str, Length(min=1, max=8)),
     "tags": list,
