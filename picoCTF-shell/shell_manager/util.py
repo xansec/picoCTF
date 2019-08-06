@@ -4,6 +4,7 @@ Common utilities for the shell manager.
 
 import json
 import logging
+import os
 import re
 import shutil
 import string
@@ -17,13 +18,24 @@ from voluptuous import (All, ALLOW_EXTRA, Length, MultipleInvalid, Range,
 
 logger = logging.getLogger(__name__)
 
-# the root of the hacksports local store
-HACKSPORTS_ROOT = "/opt/hacksports/"
-PROBLEM_ROOT = join(HACKSPORTS_ROOT, "sources")
-EXTRA_ROOT = join(HACKSPORTS_ROOT, "extra")
-STAGING_ROOT = join(HACKSPORTS_ROOT, "staging")
-DEPLOYED_ROOT = join(HACKSPORTS_ROOT, "deployed")
-BUNDLE_ROOT = join(HACKSPORTS_ROOT, "bundles")
+# Directories used to store server state.
+
+# Most resources (installed problems and bundles, config, etc.) are stored
+# within the SHARED_ROOT directory, which can be located on a network
+# filesystem and mounted onto several shell servers to sync state.
+
+# Deployed problem instances, however, are separate to each server
+# (although the same problem instance will share its flag/port across servers).
+SHARED_ROOT = '/opt/hacksports/shared/'
+LOCAL_ROOT = '/opt/hacksports/local/'
+
+PROBLEM_ROOT = join(SHARED_ROOT, "sources")
+EXTRA_ROOT = join(SHARED_ROOT, "extra")
+STAGING_ROOT = join(SHARED_ROOT, "staging")
+BUNDLE_ROOT = join(SHARED_ROOT, "bundles")
+DEB_ROOT = join(SHARED_ROOT, "debs")
+
+DEPLOYED_ROOT = join(LOCAL_ROOT, "deployed")
 
 
 class ConfigDict(dict):
@@ -35,18 +47,10 @@ class ConfigDict(dict):
         self[attr] = value
 
 
-default_config = ConfigDict({
+default_shared_config = ConfigDict({
     # secret used for deterministic deployment
     "deploy_secret":
     "qwertyuiop",
-
-    # the externally accessible address of this server
-    "hostname":
-    "127.0.0.1",
-
-    # the url of the web server
-    "web_server":
-    "http://127.0.0.1",
 
     # the default username for files to be owned by
     "default_user":
@@ -77,6 +81,16 @@ default_config = ConfigDict({
     }]
 })
 
+default_local_config = ConfigDict({
+    # the externally accessible address of this server
+    "hostname":
+    "127.0.0.1",
+
+    # the url of the web server
+    "web_server":
+    "http://127.0.0.1",
+})
+
 problem_schema = Schema({
     Required("author"): All(str, Length(min=1, max=32)),
     Required("score"): All(int, Range(min=0)),
@@ -86,6 +100,8 @@ problem_schema = Schema({
     Required("hints"): list,
     Required("organization"): All(str, Length(min=1, max=32)),
     Required("event"): All(str, Length(min=1, max=32)),
+    "unique_name": str,
+    "static_flag": bool,
     "walkthrough": All(str, Length(min=1, max=512)),
     "version": All(str, Length(min=1, max=8)),
     "tags": list,
@@ -98,29 +114,29 @@ problem_schema = Schema({
 
 bundle_schema = Schema({
     Required("author"): All(str, Length(min=1, max=32)),
-    Required("problems"): list,
     Required("name"): All(str, Length(min=1, max=32)),
     Required("description"): str,
-    Required("categories"): list,
-    "version": All(str, Length(min=1, max=8)),
-    "tags": list,
-    "organization": All(str, Length(min=1, max=32)),
-    "dependencies": dict,
-    "pkg_dependencies": list
+    "dependencies": dict
 })
 
-config_schema = Schema(
+shared_config_schema = Schema(
     {
         Required("deploy_secret"): str,
-        Required("hostname"): str,
-        Required("web_server"): str,
         Required("default_user"): str,
         Required("web_root"): str,
         Required("problem_directory_root"): str,
         Required("obfuscate_problem_directories"): bool,
         Required("banned_ports"): list
     },
-    extra=True)
+    extra=False)
+
+local_config_schema = Schema(
+    {
+        Required("hostname"): str,
+        Required("web_server"): str,
+        Required("rate_limit_bypass"): str,
+    },
+    extra=False)
 
 port_range_schema = Schema({
     Required("start"):
@@ -259,8 +275,13 @@ def get_problem(problem_path):
     """
 
     json_path = join(problem_path, "problem.json")
-    problem = json.loads(open(json_path, "r").read())
-
+    try:
+        problem = json.loads(open(json_path, "r").read())
+    except json.decoder.JSONDecodeError as e:
+        logger.critical(f"Error reading JSON file {json_path}")
+        logger.critical(e)
+        raise FatalException
+    problem['unique_name'] = "{}-{}".format(sanitize_name(problem["name"]), get_pid_hash(problem, True))
     try:
         problem_schema(problem)
     except MultipleInvalid as e:
@@ -283,7 +304,7 @@ def get_bundle_root(bundle_name, absolute=False):
         The tentative installation location.
     """
 
-    bundle_root = join(BUNDLE_ROOT, sanitize_name(bundle_name))
+    bundle_root = join(BUNDLE_ROOT, sanitize_name(bundle_name), "bundle.json")
 
     assert bundle_root.startswith(sep)
     if absolute:
@@ -294,55 +315,53 @@ def get_bundle_root(bundle_name, absolute=False):
 
 def get_bundle(bundle_path):
     """
-    Returns a bundle spec from a given bundle directory.
+    Returns a bundle spec from a bundle JSON file.
 
     Args:
-        bundle_path: path to the root of the bundle directory.
+        bundle_path: path to the bundle JSON file.
 
     Returns:
         A bundle object.
     """
 
-    json_path = join(bundle_path, "bundle.json")
-
-    bundle = json.loads(open(json_path, "r").read())
+    bundle = json.loads(open(bundle_path, "r").read())
 
     try:
         bundle_schema(bundle)
     except MultipleInvalid as e:
-        logger.critical("Error validating bundle object at '%s'!", json_path)
+        logger.critical("Error validating bundle object at '%s'!", bundle_path)
         logger.critical(e)
         raise FatalException
 
     return bundle
 
 
-def verify_config(config_object):
+def verify_shared_config(shared_config_object):
     """
-    Verifies the given configuration dict against the config_schema and the
-    port_range_schema.
+    Verifies the given shared configuration dict against
+    the shared_config_schema and the port_range_schema.
 
     Args:
-        config_object: The configuration options in a dict
+        shared_config_object: The configuration options in a dict
 
     Raises:
          FatalException: if failed.
     """
 
     try:
-        config_schema(config_object)
+        shared_config_schema(shared_config_object)
     except MultipleInvalid as e:
-        logger.critical("Error validating config file at '%s'!", path)
+        logger.critical("Error validating shared config file!")
         logger.critical(e)
         raise FatalException
 
-    for port_range in config_object["banned_ports"]:
+    for port_range in shared_config_object["banned_ports"]:
         try:
             port_range_schema(port_range)
             assert port_range["start"] <= port_range["end"]
         except MultipleInvalid as e:
             logger.critical(
-                "Error validating port range in config file at '%s'!", path)
+                "Error validating port range in shared config file!")
             logger.critical(e)
             raise FatalException
         except AssertionError:
@@ -351,35 +370,24 @@ def verify_config(config_object):
             raise FatalException
 
 
-def get_config(path):
+def verify_local_config(local_config_object):
     """
-    Returns a configuration object from the given path.
+    Verifies the given local configuration dict against
+    the local_config_schema.
 
     Args:
-        path: the full path to the json file
+        local_config_object: The configuration options in a dict
 
-    Returns:
-        A python object containing the fields within
+    Raises:
+         FatalException: if failed.
     """
 
-    with open(path) as f:
-        config_object = json.loads(f.read())
-
-    verify_config(config_object)
-
-    config = ConfigDict()
-    for key, value in config_object.items():
-        config[key] = value
-
-    return config
-
-
-def get_hacksports_config():
-    """
-    Returns the global configuration options from the file in HACKSPORTS_ROOT.
-    """
-
-    return get_config(join(HACKSPORTS_ROOT, "config.json"))
+    try:
+        local_config_schema(local_config_object)
+    except MultipleInvalid as e:
+        logger.critical("Error validating local config file!")
+        logger.critical(e)
+        raise FatalException
 
 
 def write_configuration_file(path, config_dict):
@@ -391,36 +399,85 @@ def write_configuration_file(path, config_dict):
         config_dict: the configuration dictionary
     """
 
-    verify_config(config_dict)
-
     with open(path, "w") as f:
         json_data = json.dumps(
             config_dict, sort_keys=True, indent=4, separators=(',', ': '))
         f.write(json_data)
 
 
-def write_global_configuration(config_dict):
+def get_shared_config():
     """
-    Writes the options in config_dict to the global config file.
+    Returns the shared configuration options from the file in SHARED_ROOT.
+    """
+    shared_config_location = join(SHARED_ROOT, "shared_config.json")
+    try:
+        with open(shared_config_location) as f:
+            config_object = json.loads(f.read())
+        verify_shared_config(config_object)
+        config = ConfigDict()
+        for key, value in config_object.items():
+            config[key] = value
+        return config
+    except PermissionError:
+        logger.error("You must run shell_manager with sudo.")
+        raise FatalException
+    except FileNotFoundError:
+        write_configuration_file(shared_config_location, default_shared_config)
+        chmod(shared_config_location, 0o640)
+        logger.info(
+            "There was no default configuration. One has been created for you. Please edit it accordingly using the 'shell_manager config' subcommand before deploying any instances."
+        )
+        raise FatalException
+
+
+def get_local_config():
+    """
+    Returns the local configuration options from the file in LOCAL_ROOT.
+    """
+    local_config_location = join(LOCAL_ROOT, "local_config.json")
+    try:
+        with open(local_config_location) as f:
+            config_object = json.loads(f.read())
+        verify_local_config(config_object)
+        config = ConfigDict()
+        for key, value in config_object.items():
+            config[key] = value
+        return config
+    except PermissionError:
+        logger.error("You must run shell_manager with sudo.")
+        raise FatalException
+    except FileNotFoundError:
+        write_configuration_file(local_config_location, default_local_config)
+        chmod(local_config_location, 0o640)
+        logger.info(
+            "There was no default configuration. One has been created for you. Please edit it accordingly using the 'shell_manager config' subcommand before deploying any instances."
+        )
+        raise FatalException
+
+
+def set_shared_config(config_dict):
+    """
+    Validates and writes the options in config_dict to the shared config file.
 
     Args:
         config_dict: the configuration dictionary
     """
+    verify_shared_config(config_dict)
+    write_configuration_file(
+        join(SHARED_ROOT, "shared_config.json"), config_dict)
 
-    write_configuration_file(join(HACKSPORTS_ROOT, "config.json"), config_dict)
 
-
-def place_default_config(destination=join(HACKSPORTS_ROOT, "config.json")):
+def set_local_config(config_dict):
     """
-    Places a default configuration file in the destination.
+    Validates and writes the options in config_dict to the local config file.
 
     Args:
-        destination: Where to place the default configuration. Defaults to
-            HACKSPORTS_ROOT/config.json
+        config_dict: the configuration dictionary
     """
+    verify_local_config(config_dict)
+    write_configuration_file(
+        join(LOCAL_ROOT, "local_config.json"), config_dict)
 
-    write_configuration_file(destination, default_config)
-    chmod(destination, 0o640)
 
 def get_pid_hash(problem, short=False):
     """
@@ -440,7 +497,7 @@ def get_pid_hash(problem, short=False):
         logger.critical("Error validating problem object!")
         logger.critical(e)
         raise FatalException
-    
+
     input = "{}-{}-{}-{}".format(problem["name"], problem["author"], problem["organization"], problem["event"])
     output = md5(input.encode("utf-8")).hexdigest()
 
@@ -448,3 +505,25 @@ def get_pid_hash(problem, short=False):
         return output[:7]
 
     return output
+
+
+def acquire_lock():
+    """Acquire the problem installation/deployment lock."""
+    lock_file = join(SHARED_ROOT, "deploy.lock")
+    if isfile(lock_file):
+        logger.error(
+            "Another problem installation or deployment appears in progress. If you believe this to be an error, "
+            "run 'shell_manager clean'")
+        raise FatalException
+
+    with open(lock_file, "w") as f:
+        f.write("1")
+    logger.debug(f"Obtained lock file ({str(lock_file)})")
+
+
+def release_lock():
+    """Release the problem installation/deployment lock."""
+    lock_file = join(SHARED_ROOT, "deploy.lock")
+    if isfile(lock_file):
+        os.remove(lock_file)
+        logger.debug(f"Released lock file ({str(lock_file)})")

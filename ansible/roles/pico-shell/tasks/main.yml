@@ -51,3 +51,8 @@
 # services
 #   sudo systemctl add-wants default.target shell_manager.target
 # hardening
+
+- name: Remove /var/log/wtmp
+  file:
+    path: /var/log/wtmp
+    state: absent

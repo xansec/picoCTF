@@ -349,23 +349,13 @@ def test_get_user(mongo_proc, redis_proc, client): # noqa (fixture)
     expected_body = {
         'admin': False,
         'completed_minigames': [],
-        'country': STUDENT_DEMOGRAPHICS['country'],
-        'demo': {
-            'age': STUDENT_DEMOGRAPHICS['demo']['age'],
-            'parentemail': STUDENT_DEMOGRAPHICS['demo']['parentemail']},
-        'disabled': False,
-        'email': STUDENT_DEMOGRAPHICS['email'],
         'extdata': {},
-        'firstname': STUDENT_DEMOGRAPHICS['firstname'],
-        'lastname': STUDENT_DEMOGRAPHICS['lastname'],
         'logged_in': True,
+        'score': 0,
         'teacher': False,
-        'tid': '8b19b0478dcc43e7a448a4e500584c10',
         'tokens': 0,
-        'uid': 'dc7089e279d24b70b989cd53665eb49c',
         'unlocked_walkthroughs': [],
         'username': STUDENT_DEMOGRAPHICS['username'],
-        'usertype': 'student',
         'verified': True
         }
     res = client.get('/api/v1/user')

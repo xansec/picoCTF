@@ -8,7 +8,7 @@ shell_manager_dir:  "{{pico_base_dir}}/picoCTF-shell"
 ###
 # wetty configuration
 ###
-wetty_js_path: "/opt/hacksports/wetty/node_modules/wetty.js"
+wetty_js_path: "/opt/wetty/node_modules/wetty.js"
 
 # configure nginx
 shell_site_config_name: "shell"
@@ -25,14 +25,12 @@ bundle_dir: "/picoCTF-bundles"
 # specified in an environmental configuration AND `auto_load_problems` is True
 ##
 problem_source_dirs:
-  - "{{ pico_base_dir }}/problems/examples"
+  - "{{ pico_base_dir }}/problems/examples/binary-exploitation/buffer-overflow-1"
+  - "{{ pico_base_dir }}/problems/examples/cryptography/ecb-1"
+  - "{{ pico_base_dir }}/problems/examples/web-exploitation/sql-injection-1"
 
 bundles:
-  - {
-    source: "{{ pico_base_dir }}/problems/bundles/challenge-sampler.json",
-    name: "challenge-sampler",
-    instances: 2
-  }
+  - "{{ pico_base_dir }}/problems/bundles/challenge-sampler.json"
 
 # SSL requires cert and vault-encrypted key
 enable_shell_ssl: False

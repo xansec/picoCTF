@@ -6,26 +6,17 @@ import api
 from api import check, validate
 
 bundle_schema = Schema({
-    Required("name"):
-    check(("The bundle name must be a string.", [str])),
     Required("author"):
     check(("The bundle author must be a string.", [str])),
-    Required("categories"):
-    check(("The bundle categories must be a list.", [list])),
-    Required("problems"):
-    check(("The bundle problems must be a list.", [list])),
+    Required("name"):
+    check(("The bundle name must be a string.", [str])),
     Required("description"):
     check(("The bundle description must be a string.", [str])),
-    "organization":
-    check(("The bundle organization must be a string.", [str])),
     "dependencies":
     check(("The bundle dependencies must be a dict.", [dict])),
     "dependencies_enabled":
     check(("The dependencies enabled state must be a bool.",
            [lambda x: type(x) == bool])),
-    "pkg_dependencies":
-    check(("The package dependencies must be a list.",
-           [lambda x: type(x) == list]))
 })
 
 

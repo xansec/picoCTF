@@ -8,7 +8,7 @@ from flask_restplus import Namespace, Resource
 import api
 from api import PicoException, rate_limit, require_admin
 
-from .schemas import user_req
+from .schemas import user_req, user_delete_req, user_search_req
 
 ns = Namespace('users', description='User management')
 
@@ -91,13 +91,20 @@ class User(Resource):
             raise PicoException('User not found', status_code=404)
         return res, 200
 
+
+@ns.route('/<string:user_id>/delete')
+class UserDeleteResponse(Resource):
+    """Delete a specific user with an optional reason"""
+
     @require_admin
-    def delete(self, user_id):
+    @ns.expect(user_delete_req)
+    def post(self, user_id):
         """Disable a specific user."""
+        req = user_delete_req.parse_args(strict=True)
         user = api.user.get_user(uid=user_id)
         if not user:
             raise PicoException('User not found', status_code=404)
-        api.user.disable_account(user_id)
+        api.user.disable_account(user_id, req["reason"])
         return jsonify({
             'success': True
         })
@@ -124,3 +131,28 @@ class UserDataExport(Resource):
             'submissions': submissions,
             'feedback': feedbacks
         })
+
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Not authorized')
+@ns.response(404, 'User not found')
+@ns.route('/search')
+class UserSearch(Resource):
+    """Search for a given user."""
+
+    @require_admin
+    @ns.expect(user_search_req)
+    def post(self):
+        """Search for a given user."""        
+        req = user_search_req.parse_args(strict=True)
+
+        if req["field"] == "Email":
+            user_data = api.user.get_users(email=req["query"])
+        elif req["field"] == "Parent Email":
+            user_data = api.user.get_users(parentemail=req["query"])
+        elif req["field"] == "User Name":
+            user_data = api.user.get_users(username=req["query"])
+
+        if not user_data:
+            raise PicoException('User not found', status_code=404)
+        return jsonify(user_data)

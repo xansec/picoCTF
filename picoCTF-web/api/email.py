@@ -191,3 +191,20 @@ def send_email_invite(gid, email, teacher=False):
 
     message = Message(body=body, recipients=[email], subject=subject)
     mail.send(message)
+
+def send_deletion_notification(username, email, delete_reason):
+    """
+    Send an email to notify that an account has been deleted.
+    """
+    refresh_email_settings()
+    settings = api.config.get_settings()
+
+    body = settings["email"]["deletion_notification_body"].format(
+        competition_name = settings["competition_name"],
+        username = username,
+        delete_reason = delete_reason)
+
+    subject = "{} Account Deletion".format(settings["competition_name"])
+
+    message = Message(body=body, recipients=[email], subject=subject)
+    mail.send(message)

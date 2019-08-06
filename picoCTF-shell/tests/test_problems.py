@@ -3,11 +3,9 @@ from os.path import dirname, join, realpath
 
 import hacksport.deploy
 from hacksport.deploy import deploy_problem
-from shell_manager.util import default_config
 
 PATH = dirname(realpath(__file__))
 
-hacksport.deploy.deploy_config = default_config
 
 
 @pytest.mark.skip("Broken tests/not working")

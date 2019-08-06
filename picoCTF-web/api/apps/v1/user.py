@@ -12,6 +12,9 @@ from .schemas import (disable_account_req, email_verification_req, login_req,
 ns = Namespace('user', description='Authentication and information about ' +
                                    'current user')
 
+USERDATA_FILTER = ['admin', 'extdata', 'completed_minigames', 'logged_in',
+                    'teacher', 'tokens', 'unlocked_walkthroughs', 'username',
+                    'verified']
 
 @ns.route('')
 class User(Resource):
@@ -25,7 +28,11 @@ class User(Resource):
         }
         if api.user.is_logged_in():
             res['logged_in'] = True
-            res.update(api.user.get_user())
+            res['score'] = api.stats.get_score(tid=api.user.get_user()['tid'],
+                                               time_weighted=False)
+            userdata = {k: v for k, v in api.user.get_user().items() if
+                        k in USERDATA_FILTER}
+            res.update(userdata)
         return jsonify(res)
 
     @check_csrf
@@ -142,7 +149,7 @@ class DisableAccountResponse(Resource):
         if not api.user.confirm_password(
                 req['password'], user['password_hash']):
             raise PicoException('The provided password is not correct.', 422)
-        api.user.disable_account(user['uid'])
+        api.user.disable_account(user['uid'], "Deleted at user's request.")
         api.user.logout()
         return jsonify({
             'success': True

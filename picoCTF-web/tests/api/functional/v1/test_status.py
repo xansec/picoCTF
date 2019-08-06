@@ -26,13 +26,7 @@ def test_status(mongo_proc, redis_proc, client): # noqa
     clear_db()
 
     expected_responses = {
-        'enable_feedback': True,
-        'enable_captcha': False,
-        'reCAPTCHA_public_key': '',
         'competition_active': False,
-        'email_verification': False,
-        'max_team_size': 1,
-        'email_filter': []
     }
     nondeterministic_responses = ['time']
     res = client.get('/api/v1/status')

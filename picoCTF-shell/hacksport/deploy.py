@@ -1,5 +1,20 @@
+import logging
+
 """
-Problem deployment.
+Handles deployment of an installed problem.
+
+Deploying a problem means creating one or more instances, which are each
+templated with flags, the shell server URL, etc., and assigned a port
+(if required for their problem type).
+
+Flags and assigned ports will remain consistent for (problem, instance) pairs
+across any shell servers that share the SHARED_ROOT directory.
+
+However, instances must still be created individually on each shell server,
+as server URLs must be templated appropriately, dependencies potentially
+need to be installed on each server, and the underlying files, users and
+service definitions that make up a deployed instance are specific to each
+shell server.
 """
 
 HIGHEST_PORT = 65535
@@ -12,12 +27,13 @@ XINETD_SERVICE_PATH = "/etc/xinetd.d/"
 TEMP_DEB_DIR = "/tmp/picoctf_debs/"
 
 # will be set to the configuration module during deployment
-deploy_config = None
+shared_config = None
+local_config = None
 port_map = {}
-inv_port_map = {}
 current_problem = None
 current_instance = None
 
+logger = logging.getLogger(__name__)
 
 def get_deploy_context():
     """
@@ -25,12 +41,12 @@ def get_deploy_context():
     config, port_map, problem, instance
     """
 
-    global deploy_config, port_map, inv_port_map, current_problem, current_instance
+    global shared_config, local_config, port_map, current_problem, current_instance
 
     return {
-        "config": deploy_config,
+        "shared_config": shared_config,
+        "local_config": local_config,
         "port_map": port_map,
-        "inv_port_map": inv_port_map,
         "problem": current_problem,
         "instance": current_instance
     }
@@ -60,47 +76,49 @@ def give_port():
 
     context = get_deploy_context()
     # default behavior
-    if context["config"] is None:
+    if context["shared_config"] is None:
         return randint(LOWEST_PORT, HIGHEST_PORT)
 
-    if "banned_ports_parsed" not in context["config"]:
+    if "banned_ports_parsed" not in context["shared_config"]:
         banned_ports_result = []
-        for port_range in context["config"].banned_ports:
+        for port_range in context["shared_config"].banned_ports:
             banned_ports_result.extend(
                 list(range(port_range["start"], port_range["end"] + 1)))
 
-        context["config"]["banned_ports_parsed"] = banned_ports_result
+        context["shared_config"]["banned_ports_parsed"] = banned_ports_result
 
     # during real deployment, let's register a port
     if port_random is None:
-        port_random = Random(context["config"].deploy_secret)
+        port_random = Random(context["shared_config"].deploy_secret)
 
     # if this instance already has a port, reuse it
-    if (context["problem"], context["instance"]) in inv_port_map:
-        return inv_port_map[(context["problem"], context["instance"])]
+    if (context["problem"], context["instance"]) in context["port_map"]:
+        assigned_port = context['port_map'][(context['problem'], context['instance'])]
+        logger.debug(f"This problem instance ({context['problem']}: {str(context['instance'])}) already has an assigned port: {str(assigned_port)}")
+        return assigned_port
 
-    if len(context["port_map"].items()) + len(
-            context["config"].banned_ports_parsed) == HIGHEST_PORT + 1:
+    used_ports = [port for port in context["port_map"].values() if port is not None]
+    if len(used_ports) + len(
+            context["shared_config"].banned_ports_parsed) == HIGHEST_PORT + 1:
         raise Exception(
             "All usable ports are taken. Cannot deploy any more instances.")
 
     # Added used ports to banned_ports_parsed.
-    for port in port_map:
-        context["config"].banned_ports_parsed.append(port)
+    for port in used_ports:
+        context["shared_config"].banned_ports_parsed.append(port)
 
     # in case the port chosen is in use, try again.
-    loop_var = HIGHEST_PORT - len(context["config"].banned_ports_parsed) + 1
+    loop_var = HIGHEST_PORT - len(context["shared_config"].banned_ports_parsed) + 1
     while loop_var > 0:
         # Get a random port that is random, not in the banned list, not in use, and not assigned before.
         port = port_random.choice([
             i for i in range(LOWEST_PORT, HIGHEST_PORT)
-            if i not in context["config"].banned_ports_parsed
+            if i not in context["shared_config"].banned_ports_parsed
         ])
         if check_if_port_in_use(port):
             loop_var -= 1
-            context["config"].banned_ports_parsed.append(port)
+            context["shared_config"].banned_ports_parsed.append(port)
             continue
-        context["port_map"][port] = (context["problem"], context["instance"])
         return port
     raise Exception(
         "Unable to assigned a port to this problem. All ports are either taken or used by the system."
@@ -109,12 +127,12 @@ def give_port():
 
 import functools
 import json
-import logging
 import os
 import shutil
 import subprocess
 import traceback
 from abc import ABCMeta
+from ast import literal_eval
 from copy import copy, deepcopy
 from grp import getgrnam
 from hashlib import md5, sha1
@@ -132,15 +150,15 @@ from hacksport.problem import (Compiled, Directory, ExecutableFile, File,
                                ProtectedFile, Remote, Service)
 from hacksport.status import get_all_problem_instances, get_all_problems
 from jinja2 import Environment, FileSystemLoader, Template
-from shell_manager.bundle import get_bundle, get_bundle_root
 from shell_manager.package import package_problem
 from shell_manager.util import (DEPLOYED_ROOT, FatalException, get_attributes,
-                                get_problem, get_problem_root, HACKSPORTS_ROOT,
+                                get_problem, get_problem_root,
                                 sanitize_name, STAGING_ROOT, get_problem_root_hashed,
-                                get_pid_hash)
+                                get_pid_hash, get_bundle, DEB_ROOT, SHARED_ROOT,
+                                get_shared_config, get_local_config,
+                                acquire_lock, release_lock)
 from spur import RunProcessError
 
-logger = logging.getLogger(__name__)
 
 
 def challenge_meta(attributes):
@@ -185,13 +203,14 @@ def update_problem_class(Class, problem_object, seed, user, instance_directory):
     attributes = deepcopy(problem_object)
 
     # pass configuration options in as class fields
-    attributes.update(dict(deploy_config))
+    attributes.update(dict(shared_config))
+    attributes.update(dict(local_config))
 
     attributes.update({
         "random": random,
         "user": user,
         "directory": instance_directory,
-        "server": deploy_config.hostname
+        "server": local_config.hostname
     })
 
     return challenge_meta(attributes)(Class.__name__, Class.__bases__,
@@ -296,11 +315,11 @@ def generate_instance_deployment_directory(username):
     """
 
     directory = username
-    if deploy_config.obfuscate_problem_directories:
+    if shared_config.obfuscate_problem_directories:
         directory = username + "_" + md5(
-            (username + deploy_config.deploy_secret).encode()).hexdigest()
+            (username + shared_config.deploy_secret).encode()).hexdigest()
 
-    root_dir = deploy_config.problem_directory_root
+    root_dir = shared_config.problem_directory_root
 
     if not isdir(root_dir):
         os.makedirs(root_dir)
@@ -329,7 +348,7 @@ def generate_staging_directory(root=STAGING_ROOT,
     Creates a random, empty staging directory
 
     Args:
-        root: The parent directory for the new directory. Defaults to join(HACKSPORTS_ROOT, "staging")
+        root: The parent directory for the new directory. Defaults to join(SHARED_ROOT, "staging")
 
         Optional prefixes to help identify the staging directory: problem_name, instance_number
 
@@ -445,7 +464,7 @@ def deploy_files(staging_directory, instance_directory, file_list, username,
 
     # get uid and gid for default and problem user
     user = getpwnam(username)
-    default = getpwnam(deploy_config.default_user)
+    default = getpwnam(shared_config.default_user)
 
     for f in file_list:
         # copy the file over, making the directories as needed
@@ -523,7 +542,7 @@ def generate_instance(problem_object,
     """
 
     logger.debug("Generating instance %d of problem '%s'.", instance_number,
-                 problem_object["name"])
+                 problem_object["unique_name"])
     logger.debug("...Using staging directory %s", staging_directory)
 
     username, new = create_instance_user(problem_object['name'],
@@ -537,7 +556,7 @@ def generate_instance(problem_object,
         deployment_directory = generate_instance_deployment_directory(username)
     logger.debug("...Using deployment directory '%s'.", deployment_directory)
 
-    seed = generate_seed(problem_object['name'], deploy_config.deploy_secret,
+    seed = generate_seed(problem_object['name'], shared_config.deploy_secret,
                          str(instance_number))
     logger.debug("...Generated random seed '%s' for deployment.", seed)
 
@@ -584,7 +603,7 @@ def generate_instance(problem_object,
         else:
             source_path = join(copy_path, source_name)
 
-        problem_hash = problem_object["name"] + deploy_config.deploy_secret + str(
+        problem_hash = problem_object["name"] + shared_config.deploy_secret + str(
             instance_number)
         problem_hash = md5(problem_hash.encode("utf-8")).hexdigest()
 
@@ -593,10 +612,10 @@ def generate_instance(problem_object,
         link_template = "<a href='{}'>{}</a>"
 
         web_accessible_files.append((source_path,
-                                     join(deploy_config.web_root,
+                                     join(shared_config.web_root,
                                           destination_path)))
         uri_prefix = "//"
-        uri = join(uri_prefix, deploy_config.hostname, destination_path)
+        uri = join(uri_prefix, local_config.hostname, destination_path)
 
         if not raw:
             return link_template.format(
@@ -689,17 +708,28 @@ def deploy_problem(problem_directory,
 
     if instances is None:
         instances = [0]
-    global current_problem, current_instance
+    global current_problem, current_instance, port_map
 
     problem_object = get_problem(problem_directory)
 
-    current_problem = problem_object["name"]
+    current_problem = problem_object["unique_name"]
 
     instance_list = []
 
     need_restart_xinetd = False
 
     logger.debug("Beginning to deploy problem '%s'.", problem_object["name"])
+
+    problem_deb_location = os.path.join(
+        DEB_ROOT, sanitize_name(problem_object['unique_name'])) + '.deb'
+    try:
+        subprocess.run('DEBIAN_FRONTEND=noninteractive apt-get -y install ' +
+                       f'--reinstall {problem_deb_location}',
+                       shell=True, check=True, stdout=subprocess.PIPE)
+    except subprocess.CalledProcessError:
+        logger.error("An error occurred while installing problem packages.")
+        raise FatalException
+    logger.debug("Reinstalled problem's deb package to fulfill dependencies")
 
     for instance_number in instances:
         current_instance = instance_number
@@ -775,9 +805,6 @@ def deploy_problem(problem_directory,
             if not debug:
                 shutil.rmtree(instance["staging_directory"])
 
-        unique = problem_object["name"] + problem_object["author"] + str(
-            instance_number) + deploy_config.deploy_secret
-
         deployment_info = {
             "user":
             problem.user,
@@ -808,6 +835,9 @@ def deploy_problem(problem_directory,
             deployment_info["port"] = problem.port
             logger.debug("...Port %d has been allocated.", problem.port)
 
+        port_map[(current_problem, instance_number)] = deployment_info.get(
+            "port", None)
+
         instance_info_path = os.path.join(deployment_json_dir,
                                           "{}.json".format(instance_number))
         with open(instance_info_path, "w") as f:
@@ -823,79 +853,52 @@ def deploy_problem(problem_directory,
         execute(["service", "xinetd", "restart"], timeout=60)
 
     logger.info("Problem instances %s were successfully deployed for '%s'.",
-                instances, problem_object["name"])
+                instances, problem_object["unique_name"])
     return need_restart_xinetd
 
 
-def deploy_problems(args, config):
+def deploy_problems(args):
     """ Main entrypoint for problem deployment """
 
-    global deploy_config, port_map, inv_port_map
-    deploy_config = config
+    global shared_config, local_config, port_map
+    shared_config = get_shared_config()
+    local_config = get_local_config()
 
     need_restart_xinetd = False
 
     try:
-        user = getpwnam(deploy_config.default_user)
+        user = getpwnam(shared_config.default_user)
     except KeyError as e:
         logger.info("default_user '%s' does not exist. Creating the user now.",
-                    deploy_config.default_user)
-        create_user(deploy_config.default_user)
+                    shared_config.default_user)
+        create_user(shared_config.default_user)
 
-    if args.deployment_directory is not None and (len(args.problem_paths) > 1 or
-                                                  args.num_instances > 1):
-        logger.error(
-            "Cannot specify deployment directory if deploying multiple problems or instances."
-        )
-        raise FatalException
+    problem_names = args.problem_names
 
-    if args.secret:
-        deploy_config.deploy_secret = args.secret
-        logger.warning(
-            "Overriding deploy_secret with user supplied secret '%s'.",
-            args.secret)
+    if len(problem_names) == 1 and problem_names[0] == 'all':
+        # Shortcut to deploy n instances of all problems
+        problem_names = [v['unique_name'] for k, v in get_all_problems().items()]
 
-    problem_names = args.problem_paths
+    # Attempt to load the port_map from file
+    try:
+        port_map_path = join(SHARED_ROOT, 'port_map.json')
+        with open(port_map_path, 'r') as f:
+            port_map = json.load(f)
+            port_map = {literal_eval(k): v for k, v in port_map.items()}
+    except FileNotFoundError:
+        # If it does not exist, create it
+        for path, problem in get_all_problems().items():
+            for instance in get_all_problem_instances(path):
+                port_map[(problem["unique_name"],
+                          instance["instance_number"])] = instance.get("port", None)
+        with open(port_map_path, 'w') as f:
+            stringified_port_map = {repr(k): v for k, v in port_map.items()}
+            json.dump(stringified_port_map, f)
+    except IOError:
+        logger.error(f"Error loading port map from {port_map_path}")
+        raise
 
-    if args.bundle:
-        bundle_problems = []
-        for bundle_path in args.problem_paths:
-            if os.path.isfile(bundle_path):
-                bundle = get_bundle(bundle_path)
-                bundle_problems.extend(bundle["problems"])
-            else:
-                bundle_sources_path = get_bundle_root(
-                    bundle_path, absolute=True)
-                if os.path.isdir(bundle_sources_path):
-                    bundle = get_bundle(bundle_sources_path)
-                    bundle_problems.extend(bundle["problems"])
-                else:
-                    logger.error("Could not find bundle at '%s'.", bundle_path)
-                    raise FatalException
-        problem_names = bundle_problems
-
-    # before deploying problems, load in port_map and already_deployed instances
-    already_deployed = {}
-    for path, problem in get_all_problems().items():
-        already_deployed[path] = []
-        for instance in get_all_problem_instances(path):
-            already_deployed[path].append(instance["instance_number"])
-            if "port" in instance:
-                port_map[instance["port"]] = (problem["name"],
-                                              instance["instance_number"])
-                inv_port_map[(problem["name"],
-                              instance["instance_number"])] = instance["port"]
-
-    lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
-    if os.path.isfile(lock_file):
-        logger.error(
-            "Cannot deploy while other deployment in progress. If you believe this is an error, "
-            "run 'shell_manager clean'")
-        raise FatalException
-
-    logger.debug("Obtaining deployment lock file %s", lock_file)
-    with open(lock_file, "w") as f:
-        f.write("1")
+    acquire_lock()
 
     if args.instances:
         instance_list = args.instances
@@ -904,91 +907,81 @@ def deploy_problems(args, config):
 
     try:
         for problem_name in problem_names:
-            if isdir(get_problem_root(problem_name, absolute=True)):
-                # problem_name is already an installed package
-                deploy_location = get_problem_root(problem_name, absolute=True)
-            elif isdir(problem_name) and args.dry:
-                # dry run - avoid installing package
-                deploy_location = problem_name
-            elif isdir(problem_name):
-                # problem_name is a source dir - convert to .deb and install
-                try:
-                    if not os.path.isdir(TEMP_DEB_DIR):
-                        os.mkdir(TEMP_DEB_DIR)
-                    generated_deb_path = package_problem(problem_name, out_path=TEMP_DEB_DIR)
-                except FatalException:
-                    logger.error("An error occurred while packaging %s.", problem_name)
-                    raise
-                try:
-                    # reinstall flag ensures package will be overwritten if version is the same,
-                    # maintaining previous 'dpkg -i' behavior
-                    subprocess.run('apt-get install --reinstall {}'.format(generated_deb_path), shell=True, check=True, stdout=subprocess.PIPE)
-                except subprocess.CalledProcessError:
-                    logger.error("An error occurred while installing problem packages.")
-                    raise FatalException
-                deploy_location = get_problem_root_hashed(get_problem(problem_name), absolute=True)
-            else:
-                logger.error("'%s' is neither an installed package, nor a valid problem directory",
-                             problem_name)
-                raise FatalException
+            if not isdir(get_problem_root(problem_name, absolute=True)):
+                logger.error(f"'{problem_name}' is not an installed problem")
+                continue
+            source_location = get_problem_root(problem_name, absolute=True)
+
+            problem_object = get_problem(source_location)
+
+            instances_to_deploy = copy(instance_list)
+            is_static_flag = problem_object.get("static_flag", False)
+            if is_static_flag is True:
+                instances_to_deploy = [0]
 
             # Avoid redeploying already-deployed instances
-            if args.redeploy:
-                todo_instance_list = instance_list
-            else:
-                todo_instance_list = list(
-                    set(instance_list) -
-                    set(already_deployed.get(problem_name, [])))
+            if not args.redeploy or is_static_flag:
+                already_deployed = set()
+                for instance in get_all_problem_instances(problem_name):
+                    already_deployed.add(instance["instance_number"])
+                instances_to_deploy = list(set(instances_to_deploy) - already_deployed)
 
-            need_restart_xinetd = deploy_problem(
-                deploy_location,
-                instances=todo_instance_list,
-                test=args.dry,
-                deployment_directory=args.deployment_directory,
-                debug=args.debug,
-                restart_xinetd=False)
+            if instances_to_deploy:
+                deploy_problem(
+                    source_location,
+                    instances=instances_to_deploy,
+                    test=args.dry,
+                    debug=args.debug,
+                    restart_xinetd=False)
+            else:
+                logger.info("No additional instances to deploy for '%s'.",
+                            problem_object["unique_name"])
     finally:
         # Restart xinetd unless specified. Service must be manually restarted
-        if not args.no_restart and need_restart_xinetd:
+        if not args.no_restart:
             execute(["service", "xinetd", "restart"], timeout=60)
 
-        logger.debug("Releasing lock file %s", lock_file)
-        os.remove(lock_file)
+        # Write out updated port map
+        with open(port_map_path, 'w') as f:
+            stringified_port_map = {repr(k): v for k, v in port_map.items()}
+            json.dump(stringified_port_map, f)
+
+        release_lock()
 
 
-def remove_instances(path, instance_list):
-    """ Remove all files under deployment directory and metdata for a given list of instances """
-    path = path.lower().replace(" ", "-")
-    problem_instances = get_all_problem_instances(path)
-    deployment_json_dir = join(DEPLOYED_ROOT, path)
+def remove_instances(problem_name, instances_to_remove):
+    """Remove all files and metadata for a given list of instances."""
+    deployed_instances = get_all_problem_instances(problem_name)
+    deployment_json_dir = join(DEPLOYED_ROOT, problem_name)
 
-    for instance in problem_instances:
+    for instance in deployed_instances:
         instance_number = instance["instance_number"]
-        if instance["instance_number"] in instance_list:
-            logger.debug("Removing instance {} of '{}'.".format(
-                instance_number, path))
+        if instance["instance_number"] in instances_to_remove:
+            logger.debug(
+                f"Removing instance {instance_number} of {problem_name}")
+
+            service = instance["service"]
+            if service:
+                logger.debug("...Removing xinetd service '%s'.", service)
+                os.remove(join(XINETD_SERVICE_PATH, service))
 
             directory = instance["deployment_directory"]
-            user = instance["user"]
-            service = instance["service"]
-            socket = instance["socket"]
-            deployment_json_path = join(deployment_json_dir,
-                                        "{}.json".format(instance_number))
-
-            logger.debug("...Removing xinetd service '%s'.", service)
-            os.remove(join(XINETD_SERVICE_PATH, service))
-
             logger.debug("...Removing deployment directory '%s'.", directory)
             shutil.rmtree(directory)
-            os.remove(deployment_json_path)
 
+            user = instance["user"]
             logger.debug("...Removing problem user '%s'.", user)
             execute(["userdel", user])
 
-    if problem_instances:
-        execute(["service", "xinetd", "restart"], timeout=60)
+            deployment_json_path = join(deployment_json_dir,
+                                        "{}.json".format(instance_number))
+            logger.debug(
+                "...Removing instance metadata '%s'.", deployment_json_path)
+            os.remove(deployment_json_path)
+    logger.info("Problem instances %s were successfully removed for '%s'.",
+                instances_to_remove, problem_name)
 
-def undeploy_problems(args, config):
+def undeploy_problems(args):
     """
     Main entrypoint for problem undeployment
 
@@ -996,42 +989,17 @@ def undeploy_problems(args, config):
     Does not remove the problem from the web server (delete it from the mongo db).
     """
 
-    problem_names = args.problem_paths
+    problem_names = args.problem_names
 
-    if args.bundle:
-        bundle_problems = []
-        for bundle_path in args.problem_paths:
-            if isfile(bundle_path):
-                bundle = get_bundle(bundle_path)
-                bundle_problems.extend(bundle["problems"])
-            else:
-                bundle_sources_path = get_bundle_root(
-                    bundle_path, absolute=True)
-                if isdir(bundle_sources_path):
-                    bundle = get_bundle(bundle_sources_path)
-                    bundle_problems.extend(bundle["problems"])
-                else:
-                    logger.error("Could not find bundle at '%s'.", bundle_path)
-                    raise FatalException
-        problem_names = bundle_problems
-
-    # before undeploying problems, load in already_deployed instances
-    already_deployed = {}
-    for path, problem in get_all_problems().items():
-        already_deployed[problem["name"]] = []
-        for instance in get_all_problem_instances(path):
-            already_deployed[problem["name"]].append(
-                instance["instance_number"])
-    lock_file = join(HACKSPORTS_ROOT, "deploy.lock")
-    if os.path.isfile(lock_file):
-        logger.error(
-            "Cannot undeploy while other deployment in progress. If you believe this is an error, "
-            "run 'shell_manager clean'")
+    if len(problem_names) == 0:
+        logger.error("No problem name(s) specified")
         raise FatalException
 
-    logger.debug("Obtaining deployment lock file %s", lock_file)
-    with open(lock_file, "w") as f:
-        f.write("1")
+    if len(problem_names) == 1 and problem_names[0] == 'all':
+        # Shortcut to undeploy n instances of all problems
+        problem_names = [v['unique_name'] for k, v in get_all_problems().items()]
+
+    acquire_lock()
 
     if args.instances:
         instance_list = args.instances
@@ -1040,26 +1008,23 @@ def undeploy_problems(args, config):
 
     try:
         for problem_name in problem_names:
-            problem_root = get_problem_root(problem_name, absolute=True)
-            if isdir(problem_root):
-                problem = get_problem(problem_root)
-                instances = list(
-                    filter(lambda x: x in already_deployed[problem["name"]],
-                           instance_list))
-                if len(instances) == 0:
-                    logger.warning(
-                        "No deployed instances %s were found for problem '%s'.",
-                        instance_list, problem["name"])
-                else:
-                    logger.debug("Undeploying problem '%s'.", problem["name"])
-                    remove_instances(problem_name, instance_list)
-                    logger.info(
-                        "Problem instances %s were successfully removed from '%s'.",
-                        instances, problem["name"])
-            else:
-                logger.error("Problem '%s' doesn't appear to be installed.",
-                             problem_name)
-                raise FatalException
+            if not isdir(get_problem_root(problem_name, absolute=True)):
+                logger.error(f"'{problem_name}' is not an installed problem")
+                continue
+
+            instances_to_remove = copy(instance_list)
+            deployed_instances = set()
+            for instance in get_all_problem_instances(problem_name):
+                deployed_instances.add(instance["instance_number"])
+            instances_to_remove = list(
+                set(instances_to_remove).intersection(deployed_instances))
+
+            if len(instances_to_remove) == 0:
+                logger.warning(
+                    f"No deployed instances found for {problem_name}")
+                continue
+
+            remove_instances(problem_name, instances_to_remove)
     finally:
-        logger.debug("Releasing lock file %s", lock_file)
-        os.remove(lock_file)
+        execute(["service", "xinetd", "restart"], timeout=60)
+        release_lock()

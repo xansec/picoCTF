@@ -30,10 +30,7 @@ def test_get_my_team(mongo_proc, redis_proc, client): # noqa (fixture)
     expected_fields = {
         'achievements': [],
         'affiliation': STUDENT_DEMOGRAPHICS['affiliation'],
-        'competition_active': False,
-        'country': 'US',
         'eligible': True,
-        'flagged_submissions': [],
         'max_team_size': 1,
         'progression': [],
         'score': 0,
@@ -43,9 +40,6 @@ def test_get_my_team(mongo_proc, redis_proc, client): # noqa (fixture)
         }
     expected_member_fields = {
         'country': STUDENT_DEMOGRAPHICS['country'],
-        'email': STUDENT_DEMOGRAPHICS['email'],
-        'firstname': STUDENT_DEMOGRAPHICS['firstname'],
-        'lastname': STUDENT_DEMOGRAPHICS['lastname'],
         'username': STUDENT_DEMOGRAPHICS['username'],
         'usertype': 'student'
     }
@@ -57,10 +51,6 @@ def test_get_my_team(mongo_proc, redis_proc, client): # noqa (fixture)
     assert len(res.json['members']) == 1
     for k, v in expected_member_fields.items():
         assert res.json['members'][0][k] == v
-
-    db = get_conn()
-    uid = db.users.find_one({'username': STUDENT_DEMOGRAPHICS['username']})['uid']
-    assert res.json['members'][0]['uid'] == uid
 
 
 def test_get_my_team_score(mongo_proc, redis_proc, client): # noqa (fixture)

@@ -644,9 +644,9 @@ batch_registration_req.add_argument(
 user_search_req = reqparse.RequestParser()
 user_search_req.add_argument(
     'field', required=True, type=str,
-    choices=['email', 'parentemail'],
+    choices=['Email', 'Parent Email', 'User Name'],
     location='json', help='The field to be searched',
-    error='Field to search must be one of: "email", "parentemail"'
+    error='Field to search must be one of: "Email", "Parent Email", "User Name"'
 )
 user_search_req.add_argument(
     'query', required=True, location='json', type=str,
@@ -671,4 +671,11 @@ event_req.add_argument(
 event_req.add_argument(
     'logo', required=False, type=str, location='json', default=None,
     help='URL of a logo for the event', error='Logo must be an image URL'
+)
+
+# User deletion schema
+user_delete_req = reqparse.RequestParser()
+user_delete_req.add_argument(
+    'reason', required=False, location='json', type=str,
+    help="Deletion reason", error="The reason must be a string!"
 )

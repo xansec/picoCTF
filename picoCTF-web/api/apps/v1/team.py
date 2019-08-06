@@ -11,6 +11,12 @@ from .schemas import (join_group_req, score_progression_req, team_change_req,
 
 ns = Namespace('team', description="Information about the current user's team")
 
+TEAMDATA_FILTER = ['achievements', 'affiliation', 'eligible', 'max_team_size',
+                   'members', 'progression', 'score', 'size',
+                   'solved_problems', 'team_name', 'tid']
+
+TEAMMEMBER_FILTER = ['affiliation', 'country', 'username', 'usertype']
+
 
 @ns.route('')
 class Team(Resource):
@@ -22,7 +28,13 @@ class Team(Resource):
     def get(self):
         """Get information about the current user's team."""
         current_tid = api.user.get_user()['tid']
-        return jsonify(api.team.get_team_information(current_tid))
+        teamdata = {k: v for k, v in
+                    api.team.get_team_information(current_tid).items() if
+                    k in TEAMDATA_FILTER}
+        members = list(map(lambda member: {k: v for k, v in member.items() if
+                           k in TEAMMEMBER_FILTER}, teamdata['members']))
+        teamdata['members'] = members
+        return jsonify(teamdata)
 
     @require_login
     @ns.response(200, 'Success')
@@ -51,7 +63,8 @@ class Score(Resource):
         """Get your team's score."""
         current_tid = api.user.get_user()['tid']
         return jsonify({
-            'score': int(api.stats.get_score(tid=current_tid))
+            'score': api.stats.get_score(tid=current_tid,
+                                         time_weighted=False)
         })
 
 

@@ -30,6 +30,8 @@ problem_schema = Schema({
     check(("Event must be string.", [str])),
     Required("unique_name"):
     check(("The problems's unique name must be a string.", [str])),
+    "static_flag":
+    check(("The static_flag setting must be a bool.", [bool])),
     "walkthrough":
     check(("The problem walkthrough must be a string.", [str])),
     "description":
@@ -104,7 +106,7 @@ def upsert_problem(problem, sid):
         validate(instance_schema, instance)
 
     problem["pid"] = problem["unique_name"]
-    
+
     # Initially disable problems
     problem["disabled"] = True
 
@@ -365,16 +367,15 @@ def is_problem_unlocked(problem, solved):
     unlocked = True
 
     for bundle in api.bundles.get_all_bundles():
-        if problem["unique_name"] in bundle["problems"]:
-            if "dependencies" in bundle and bundle["dependencies_enabled"]:
-                if problem["unique_name"] in bundle["dependencies"]:
-                    dependency = bundle["dependencies"][
-                        problem["unique_name"]]
-                    weightsum = sum(
-                        dependency['weightmap'].get(p['unique_name'], 0)
-                        for p in solved)
-                    if weightsum < dependency['threshold']:
-                        unlocked = False
+        if "dependencies" in bundle and bundle["dependencies_enabled"]:
+            if problem["unique_name"] in bundle["dependencies"]:
+                dependency = bundle["dependencies"][
+                    problem["unique_name"]]
+                weightsum = sum(
+                    dependency['weightmap'].get(p['unique_name'], 0)
+                    for p in solved)
+                if weightsum < dependency['threshold']:
+                    unlocked = False
 
     return unlocked
 
@@ -445,10 +446,15 @@ def sanitize_problem_data(data):
         "pip_python_version",
         "pip_requirements",
         "pkg_dependencies",
+        "sanitized_name",
         "service",
+        "server_number",
         "should_symlink",
         "sid",
+        "socket",
+        "static_flag",
         "tags",
+        "unique_name",
         "user",
         "walkthrough",
     ]

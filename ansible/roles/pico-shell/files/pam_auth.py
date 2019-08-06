@@ -9,10 +9,10 @@ from os.path import join
 import requests
 
 DEFAULT_USER = "nobody"
-HACKSPORTS_ROOT = "/opt/hacksports/"
+LOCAL_ROOT = "/opt/hacksports/local/"
 COMPETITORS_GROUP = "competitors"
 
-config_file = join(HACKSPORTS_ROOT, "config.json")
+config_file = join(LOCAL_ROOT, "local_config.json")
 config = json.loads(open(config_file).read())
 SERVER = config["web_server"]
 LIMIT_BYPASS = config['rate_limit_bypass']
@@ -76,7 +76,7 @@ def secure_user(user):
 
     # Secure bashrc
     subprocess.check_output([
-        'cp', '/opt/hacksports/config/securebashrc',
+        'cp', '/opt/hacksports/shared/config/securebashrc',
         os.path.join(home, '.bashrc')
     ])
     subprocess.check_output(
