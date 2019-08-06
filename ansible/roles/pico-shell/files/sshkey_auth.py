@@ -14,6 +14,7 @@ config = json.loads(open(config_file).read())
 SERVER = config["web_server"]
 LIMIT_BYPASS = config['rate_limit_bypass']
 TIMEOUT = 5
+SYSTEM_USERS = ["vagrant", "ubuntu"]
 
 
 def competition_active():
@@ -37,6 +38,8 @@ def try_login(user):
 
 
 def server_valid_user(user):
+    if user in SYSTEM_USERS:
+        return True
     if not competition_active():
         return False
     result = try_login(user)
