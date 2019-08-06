@@ -9,7 +9,7 @@ window.apiCall = function(method, url, data, ga_event_class, ga_event) {
     timeout: 10000,
     error(jqXHR, textStatus, errorThrown) {
       // Notify for errors with no HTTP response code. Otherwise handle when calling @apiCall
-      if (errorThrown === "") {
+      if (errorThrown === "" && !jqXHR.responseJSON) {
         ga("send", "event", "Error", "APIOffline", url);
         $.notify(
           "The server is currently down. We will work to fix this error right away.",
