@@ -649,7 +649,7 @@ const LoginForm = React.createClass({
               <Col md={12}>
                 <p className="help-block">
 Parent or legal guardian must insert contact email address.  By inserting email address and finalizing
-registration, parent\x2Flegal guardian is hereby consenting to their child’s registration under the Terms of
+registration, parent/legal guardian is hereby consenting to their child’s registration under the Terms of
  Use, Privacy Statement and any applicable Competition Rules.</p>
                 <Input
                   type="email"

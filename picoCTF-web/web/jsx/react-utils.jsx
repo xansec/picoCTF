@@ -179,7 +179,8 @@ const TextEntry = React.createClass({
   propTypes: {
     name: React.PropTypes.string.isRequired,
     type: React.PropTypes.string.isRequired,
-    onChange: React.PropTypes.func.isRequired
+    onChange: React.PropTypes.func.isRequired,
+    placeholder: React.PropTypes.string
   },
 
   render() {
@@ -189,6 +190,7 @@ const TextEntry = React.createClass({
         type={this.props.type}
         value={this.props.value}
         onChange={this.props.onChange}
+        placeholder={this.props.placeholder}
       />
     );
     return <FormEntry {...Object.assign({ entry: input }, this.props)} />;
