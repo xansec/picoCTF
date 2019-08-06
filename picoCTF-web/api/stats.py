@@ -152,19 +152,18 @@ def get_group_average_score(gid=None, name=None):
 
 # Stored by the cache_stats daemon
 # @memoize
-def get_all_team_scores(country=None, include_ineligible=False):
+def get_all_team_scores(include_ineligible=False):
     """
     Get the score for every team in the database.
 
     Args:
-        country: optional restriction by country
         include_ineligible: include ineligible teams
 
     Returns:
         A list of dictionaries with name and score
 
     """
-    key_args = {'country': country, 'include_ineligible': include_ineligible}
+    key_args = {'include_ineligible': include_ineligible}
     teams = api.team.get_all_teams(**key_args)
     scoreboard_cache = get_scoreboard_cache(**key_args)
     scoreboard_cache.clear()
@@ -434,7 +433,7 @@ def get_initial_scoreboard():
 
     result = {'tid': 0, 'groups': []}
     # Include all arguments
-    global_board = get_scoreboard_cache(country=None, include_ineligible=True)
+    global_board = get_scoreboard_cache(include_ineligible=True)
     result['global'] = {
         'name': 'global',
         'pages': math.ceil(len(global_board) / pagelen),
@@ -460,9 +459,7 @@ def get_initial_scoreboard():
         result['global']['start_page'] = math.ceil((global_pos + 1) / pagelen)
 
         # Eligible student board, starting at first page
-        # result['country'] = user["country"]
-        student_board = get_scoreboard_cache(country=None,
-                                             include_ineligible=False)
+        student_board = get_scoreboard_cache(include_ineligible=False)
         student_pos = student_board.rank(get_scoreboard_key(team),
                                          reverse=True) or 0
         start_slice = math.floor(student_pos / pagelen) * pagelen
@@ -535,14 +532,12 @@ def get_scoreboard_page(board, page_number, gid=None):
                                       reverse=True)
         scoreboard = [decode_scoreboard_item(item) for item in raw_board]
     elif board == "global":
-        global_board = get_scoreboard_cache(country=None,
-                                            include_ineligible=True)
+        global_board = get_scoreboard_cache(include_ineligible=True)
         raw_board = global_board.range(start, end, with_scores=True,
                                        reverse=True)
         scoreboard = [decode_scoreboard_item(item) for item in raw_board]
     elif board == "student":
-        student_board = get_scoreboard_cache(country=None,
-                                             include_ineligible=False)
+        student_board = get_scoreboard_cache(include_ineligible=False)
         raw_board = student_board.range(start, end, with_scores=True,
                                         reverse=True)
         scoreboard = [decode_scoreboard_item(item) for item in raw_board]

@@ -339,25 +339,20 @@ def mark_eligiblity(tid, status):
     )
 
 
-def get_all_teams(include_ineligible=False, country=None):
+def get_all_teams(include_ineligible=False):
     """
     Retrieve all teams.
 
     Args:
         include_ineligible: include ineligible teams in result
-        country: optional country filter
 
     Returns:
         A list of all of the teams.
 
     """
     # Ignore empty teams (remnants of single player self-team ids)
-    match = {"size": {"$gt": 0}}
-    if country is not None:
-        match.update({"country": country})
-
     db = api.db.get_conn()
-    teams = list(db.teams.find(match, {"_id": 0}))
+    teams = list(db.teams.find({"size": {"$gt": 0}}, {"_id": 0}))
 
     # Filter out ineligible teams, if desired
     if not include_ineligible:
