@@ -165,14 +165,14 @@ settings_patch_req.add_argument(
     error='enable_feedback must be a boolean'
 )
 settings_patch_req.add_argument(
-    'start_time', required=False, type=inputs.datetime_from_iso8601,
+    'start_time', required=False, type=inputs.datetime_from_rfc822,
     location='json',
-    error='start_time must be an ISO 8601 timestamp'
+    error='start_time must be an RFC 822 timestamp'
 )
 settings_patch_req.add_argument(
-    'end_time', required=False, type=inputs.datetime_from_iso8601,
+    'end_time', required=False, type=inputs.datetime_from_rfc822,
     location='json',
-    error='end_time must be an ISO 8601 timestamp'
+    error='end_time must be an RFC 822 timestamp'
 )
 settings_patch_req.add_argument(
     'competition_name', required=False, type=str, location='json',

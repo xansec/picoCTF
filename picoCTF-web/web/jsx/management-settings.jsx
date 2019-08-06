@@ -94,8 +94,8 @@ const GeneralTab = React.createClass({
       enable_feedback: this.state.enable_feedback,
       competition_name: this.state.competition_name,
       competition_url: this.state.competition_url,
-      start_time: new Date(this.state.start_time).toISOString(),
-      end_time: new Date(this.state.end_time).toISOString(),
+      start_time: new Date(this.state.start_time).toUTCString(),
+      end_time: new Date(this.state.end_time).toUTCString(),
       max_team_size: this.state.max_team_size,
       username_blacklist: this.state.username_blacklist
     };
