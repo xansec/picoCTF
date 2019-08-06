@@ -53,8 +53,7 @@ const ManagementTabs = React.createClass({
 
   componentDidMount() {
     // Formatting hack
-    $("#main-content>.container").addClass("container-fluid");
-    $("#main-content>.container").removeClass("container");
+    $("#main-content>.container").addClass("container-fluid").removeClass("container");
   },
 
   componentWillMount() {
@@ -92,6 +91,9 @@ const ManagementTabs = React.createClass({
             bundles={this.state.bundles}
             submissions={this.state.submissions}
           />
+        </Tab>
+        <Tab eventKey="users" title="Manage Users">
+          <UserSearchTab />
         </Tab>
         <Tab eventKey="exceptions" title="Exceptions">
           <ExceptionTab
