@@ -947,7 +947,7 @@ const UserSearchTab = React.createClass({
   getInitialState() {
     return {
       search_field: "Email",
-      search_query: "email@example.com",
+      search_query: "",
       users: []
     };
   },
@@ -1017,6 +1017,7 @@ const UserSearchTab = React.createClass({
               value={this.state.search_query}
               onChange={this.updateSearchQuery}
               description={searchQueryDescription}
+              placeholder="email@example.com"
             />
             <Row>
               <div className="text-center">
