@@ -14,6 +14,8 @@ import api
 
 def main():
     with api.create_app().app_context():
+        api.events.add_event("Global", eligibility_conditions={})
+
         settings = api.config.get_settings()
         settings["start_time"] = datetime.now()
         settings["end_time"] = settings["start_time"] + timedelta(weeks=52)
