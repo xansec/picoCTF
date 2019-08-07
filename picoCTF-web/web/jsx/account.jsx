@@ -164,6 +164,25 @@ const TeamManagementForm = React.createClass({
       );
   },
 
+  toggleAllowIneligibleMembers(e) {
+    e.preventDefault();
+    const data = {
+      allow_ineligible_members: !this.state.allow_ineligible_members
+    };
+    apiCall("PATCH", "/api/v1/team", data)
+      .done(data =>
+        apiNotify(
+          {
+            status: 1,
+            message: "Settings updated successfully"
+          }
+        )
+      )
+      .fail(jqXHR =>
+        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+      );
+  },
+
   onTeamPasswordChange(e) {
     e.preventDefault();
     if (this.state.team_password !== this.state.confirm_team_password) {
@@ -211,6 +230,19 @@ const TeamManagementForm = React.createClass({
     ));
   },
 
+  renderIneligibleMemberToggle() {
+    if (this.state.team.eligible) {
+      return (
+        <Col className="form-group">
+          <p>Ineligible users are currently <b>{this.state.team.allow_ineligible_members ? 'permitted to join' : 'blocked from joining'}</b> your team.</p>
+          <Button onClick={this.toggleAllowIneligibleMembers}>
+          {this.state.team.allow_ineligible_members ? 'Block Ineligible Users' : 'Allow Ineligible Users'}
+          </Button>
+        </Col>
+      )
+    }
+  },
+
   render() {
     if (this.state.team.max_team_size > 1 && !this.state.user.teacher) {
       window.$("#team-management-container").show();
@@ -247,10 +279,12 @@ const TeamManagementForm = React.createClass({
                 label="Confirm New Team Password"
                 required={true}
               />
-              <Col md={6}>
-                <Button type="submit">Change Team Password</Button>
-              </Col>
+              <Button type="submit">Change Team Password</Button>
             </form>
+
+            <hr/>
+            <p>Your team is considered <b>{this.state.team.eligible ? 'eligible' : 'ineligible'}</b> for this competition.</p>
+              {this.renderIneligibleMemberToggle()}
           </Panel>
         );
       } else {
