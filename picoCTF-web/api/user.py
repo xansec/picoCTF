@@ -283,8 +283,8 @@ def add_user(params):
 
     # Determine the user team's initial eligibilities
     initial_eligibilities = [
-        event['eid'] for event in api.events.get_all_events()
-        if api.events.is_eligible(user, event)
+        scoreboard['sid'] for scoreboard in api.scoreboards.get_all_scoreboards()
+        if api.scoreboards.is_eligible(user, scoreboard)
     ]
     db.teams.find_one_and_update(
         {"tid": tid},

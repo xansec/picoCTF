@@ -86,7 +86,7 @@ class TopTeamsScoreProgressions(Resource):
         """Get score progressions for the top n teams, optionally filtered."""
         req = top_teams_score_progression_req.parse_args(strict=True)
         return jsonify(api.stats.get_top_teams_score_progressions(
-            event_id=req['event_id'], gid=req['gid']
+            scoreboard_id=req['scoreboard_id'], gid=req['gid']
         ))
 
 

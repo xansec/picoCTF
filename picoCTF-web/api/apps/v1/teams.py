@@ -36,7 +36,7 @@ class TeamList(Resource):
                 c in string.digits + string.ascii_lowercase + " ()+-,#'&!?"
                 for c in req['team_name'].lower()]):
             raise PicoException(
-                "Team names cannot contain special characters other than "+
+                "Team names cannot contain special characters other than " +
                 "()+-,#'&!?", status_code=400
             )
 
@@ -90,8 +90,8 @@ class RecalculateEligibilitiesResponse(Resource):
         Force recalculation of a team's eligibilities.
 
         Re-evaluate a team's eligibilities. May be useful if a former team
-        member that caused a team to become ineligible for an event has
-        deleted their account, or if a new event has been added since the
+        member that caused a team to become ineligible for an scoreboard has
+        deleted their account, or if a new scoreboard has been added since the
         team was formed.
         """
         team = api.team.get_team(team_id)
@@ -100,12 +100,12 @@ class RecalculateEligibilitiesResponse(Resource):
 
         team_members = api.team.get_team_members(
             tid=team_id, show_disabled=False)
-        all_events = api.events.get_all_events()
+        all_scoreboards = api.scoreboards.get_all_scoreboards()
         member_eligibilities = dict()
         for member in team_members:
             member_eligibilities[member['uid']] = {
-                event['eid'] for event in all_events
-                if api.events.is_eligible(member, event)
+                scoreboard['sid'] for scoreboard in all_scoreboards
+                if api.scoreboards.is_eligible(member, scoreboard)
             }
 
         team_eligibilities = list(

@@ -1,37 +1,37 @@
-"""Event management."""
+"""Scoreboard management."""
 
 import api
 from api import block_before_competition, PicoException, require_admin
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-from .schemas import event_req, scoreboard_page_req
+from .schemas import scoreboard_req, scoreboard_page_req
 
-ns = Namespace('events', description='Event management')
+ns = Namespace('scoreboards', description='Scoreboard management')
 
 
 @ns.route('')
-class EventList(Resource):
-    """Get the list of all events, or add a new event."""
+class ScoreboardList(Resource):
+    """Get the list of all scoreboards, or add a new scoreboard."""
 
     @require_admin
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Permission denied')
     def get(self):
-        """Get the list of all events."""
-        return jsonify(api.events.get_all_events())
+        """Get the list of all scoreboards."""
+        return jsonify(api.scoreboards.get_all_scoreboards())
 
     @require_admin
-    @ns.response(201, 'Event added')
+    @ns.response(201, 'Scoreboard added')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Permission denied')
-    @ns.expect(event_req)
+    @ns.expect(scoreboard_req)
     def post(self):
-        """Add a new event."""
-        req = event_req.parse_args(strict=True)
-        eid = api.events.add_event(
+        """Add a new scoreboard."""
+        req = scoreboard_req.parse_args(strict=True)
+        sid = api.scoreboards.add_scoreboard(
             req['name'],
             eligibility_conditions=req['eligibility_conditions'],
             sponsor=req['sponsor'],
@@ -39,32 +39,32 @@ class EventList(Resource):
         )
         res = jsonify({
             'success': True,
-            'eid': eid
+            'sid': sid
         })
         res.status_code = 201
         return res
 
 
-@ns.route('/<string:event_id>')
-class Event(Resource):
-    """Get a specific event."""
+@ns.route('/<string:scoreboard_id>')
+class Scoreboard(Resource):
+    """Get a specific scoreboard."""
 
     @require_admin
     @ns.response(200, 'Success')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Permission denied')
-    def get(self, event_id):
-        """Get a specific event."""
-        event = api.events.get_event(event_id)
-        if not event:
-            raise PicoException('Event not found', 404)
-        return jsonify(event)
+    def get(self, scoreboard_id):
+        """Get a specific scoreboard."""
+        scoreboard = api.scoreboards.get_scoreboard(scoreboard_id)
+        if not scoreboard:
+            raise PicoException('Scoreboard not found', 404)
+        return jsonify(scoreboard)
 
 
-@ns.route('/<string:event_id>/scoreboard')
+@ns.route('/<string:scoreboard_id>/scoreboard')
 class ScoreboardPage(Resource):
     """
-    Get a scoreboard page for an event.
+    Get a scoreboard page for an scoreboard.
 
     If a page is not specified, will attempt to return the page containing the
     current team, falling back to the first page if neccessary.
@@ -74,9 +74,9 @@ class ScoreboardPage(Resource):
     @ns.response(200, 'Success')
     @ns.response(422, 'Competition has not started')
     @ns.expect(scoreboard_page_req)
-    def get(self, event_id):
-        """Retrieve a scoreboard page for an event."""
+    def get(self, scoreboard_id):
+        """Retrieve a scoreboard page for a scoreboard."""
         req = scoreboard_page_req.parse_args(strict=True)
         return jsonify(
             api.stats.get_scoreboard_page(
-                {'event_id': event_id}, req['page']))
+                {'scoreboard_id': scoreboard_id}, req['page']))

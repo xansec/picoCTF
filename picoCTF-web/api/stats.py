@@ -156,18 +156,18 @@ def get_group_average_score(gid=None, name=None):
 
 # Stored by the cache_stats daemon
 # @memoize
-def get_all_team_scores(event_id=None):
+def get_all_team_scores(scoreboard_id=None):
     """
     Get the score for every team in the database.
 
     Args:
-        event_id: Optional, limit scores to teams eligible for this event
+        scoreboard_id: Optional, limit to teams eligible for this scoreboard
 
     Returns:
         A list of dictionaries with name and score
 
     """
-    key_args = {'event_id': event_id}
+    key_args = {'scoreboard_id': scoreboard_id}
     teams = api.team.get_all_teams(**key_args)
     scoreboard_cache = get_scoreboard_cache(**key_args)
     scoreboard_cache.clear()
@@ -325,16 +325,16 @@ def get_problem_solves(pid):
 # Stored by the cache_stats daemon
 @memoize
 def get_top_teams_score_progressions(
-        limit=5, event_id=None, gid=None):
+        limit=5, scoreboard_id=None, gid=None):
     """
     Get the score progressions for the top teams.
 
     Args:
         limit: Number of teams to include
-        event_id: If specified, compute the progressions for the top teams
-                  eligible for this event only.
+        scoreboard_id: If specified, compute the progressions for the top teams
+                  eligible for this scoreboard only.
         gid: If specified, compute the progressions for the top teams
-             from this group only. Overrides event_id.
+             from this group only. Overrides scoreboard_id.
 
     Returns:
         The top teams and their score progressions.
@@ -350,7 +350,7 @@ def get_top_teams_score_progressions(
         }
 
     if gid is None:
-        scoreboard_cache = get_all_team_scores(event_id=event_id)
+        scoreboard_cache = get_all_team_scores(scoreboard_id=scoreboard_id)
     else:
         scoreboard_cache = get_group_scores(gid=gid)
 

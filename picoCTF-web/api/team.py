@@ -337,12 +337,12 @@ def mark_eligiblity(tid, status):
     )
 
 
-def get_all_teams(event_id=None):
+def get_all_teams(scoreboard_id=None):
     """
     Retrieve all teams.
 
     Args:
-        event_id: optional, find only teams eligible for a certain event ID
+        scoreboard_id: optional, find only teams eligible for this scoreboard
 
     Returns:
         A list of all matching teams.
@@ -352,9 +352,9 @@ def get_all_teams(event_id=None):
     db = api.db.get_conn()
     match = {"size": {"$gt": 0}}
 
-    # If specified, restrict to teams eligible for a certain event
-    if event_id:
-        match['eligibilities'] = event_id
+    # If specified, restrict to teams eligible for a certain scoreboard
+    if scoreboard_id:
+        match['eligibilities'] = scoreboard_id
 
     return list(db.teams.find(match, {"_id": 0}))
 
@@ -391,28 +391,30 @@ def join_team(team_name, password, user):
 
     # Update the team's eligibilities
     if desired_team_info['size'] == 0:
-        updated_eligible_events = [
-            event for event in api.events.get_all_events()
-            if api.events.is_eligible(user, event)
+        updated_eligible_scoreboards = [
+            scoreboard for scoreboard in api.scoreboards.get_all_scoreboards()
+            if api.scoreboards.is_eligible(user, scoreboard)
         ]
     else:
-        currently_eligible_events = [
-            api.events.get_event(eid)
-            for eid in desired_team_info['eligibilities']
+        currently_eligible_scoreboards = [
+            api.scoreboards.get_scoreboard(sid)
+            for sid in desired_team_info['eligibilities']
         ]
-        updated_eligible_events = [
-            event for event in currently_eligible_events
-            if api.events.is_eligible(user, event)
+        updated_eligible_scoreboards = [
+            scoreboard for scoreboard in currently_eligible_scoreboards
+            if api.scoreboards.is_eligible(user, scoreboard)
         ]
         lost_eligibilities = [
-            event for event in currently_eligible_events
-            if event not in updated_eligible_events
+            scoreboard for scoreboard in currently_eligible_scoreboards
+            if scoreboard not in updated_eligible_scoreboards
         ]
         if (len(lost_eligibilities) > 0 and
                 not desired_team_info.get('allow_ineligible_members', False)):
             raise PicoException(
                 'You cannot join this team as doing so would make it ' +
-                f'ineligible for {lost_eligibilities[0]["name"]}', 403
+                'ineligible for the {} scoreboard.'.format(
+                    lost_eligibilities[0]["name"]
+                ), 403
             )
 
     # Join the new team
@@ -434,7 +436,7 @@ def join_team(team_name, password, user):
     db.teams.find_one_and_update(
         {"tid": desired_team["tid"]},
         {"$set": {
-            "eligibilities": [e['eid'] for e in updated_eligible_events]
+            "eligibilities": [s['sid'] for s in updated_eligible_scoreboards]
         }}
     )
 
