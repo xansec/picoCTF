@@ -21,13 +21,13 @@ def run():
 
         print("Caching the public scoreboard entries...")
         get_all_team_scores()
-        for event in api.events.get_all_events():
-            get_all_team_scores(event_id=event['eid'])
+        for scoreboard in api.scoreboards.get_all_scoreboards():
+            get_all_team_scores(scoreboard_id=scoreboard['sid'])
 
-        print("Caching the public scoreboard graph for each event...")
-        for event in api.events.get_all_events():
-            cache(get_top_teams_score_progressions, event_id=event['eid'],
-                  gid=None)
+        print("Caching the public scoreboard graph for each scoreboard...")
+        for scoreboard in api.scoreboards.get_all_scoreboards():
+            cache(get_top_teams_score_progressions,
+                  scoreboard_id=scoreboard['sid'], gid=None)
 
         print("Caching the scoreboard graph for each group...")
         for group in api.group.get_all_groups():
