@@ -116,11 +116,11 @@ def get_users(email=None, parentemail=None, username=None, include_pw_hash=False
         projection['password_hash'] = 0
 
     if email is not None:
-        match.update({'email': email})
+        match.update({'email': re.compile(email, re.IGNORECASE)})
     elif parentemail is not None:
-        match.update({'demo.parentemail': parentemail})
+        match.update({'demo.parentemail': re.compile(parentemail, re.IGNORECASE)})
     elif username is not None:
-        match.update({'username': username})
+        match.update({'username': re.compile(username, re.IGNORECASE)})
     else:
         raise PicoException(
             'Could not retrieve user - no argument provided', 400)
