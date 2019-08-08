@@ -2,17 +2,17 @@
 import csv
 import string
 
+import api
+from api import (PicoException, block_before_competition, check_csrf,
+                 rate_limit, require_login, require_teacher)
 from flask import jsonify
 from flask_restplus import Namespace, Resource
-from marshmallow import (fields, post_load, pre_load, RAISE, Schema, validate,
-                         ValidationError)
-
-import api
-from api import (check_csrf, PicoException, rate_limit, require_login,
-                 require_teacher)
+from marshmallow import (RAISE, Schema, ValidationError, fields, post_load,
+                         pre_load, validate)
 
 from .schemas import (batch_registration_req, group_invite_req,
-                      group_patch_req, group_remove_team_req, group_req)
+                      group_patch_req, group_remove_team_req, group_req,
+                      scoreboard_page_req)
 
 ns = Namespace('groups', description='Group management')
 
@@ -384,3 +384,36 @@ class BatchRegistrationResponse(Resource):
             'success': True,
             'accounts': created_accounts
         })
+
+
+@ns.route('/<string:group_id>/scoreboard')
+class ScoreboardPage(Resource):
+    """
+    Get a scoreboard page for a group.
+
+    If a page is not specified, will attempt to return the page containing the
+    current team, falling back to the first page if neccessary.
+    """
+    @block_before_competition
+    @ns.response(200, 'Success')
+    @ns.response(403, 'Permission denied')
+    @ns.response(404, 'Group not found')
+    @ns.response(422, 'Competition has not started')
+    @ns.expect(scoreboard_page_req)
+    def get(self, group_id):
+        """Retrieve a scoreboard page for a group."""
+        group = api.group.get_group(gid=group_id)
+        if not group:
+            raise PicoException('Group not found', 404)
+        group_members = [group['owner']] + group['members'] + group['teachers']
+
+        curr_user = api.user.get_user()
+        if (not curr_user or (curr_user['tid'] not in group_members
+                              and not curr_user['admin'])):
+            raise PicoException("You do not have permission to " +
+                                "view this group's scoreboard.", 403)
+
+        req = scoreboard_page_req.parse_args(strict=True)
+        return jsonify(
+            api.stats.get_scoreboard_page(
+                {'group_id': group_id}, req['page']))

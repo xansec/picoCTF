@@ -337,25 +337,26 @@ def mark_eligiblity(tid, status):
     )
 
 
-def get_all_teams(include_ineligible=False):
+def get_all_teams(event_id=None):
     """
     Retrieve all teams.
 
     Args:
-        include_ineligible: include ineligible teams in result
+        event_id: optional, find only teams eligible for a certain event ID
 
     Returns:
-        A list of all of the teams.
+        A list of all matching teams.
 
     """
     # Ignore empty teams (remnants of single player self-team ids)
     db = api.db.get_conn()
-    teams = list(db.teams.find({"size": {"$gt": 0}}, {"_id": 0}))
+    match = {"size": {"$gt": 0}}
 
-    # Filter out ineligible teams, if desired
-    if not include_ineligible:
-        teams = [t for t in teams if is_eligible(t['tid'])]
-    return teams
+    # If specified, restrict to teams eligible for a certain event
+    if event_id:
+        match['eligibilities'] = event_id
+
+    return list(db.teams.find(match, {"_id": 0}))
 
 
 def join_team(team_name, password, user):

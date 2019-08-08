@@ -1,12 +1,11 @@
 """Event management."""
 
+import api
+from api import block_before_competition, PicoException, require_admin
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-import api
-from api import PicoException, require_admin
-
-from .schemas import event_req
+from .schemas import event_req, scoreboard_page_req
 
 ns = Namespace('events', description='Event management')
 
@@ -60,3 +59,24 @@ class Event(Resource):
         if not event:
             raise PicoException('Event not found', 404)
         return jsonify(event)
+
+
+@ns.route('/<string:event_id>/scoreboard')
+class ScoreboardPage(Resource):
+    """
+    Get a scoreboard page for an event.
+
+    If a page is not specified, will attempt to return the page containing the
+    current team, falling back to the first page if neccessary.
+    """
+
+    @block_before_competition
+    @ns.response(200, 'Success')
+    @ns.response(422, 'Competition has not started')
+    @ns.expect(scoreboard_page_req)
+    def get(self, event_id):
+        """Retrieve a scoreboard page for an event."""
+        req = scoreboard_page_req.parse_args(strict=True)
+        return jsonify(
+            api.stats.get_scoreboard_page(
+                {'event_id': event_id}, req['page']))

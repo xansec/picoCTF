@@ -74,7 +74,8 @@ def cache(f, *args, **kwargs):
 
 def update_all_scoreboards():
     api.stats.get_all_team_scores()
-    api.stats.get_all_team_scores(include_ineligible=True)
+    for event in api.events.get_all_events():
+        api.stats.get_all_team_scores(event_id=event['eid'])
     for group in api.group.get_all_groups():
         api.stats.get_group_scores(gid=group['gid'])
 

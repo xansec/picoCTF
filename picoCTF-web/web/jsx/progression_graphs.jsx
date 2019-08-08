@@ -202,7 +202,7 @@ window.drawTopTeamsProgressionGraph = function(selector, gid) {
   } else if (gid === "global") {
     apiCall(
       "GET",
-      "/api/v1/stats/top_teams/score_progression?include_ineligible=true"
+      "/api/v1/stats/top_teams/score_progression"
     )
       .done(drawgraph)
       .fail(jqXHR =>

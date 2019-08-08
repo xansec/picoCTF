@@ -21,19 +21,18 @@ def run():
 
         print("Caching the public scoreboard entries...")
         get_all_team_scores()
-        get_all_team_scores(include_ineligible=True)
+        for event in api.events.get_all_events():
+            get_all_team_scores(event_id=event['eid'])
 
-        print("Caching the public scoreboard graph...")
-        cache(get_top_teams_score_progressions, include_ineligible=False,
-              gid=None)
-        cache(get_top_teams_score_progressions, include_ineligible=True,
-              gid=None)
+        print("Caching the public scoreboard graph for each event...")
+        for event in api.events.get_all_events():
+            cache(get_top_teams_score_progressions, event_id=event['eid'],
+                  gid=None)
 
         print("Caching the scoreboard graph for each group...")
         for group in api.group.get_all_groups():
             get_group_scores(gid=group['gid'])
             cache(get_top_teams_score_progressions,
-                  include_ineligible=True,
                   gid=group['gid'])
 
         print("Caching number of solves for each problem.")

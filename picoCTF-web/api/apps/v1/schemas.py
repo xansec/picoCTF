@@ -517,20 +517,10 @@ team_patch_req.add_argument(
 # Scoreboard page request
 scoreboard_page_req = reqparse.RequestParser()
 scoreboard_page_req.add_argument(
-    'board', required=False, choices=['groups', 'global', 'student'],
-    type=str, location='args', help='Choose which scoreboard to return',
-    error='board must be one of: "groups", "global", "student"'
-)
-scoreboard_page_req.add_argument(
-    'page', required=False, default=1, type=inputs.positive, location='args',
-    help='Scoreboard page to return',
+    'page', required=False, default=None, type=inputs.positive,
+    location='args', help='Scoreboard page to return',
     error='page must be a positive integer'
 )
-scoreboard_page_req.add_argument(
-    'gid', required=False, type=str, location='args',
-    help='Classroom id'
-)
-
 
 # Scoreboard search request
 scoreboard_search_req = reqparse.RequestParser()
@@ -546,7 +536,6 @@ scoreboard_search_req.add_argument(
     help='Scoreboard page to return'
 )
 
-
 # Top teams score progression request
 top_teams_score_progression_req = reqparse.RequestParser()
 top_teams_score_progression_req.add_argument(
@@ -555,10 +544,9 @@ top_teams_score_progression_req.add_argument(
     error="limit must be a positive integer"
 )
 top_teams_score_progression_req.add_argument(
-    'include_ineligible', required=False, default=False, type=inputs.boolean,
-    location='args', help='Whether to include teams that are ineligible ' +
-                          'for the current competition',
-    error='include_ineligible must be a boolean value'
+    'event_id', required=False, type=str, default=None, location='args',
+    help="If specified, retrieve the top teams' score progressions for a " +
+         "specific event"
 )
 top_teams_score_progression_req.add_argument(
     'gid', required=False, type=str, default=None, location='args',

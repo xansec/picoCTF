@@ -86,7 +86,7 @@ class TopTeamsScoreProgressions(Resource):
         """Get score progressions for the top n teams, optionally filtered."""
         req = top_teams_score_progression_req.parse_args(strict=True)
         return jsonify(api.stats.get_top_teams_score_progressions(
-            include_ineligible=req['include_ineligible'], gid=req['gid']
+            event_id=req['event_id'], gid=req['gid']
         ))
 
 
@@ -105,6 +105,10 @@ class SubmissionStatistics(Resource):
             for p in api.problem.get_all_problems(show_disabled=True)
         })
 
+
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Not authorized')
 @ns.route('/demographics')
 class DemographicInformation(Resource):
     """Get demographic information used in analytics."""
