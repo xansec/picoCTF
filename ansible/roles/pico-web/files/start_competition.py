@@ -14,7 +14,11 @@ import api
 
 def main():
     with api.create_app().app_context():
-        api.events.add_event("Global", eligibility_conditions={})
+        api.scoreboards.add_event("Global", eligibility_conditions={})
+        api.scoreboards.add_event("US Students", eligibility_conditions={
+            "country": "US",
+            "usertype": "student",
+        })
 
         settings = api.config.get_settings()
         settings["start_time"] = datetime.now()
