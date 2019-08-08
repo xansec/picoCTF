@@ -14,10 +14,7 @@ ns = Namespace('scoreboards', description='Scoreboard management')
 class ScoreboardList(Resource):
     """Get the list of all scoreboards, or add a new scoreboard."""
 
-    @require_admin
     @ns.response(200, 'Success')
-    @ns.response(401, 'Not logged in')
-    @ns.response(403, 'Permission denied')
     def get(self):
         """Get the list of all scoreboards."""
         return jsonify(api.scoreboards.get_all_scoreboards())
@@ -49,10 +46,8 @@ class ScoreboardList(Resource):
 class Scoreboard(Resource):
     """Get a specific scoreboard."""
 
-    @require_admin
     @ns.response(200, 'Success')
-    @ns.response(401, 'Not logged in')
-    @ns.response(403, 'Permission denied')
+    @ns.response(404, 'Scoreboard not found')
     def get(self, scoreboard_id):
         """Get a specific scoreboard."""
         scoreboard = api.scoreboards.get_scoreboard(scoreboard_id)
