@@ -649,7 +649,7 @@ scoreboard_req.add_argument(
 )
 scoreboard_req.add_argument(
     'eligibility_conditions', required=False, type=object_type,
-    location='json', default='', help='MongoDB query to find eligible users',
+    location='json', default={}, help='MongoDB query to find eligible users',
     error='Eligibility conditions must be a MongoDB query string'
 )
 scoreboard_req.add_argument(

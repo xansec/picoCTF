@@ -33,13 +33,13 @@ def get_scoreboard(sid):
     return db.scoreboards.find_one({'sid': sid}, {'_id': False})
 
 
-def add_scoreboard(name, eligibility_conditions="", sponsor=None, logo=None):
+def add_scoreboard(name, eligibility_conditions={}, sponsor=None, logo=None):
     """
     Add a scoreboard to the database.
 
     Args:
         name (str): name of the scoreboard
-        eligibility_conditions (str): mongodb query to find eligible users
+        eligibility_conditions (dict): mongodb query to find eligible users
         sponsor (str): optional, sponsor of the scoreboard
         logo (str): optional, URL of a logo image for the scoreboard
 
