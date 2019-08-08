@@ -82,17 +82,16 @@ class Team(Resource):
 @ns.response(404, 'Team not found')
 @ns.route('/<string:team_id>/recalculate_eligibilities')
 class RecalculateEligibilitiesResponse(Resource):
-    """Force recalculation of a team's eligibilities."""
+    """Force recalculation of a team's scoreboard eligibilities."""
 
     @require_admin
     def get(self, team_id):
         """
-        Force recalculation of a team's eligibilities.
+        Re-evaluate a team's scoreboard eligibilities.
 
-        Re-evaluate a team's eligibilities. May be useful if a former team
-        member that caused a team to become ineligible for an scoreboard has
-        deleted their account, or if a new scoreboard has been added since the
-        team was formed.
+        May be useful if a former member who had previously caused their
+        team to become ineligible for a scoreboard deletes their account,
+        or if a new scoreboard is added after the team's creation.
         """
         team = api.team.get_team(team_id)
         if not team:

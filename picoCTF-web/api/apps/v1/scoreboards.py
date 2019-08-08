@@ -59,7 +59,7 @@ class Scoreboard(Resource):
 @ns.route('/<string:scoreboard_id>/scoreboard')
 class ScoreboardPage(Resource):
     """
-    Get a scoreboard page for an scoreboard.
+    Get a results page for an scoreboard.
 
     If a page is not specified, will attempt to return the page containing the
     current team, falling back to the first page if neccessary.

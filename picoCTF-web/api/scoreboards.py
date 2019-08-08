@@ -1,10 +1,9 @@
 """
 Module for dealing with scoreboards.
 
-An event can have multiple scoreboards, each with associated
-eligibility criteria.
+An event can have multiple scoreboards with different eligibility criteria.
 A team is initially eligible to appear on any scoreboards for which
-its founding member is eligibile.
+its founding member is eligible.
 
 When a new member joins the team, the team's eligibility for a given scoreboard
 will be revoked if the new member does not fit its criteria.
