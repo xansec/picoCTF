@@ -115,6 +115,7 @@ const TeamManagementForm = React.createClass({
   getInitialState() {
     return {
       user: {},
+      scoreboards: [],
       team: {},
       team_name: "",
       team_password: ""
@@ -125,9 +126,11 @@ const TeamManagementForm = React.createClass({
     addAjaxListener("teamManagementFormState", "/api/v1/user", data => {
       this.setState(update(this.state, { user: { $set: data } }));
     });
-
     apiCall("GET", "/api/v1/team").done(data => {
       this.setState(update(this.state, { team: { $set: data } }));
+    });
+    apiCall("GET", "/api/v1/scoreboards").done(data => {
+      this.setState(update(this.state, { scoreboards: { $set: data } }));
     });
   },
 
@@ -167,17 +170,18 @@ const TeamManagementForm = React.createClass({
   toggleAllowIneligibleMembers(e) {
     e.preventDefault();
     const data = {
-      allow_ineligible_members: !this.state.allow_ineligible_members
+      allow_ineligible_members: !this.state.team.allow_ineligible_members
     };
     apiCall("PATCH", "/api/v1/team", data)
-      .done(data =>
+      .done(response => {
+        this.setState(update(this.state, { team: { $merge: data } } ));
         apiNotify(
           {
             status: 1,
             message: "Settings updated successfully"
           }
         )
-      )
+      })
       .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
@@ -230,17 +234,24 @@ const TeamManagementForm = React.createClass({
     ));
   },
 
+  listEligibleScoreboards() {
+    const eligibleScoreboards = this.state.scoreboards.filter((scoreboard) =>
+      this.state.team.eligibilities.indexOf(scoreboard.sid) != -1)
+    const scoreboardList = eligibleScoreboards.map((scoreboard, i) =>
+        <li key={i}>{scoreboard.name}</li>
+    )
+    return scoreboardList
+  },
+
   renderIneligibleMemberToggle() {
-    if (this.state.team.eligible) {
-      return (
-        <Col className="form-group">
-          <p>Ineligible users are currently <b>{this.state.team.allow_ineligible_members ? 'permitted to join' : 'blocked from joining'}</b> your team.</p>
-          <Button onClick={this.toggleAllowIneligibleMembers}>
-          {this.state.team.allow_ineligible_members ? 'Block Ineligible Users' : 'Allow Ineligible Users'}
-          </Button>
-        </Col>
-      )
-    }
+    return (
+      <Col className="form-group">
+        <p>Currently, new users are <b>{this.state.team.allow_ineligible_members ? 'allowed to join' : 'prevented from joining'}</b> your team if doing so would cause your team to become ineligible for any of its current scoreboards.</p>
+        <Button onClick={this.toggleAllowIneligibleMembers}>
+        {this.state.team.allow_ineligible_members ? 'Prevent Ineligible Users From Joining Team' : 'Allow Ineligible Users To Join Team'}
+        </Button>
+      </Col>
+    )
   },
 
   render() {
@@ -283,8 +294,9 @@ const TeamManagementForm = React.createClass({
             </form>
 
             <hr/>
-            <p>Your team is considered <b>{this.state.team.eligible ? 'eligible' : 'ineligible'}</b> for this competition.</p>
-              {this.renderIneligibleMemberToggle()}
+            <p>Your team is eligible to appear on these scoreboards:</p>
+            <ul>{this.listEligibleScoreboards()}</ul>
+            {this.renderIneligibleMemberToggle()}
           </Panel>
         );
       } else {
