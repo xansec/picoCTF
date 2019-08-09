@@ -14,8 +14,8 @@ import api
 
 def main():
     with api.create_app().app_context():
-        api.scoreboards.add_event("Global", eligibility_conditions={})
-        api.scoreboards.add_event("US Students", eligibility_conditions={
+        api.scoreboards.add_scoreboard("Global", eligibility_conditions={})
+        api.scoreboards.add_scoreboard("US Students", eligibility_conditions={
             "country": "US",
             "usertype": "student",
         })
