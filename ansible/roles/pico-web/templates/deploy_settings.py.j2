@@ -8,10 +8,10 @@ MONGO_PW = "{{ picoWeb_db_password }}"
 {% endif %}
 
 REDIS_DB_NUMBER = "{{ redis_db_number | default(0) }}"
-REDIS_ADDR = "{{ db_private_ip }}"
+REDIS_ADDR = "{{ redis_private_ip | default(db_private_ip) }}"
 REDIS_PORT =" {{ redis_conf_port | default(6379) }}"
 {% if  redis_conf_auth | bool %}
-REDIS_PW = "{{ picoWeb_db_password }}"
+REDIS_PW = "{{ redis_db_password | default(picoWeb_db_password) }}"
 {% endif %}
 
 RATE_LIMIT_BYPASS = "{{ flask_app_rate_limit_bypass | default("INSECURE_DEFAULT_CHANGE_ME") }}"
