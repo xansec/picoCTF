@@ -30,9 +30,28 @@ server {
     }
 
     location / {
+        {% if (enable_shell_ssl|bool and enable_shell_https_proxy|bool ) -%}
+        if ($http_referer ~ https://{{ shell_hostname }}/problem/(\d+)/?(.*) ) {
+            set $port $1;
+            return 307 https://{{ shell_hostname }}/problem/$port$request_uri;
+        }
+        {% endif %}
         types        { }
         default_type application/octet-stream;
     }
+    {% if (enable_shell_ssl|bool and enable_shell_https_proxy|bool ) -%}
+    location ~ /problem/(\d+)/?(.*) {
+        set $port $1;
+        set $path $2;
+        rewrite ^.*$ /$path break;
+        proxy_pass http://127.0.0.1:$port;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Scheme $scheme;
+        proxy_redirect http:// $scheme://;
+    }
+    {% endif %}
 }
 
 {% if enable_shell_ssl | bool -%}
