@@ -3,16 +3,16 @@
 server {
     server_name {{ shell_hostname }};
     root   /usr/share/nginx/html;
-    {% if enable_shell_ssl | bool -%}
+{% if enable_shell_ssl | bool -%}
     listen       443 ssl;
 
     ssl_certificate  /etc/ssl/certs/ssl-pico.chained.crt;
     ssl_certificate_key /etc/ssl/private/ssl-pico.key;
     ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
     ssl_ciphers         HIGH:!aNULL:!MD5;
-    {% else %}
+{% else %}
     listen       80;
-    {% endif %}
+{% endif %}
 
     more_clear_headers Server;
     more_clear_headers Strict-Transport-Security;
@@ -30,16 +30,16 @@ server {
     }
 
     location / {
-        {% if (enable_shell_proxy|bool) -%}
+{% if (enable_shell_proxy|bool) -%}
         if ($http_referer ~ $scheme://{{ shell_hostname }}/problem/(\d+)/?(.*) ) {
             set $port $1;
             return 307 $scheme://{{ shell_hostname }}/problem/$port$request_uri;
         }
-        {% endif %}
+{% endif %}
         types        { }
         default_type application/octet-stream;
     }
-    {% if (enable_shell_proxy|bool) -%}
+{% if (enable_shell_proxy|bool) -%}
     location ~ /problem/(\d+)/?(.*) {
         set $port $1;
         set $path $2;
@@ -51,7 +51,7 @@ server {
         proxy_set_header X-Scheme $scheme;
         proxy_redirect http:// $scheme://;
     }
-    {% endif %}
+{% endif %}
 }
 
 {% if enable_shell_ssl | bool -%}
