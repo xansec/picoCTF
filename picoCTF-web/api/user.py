@@ -399,8 +399,8 @@ def disable_account(uid, disable_reason=None):
         "lastname": "",
         "email": "",
         "country": "",
-        "demo" : "{}",
-        "disable_reason" : disable_reason
+        "demo": {},
+        "disable_reason": disable_reason
     }})
 
     # Drop them from their team
