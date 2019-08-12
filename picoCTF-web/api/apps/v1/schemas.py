@@ -642,6 +642,11 @@ scoreboard_req.add_argument(
     error='Eligibility conditions must be a MongoDB query string'
 )
 scoreboard_req.add_argument(
+    'priority', required=False, type=inputs.natural, location='json',
+    default=0, help='Optional scoreboard priority. Scoreboards are listed ' +
+                    'in order of descending priority on the scoreboard page'
+)
+scoreboard_req.add_argument(
     'sponsor', required=False, type=str, location='json', default=None,
     help='Sponsor of the scoreboard', error='Sponsor must be a string'
 )
