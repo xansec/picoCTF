@@ -522,6 +522,13 @@ scoreboard_page_req.add_argument(
     error='page must be a positive integer'
 )
 
+# Score progressions request
+score_progressions_req = reqparse.RequestParser()
+score_progressions_req.add_argument(
+    'limit', required=False, type=inputs.positive, default=5, location='args',
+    help="The number of top teams' score progressions to return"
+)
+
 # Scoreboard search request
 scoreboard_search_req = reqparse.RequestParser()
 scoreboard_search_req.add_argument(
@@ -534,24 +541,6 @@ scoreboard_search_req.add_argument(
 scoreboard_search_req.add_argument(
     'page', required=True, type=inputs.positive, location='args',
     help='Scoreboard page to return'
-)
-
-# Top teams score progression request
-top_teams_score_progression_req = reqparse.RequestParser()
-top_teams_score_progression_req.add_argument(
-    'limit', required=False, default=5, type=inputs.positive,
-    location='args', help='Number of top teams to retrieve',
-    error="limit must be a positive integer"
-)
-top_teams_score_progression_req.add_argument(
-    'scoreboard_id', required=False, type=str, default=None, location='args',
-    help="If specified, retrieve the top teams' score progressions for a " +
-         "specific scoreboard"
-)
-top_teams_score_progression_req.add_argument(
-    'gid', required=False, type=str, default=None, location='args',
-    help='If specified, restrict to top teams from this group',
-    error='gid must be a string'
 )
 
 # Group request

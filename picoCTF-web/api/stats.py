@@ -155,7 +155,6 @@ def get_group_average_score(gid=None, name=None):
 
 
 # Stored by the cache_stats daemon
-# @memoize
 def get_all_team_scores(scoreboard_id=None):
     """
     Get the score for every team in the database.
@@ -325,7 +324,7 @@ def get_problem_solves(pid):
 # Stored by the cache_stats daemon
 @memoize
 def get_top_teams_score_progressions(
-        limit=5, scoreboard_id=None, gid=None):
+        limit=5, scoreboard_id=None, group_id=None):
     """
     Get the score progressions for the top teams.
 
@@ -333,12 +332,12 @@ def get_top_teams_score_progressions(
         limit: Number of teams to include
         scoreboard_id: If specified, compute the progressions for the top teams
                   eligible for this scoreboard only.
-        gid: If specified, compute the progressions for the top teams
+        group_id: If specified, compute the progressions for the top teams
              from this group only. Overrides scoreboard_id.
 
     Returns:
         The top teams and their score progressions.
-        A dict of {name: name, score_progression: score_progression}
+        A dict containing each team's name, affiliation, and score progression.
 
     """
     def output_item(item):
@@ -349,10 +348,10 @@ def get_top_teams_score_progressions(
             'score_progression': get_score_progression(tid=data['tid'])
         }
 
-    if gid is None:
+    if group_id is None:
         scoreboard_cache = get_all_team_scores(scoreboard_id=scoreboard_id)
     else:
-        scoreboard_cache = get_group_scores(gid=gid)
+        scoreboard_cache = get_group_scores(gid=group_id)
 
     team_items = scoreboard_cache.range(0, limit - 1, with_scores=True,
                                         desc=True)

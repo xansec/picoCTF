@@ -16,31 +16,31 @@ def run():
             result = f(reset_cache=True, *args, **kwargs)
             return result
 
-        print("Caching registration stats.")
+        print("Caching registration stats...")
         cache(get_registration_count)
 
-        print("Caching the public scoreboard entries...")
+        print("Caching the scoreboards...")
         get_all_team_scores()
         for scoreboard in api.scoreboards.get_all_scoreboards():
             get_all_team_scores(scoreboard_id=scoreboard['sid'])
 
-        print("Caching the public scoreboard graph for each scoreboard...")
+        print("Caching the score progressions for each scoreboard...")
         for scoreboard in api.scoreboards.get_all_scoreboards():
             cache(get_top_teams_score_progressions,
-                  scoreboard_id=scoreboard['sid'], gid=None)
+                  scoreboard_id=scoreboard['sid'])
 
-        print("Caching the scoreboard graph for each group...")
+        print("Caching the scores and score progressions for each group...")
         for group in api.group.get_all_groups():
             get_group_scores(gid=group['gid'])
             cache(get_top_teams_score_progressions,
-                  gid=group['gid'])
+                  group_id=group['gid'])
 
-        print("Caching number of solves for each problem.")
+        print("Caching number of solves for each problem...")
         for problem in api.problem.get_all_problems():
             print(problem["name"],
                   cache(get_problem_solves, problem["pid"]))
 
-        print("Caching Invalid Instance Submissions.")
+        print("Caching invalid instance submissions...")
         cache(check_invalid_instance_submissions)
 
 

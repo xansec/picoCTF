@@ -5,7 +5,7 @@ from api import block_before_competition, PicoException, require_admin
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 
-from .schemas import scoreboard_req, scoreboard_page_req
+from .schemas import score_progressions_req, scoreboard_page_req, scoreboard_req
 
 ns = Namespace('scoreboards', description='Scoreboard management')
 
@@ -67,11 +67,36 @@ class ScoreboardPage(Resource):
 
     @block_before_competition
     @ns.response(200, 'Success')
+    @ns.response(404, 'Scoreboard not found')
     @ns.response(422, 'Competition has not started')
     @ns.expect(scoreboard_page_req)
     def get(self, scoreboard_id):
         """Retrieve a scoreboard page for a scoreboard."""
         req = scoreboard_page_req.parse_args(strict=True)
+        scoreboard = api.scoreboards.get_scoreboard(scoreboard_id)
+        if not scoreboard:
+            raise PicoException('Scoreboard not found', 404)
         return jsonify(
             api.stats.get_scoreboard_page(
                 {'scoreboard_id': scoreboard_id}, req['page']))
+
+
+@ns.route('/<string:scoreboard_id>/score_progressions')
+class ScoreProgressionsResult(Resource):
+    """Get a list of score progressions for the top n teams on a scoreboard."""
+
+    @block_before_competition
+    @ns.response(200, 'Success')
+    @ns.response(404, 'Scoreboard not found')
+    @ns.response(422, 'Competition has not started')
+    @ns.expect(score_progressions_req)
+    def get(self, scoreboard_id):
+        """Get a list of teams' score progressions."""
+        req = score_progressions_req.parse_args(strict=True)
+        scoreboard = api.scoreboards.get_scoreboard(scoreboard_id)
+        if not scoreboard:
+            raise PicoException('Scoreboard not found', 404)
+        return jsonify(
+            api.stats.get_top_teams_score_progressions(
+                limit=req['limit'], scoreboard_id=scoreboard_id
+            ))

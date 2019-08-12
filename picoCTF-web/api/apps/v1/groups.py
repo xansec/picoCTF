@@ -12,7 +12,7 @@ from marshmallow import (RAISE, Schema, ValidationError, fields, post_load,
 
 from .schemas import (batch_registration_req, group_invite_req,
                       group_patch_req, group_remove_team_req, group_req,
-                      scoreboard_page_req)
+                      score_progressions_req, scoreboard_page_req)
 
 ns = Namespace('groups', description='Group management')
 
@@ -417,3 +417,32 @@ class ScoreboardPage(Resource):
         return jsonify(
             api.stats.get_scoreboard_page(
                 {'group_id': group_id}, req['page']))
+
+
+@ns.route('/<string:group_id>/score_progressions')
+class ScoreProgressionsResult(Resource):
+    """Get a list of score progressions for the top n teams in a group."""
+
+    @block_before_competition
+    @ns.response(200, 'Success')
+    @ns.response(403, 'Permission denied')
+    @ns.response(404, 'Group not found')
+    @ns.response(422, 'Competition has not started')
+    @ns.expect(score_progressions_req)
+    def get(self, group_id):
+        """Get a list of teams' score progressions."""
+        req = score_progressions_req.parse_args(strict=True)
+        group = api.group.get_group(gid=group_id)
+        if not group:
+            raise PicoException('Group not found', 404)
+        group_members = [group['owner']] + group['members'] + group['teachers']
+
+        curr_user = api.user.get_user()
+        if (not curr_user or (curr_user['tid'] not in group_members
+                              and not curr_user['admin'])):
+            raise PicoException("You do not have permission to " +
+                                "view this group's score progressions.", 403)
+        return jsonify(
+            api.stats.get_top_teams_score_progressions(
+                limit=req['limit'], group_id=group_id
+            ))
