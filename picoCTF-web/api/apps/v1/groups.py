@@ -414,9 +414,15 @@ class ScoreboardPage(Resource):
                                 "view this group's scoreboard.", 403)
 
         req = scoreboard_page_req.parse_args(strict=True)
-        return jsonify(
-            api.stats.get_scoreboard_page(
-                {'group_id': group_id}, req['page']))
+        if req['search'] is not None:
+            page = api.stats.get_filtered_scoreboard_page(
+                {'group_id': group_id},
+                req['search'], req['page'] or 1
+            )
+        else:
+            page = api.stats.get_scoreboard_page(
+                {'group_id': group_id}, req['page'])
+        return jsonify(page)
 
 
 @ns.route('/<string:group_id>/score_progressions')

@@ -76,9 +76,15 @@ class ScoreboardPage(Resource):
         scoreboard = api.scoreboards.get_scoreboard(scoreboard_id)
         if not scoreboard:
             raise PicoException('Scoreboard not found', 404)
-        return jsonify(
-            api.stats.get_scoreboard_page(
-                {'scoreboard_id': scoreboard_id}, req['page']))
+        if req['search'] is not None:
+            page = api.stats.get_filtered_scoreboard_page(
+                {'scoreboard_id': scoreboard_id},
+                req['search'], req['page'] or 1
+            )
+        else:
+            page = api.stats.get_scoreboard_page(
+                {'scoreboard_id': scoreboard_id}, req['page'])
+        return jsonify(page)
 
 
 @ns.route('/<string:scoreboard_id>/score_progressions')

@@ -426,8 +426,10 @@ def get_scoreboard_page(scoreboard_key, page_number=None):
 
     Args:
         scoreboard_key (dict): scoreboard key
-        page_number (int): optional, page to retrieve / None to get the
-                     current team's page
+
+    Kwargs:
+        page_number (int): page to retrieve, defaults to None (which attempts
+                     to return the current team's page)
 
     Returns:
         (list: scoreboard page, int: current page, int: number of pages)
@@ -448,7 +450,38 @@ def get_scoreboard_page(scoreboard_key, page_number=None):
                   in board_cache.range(
                       start, end, with_scores=True, reverse=True)]
 
-    available_pages = math.ceil(len(board_cache) / SCOREBOARD_PAGE_LEN)
+    available_pages = max(math.ceil(len(board_cache) / SCOREBOARD_PAGE_LEN), 1)
+    return (board_page, page_number, available_pages)
+
+
+def get_filtered_scoreboard_page(scoreboard_key, pattern, page_number=1):
+    """
+    Get a page of a filtered scoreboard.
+
+    Scoreboards can be filtered by a search pattern on the team name and
+    affiliation fields.
+
+    If a page is not specified, will fall back to the first page.
+
+    Args:
+        scoreboard_key (dict): scoreboard key
+        pattern (str): search pattern
+
+    Kwargs:
+        page_number (int): page to retrieve, defaults to 1
+
+    Returns:
+        (list: scoreboard page, int: current page, int: number of pages)
+    """
+    board_cache = get_scoreboard_cache(**scoreboard_key)
+    results = search_scoreboard_cache(board_cache, pattern)
+    start = SCOREBOARD_PAGE_LEN * (page_number - 1)
+    end = start + SCOREBOARD_PAGE_LEN
+    board_page = results[start:end]
+    for item in board_page:
+        item['rank'] = board_cache.rank(item['key'], reverse=True) + 1
+        item.pop('key')
+    available_pages = max(math.ceil(len(results) / SCOREBOARD_PAGE_LEN), 1)
     return (board_page, page_number, available_pages)
 
 
@@ -468,24 +501,3 @@ def get_demographic_data():
         })
 
     return result
-
-
-def search_scoreboard(board, pattern, page=1):
-    if board == "student": # @TODO change to work with new scoreboards
-        key_args = {'country': None, 'include_ineligible': False}
-    else:  # default to global
-        key_args = {'country': None, 'include_ineligible': True}
-    scoreboard = get_scoreboard_cache(**key_args)
-    results = search_scoreboard_cache(scoreboard, pattern)
-    start = SCOREBOARD_PAGE_LEN * (page - 1)
-    end = start + SCOREBOARD_PAGE_LEN
-    boardlist = results[start:end]
-    for item in boardlist:
-        item['rank'] = scoreboard.rank(item['key'], reverse=True) + 1
-        item.pop('key')
-    return {
-        'name': board,
-        'pages': math.ceil(len(results) / SCOREBOARD_PAGE_LEN),
-        'start_page': page,
-        'scoreboard': boardlist
-    }

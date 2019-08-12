@@ -515,11 +515,17 @@ team_patch_req.add_argument(
 )
 
 # Scoreboard page request
+# @TODO marshmallow: default page to 1 rather than None if search is specified
+#                    remove 'or 1' in get_filtered_scoreboard_page calls
 scoreboard_page_req = reqparse.RequestParser()
 scoreboard_page_req.add_argument(
     'page', required=False, default=None, type=inputs.positive,
     location='args', help='Scoreboard page to return',
     error='page must be a positive integer'
+)
+scoreboard_page_req.add_argument(
+    'search', required=False, default=None, type=str, location='args',
+    help='Search filter pattern', error='Search pattern must be a string'
 )
 
 # Score progressions request
@@ -527,20 +533,6 @@ score_progressions_req = reqparse.RequestParser()
 score_progressions_req.add_argument(
     'limit', required=False, type=inputs.positive, default=5, location='args',
     help="The number of top teams' score progressions to return"
-)
-
-# Scoreboard search request
-scoreboard_search_req = reqparse.RequestParser()
-scoreboard_search_req.add_argument(
-    'board', required=False, choices=['global', 'student'],
-    type=str, location='args', help='Choose which scoreboard to return'
-)
-scoreboard_search_req.add_argument(
-    'pattern', required=True, type=str, location='args'
-)
-scoreboard_search_req.add_argument(
-    'page', required=True, type=inputs.positive, location='args',
-    help='Scoreboard page to return'
 )
 
 # Group request
