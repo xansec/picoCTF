@@ -695,7 +695,7 @@ const ProblemView = React.createClass({
     return {
       filterRegex: /.*/,
       activeSort: {
-        name: "name",
+        name: "score",
         ascending: true
       },
       problemClassifier: [
