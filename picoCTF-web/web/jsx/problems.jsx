@@ -1,9 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS208: Avoid top-level this
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const { Panel } = ReactBootstrap;
 const { Button } = ReactBootstrap;
 const { ButtonGroup } = ReactBootstrap;
@@ -18,12 +12,10 @@ const { ListGroupItem } = ReactBootstrap;
 const { Collapse } = ReactBootstrap;
 const { Table } = ReactBootstrap;
 const { Badge } = ReactBootstrap;
+const { Tabs } = ReactBootstrap;
 const { Tab } = ReactBootstrap;
-const { Nav } = ReactBootstrap;
 const { NavItem } = ReactBootstrap;
-const { FormGroup } = ReactBootstrap;
-const { InputGroup } = ReactBootstrap;
-const { FormControl } = ReactBootstrap;
+const { update } = React.addons;
 
 const renderProblemList = _.template(
   $("#problem-list-template")
@@ -102,29 +94,6 @@ const constructAchievementCallbackChain = achievements =>
     achievements,
     achievements.length - 1
   );
-
-const submitProblem = function(e) {
-  e.preventDefault();
-  const input = $(e.target).find("input");
-  apiCall("POST", "/api/v1/submissions", {
-    pid: input.data("pid"),
-    key: input.val(),
-    method: "web"
-  })
-    .done(function(data) {
-      if (data.correct) {
-        ga("send", "event", "Problem", "Solve", "Basic");
-        apiNotify({ status: 1, message: data.message });
-        loadProblems();
-      } else {
-        ga("send", "event", "Problem", "Wrong", "Basic");
-        apiNotify({ status: 0, message: data.message });
-      }
-    })
-    .fail(jqXHR =>
-      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-    );
-};
 
 // apiCall "GET", "/api/v1/achievements"
 // .done (data) ->
@@ -211,7 +180,7 @@ const loadProblems = () =>
           //$("li.disabled>a").removeAttr "href"
 
           $(".problem-hint").hide();
-          $(".problem-submit").on("submit", submitProblem);
+          // $(".problem-submit").on("submit", submitProblem);
 
           $(".rating-button").on("click", addProblemReview);
         })
@@ -231,6 +200,137 @@ const addScoreToTitle = selector =>
       );
     }
   });
+
+const SortableButton = React.createClass({
+  propTypes: {
+    name: React.PropTypes.string.isRequired
+  },
+
+  handleClick(e) {
+    this.props.onFocus(this.props.name);
+
+    if (this.props.active) {
+      this.props.onSortChange(this.props.name, !this.props.ascending);
+    } else {
+      //Make it active. No-op on sorting.
+      this.props.onSortChange(this.props.name, this.props.ascending);
+    }
+  },
+
+  render() {
+    const glyph = this.props.ascending ? (
+      <Glyphicon glyph="chevron-down" />
+    ) : (
+      <Glyphicon glyph="chevron-up" />
+    );
+    return (
+      <Button
+        bsSize="small"
+        active={this.props.active}
+        onClick={this.handleClick}
+      >
+        {this.props.name} {glyph}
+      </Button>
+    );
+  }
+});
+
+const SortableButtonGroup = React.createClass({
+  getInitialState() {
+    const result = [];
+    for (name of this.props.data) {
+      result.push([name, { active: false, ascending: true }]);
+    }
+    const state = _.object(result);
+    state[this.props.activeSort.name] = {
+      active: true,
+      ascending: this.props.activeSort.ascending
+    };
+    return state;
+  },
+
+  handleClick(name) {
+    //Reset all active states.
+    const activeStates = _.reduce(
+      this.getInitialState(),
+      function(memo, sortState, name) {
+        memo[name] = { active: false, ascending: true };
+        return memo;
+      },
+      {}
+    );
+    activeStates[name].active = true;
+    this.setState(activeStates);
+  },
+
+  render() {
+    const activeState = this.state;
+    activeState[this.props.activeSort.name] = {
+      active: true,
+      ascending: this.props.activeSort.ascending
+    };
+    return (
+      <ButtonGroup>
+        {this.props.data.map((name, i) => {
+          return (
+            <SortableButton
+              key={i}
+              active={activeState[name].active}
+              ascending={activeState[name].ascending}
+              name={name}
+              onSortChange={this.props.onSortChange}
+              onFocus={this.handleClick}
+            />
+          );
+        })}
+      </ButtonGroup>
+    );
+  }
+});
+
+const ProblemFilter = React.createClass({
+  propTypes: {
+    onFilterChange: React.PropTypes.func.isRequired,
+    filter: React.PropTypes.string
+  },
+
+  getInitialState() {
+    return { filter: this.props.filter };
+  },
+
+  onChange() {
+    const filterValue = this.refs.filter.getInputDOMNode().value;
+    this.setState({ filter: filterValue });
+    this.props.onFilterChange(filterValue);
+  },
+
+  render() {
+    const glyph = <Glyphicon glyph="search" />;
+    return (
+      <Panel>
+        <Col xs={12}>
+          Search
+          <Input
+            type="text"
+            className="form-control"
+            ref="filter"
+            addonBefore={glyph}
+            onChange={this.onChange}
+            value={this.state.filter}
+          />
+        </Col>
+        <Col xs={12}>
+          <SortableButtonGroup
+            key={this.props.activeSort}
+            activeSort={this.props.activeSort}
+            onSortChange={this.props.onSortChange}
+            data={["name", "category", "score"]}
+          />
+        </Col>
+      </Panel>
+    );
+  }
+});
 
 const ClassifierItem = React.createClass({
   handleClick(e) {
@@ -308,10 +408,10 @@ const ProblemClassifierList = React.createClass({
 
     const solvedState = _.groupBy(this.props.problems, "solved");
     let solvedData = _.map(solvedState, (problems, solved) => ({
-      name: `${solved ? "Solved" : "Unsolved"}`,
+      name: solved == 'true' ? "Solved" : "Unsolved",
       size: problems.length,
       classifier(problem) {
-        return problem.solved === solved;
+        return problem.solved.toString() === solved;
       }
     }));
     //solvedData = _.sortBy(solvedData, "name");
@@ -338,62 +438,108 @@ const ProblemClassifierList = React.createClass({
 const ProblemHintTable = React.createClass({
   render() {
     return (
-      <Table responsive={true}>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Hint</th>
-          </tr>
-        </thead>
-        <tbody>
+      <ListGroup>
+        <div className="panel-body">
           {this.props.hints.map((hint, i) => (
-            <tr key={i}>
-              <td>{i + 1}</td>
-              <td>{hint}</td>
-            </tr>
+            <ListGroupItem key={i} >{hint}</ListGroupItem>
           ))}
-        </tbody>
-      </Table>
+        </div>
+      </ListGroup>
     );
   }
 });
 
 const ProblemSubmit = React.createClass({
+  getInitialState() {
+    return {
+      value : ""
+    }
+  },
+  handleChange(e) {
+    this.setState(
+      update(this.state, {
+        $set: {
+          value: e.target.value
+        }
+      })
+    );
+  },
+  submitProblem (e) {
+   e.preventDefault();
+   const input = $(e.target).find("input");
+   apiCall("POST", "/api/v1/submissions", {
+     pid: this.props.pid,
+     key: this.state.value,
+     method: "web"
+   })
+     .done(function(data) {
+       if (data.correct) {
+         ga("send", "event", "Problem", "Solve", "Basic");
+         apiNotify({ status: 1, message: data.message });
+         loadProblems();
+       } else {
+         ga("send", "event", "Problem", "Wrong", "Basic");
+         apiNotify({ status: 0, message: data.message });
+       }
+     })
+     .fail(jqXHR =>
+       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+     );
+  },
+
   render() {
+    const submitButton = (<Button className="btn-primary" type="submit">Submit!</Button>);
+    const upButton = (
+      <Button
+        id={this.props.pid + "-thumbsup"}
+        data-pid={this.props.pid}
+        data-setting="up"
+        style={{borderRadius: 0, top:0}}
+        className={`rating-button glyphicon glyphicon-thumbs-up pull-left ${this.props.thumbs.upClass}`}
+      />
+    );
+    const downButton = (
+      <Button
+        id={this.props.pid + "-thumbsdown"}
+        data-pid={this.props.pid}
+        data-setting="down" 
+        style={{top:0}}
+        className={`rating-button glyphicon glyphicon-thumbs-down pull-right ${this.props.thumbs.downClass}`}
+      />
+    );
     return (
       <Col>
-        <p className="problem-description">{this.props.description}</p>
-        <Row>
-          <form class="problem-submit">
-            <FormGroup>
-              <Col md={10} sm={9} xs={7} lg={11}>
-                <InputGroup>
-                  <InputGroup.Button>
-                    <Button className="btn-primary" type="submit">Submit!</Button>
-                  </InputGroup.Button>
-                  <FormControl
-                    type="text"
-                    value={this.state.value}
-                    placeholder="picoCTF{FLAG}"
-                    onChange={this.handleChange}
-                  />
-                </InputGroup>
-              </Col>
-              <Col md={2} sm={3} xs={5} lg={1}>
-                <span id={this.props.pid + "-thumbsup"} data-pid={this.props.pid} data-setting="up" style="font-size:1.7em;" class={"rating-button glyphicon glyphicon-thumbs-up pull-left" + thumbs.upClass}></span>
-                <span id={this.props.pid + "-thumbsdown"} data-pid={this.props.pid} data-setting="down" style="font-size:1.7em;" class={"rating-button glyphicon glyphicon-thumbs-down pull-right" + thumbs.downClass}></span>
-              </Col>
-            </FormGroup>
-          </form>
-        </Row>
+        <p className="problem-description" dangerouslySetInnerHTML={ {__html: this.props.description} }></p>
+        <form className="problem-submit" onSubmit={this.submitProblem}>
+          <Row>
+            <Input
+              buttonBefore={submitButton}
+              type="text"
+              value={this.state.value}
+              placeholder="picoCTF{FLAG}"
+              onChange={this.handleChange}
+            >
+              <span className="input-group-btn">
+                {upButton}
+              </span>
+              <span className="input-group-btn">
+                {downButton}
+              </span>
+            </Input>
+          </Row>
+        </form>
       </Col>
     )
   }
-})
+});
 
 const Problem = React.createClass({
   getInitialState() {
-    return { expanded: false };
+    if (this.props.solved) {
+      return { expanded: false };
+    } else {
+      return { expanded: true };
+    }
   },
 
   handleExpand(e) {
@@ -428,7 +574,7 @@ const Problem = React.createClass({
     var review = null;
 
     for (var i = 0; i < this.props.reviewData.length; i++)
-      if (this.props.reviewData[i].pid == problem.pid){
+      if (this.props.reviewData[i].pid == this.props.pid){
         alreadyReviewed = true;
         review = this.props.reviewData[i].feedback;
       }
@@ -438,7 +584,7 @@ const Problem = React.createClass({
       downClass: alreadyReviewed && !review.liked ? "active" : ""
     };
 
-    if (this.state.expanded) {
+    if (this.state.expanded && this.props.hints.length > 0) {
       return (
         <Panel
           bsStyle={panelStyle}
@@ -447,39 +593,48 @@ const Problem = React.createClass({
           expanded={this.state.expanded}
           onSelect={this.handleExpand}
         >
-          <Row id={this.props.pid}>
-            <Col>
-              <Tab.Container defaultActiveKey={this.props.pid + "solve"}>
-                <Row className="clearfix">
-                  <Col sm={12}>
-                    <Nav bsStyle="tabs">
-                      <NavItem eventKey={this.props.pid + "solve"}>Solve</NavItem>
-                      <NavItem eventKey={this.props.pid + "hint"}>Hints</NavItem>
-                    </Nav>
-                  </Col>
-                  <Col sm={12}>
-                    <Tab.Content>
-                      <Tab.Pane eventKey={this.props.pid + "solve"}>
-                        <Panel.Body>
-                          <ProblemSubmit
-                            {...Object.assign(
-                              {
-                                thumbs: thumbs
-                              },
-                              this.props
-                            )}
-                          />
-                        </Panel.Body>
-                      </Tab.Pane>
-                      <Tab.Pane eventKey={this.props.pid + "hint"}>
-                        <ProblemHintTable hints={this.props.hints} />
-                      </Tab.Pane>
-                    </Tab.Content>
-                  </Col>
-                </Row>
-              </Tab.Container>
-            </Col>
-          </Row>
+          <Tabs defaultActiveKey={this.props.pid + "solve"} bsStyle="tabs">
+            <Tab eventKey={this.props.pid + "solve"} title="Solve">
+              <div className="panel-body">
+                <ProblemSubmit
+                  {...Object.assign(
+                    {
+                      thumbs: thumbs
+                    },
+                    this.props
+                  )}
+                />
+              </div>
+            </Tab>
+            <Tab eventKey={this.props.pid + "hint"} title="Hints">
+              <ProblemHintTable hints={this.props.hints} />
+            </Tab>
+          </Tabs>
+        </Panel>
+      );
+    } else if (this.state.expanded && this.props.hints.length == 0) {
+      return (
+        <Panel
+          bsStyle={panelStyle}
+          header={problemHeader}
+          collapsible={true}
+          expanded={this.state.expanded}
+          onSelect={this.handleExpand}
+        >
+          <Tabs defaultActiveKey={this.props.pid + "solve"} bsStyle="tabs">
+                <Tab eventKey={this.props.pid + "solve"} title="Solve">
+                  <div className="panel-body">
+                  <ProblemSubmit
+                    {...Object.assign(
+                      {
+                        thumbs: thumbs
+                      },
+                      this.props
+                    )}
+                  />
+                  </div>
+                </Tab>
+          </Tabs>
         </Panel>
       );
     } else {
@@ -538,6 +693,11 @@ const ProblemView = React.createClass({
 
   getInitialState() {
     return {
+      filterRegex: /.*/,
+      activeSort: {
+        name: "name",
+        ascending: true
+      },
       problemClassifier: [
         {
           name: "all",
@@ -547,6 +707,22 @@ const ProblemView = React.createClass({
         }
       ]
     };
+  },
+
+  onFilterChange(filter) {
+    try {
+      const newFilter = new RegExp(filter, "i");
+      this.setState(
+        update(this.state, { filterRegex: { $set: newFilter } })
+      );
+    } catch (error) {}
+  },
+  // We shouldn't do anything.
+
+  onSortChange(name, ascending) {
+    this.setState(
+      update(this.state, { activeSort: { $set: { name, ascending } } })
+    );
   },
 
   setClassifier(classifierState, classifier, name) {
@@ -567,18 +743,53 @@ const ProblemView = React.createClass({
     }
   },
 
+  filterProblems(problems) {
+    const visibleProblems = _.filter(problems, problem => {
+      return (
+        this.state.filterRegex.exec(problem.name) !== null &&
+        _.all(
+          this.state.problemClassifier.map(classifier =>
+            classifier.func(problem)
+          )
+        )
+      );
+    });
+
+    const sortedProblems = _.sortBy(
+      visibleProblems,
+      this.state.activeSort.name
+    );
+
+    if (this.state.activeSort.ascending) {
+      return sortedProblems;
+    } else {
+      return sortedProblems.reverse();
+    }
+  },
+
   render() {
+    const filteredProblems = this.filterProblems(this.props.problems);
     return (
       <Row className="pad">
         <Col xs={3} md={3}>
-          <ProblemClassifierList
-            setClassifier={this.setClassifier}
-            problems={this.props.problems}
-          />
+          <Row>
+            <ProblemFilter
+              onSortChange={this.onSortChange}
+              filter=""
+              activeSort={this.state.activeSort}
+              onFilterChange={this.onFilterChange}
+            />
+          </Row>
+          <Row>
+            <ProblemClassifierList
+              setClassifier={this.setClassifier}
+              problems={filteredProblems}
+            />
+          </Row>
         </Col>
         <Col xs={9} md={9}>
           <ProblemList
-            problems={this.props.problems}
+            problems={filteredProblems}
             reviewData={this.props.reviewData}
           />
         </Col>
