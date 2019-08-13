@@ -106,7 +106,6 @@ def get_team_review_count(tid=None, uid=None):
 
 
 # Stored by the cache_stats daemon.
-# @memoize
 def get_group_scores(gid=None, name=None):
     """
     Get the group scores.
@@ -322,7 +321,6 @@ def get_problem_solves(pid):
 
 
 # Stored by the cache_stats daemon
-@memoize
 def get_top_teams_score_progressions(
         limit=5, scoreboard_id=None, group_id=None):
     """
