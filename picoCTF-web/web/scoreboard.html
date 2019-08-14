@@ -18,10 +18,10 @@ startup_functions:
 <script type="text/template" id="scoreboard-tabs-template">
   <ul class="nav nav-tabs" id="scoreboard-tabs">
     <% _.each(eligibleScoreboards, function(scoreboard, index) { %>
-      <li data-sid="<%= scoreboard.sid %>"><a data-toggle="tab" href="#<%= scoreboard.sid %>" onClick="window.reloadGraph()"><%- scoreboard.name %></a></li>
+      <li data-sid="<%= scoreboard.sid %>"><a data-toggle="tab" href="#<%= scoreboard.sid %>"><%- scoreboard.name %></a></li>
     <% }); %>
     <% _.each(teamGroups, function(group, index) { %>
-      <li data-gid="<%= group.gid %>"><a data-toggle="tab" href="#<%= group.gid %>" onClick="window.reloadGraph()"><%- group.name %></a></li>
+      <li data-gid="<%= group.gid %>"><a data-toggle="tab" href="#<%= group.gid %>"><%- group.name %></a></li>
     <% }); %>
   </ul>
   <div class="tab-content">
@@ -34,7 +34,7 @@ startup_functions:
 </script>
 
 <script type="text/template" id="scoreboard-template">
-  <% if(!($.isEmptyObject(data)) && data.scoreboard.length > 0) { %>
+  <% if(!($.isEmptyObject(scorepage)) && scorepage.length > 0) { %>
     <table class="table scoreboard-table">
       <thead>
         <tr>
@@ -45,13 +45,13 @@ startup_functions:
         </tr>
       </thead>
       <tbody>
-        <% _.each(data.scoreboard, function(team, i) { %>
-            <% if(team.tid == tid) { %>
+        <% _.each(scorepage, function(team, i) { %>
+            <% if(team.tid == user_tid) { %>
             <tr class="alert alert-success">
             <% } else { %>
             <tr>
             <% } %>
-            <td><%= (50*(data.start_page - 1)) + i + 1 %>.</td>
+            <td><%= (50*(page - 1)) + i + 1 %>.</td>
             <td><%- team.name %></td>
             <td><%- team.affiliation %></td>
             <td><strong><%= team.score %></strong></td>
@@ -66,26 +66,8 @@ startup_functions:
   <% } %>
 </script>
 
-<script type="text/template" id="scorepage-template">
-    <% _.each(scorepage, function(team, i) { %>
-      <% if(team.tid == tid) { %>
-      <tr class="alert alert-success">
-      <% } else { %>
-      <tr>
-      <% } %>
-        <% if('rank' in team) { %>
-        <td><%- team.rank %>.</td>
-        <% } else { %>
-        <td><%= (50*(page - 1)) + i + 1 %>.</td>
-        <% } %>
-        <td><%- team.name %></td>
-        <td><%- team.affiliation %></td>
-        <td><strong><%= team.score %></strong></td>
-      </tr>
-    <% }); %>
-</script>
-
 <div class="container">
   <div id="scoreboard-teamscore"></div>
   <div id="scoreboard-tabs"></div>
+  <div id="scoreboard-container"></div>
 </div>
