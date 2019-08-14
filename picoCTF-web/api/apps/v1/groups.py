@@ -422,7 +422,11 @@ class ScoreboardPage(Resource):
         else:
             page = api.stats.get_scoreboard_page(
                 {'group_id': group_id}, req['page'])
-        return jsonify(page)
+        return jsonify({
+            'scoreboard': page[0],
+            'current_page': page[1],
+            'total_pages': page[2]
+        })
 
 
 @ns.route('/<string:group_id>/score_progressions')
