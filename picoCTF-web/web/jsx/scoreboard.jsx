@@ -36,7 +36,6 @@ window.reloadGraph = function() {
 
 const render_scoreboard = function(board_key, search) {
   // Re-render the scoreboard display, including the paginator
-  var search = null;
 
   // Build the scoreboard page endpoint URL
   var scoreboard_endpoint = '/api/v1/'
@@ -45,7 +44,7 @@ const render_scoreboard = function(board_key, search) {
   } else {
     scoreboard_endpoint += 'scoreboards/' + board_key.scoreboard_id + '/scoreboard';
   }
-  if (search != null) {
+  if (search !== undefined) {
     scoreboard_endpoint += '?search=' + search
   }
 
@@ -63,9 +62,7 @@ const render_scoreboard = function(board_key, search) {
       })
       $("#scoreboard-container").html(scoreboardContent).promise().then(
         function(){
-          console.log('board_key: ' + board_key)
-          console.log('total_pages: ' + scoreboard_data[0].total_pages)
-          console.log('current_page: ' + scoreboard_data[0].current_page)
+          // Once content has loaded, set up paginator
           $("#pagination").bootstrapPaginator({
             totalPages: scoreboard_data[0].total_pages,
             bootstrapMajorVersion: 3,
@@ -74,6 +71,18 @@ const render_scoreboard = function(board_key, search) {
             onPageClicked(e, eOriginal, type, page) {
               render_scoreboard_page(board_key, "", page);
             }
+          });
+
+          // Carry forward search field contents if present
+          if (search !== undefined) {
+            $("#search").val(search);
+          }
+
+          // Attach search field listener
+          $("form[role=search]").on("submit", function(e) {
+            e.preventDefault();
+            var searchValue = $("#search").val();
+            render_scoreboard(board_key, searchValue);
           });
         }
       )
@@ -85,7 +94,7 @@ const render_scoreboard = function(board_key, search) {
 
 const render_scoreboard_page = function(board_key, search, page) {
   // Re-render only the scoreboard page, keeping search field and pagination
-  var search = "";
+  var searchValue = $("#search").val()
 
   // Build the scoreboard page endpoint URL
   var scoreboard_endpoint = '/api/v1/'
@@ -94,11 +103,9 @@ const render_scoreboard_page = function(board_key, search, page) {
   } else {
     scoreboard_endpoint += 'scoreboards/' + board_key.scoreboard_id + '/scoreboard';
   }
-  if (page != null) {
-    scoreboard_endpoint += '?page=' + page
-  }
+  scoreboard_endpoint += '?page=' + page
   if (search != "") {
-    scoreboard_endpoint += '&search=' + search
+    scoreboard_endpoint += '&search=' + searchValue
   }
 
   // Fetch the scoreboard page and re-render the scoreboard display
