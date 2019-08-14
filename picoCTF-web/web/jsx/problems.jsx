@@ -771,7 +771,7 @@ const ProblemView = React.createClass({
     const filteredProblems = this.filterProblems(this.props.problems);
     return (
       <Row className="pad">
-        <Col xs={3} md={3}>
+        <Col md={3}>
           <Row>
             <ProblemFilter
               onSortChange={this.onSortChange}
@@ -787,7 +787,7 @@ const ProblemView = React.createClass({
             />
           </Row>
         </Col>
-        <Col xs={9} md={9}>
+        <Col md={9}>
           <ProblemList
             problems={filteredProblems}
             reviewData={this.props.reviewData}
