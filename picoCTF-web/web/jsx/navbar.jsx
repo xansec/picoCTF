@@ -3,13 +3,13 @@ const apiOffline = { News: "/news" };
 const teacherLoggedIn = {
   Problems: "/problems",
   Shell: "/shell",
-  Scoreboard: "/scoreboard",
+  Scoreboards: "/scoreboard",
   Classroom: "/classroom",
   News: "/news"
 };
 
 const teacherLoggedInNoCompetition = {
-  Scoreboard: "/scoreboard",
+  Scoreboards: "/scoreboard",
   Classroom: "/classroom",
   News: "/news"
 };
@@ -17,12 +17,12 @@ const teacherLoggedInNoCompetition = {
 const userLoggedIn = {
   Problems: "/problems",
   Shell: "/shell",
-  Scoreboard: "/scoreboard",
+  Scoreboards: "/scoreboard",
   News: "/news"
 };
 
 const userLoggedInNoCompetition = {
-  Scoreboard: "/scoreboard",
+  Scoreboards: "/scoreboard",
   News: "/news"
 };
 
