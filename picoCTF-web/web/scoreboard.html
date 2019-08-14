@@ -35,6 +35,16 @@ startup_functions:
 
 <script type="text/template" id="scoreboard-template">
   <% if(!($.isEmptyObject(scorepage)) && scorepage.length > 0) { %>
+    <form class="navbar-form text-center" role="search">
+      <div class="input-group">
+        <input class="form-control" placeholder="Search" name="search" id="search" type="text" size=30>
+      </div>
+    </form>
+    <% if (total_pages > 1) { %>
+      <div class="pagination-container">
+        <ul id="pagination" class="pagination"></ul>
+      </div>
+    <% } %>
     <table class="table scoreboard-table">
       <thead>
         <tr>
@@ -51,7 +61,7 @@ startup_functions:
             <% } else { %>
             <tr>
             <% } %>
-            <td><%= (50*(page - 1)) + i + 1 %>.</td>
+            <td><%= (50*(current_page - 1)) + i + 1 %>.</td>
             <td><%- team.name %></td>
             <td><%- team.affiliation %></td>
             <td><strong><%= team.score %></strong></td>
@@ -64,6 +74,25 @@ startup_functions:
       <p class="text-center">No teams have scored any points yet.</p>
     </pre>
   <% } %>
+</script>
+
+<script type="text/template" id="scoreboard-page-template">
+  <% _.each(scorepage, function(team, i) { %>
+    <% if(team.tid == user_tid) { %>
+    <tr class="alert alert-success">
+    <% } else { %>
+    <tr>
+    <% } %>
+      <% if('rank' in team) { %>
+      <td><%- team.rank %>.</td>
+      <% } else { %>
+      <td><%= (50*(current_page - 1)) + i + 1 %>.</td>
+      <% } %>
+      <td><%- team.name %></td>
+      <td><%- team.affiliation %></td>
+      <td><strong><%= team.score %></strong></td>
+    </tr>
+  <% }); %>
 </script>
 
 <div class="container">
