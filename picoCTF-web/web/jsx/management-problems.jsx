@@ -734,7 +734,7 @@ const ProblemTab = React.createClass({
     const filteredProblems = this.filterProblems(this.props.problems);
     return (
       <Row className="pad">
-        <Col xs={3} md={3}>
+        <Col md={3}>
           <Row>
             <ProblemFilter
               onSortChange={this.onSortChange}
@@ -757,7 +757,7 @@ const ProblemTab = React.createClass({
             />
           </Row>
         </Col>
-        <Col xs={9} md={9}>
+        <Col md={9}>
           <Row>
             <Col xs={12}>
               <ProblemListModifiers
