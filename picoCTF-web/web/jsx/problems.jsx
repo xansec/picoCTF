@@ -660,8 +660,7 @@ const ProblemList = React.createClass({
     if (this.props.problems.length === 0) {
       return (
         <h4>
-          No problems have been loaded. Click <a href="#">here</a> to get
-          started.
+          No matching problems are available.
         </h4>
       );
     }
