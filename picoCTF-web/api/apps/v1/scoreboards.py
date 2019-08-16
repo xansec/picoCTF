@@ -31,6 +31,7 @@ class ScoreboardList(Resource):
         sid = api.scoreboards.add_scoreboard(
             req['name'],
             eligibility_conditions=req['eligibility_conditions'],
+            priority=req['priority'],
             sponsor=req['sponsor'],
             logo=req['logo']
         )

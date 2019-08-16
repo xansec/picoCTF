@@ -169,7 +169,10 @@ const render_scoreboard_navigation = () =>
     var eligibleScoreboards = scoreboard_data[0].filter((scoreboard) =>
       team_data[0].eligibilities.indexOf(scoreboard.sid) != -1)
     eligibleScoreboards = _.sortBy(eligibleScoreboards, 'name')
-    eligibleScoreboards = _.sortBy(eligibleScoreboards, 'priority')
+    eligibleScoreboards = _.sortBy(eligibleScoreboards, function(scoreboard) {
+      // Sort by descending priority order
+      return -(scoreboard['priority']);
+    })
     var teamGroups = _.sortBy(group_data[0], 'name')
     const scoreboardTabTemplate = _.template(
       $("#scoreboard-tabs-template")
