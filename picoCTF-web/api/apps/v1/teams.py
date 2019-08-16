@@ -53,6 +53,46 @@ class TeamList(Resource):
         return res
 
 
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Permission denied')
+@ns.route('/recalculate_eligibilities')
+class RecalculateAllEligibilitiesResponse(Resource):
+    """Force recalculation of all teams' scoreboard eligibilities."""
+
+    @require_admin
+    def get(self):
+        """
+        Re-evaluate all teams' scoreboard eligibilities.
+
+        May be useful if a new scoreboard is added mid-competition.
+        """
+        for team in api.team.get_all_teams():
+            team_id = team['tid']
+            team_members = api.team.get_team_members(
+                tid=team_id, show_disabled=False)
+            all_scoreboards = api.scoreboards.get_all_scoreboards()
+            member_eligibilities = dict()
+            for member in team_members:
+                member_eligibilities[member['uid']] = {
+                    scoreboard['sid'] for scoreboard in all_scoreboards
+                    if api.scoreboards.is_eligible(member, scoreboard)
+                }
+
+            team_eligibilities = list(
+                set.intersection(*member_eligibilities.values()))
+            db = api.db.get_conn()
+            db.teams.find_one_and_update(
+                {"tid": team_id},
+                {"$set": {
+                    "eligibilities": team_eligibilities
+                }}
+            )
+        return jsonify({
+            'success': True
+        })
+
+
 @ns.route('/<string:team_id>')
 class Team(Resource):
     """A specific team."""
