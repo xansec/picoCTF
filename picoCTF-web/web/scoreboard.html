@@ -31,6 +31,11 @@ startup_functions:
       </div>
      <% }); %>
   </div>
+  <form class="navbar-form text-center" role="search">
+    <div class="input-group">
+      <input class="form-control" placeholder="Search" name="search" id="search" type="text" size=30>
+    </div>
+  </form>
 </script>
 
 <script type="text/template" id="scoreboard-template">
@@ -50,11 +55,6 @@ startup_functions:
     </div>
   </div>
   <% if(!($.isEmptyObject(scorepage)) && scorepage.length > 0) { %>
-    <form class="navbar-form text-center" role="search">
-      <div class="input-group">
-        <input class="form-control" placeholder="Search" name="search" id="search" type="text" size=30>
-      </div>
-    </form>
     <% if (total_pages > 1) { %>
       <div class="pagination-container">
         <ul id="pagination" class="pagination"></ul>

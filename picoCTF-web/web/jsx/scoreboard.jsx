@@ -97,18 +97,6 @@ const render_scoreboard = function(board_key, search) {
             render_scoreboard_page(board_key, "", page);
           }
         });
-
-        // Carry forward search field contents if present
-        if (search !== undefined) {
-          $("#search").val(search);
-        }
-
-        // Attach search field listener
-        $("form[role=search]").on("submit", function(e) {
-          e.preventDefault();
-          var searchValue = $("#search").val();
-          render_scoreboard(board_key, searchValue);
-        });
       }
     )
   })
@@ -186,6 +174,7 @@ const render_scoreboard_navigation = () =>
       // Attach listeners to tab links
       var tab_set = $("#scoreboard-tabs li a")
       tab_set.on("click", function(e) {
+        $("#search").val("")
         var active_tab = $(e.target).parent().data();
         if (active_tab.sid !== undefined) {
           var board_key = {'scoreboard_id': active_tab.sid}
@@ -196,6 +185,20 @@ const render_scoreboard_navigation = () =>
         reloadGraph()
         render_scoreboard(board_key)
       })
+
+      // Attach search field listener
+      $("form[role=search]").on("submit", function(e) {
+        e.preventDefault();
+        var active_tab = $("#scoreboard-tabs li.active").data();
+        if (active_tab.sid !== undefined) {
+          var board_key = {'scoreboard_id': active_tab.sid}
+        }
+        else if (active_tab.gid !== undefined) {
+          var board_key = {'group_id': active_tab.gid}
+        }
+        var searchValue = $("#search").val();
+        render_scoreboard(board_key, searchValue);
+      });
 
       // Automatically render the first scoreboard
       tab_set.first().trigger("click")
