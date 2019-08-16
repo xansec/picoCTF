@@ -447,12 +447,16 @@ class ScoreProgressionsResult(Resource):
             raise PicoException('Group not found', 404)
         group_members = [group['owner']] + group['members'] + group['teachers']
 
-        curr_user = api.user.get_user()
-        if (not curr_user or (curr_user['tid'] not in group_members
-                              and not curr_user['admin'])):
+        if (not api.user.is_logged_in() or (
+                api.user.get_user()['tid'] not in group_members
+                and not api.user.get_user()['admin'])):
             raise PicoException("You do not have permission to " +
                                 "view this group's score progressions.", 403)
+        if req['limit'] and (
+                not api.user.is_logged_in()
+                or not api.user.get_user()['admin']):
+            raise PicoException('Must be admin to specify limit', 403)
         return jsonify(
             api.stats.get_top_teams_score_progressions(
-                limit=req['limit'], group_id=group_id
+                limit=(req['limit'] or 5), group_id=group_id
             ))

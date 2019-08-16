@@ -531,8 +531,9 @@ scoreboard_page_req.add_argument(
 # Score progressions request
 score_progressions_req = reqparse.RequestParser()
 score_progressions_req.add_argument(
-    'limit', required=False, type=inputs.positive, default=5, location='args',
-    help="The number of top teams' score progressions to return"
+    'limit', required=False, type=inputs.positive, location='args',
+    help="The number of top teams' score progressions to return. " +
+         "Must be an admin to use this argument."
 )
 
 # Group request

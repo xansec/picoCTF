@@ -98,6 +98,7 @@ class ScoreProgressionsResult(Resource):
 
     @block_before_competition
     @ns.response(200, 'Success')
+    @ns.response(403, 'Must be admin to specify limit')
     @ns.response(404, 'Scoreboard not found')
     @ns.response(422, 'Competition has not started')
     @ns.expect(score_progressions_req)
@@ -107,7 +108,11 @@ class ScoreProgressionsResult(Resource):
         scoreboard = api.scoreboards.get_scoreboard(scoreboard_id)
         if not scoreboard:
             raise PicoException('Scoreboard not found', 404)
+        if req['limit'] and (
+                not api.user.is_logged_in()
+                or not api.user.get_user()['admin']):
+            raise PicoException('Must be admin to specify limit', 403)
         return jsonify(
             api.stats.get_top_teams_score_progressions(
-                limit=req['limit'], scoreboard_id=scoreboard_id
+                limit=(req['limit'] or 5), scoreboard_id=scoreboard_id
             ))
