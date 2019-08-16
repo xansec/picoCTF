@@ -321,6 +321,7 @@ def get_problem_solves(pid):
 
 
 # Stored by the cache_stats daemon
+@memoize
 def get_top_teams_score_progressions(
         limit=5, scoreboard_id=None, group_id=None):
     """

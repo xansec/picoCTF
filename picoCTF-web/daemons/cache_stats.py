@@ -27,12 +27,14 @@ def run():
         print("Caching the score progressions for each scoreboard...")
         for scoreboard in api.scoreboards.get_all_scoreboards():
             cache(get_top_teams_score_progressions,
+                  limit=5,
                   scoreboard_id=scoreboard['sid'])
 
         print("Caching the scores and score progressions for each group...")
         for group in api.group.get_all_groups():
             get_group_scores(gid=group['gid'])
             cache(get_top_teams_score_progressions,
+                  limit=5,
                   group_id=group['gid'])
 
         print("Caching number of solves for each problem...")
