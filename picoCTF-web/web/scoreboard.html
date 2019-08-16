@@ -34,6 +34,21 @@ startup_functions:
 </script>
 
 <script type="text/template" id="scoreboard-template">
+  <div class="row">
+    <div class="col-xs-12 scoreboard-title-container">
+      <% if (scoreboard_logo !== null) { %>
+        <img src="<%= scoreboard_logo %> " class="scoreboard-logo"/>
+      <% } %>
+      <div>
+        <% if (scoreboard_name !== null) { %>
+          <h3><%= scoreboard_name %></h3>
+        <% } %>
+        <% if (scoreboard_sponsor !== null) { %>
+          <h5>Sponsored by <%= scoreboard_sponsor %></h5>
+        <% } %>
+      </div>
+    </div>
+  </div>
   <% if(!($.isEmptyObject(scorepage)) && scorepage.length > 0) { %>
     <form class="navbar-form text-center" role="search">
       <div class="input-group">

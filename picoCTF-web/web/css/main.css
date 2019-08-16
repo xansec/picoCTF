@@ -143,6 +143,15 @@
     background-color: white;
 }
 
+.scoreboard-title-container {
+  display: flex;
+}
+
+.scoreboard-title-container .scoreboard-logo {
+  width:90px;
+  margin-right: 1em;
+}
+
 .team-photo-img {
     width: 150px;
 }

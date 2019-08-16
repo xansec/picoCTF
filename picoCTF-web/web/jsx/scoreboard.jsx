@@ -48,45 +48,70 @@ const render_scoreboard = function(board_key, search) {
     scoreboard_endpoint += '?search=' + search
   }
 
+  // If non-group scoreboard, get scoreboard metadata
+  if (board_key.hasOwnProperty('scoreboard_id')) {
+    var scoreboard_metadata_endpoint = '/api/v1/scoreboards/' + board_key.scoreboard_id;
+  } else {
+    var scoreboard_metadata_endpoint = null
+  }
+
   // Fetch the scoreboard page and re-render the scoreboard display
   $.when(
     apiCall("GET", "/api/v1/team"),
-    apiCall("GET", scoreboard_endpoint)
+    apiCall("GET", scoreboard_endpoint),
+    (function() {
+      if (scoreboard_metadata_endpoint !== null) {
+        return apiCall("GET", scoreboard_metadata_endpoint)
+      } else {
+        return null
+      }
+    })()
   )
-  .done(function(team_data, scoreboard_data) {
-      var scoreboardContent = renderScoreboard({
-        scorepage: scoreboard_data[0].scoreboard,
-        current_page: scoreboard_data[0].current_page,
-        total_pages: scoreboard_data[0].total_pages,
-        user_tid: team_data[0].tid
+  .done(function(team_data, scoreboard_data, scoreboard_metadata) {
+    var scoreboard_properties = {
+      scorepage: scoreboard_data[0].scoreboard,
+      current_page: scoreboard_data[0].current_page,
+      total_pages: scoreboard_data[0].total_pages,
+      scoreboard_name: null,
+      scoreboard_sponsor: null,
+      scoreboard_logo: null,
+      user_tid: team_data[0].tid
+    }
+    if (scoreboard_metadata !== null) {
+      scoreboard_properties = Object.assign(scoreboard_properties, {
+        scoreboard_name: scoreboard_metadata[0].name,
+        scoreboard_sponsor: scoreboard_metadata[0].sponsor,
+        scoreboard_logo: scoreboard_metadata[0].logo
       })
-      $("#scoreboard-container").html(scoreboardContent).promise().then(
-        function(){
-          // Once content has loaded, set up paginator
-          $("#pagination").bootstrapPaginator({
-            totalPages: scoreboard_data[0].total_pages,
-            bootstrapMajorVersion: 3,
-            numberOfPages: 10,
-            currentPage: scoreboard_data[0].current_page,
-            onPageClicked(e, eOriginal, type, page) {
-              render_scoreboard_page(board_key, "", page);
-            }
-          });
-
-          // Carry forward search field contents if present
-          if (search !== undefined) {
-            $("#search").val(search);
+    }
+    var scoreboardContent = renderScoreboard(scoreboard_properties)
+    $("#scoreboard-container").html(scoreboardContent).promise().then(
+      function(){
+        // Once content has loaded, set up paginator
+        $("#pagination").bootstrapPaginator({
+          totalPages: scoreboard_data[0].total_pages,
+          bootstrapMajorVersion: 3,
+          numberOfPages: 10,
+          currentPage: scoreboard_data[0].current_page,
+          onPageClicked(e, eOriginal, type, page) {
+            render_scoreboard_page(board_key, "", page);
           }
+        });
 
-          // Attach search field listener
-          $("form[role=search]").on("submit", function(e) {
-            e.preventDefault();
-            var searchValue = $("#search").val();
-            render_scoreboard(board_key, searchValue);
-          });
+        // Carry forward search field contents if present
+        if (search !== undefined) {
+          $("#search").val(search);
         }
-      )
-    })
+
+        // Attach search field listener
+        $("form[role=search]").on("submit", function(e) {
+          e.preventDefault();
+          var searchValue = $("#search").val();
+          render_scoreboard(board_key, searchValue);
+        });
+      }
+    )
+  })
   .fail(jqXHR =>
     apiNotify({ status: 0, message: jqXHR.responseJSON.message })
   );
@@ -176,112 +201,6 @@ const render_scoreboard_navigation = () =>
   .fail(jqXHR =>
     apiNotify({ status: 0, message: jqXHR.responseJSON.message })
   );
-
-  // apiCall("GET", "/api/v1/stats/scoreboard")
-  //   .done(function(data) {
-  //     $("#scoreboard-tabs")
-  //       .html(
-  //         renderScoreboardTabs({
-  //           data,
-  //           renderScoreboard
-  //         })
-  //       )
-  //       .promise()
-  //       .then(function() {
-  //         const { tid } = data;
-  //         const paginate = board =>
-  //           $(`#${board.name}-pagination`).bootstrapPaginator({
-  //             totalPages: board.pages,
-  //             bootstrapMajorVersion: 3,
-  //             numberOfPages: 10,
-  //             currentPage: board.start_page,
-  //             onPageClicked(e, eOriginal, type, page) {
-  //               load_scoreboard_page(
-  //                 board.name,
-  //                 page,
-  //                 data.tid,
-  //                 board.gid
-  //               );
-  //             }
-  //           });
-  //         Object.keys(data).forEach(function(e) {
-  //           if (Array.isArray(data[e])) {
-  //             data[e].forEach(paginate);
-  //           } else if (typeof data[e] === "object") {
-  //             paginate(data[e]);
-  //           }
-  //         });
-  //         let timeoutID_global = null;
-  //         let timeoutID_student = null;
-  //         const paginateSearch = (pattern, board) =>
-  //           $(`#${board.name}-pagination`).bootstrapPaginator({
-  //             totalPages: Math.max(board.pages, 1),
-  //             bootstrapMajorVersion: 3,
-  //             numberOfPages: 10,
-  //             currentPage: board.start_page,
-  //             onPageClicked(e, eOriginal, type, page) {
-  //               searchBoard(pattern, board.name, page);
-  //             }
-  //           });
-  //         var searchBoard = function(pattern, board, page) {
-  //           let repaginate;
-  //           if (page == null) {
-  //             page = 0;
-  //           }
-  //           if (page === 0) {
-  //             repaginate = true;
-  //             page = 1;
-  //           }
-  //           apiCall(
-  //             "GET",
-  //             `/api/v1/stats/scoreboard/search?pattern=${pattern}&board=${board}&page=${page}`
-  //           ).done(function(searchdata) {
-  //             $(`#${board} tbody`).html(
-  //               renderScorepage({
-  //                 scorepage: searchdata.scoreboard,
-  //                 page,
-  //                 tid
-  //               })
-  //             );
-  //             if (repaginate) {
-  //               paginateSearch(pattern, searchdata);
-  //             }
-  //           });
-  //         };
-  //         $("#global-search").keyup(function(e) {
-  //           if (e.target.value.length > 2) {
-  //             clearTimeout(timeoutID_global);
-  //             timeoutID_global = setTimeout(
-  //               () => searchBoard(e.target.value, "global"),
-  //               250
-  //             );
-  //           } else if (e.target.value === "") {
-  //             load_scoreboards();
-  //             reloadGraph();
-  //           }
-  //         });
-  //         $("#student-search").keyup(function(e) {
-  //           if (e.target.value.length > 2) {
-  //             clearTimeout(timeoutID_student);
-  //             timeoutID_student = setTimeout(
-  //               () => searchBoard(e.target.value, "student"),
-  //               250
-  //             );
-  //           } else if (e.target.value === "") {
-  //             load_scoreboards()
-  //               .promise()
-  //               .then(function() {
-  //                 $('#scoreboard-tabs a[href="#student"]').tab("show");
-  //                 reloadGraph();
-  //               });
-  //           }
-  //         });
-  //       });
-  //     reloadGraph();
-  //   })
-  //   .fail(jqXHR =>
-  //     apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-  //   );
 
 $(function() {
   render_scoreboard_navigation();
