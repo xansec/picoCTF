@@ -161,17 +161,21 @@ const BatchRegistrationPanel = React.createClass({
     };
     $.ajax(params)
       .done(data => {
+        let csv_content = "data:text/csv;charset=utf-8," + atob(data.as_csv);
+        let encoded_uri = encodeURI(csv_content);
+
         let response_html =
           '<div class="panel panel-success batch-registration-response"><div class="panel-heading"><h4>Accounts successfully created!</h4>' +
-          "<p>Usernames and passwords are displayed below in the order of the input CSV.</p>" +
-          "<p>Please copy these credentials, as they will only be displayed once.</p>" +
-          '<table class="table">';
-        for (let i = 0; i < data.accounts.length; i++) {
-          response_html += `<tr><td>${data.accounts[i].username}</td><td>${data.accounts[i].password}</td></tr>`;
-        }
-        response_html += "</table></div></div>";
+          "<p>You have been prompted to download an updated CSV containing usernames and passwords for your students' accounts.</p>" +
+          "<p>Make sure to save this file, as it will not available after leaving this page.</p>" +
+          '<a class="btn btn-default" id="batch-credentials-download" href="' + encoded_uri + '" download="registered_accounts.csv">Redownload Account Credentials</a>' +
+          "</div></div>"
         $(".batch-registration-response").remove();
-        $("#batch-registration-panel").append(response_html);
+        $("#batch-registration-panel").append(response_html).promise()
+          .then(function() {
+            // Automatically attempt to download account credentials
+            $("#batch-credentials-download")[0].click()
+          });
         this.props.refresh();
       })
       .fail(jqXHR => {
@@ -214,15 +218,17 @@ const BatchRegistrationPanel = React.createClass({
         <Row>
           <Col xs={12}>
             <p>
-              Batch-register students into this classroom by uploading a CSV of
-              student demographic information. Usernames and passwords will be
-              automatically generated.
+              Batch-register students into this classroom by uploading a CSV file
+              containing student demographic information.
+            </p>
+            <p>
+            Usernames and passwords will be automatically generated.
             </p>
           </Col>
         </Row>
         <Row>
           <Col xs={6}>
-            <Button href="/files/picoctf_batch_import.csv">
+            <Button href="/files/batch_registration_template.csv">
               Download Template
             </Button>
           </Col>

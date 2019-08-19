@@ -1,5 +1,7 @@
 """Group manangement."""
+import base64
 import csv
+import io
 import string
 
 import api
@@ -390,9 +392,35 @@ class BatchRegistrationResponse(Resource):
                 f"The first {len(created_accounts)} were created. " +
                 "Please contact an administrator."
             )
+
+        output = []
+        for i in range(len(students)):
+            output.append({
+                'Grade (1-12)': students[i]['current_year'],
+                'Age (13-17 or 18+)': students[i]['age'],
+                'Gender': students[i]['gender'],
+                'Parent Email (if under 18)': students[i]['parent_email'],
+                'Username': created_accounts[i]['username'],
+                'Password': created_accounts[i]['password']
+            })
+
+        buffer = io.StringIO()
+        csv_writer = csv.DictWriter(buffer, [
+            'Grade (1-12)',
+            'Age (13-17 or 18+)',
+            'Gender',
+            'Parent Email (if under 18)',
+            'Username',
+            'Password'
+        ])
+        csv_writer.writeheader()
+        csv_writer.writerows(output)
+        output_csv_bytes = buffer.getvalue().encode('utf-8')
+
         return jsonify({
             'success': True,
-            'accounts': created_accounts
+            'accounts': created_accounts,
+            'as_csv': base64.b64encode(output_csv_bytes).decode('utf-8')
         })
 
 
