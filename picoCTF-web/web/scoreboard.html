@@ -25,6 +25,7 @@ startup_functions:
     <% }); %>
   </ul>
   <div class="tab-content">
+    <h4 class="text-center">Top Teams Progression</h4>
     <% _.each(eligibleScoreboards, function(scoreboard, index) { %>
       <div class="row">
         <div id="<%= scoreboard.sid %>-progression" class="progression-graph"></div>
@@ -32,26 +33,21 @@ startup_functions:
      <% }); %>
   </div>
   <form class="navbar-form text-center" role="search">
-    <div class="input-group">
-      <input class="form-control" placeholder="Search" name="search" id="search" type="text" size=30>
+    <div class="input-group scoreboard-search-group pull-right">
+      <input class="form-control" placeholder="Search (case-sensitive)" name="search" id="search" type="text" size=30>
+      <span class="input-group-btn">
+        <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search"></span></button>
+      </span>
     </div>
   </form>
 </script>
 
 <script type="text/template" id="scoreboard-template">
   <div class="row">
-    <div class="col-xs-12 scoreboard-title-container">
-      <% if (scoreboard_logo !== null) { %>
-        <img src="<%= scoreboard_logo %> " class="scoreboard-logo"/>
+    <div class="col-xs-12">
+      <% if (scoreboard_name !== null) { %>
+        <h3><%= scoreboard_name %></h3>
       <% } %>
-      <div>
-        <% if (scoreboard_name !== null) { %>
-          <h3><%= scoreboard_name %></h3>
-        <% } %>
-        <% if (scoreboard_sponsor !== null) { %>
-          <h5>Sponsored by <%= scoreboard_sponsor %></h5>
-        <% } %>
-      </div>
     </div>
   </div>
   <% if(!($.isEmptyObject(scorepage)) && scorepage.length > 0) { %>
@@ -84,9 +80,17 @@ startup_functions:
         <% }); %>
       </tbody>
     </table>
+    <div class="scoreboard-bottom text-center">
+    <% if (scoreboard_logo !== null) { %>
+      <img src="<%= scoreboard_logo %> " class="scoreboard-logo"/>
+    <% } %>
+    <% if (scoreboard_sponsor !== null) { %>
+      <h5>Sponsored by <%= scoreboard_sponsor %></h5>
+    <% } %>
+    </div>
   <% } else { %>
-    <pre>
-      <p class="text-center">No teams have scored any points yet.</p>
+    <pre class="text-center">
+      No matching scoreboard entries.
     </pre>
   <% } %>
 </script>
