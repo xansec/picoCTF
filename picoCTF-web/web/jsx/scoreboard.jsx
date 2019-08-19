@@ -94,7 +94,8 @@ const render_scoreboard = function(board_key, search) {
           numberOfPages: 10,
           currentPage: scoreboard_data[0].current_page,
           onPageClicked(e, eOriginal, type, page) {
-            render_scoreboard_page(board_key, "", page);
+            let query = $("#search").val();
+            render_scoreboard_page(board_key, query, page);
           }
         });
       }
