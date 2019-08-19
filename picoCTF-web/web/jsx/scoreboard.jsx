@@ -189,16 +189,22 @@ const render_scoreboard_navigation = () =>
       // Attach search field listener
       $("form[role=search]").on("submit", function(e) {
         e.preventDefault();
-        var active_tab = $("#scoreboard-tabs li.active").data();
-        if (active_tab.sid !== undefined) {
-          var board_key = {'scoreboard_id': active_tab.sid}
-        }
-        else if (active_tab.gid !== undefined) {
-          var board_key = {'group_id': active_tab.gid}
-        }
-        var searchValue = $("#search").val();
-        render_scoreboard(board_key, searchValue);
       });
+      $("#search").on("keyup", function(e) {
+        e.preventDefault();
+        clearTimeout(window.searchTimeout);
+        window.searchTimeout = setTimeout(function() {
+          var active_tab = $("#scoreboard-tabs li.active").data();
+          if (active_tab.sid !== undefined) {
+            var board_key = {'scoreboard_id': active_tab.sid}
+          }
+          else if (active_tab.gid !== undefined) {
+            var board_key = {'group_id': active_tab.gid}
+          }
+          var searchValue = $("#search").val();
+          render_scoreboard(board_key, searchValue);
+        }, 250);
+      })
 
       // Automatically render the first scoreboard
       tab_set.first().trigger("click")
