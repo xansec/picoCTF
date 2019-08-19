@@ -23,9 +23,9 @@
         </div>
 
         {% include footer.html %}
-
+        {% assign time_stamp = site.time | date: "%s" %}
         {% for js_file in page.post_scripts %}
-        <script src="{{ js_file }}"></script>
+        <script src="{{ js_file }}?{{ time_stamp }}"></script>
         {% endfor %}
 
         <script>
