@@ -56,7 +56,6 @@ const render_scoreboard = function(board_key, search) {
 
   // Fetch the scoreboard page and re-render the scoreboard display
   $.when(
-    apiCall("GET", "/api/v1/team"),
     apiCall("GET", scoreboard_endpoint),
     (function() {
       if (scoreboard_metadata_endpoint !== null) {
@@ -66,7 +65,8 @@ const render_scoreboard = function(board_key, search) {
       }
     })()
   )
-  .done(function(team_data, scoreboard_data, scoreboard_metadata) {
+  .done(function(scoreboard_data, scoreboard_metadata) {
+    let team_data = JSON.parse(localStorage.getItem("/api/v1/team"));
     let scoreboard_properties = {
       scorepage: scoreboard_data[0].scoreboard,
       current_page: scoreboard_data[0].current_page,
@@ -74,7 +74,7 @@ const render_scoreboard = function(board_key, search) {
       scoreboard_name: null,
       scoreboard_sponsor: null,
       scoreboard_logo: null,
-      user_tid: team_data[0].tid
+      user_tid: team_data.tid
     };
     if (scoreboard_metadata !== null) {
       scoreboard_properties = Object.assign(scoreboard_properties, {
