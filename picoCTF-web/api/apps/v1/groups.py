@@ -3,16 +3,16 @@ import csv
 import string
 
 import api
-from api import (PicoException, block_before_competition, check_csrf,
+from api import (block_before_competition, check_csrf, PicoException,
                  rate_limit, require_login, require_teacher)
 from flask import jsonify
 from flask_restplus import Namespace, Resource
-from marshmallow import (RAISE, Schema, ValidationError, fields, post_load,
-                         pre_load, validate)
+from marshmallow import (fields, post_load, pre_load, RAISE, Schema, validate,
+                         validates_schema, ValidationError)
 
-from .schemas import (batch_registration_req, group_invite_req,
-                      group_patch_req, group_remove_team_req, group_req,
-                      score_progressions_req, scoreboard_page_req)
+from .schemas import (batch_registration_req, group_invite_req, group_patch_req,
+                      group_remove_team_req, group_req, score_progressions_req,
+                      scoreboard_page_req)
 
 ns = Namespace('groups', description='Group management')
 
@@ -362,6 +362,16 @@ class BatchRegistrationResponse(Resource):
                           "the corresponding code from: {choices}."
                 )
             )
+            parent_email = fields.Email(
+                data_key='Parent Email (if under 18)', required=True,
+                allow_none=True
+            )
+            @validates_schema
+            def validate_parent_email(self, data):
+                if (data['age'] == '13-17' and
+                        data['parent_email'] is None):
+                    raise ValidationError(
+                        'Parent email must be specified for students under 18')
 
         try:
             students = BatchRegistrationUserSchema().load(

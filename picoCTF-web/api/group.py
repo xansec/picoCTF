@@ -257,7 +257,7 @@ def batch_register(students, teacher, gid):
                     'age': student['age'],
                     'gender': student['gender'],
                     'grade': student['current_year'],
-                    'parentemail': teacher['email'],
+                    'parentemail': student['parent_email'],
                     'residencecountry': teacher['country'],
                     'schoolcountry': teacher.get('demo', {})
                                             .get('schoolcountry', ''),

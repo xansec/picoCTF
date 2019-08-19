@@ -218,10 +218,6 @@ const BatchRegistrationPanel = React.createClass({
               student demographic information. Usernames and passwords will be
               automatically generated.
             </p>
-            <p>
-              Please note that your account's email address will be associated
-              with any student accounts created via batch registration.
-            </p>
           </Col>
         </Row>
         <Row>
