@@ -172,19 +172,32 @@ const TeamManagementForm = React.createClass({
     const data = {
       allow_ineligible_members: !this.state.team.allow_ineligible_members
     };
-    apiCall("PATCH", "/api/v1/team", data)
-      .done(response => {
-        this.setState(update(this.state, { team: { $merge: data } } ));
-        apiNotify(
-          {
-            status: 1,
-            message: "Settings updated successfully"
-          }
-        )
-      })
-      .fail(jqXHR =>
-        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-      );
+    let dialogMsg = (this.state.team.allow_ineligible_members) ?
+      "This will allow users to join your team ONLY if doing so would keep " +
+      "your team ELIGIBLE for all of its current scoreboards." :
+      "This will allow users to join your team even if doing so would cause " +
+      "your team to become INELIGIBLE for any of its current scoreboards.";
+    confirmDialog(
+      dialogMsg,
+      "Scoreboard Eligibility Lock",
+      "Confirm",
+      "Cancel",
+      ()=> {
+        apiCall("PATCH", "/api/v1/team", data)
+          .done(response => {
+            this.setState(update(this.state, {team: {$merge: data}}));
+            apiNotify(
+              {
+                status: 1,
+                message: "Settings updated successfully"
+              }
+            )
+          })
+          .fail(jqXHR =>
+            apiNotify({status: 0, message: jqXHR.responseJSON.message})
+          );
+      }
+    );
   },
 
   onTeamPasswordChange(e) {
@@ -294,6 +307,7 @@ const TeamManagementForm = React.createClass({
             </form>
 
             <hr/>
+            <p><strong>Scoreboard Eligibility</strong></p>
             <p>Your team is eligible to appear on these scoreboards:</p>
             <ul>{this.listEligibleScoreboards()}</ul>
             {this.renderIneligibleMemberToggle()}
