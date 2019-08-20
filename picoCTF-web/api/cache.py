@@ -126,8 +126,8 @@ def search_scoreboard_cache(scoreboard, pattern):
     :return: sorted list of scoreboard entries
     """
     # Trailing '*>' avoids search on last token, tid
-    results = [decode_scoreboard_item(item, include_key=True) for
-               item in list(scoreboard.search("*{}*>*".format(pattern)))]
+    results = [decode_scoreboard_item(item, with_weight=True, include_key=True)
+               for item in list(scoreboard.search("*{}*>*".format(pattern)))]
     return sorted(results, key=lambda item: item["score"], reverse=True)
 
 

@@ -479,6 +479,7 @@ def get_filtered_scoreboard_page(scoreboard_key, pattern, page_number=1):
     board_page = results[start:end]
     for item in board_page:
         item['rank'] = board_cache.rank(item['key'], reverse=True) + 1
+        item['score'] = int(item['score'])
         item.pop('key')
     available_pages = max(math.ceil(len(results) / SCOREBOARD_PAGE_LEN), 1)
     return (board_page, page_number, available_pages)
