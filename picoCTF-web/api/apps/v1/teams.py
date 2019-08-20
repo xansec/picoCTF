@@ -7,7 +7,7 @@ from flask_restplus import Namespace, Resource
 import api
 from api import PicoException, require_admin, require_login
 
-from .schemas import team_req
+from .schemas import team_req, team_patch_req
 
 ns = Namespace('teams', description='Team management')
 
@@ -36,7 +36,7 @@ class TeamList(Resource):
                 c in string.digits + string.ascii_lowercase + " ()+-,#'&!?"
                 for c in req['team_name'].lower()]):
             raise PicoException(
-                "Team names cannot contain special characters other than "+
+                "Team names cannot contain special characters other than " +
                 "()+-,#'&!?", status_code=400
             )
 
@@ -56,27 +56,108 @@ class TeamList(Resource):
 @ns.response(200, 'Success')
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Permission denied')
+@ns.route('/recalculate_eligibilities')
+class RecalculateAllEligibilitiesResponse(Resource):
+    """Force recalculation of all teams' scoreboard eligibilities."""
+
+    @require_admin
+    def get(self):
+        """
+        Re-evaluate all teams' scoreboard eligibilities.
+
+        May be useful if a new scoreboard is added mid-competition.
+        """
+        for team in api.team.get_all_teams():
+            team_id = team['tid']
+            team_members = api.team.get_team_members(
+                tid=team_id, show_disabled=False)
+            all_scoreboards = api.scoreboards.get_all_scoreboards()
+            member_eligibilities = dict()
+            for member in team_members:
+                member_eligibilities[member['uid']] = {
+                    scoreboard['sid'] for scoreboard in all_scoreboards
+                    if api.scoreboards.is_eligible(member, scoreboard)
+                }
+
+            team_eligibilities = list(
+                set.intersection(*member_eligibilities.values()))
+            db = api.db.get_conn()
+            db.teams.find_one_and_update(
+                {"tid": team_id},
+                {"$set": {
+                    "eligibilities": team_eligibilities
+                }}
+            )
+        return jsonify({
+            'success': True
+        })
+
+
+@ns.route('/<string:team_id>')
+class Team(Resource):
+    """A specific team."""
+
+    @require_admin
+    @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing request')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Not authorized')
+    @ns.response(404, 'Team not found')
+    @ns.expect(team_patch_req)
+    def patch(self, team_id):
+        """Update team settings."""
+        req = team_patch_req.parse_args(strict=True)
+        res = api.team.get_team(tid=team_id)
+        if not res:
+            raise PicoException('Team not found', status_code=404)
+        api.team.update_team(team_id, req)
+        return jsonify({
+            'success': True
+        })
+
+
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Permission denied')
 @ns.response(404, 'Team not found')
-@ns.route('/<string:team_id>/recalculate_eligibility')
-class RecalculateEligibilityResponse(Resource):
-    """Force recalculation of a team's eligibility status."""
+@ns.route('/<string:team_id>/recalculate_eligibilities')
+class RecalculateEligibilitiesResponse(Resource):
+    """Force recalculation of a team's scoreboard eligibilities."""
 
     @require_admin
     def get(self, team_id):
         """
-        Force recalculation of a team's eligibility status.
+        Re-evaluate a team's scoreboard eligibilities.
 
-        Once a team has been found to be ineligible once, they are permanently
-        flagged as such. This admin-only endpoint can potentially reverse this,
-        if the competition's eligiblity conditions have been updated or the
-        member(s) previously causing ineligiblity have been deleted.
+        May be useful if a former member who had previously caused their
+        team to become ineligible for a scoreboard deletes their account,
+        or if a new scoreboard is added after the team's creation.
         """
         team = api.team.get_team(team_id)
         if not team:
             raise PicoException('Team not found', 404)
-        eligibility = api.team.is_eligible(team_id)
-        api.team.mark_eligiblity(team_id, eligibility)
+
+        team_members = api.team.get_team_members(
+            tid=team_id, show_disabled=False)
+        all_scoreboards = api.scoreboards.get_all_scoreboards()
+        member_eligibilities = dict()
+        for member in team_members:
+            member_eligibilities[member['uid']] = {
+                scoreboard['sid'] for scoreboard in all_scoreboards
+                if api.scoreboards.is_eligible(member, scoreboard)
+            }
+
+        team_eligibilities = list(
+            set.intersection(*member_eligibilities.values()))
+        db = api.db.get_conn()
+        db.teams.find_one_and_update(
+            {"tid": team_id},
+            {"$set": {
+                "eligibilities": team_eligibilities
+            }}
+        )
+
         return jsonify({
             'success': True,
-            'eligible': eligibility
+            'eligibilities': team_eligibilities
         })

@@ -1,12 +1,8 @@
 """Endpoints for getting statistical reports."""
+import api
+from api import require_admin
 from flask import jsonify
 from flask_restplus import Namespace, Resource
-
-import api
-from api import block_before_competition, PicoException, require_admin
-
-from .schemas import (scoreboard_page_req, scoreboard_search_req,
-                      top_teams_score_progression_req)
 
 ns = Namespace('stats', 'Statistical aggregations and reports')
 
@@ -18,76 +14,6 @@ class RegistrationStatus(Resource):
     def get(self):
         """Get information on user, team, and group registrations."""
         return jsonify(api.stats.get_registration_count())
-
-
-@ns.route('/scoreboard')
-class Scoreboard(Resource):
-    """Retrieve the inital scoreboard."""
-
-    @block_before_competition
-    @ns.response(200, 'Success')
-    @ns.response(422, 'Competition has not started')
-    def get(self):
-        """Retrieve the initial scoreboard."""
-        return jsonify(api.stats.get_initial_scoreboard())
-
-
-@ns.route('/scoreboard/page')
-class ScoreboardPage(Resource):
-    """Retrieve a page of a specific scoreboard."""
-
-    @block_before_competition
-    @ns.response(200, 'Success')
-    @ns.response(401, 'Must be logged in to retrieve groups board')
-    @ns.response(422, 'Competition has not started')
-    @ns.expect(scoreboard_page_req)
-    def get(self):
-        """Retrieve a page of a specific scoreboard."""
-        req = scoreboard_page_req.parse_args(strict=True)
-        if req['board'] == 'groups' and not api.user.is_logged_in():
-            raise PicoException(
-                'You must be logged in to retrieve pages from the ' +
-                'groups scoreboard.', 401
-            )
-        return jsonify(api.stats.get_scoreboard_page(
-            req['board'], req['page'], req['gid']
-        ))
-
-
-@ns.route('/scoreboard/search')
-class ScoreboardPage(Resource):
-    """Search team names and affiliation, return initial result scoreboard."""
-
-    @block_before_competition
-    @ns.response(200, 'Success')
-    @ns.response(401, 'Must be logged in to retrieve groups board')
-    @ns.response(422, 'Competition has not started')
-    @ns.expect(scoreboard_search_req)
-    def get(self):
-        """Retrieve a page of a specific scoreboard."""
-        req = scoreboard_search_req.parse_args(strict=True)
-        # Strip chars: redis pattern wildcard and key delimiter
-        pattern = req['pattern'].replace('*', '').replace('>', '')
-        # At least 3 characters
-        if len(pattern) < 3:
-            return jsonify([])
-        return jsonify(api.stats.search_scoreboard(
-            board=req['board'], pattern=req['pattern'], page=req['page']
-        ))
-
-
-@ns.route('/top_teams/score_progression')
-class TopTeamsScoreProgressions(Resource):
-    """Get score progressions for the top n teams, optionally filtered."""
-
-    @ns.response(200, 'Success')
-    @ns.expect(top_teams_score_progression_req)
-    def get(self):
-        """Get score progressions for the top n teams, optionally filtered."""
-        req = top_teams_score_progression_req.parse_args(strict=True)
-        return jsonify(api.stats.get_top_teams_score_progressions(
-            include_ineligible=req['include_ineligible'], gid=req['gid']
-        ))
 
 
 @ns.response(200, 'Success')
@@ -105,6 +31,10 @@ class SubmissionStatistics(Resource):
             for p in api.problem.get_all_problems(show_disabled=True)
         })
 
+
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Not authorized')
 @ns.route('/demographics')
 class DemographicInformation(Resource):
     """Get demographic information used in analytics."""

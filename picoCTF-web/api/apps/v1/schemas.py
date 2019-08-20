@@ -506,56 +506,34 @@ team_req.add_argument(
     error='A password for the new team is required'
 )
 
+# Team patch request
+team_patch_req = reqparse.RequestParser()
+team_patch_req.add_argument(
+    'allow_ineligible_members', required=False, type=inputs.boolean,
+    location='json', store_missing=False,
+    help='Whether to allow ineligible users to join the team'
+)
+
 # Scoreboard page request
+# @TODO marshmallow: default page to 1 rather than None if search is specified
+#                    remove 'or 1' in get_filtered_scoreboard_page calls
 scoreboard_page_req = reqparse.RequestParser()
 scoreboard_page_req.add_argument(
-    'board', required=False, choices=['groups', 'global', 'student'],
-    type=str, location='args', help='Choose which scoreboard to return',
-    error='board must be one of: "groups", "global", "student"'
-)
-scoreboard_page_req.add_argument(
-    'page', required=False, default=1, type=inputs.positive, location='args',
-    help='Scoreboard page to return',
+    'page', required=False, default=None, type=inputs.positive,
+    location='args', help='Scoreboard page to return',
     error='page must be a positive integer'
 )
 scoreboard_page_req.add_argument(
-    'gid', required=False, type=str, location='args',
-    help='Classroom id'
+    'search', required=False, default=None, type=str, location='args',
+    help='Search filter pattern', error='Search pattern must be a string'
 )
 
-
-# Scoreboard search request
-scoreboard_search_req = reqparse.RequestParser()
-scoreboard_search_req.add_argument(
-    'board', required=False, choices=['global', 'student'],
-    type=str, location='args', help='Choose which scoreboard to return'
-)
-scoreboard_search_req.add_argument(
-    'pattern', required=True, type=str, location='args'
-)
-scoreboard_search_req.add_argument(
-    'page', required=True, type=inputs.positive, location='args',
-    help='Scoreboard page to return'
-)
-
-
-# Top teams score progression request
-top_teams_score_progression_req = reqparse.RequestParser()
-top_teams_score_progression_req.add_argument(
-    'limit', required=False, default=5, type=inputs.positive,
-    location='args', help='Number of top teams to retrieve',
-    error="limit must be a positive integer"
-)
-top_teams_score_progression_req.add_argument(
-    'include_ineligible', required=False, default=False, type=inputs.boolean,
-    location='args', help='Whether to include teams that are ineligible ' +
-                          'for the current competition',
-    error='include_ineligible must be a boolean value'
-)
-top_teams_score_progression_req.add_argument(
-    'gid', required=False, type=str, default=None, location='args',
-    help='If specified, restrict to top teams from this group',
-    error='gid must be a string'
+# Score progressions request
+score_progressions_req = reqparse.RequestParser()
+score_progressions_req.add_argument(
+    'limit', required=False, type=inputs.positive, location='args',
+    help="The number of top teams' score progressions to return. " +
+         "Must be an admin to use this argument."
 )
 
 # Group request
@@ -643,6 +621,31 @@ user_search_req.add_argument(
 user_search_req.add_argument(
     'query', required=True, location='json', type=str,
     help="Body of the query", error="Query field is empty!"
+)
+
+# Scoreboard schema
+scoreboard_req = reqparse.RequestParser()
+scoreboard_req.add_argument(
+    'name', required=True, type=str, location='json',
+    help='Name of the scoreboard', error='Scoreboard name must be a string'
+)
+scoreboard_req.add_argument(
+    'eligibility_conditions', required=False, type=object_type,
+    location='json', default={}, help='MongoDB query to find eligible users',
+    error='Eligibility conditions must be a MongoDB query string'
+)
+scoreboard_req.add_argument(
+    'priority', required=False, type=inputs.natural, location='json',
+    default=0, help='Optional scoreboard priority. Scoreboards are listed ' +
+                    'in order of descending priority on the scoreboard page'
+)
+scoreboard_req.add_argument(
+    'sponsor', required=False, type=str, location='json', default=None,
+    help='Sponsor of the scoreboard', error='Sponsor must be a string'
+)
+scoreboard_req.add_argument(
+    'logo', required=False, type=str, location='json', default=None,
+    help='URL of a logo for the scoreboard', error='Logo must be an image URL'
 )
 
 # User deletion schema

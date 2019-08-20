@@ -311,7 +311,7 @@ def reassign_teams(include_assigned=False):
     db = api.db.get_conn()
 
     if include_assigned:
-        teams = api.team.get_all_teams(include_ineligible=True)
+        teams = api.team.get_all_teams()
     else:
         teams = list(
             db.teams.find({"server_number": {

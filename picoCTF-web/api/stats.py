@@ -106,7 +106,6 @@ def get_team_review_count(tid=None, uid=None):
 
 
 # Stored by the cache_stats daemon.
-# @memoize
 def get_group_scores(gid=None, name=None):
     """
     Get the group scores.
@@ -155,20 +154,18 @@ def get_group_average_score(gid=None, name=None):
 
 
 # Stored by the cache_stats daemon
-# @memoize
-def get_all_team_scores(country=None, include_ineligible=False):
+def get_all_team_scores(scoreboard_id=None):
     """
     Get the score for every team in the database.
 
     Args:
-        country: optional restriction by country
-        include_ineligible: include ineligible teams
+        scoreboard_id: Optional, limit to teams eligible for this scoreboard
 
     Returns:
         A list of dictionaries with name and score
 
     """
-    key_args = {'country': country, 'include_ineligible': include_ineligible}
+    key_args = {'scoreboard_id': scoreboard_id}
     teams = api.team.get_all_teams(**key_args)
     scoreboard_cache = get_scoreboard_cache(**key_args)
     scoreboard_cache.clear()
@@ -326,19 +323,20 @@ def get_problem_solves(pid):
 # Stored by the cache_stats daemon
 @memoize
 def get_top_teams_score_progressions(
-        limit=5, include_ineligible=False, gid=None):
+        limit=5, scoreboard_id=None, group_id=None):
     """
     Get the score progressions for the top teams.
 
     Args:
         limit: Number of teams to include
-        gid: If specified, compute the progressions for the top teams
-             from this group only. Overrides include_ineligible.
-        include_ineligible: if specified, include ineligible teams in result
+        scoreboard_id: If specified, compute the progressions for the top teams
+                  eligible for this scoreboard only.
+        group_id: If specified, compute the progressions for the top teams
+             from this group only. Overrides scoreboard_id.
 
     Returns:
         The top teams and their score progressions.
-        A dict of {name: name, score_progression: score_progression}
+        A dict containing each team's name, affiliation, and score progression.
 
     """
     def output_item(item):
@@ -349,11 +347,10 @@ def get_top_teams_score_progressions(
             'score_progression': get_score_progression(tid=data['tid'])
         }
 
-    if gid is None:
-        scoreboard_cache = get_all_team_scores(
-            include_ineligible=include_ineligible)
+    if group_id is None:
+        scoreboard_cache = get_all_team_scores(scoreboard_id=scoreboard_id)
     else:
-        scoreboard_cache = get_group_scores(gid=gid)
+        scoreboard_cache = get_group_scores(gid=group_id)
 
     team_items = scoreboard_cache.range(0, limit - 1, with_scores=True,
                                         desc=True)
@@ -419,143 +416,73 @@ def get_registration_count():
     return stats
 
 
-def get_initial_scoreboard():
+def get_scoreboard_page(scoreboard_key, page_number=None):
     """
-    Retrieve the initial scoreboard (first pages of global and student views).
+    Get a scoreboard page.
 
-    If a user is logged in, the initial pages will instead be those on which
-    that user appears, and their group scoreboards will also be returned.
-
-    Returns: dict of scoreboard information
-    """
-    user = None
-    team = None
-    pagelen = SCOREBOARD_PAGE_LEN
-
-    if api.user.is_logged_in():
-        user = api.user.get_user()
-        team = api.team.get_team(tid=user['tid'])
-
-    result = {'tid': 0, 'groups': []}
-    # Include all arguments
-    global_board = get_scoreboard_cache(country=None, include_ineligible=True)
-    result['global'] = {
-        'name': 'global',
-        'pages': math.ceil(len(global_board) / pagelen),
-        'start_page': 1,
-        'scoreboard': [],
-    }
-    if user is None:
-        raw_board = global_board.range(0, pagelen - 1, with_scores=True,
-                                       desc=True)
-        result['global']['scoreboard'] = [decode_scoreboard_item(item) for
-                                          item in raw_board]
-    else:
-        result['tid'] = team['tid']
-
-        # Display global board at particular page user is ranked at
-        global_pos = global_board.rank(get_scoreboard_key(team),
-                                       reverse=True) or 0
-        start_slice = math.floor(global_pos / pagelen) * pagelen
-        raw_board = global_board.range(start_slice, start_slice + pagelen - 1,
-                                       with_scores=True, desc=True)
-        result['global']['scoreboard'] = [decode_scoreboard_item(item) for
-                                          item in raw_board]
-        result['global']['start_page'] = math.ceil((global_pos + 1) / pagelen)
-
-        # Eligible student board, starting at first page
-        # result['country'] = user["country"]
-        student_board = get_scoreboard_cache(country=None,
-                                             include_ineligible=False)
-        student_pos = student_board.rank(get_scoreboard_key(team),
-                                         reverse=True) or 0
-        start_slice = math.floor(student_pos / pagelen) * pagelen
-        raw_student_board = student_board.range(start_slice,
-                                                start_slice + pagelen - 1,
-                                                with_scores=True,
-                                                desc=True)
-        result['student'] = {
-            'name': 'student',
-            'pages': math.ceil(len(student_board) / pagelen),
-            'scoreboard': [decode_scoreboard_item(item) for
-                           item in raw_student_board],
-            'start_page': math.ceil((student_pos + 1) / pagelen),
-        }
-
-        # Each classroom/group
-        for group in api.team.get_groups(user['tid']):
-            group_board = get_scoreboard_cache(gid=group['gid'])
-            group_pos = group_board.rank(get_scoreboard_key(team),
-                                         reverse=True) or 0
-            start_slice = math.floor(group_pos / pagelen) * pagelen
-            raw_group_board = group_board.range(start_slice,
-                                                start_slice + pagelen - 1,
-                                                with_scores=True,
-                                                desc=True)
-            result['groups'].append({
-                'gid':
-                group['gid'],
-                'name':
-                group['name'],
-                'scoreboard':
-                [decode_scoreboard_item(item) for item in raw_group_board],
-                'pages':
-                math.ceil(len(group_board) / pagelen),
-                'start_page':
-                math.ceil((group_pos + 1) / pagelen),
-            })
-    return result
-
-
-def get_scoreboard_page(board, page_number, gid=None):
-    """
-    Retrieve a specific scoreboard page.
-
-    Must be logged in to retrieve a page from the 'groups' board.
+    If a page is not specified, will attempt to return the page containing the
+    current team, falling back to the first page if neccessary.
 
     Args:
-        board: scoreboard to retrieve a page from (global, student, groups)
-        page_number: page number to retrieve
+        scoreboard_key (dict): scoreboard key
 
-    Raises:
-        PicoException: if the 'groups' board is selected but no user is
-                       logged in
+    Kwargs:
+        page_number (int): page to retrieve, defaults to None (which attempts
+                     to return the current team's page)
 
+    Returns:
+        (list: scoreboard page, int: current page, int: number of pages)
     """
+    board_cache = get_scoreboard_cache(**scoreboard_key)
+    if not page_number:
+        user = api.user.get_user()
+        if user:
+            team = api.team.get_team(tid=user['tid'])
+            team_position = board_cache.rank(get_scoreboard_key(team),
+                                             reverse=True) or 0
+            page_number = math.floor(team_position / SCOREBOARD_PAGE_LEN) + 1
+        else:
+            page_number = 1
     start = SCOREBOARD_PAGE_LEN * (page_number - 1)
     end = start + SCOREBOARD_PAGE_LEN - 1
-    scoreboard = []
-    if board == "groups":
-        user = api.user.get_user()
-        group = api.group.get_group(gid=gid)
-        if not (user["tid"] in group["members"] or
-                user["tid"] in group["teachers"] or
-                user["tid"] == group["owner"]):
-            raise PicoException(
-                    "You are not a member of this class",
-                    status_code=401)
-        group_board = get_scoreboard_cache(gid=gid)
-        raw_board = group_board.range(start, end, with_scores=True,
-                                      reverse=True)
-        scoreboard = [decode_scoreboard_item(item) for item in raw_board]
-    elif board == "global":
-        global_board = get_scoreboard_cache(country=None,
-                                            include_ineligible=True)
-        raw_board = global_board.range(start, end, with_scores=True,
-                                       reverse=True)
-        scoreboard = [decode_scoreboard_item(item) for item in raw_board]
-    elif board == "student":
-        student_board = get_scoreboard_cache(country=None,
-                                             include_ineligible=False)
-        raw_board = student_board.range(start, end, with_scores=True,
-                                        reverse=True)
-        scoreboard = [decode_scoreboard_item(item) for item in raw_board]
-    return {
-        'name': board,
-        'pages': math.ceil(len(scoreboard) / SCOREBOARD_PAGE_LEN),
-        'start_page': 1,
-        'scoreboard': scoreboard
-    }
+    board_page = [decode_scoreboard_item(item) for item
+                  in board_cache.range(
+                      start, end, with_scores=True, reverse=True)]
+
+    available_pages = max(math.ceil(len(board_cache) / SCOREBOARD_PAGE_LEN), 1)
+    return (board_page, page_number, available_pages)
+
+
+def get_filtered_scoreboard_page(scoreboard_key, pattern, page_number=1):
+    """
+    Get a page of a filtered scoreboard.
+
+    Scoreboards can be filtered by a search pattern on the team name and
+    affiliation fields.
+
+    If a page is not specified, will fall back to the first page.
+
+    Args:
+        scoreboard_key (dict): scoreboard key
+        pattern (str): search pattern
+
+    Kwargs:
+        page_number (int): page to retrieve, defaults to 1
+
+    Returns:
+        (list: scoreboard page, int: current page, int: number of pages)
+    """
+    board_cache = get_scoreboard_cache(**scoreboard_key)
+    results = search_scoreboard_cache(board_cache, pattern)
+    start = SCOREBOARD_PAGE_LEN * (page_number - 1)
+    end = start + SCOREBOARD_PAGE_LEN
+    board_page = results[start:end]
+    for item in board_page:
+        item['rank'] = board_cache.rank(item['key'], reverse=True) + 1
+        item['score'] = int(item['score'])
+        item.pop('key')
+    available_pages = max(math.ceil(len(results) / SCOREBOARD_PAGE_LEN), 1)
+    return (board_page, page_number, available_pages)
 
 
 def get_demographic_data():
@@ -574,24 +501,3 @@ def get_demographic_data():
         })
 
     return result
-
-
-def search_scoreboard(board, pattern, page=1):
-    if board == "student":
-        key_args = {'country': None, 'include_ineligible': False}
-    else:  # default to global
-        key_args = {'country': None, 'include_ineligible': True}
-    scoreboard = get_scoreboard_cache(**key_args)
-    results = search_scoreboard_cache(scoreboard, pattern)
-    start = SCOREBOARD_PAGE_LEN * (page - 1)
-    end = start + SCOREBOARD_PAGE_LEN
-    boardlist = results[start:end]
-    for item in boardlist:
-        item['rank'] = scoreboard.rank(item['key'], reverse=True) + 1
-        item.pop('key')
-    return {
-        'name': board,
-        'pages': math.ceil(len(results) / SCOREBOARD_PAGE_LEN),
-        'start_page': page,
-        'scoreboard': boardlist
-    }

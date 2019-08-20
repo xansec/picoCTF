@@ -134,7 +134,7 @@ const progressionDataToPoints = function(data, dataPoints, currentDate) {
   }
 };
 
-window.drawTopTeamsProgressionGraph = function(selector, gid) {
+window.drawTopTeamsProgressionGraph = function(selector, key) {
   const div = divFromSelector(selector);
 
   const drawgraph = data =>
@@ -192,27 +192,15 @@ window.drawTopTeamsProgressionGraph = function(selector, gid) {
         }
       }
     );
-
-  if (gid === "student") {
-    apiCall("GET", "/api/v1/stats/top_teams/score_progression")
+  if (key.hasOwnProperty('scoreboard_id') != 0) {
+    apiCall("GET", "/api/v1/scoreboards/" + key.scoreboard_id + "/score_progressions")
       .done(drawgraph)
       .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
-  } else if (gid === "global") {
-    apiCall(
-      "GET",
-      "/api/v1/stats/top_teams/score_progression?include_ineligible=true"
-    )
-      .done(drawgraph)
-      .fail(jqXHR =>
-        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-      );
-  } else {
-    apiCall(
-      "GET",
-      `/api/v1/stats/top_teams/score_progression?gid=${gid}`
-    )
+  }
+  else if (key.hasOwnProperty('group_id') != 0) {
+    apiCall("GET", "/api/v1/groups/" + key.group_id + "/score_progressions")
       .done(drawgraph)
       .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })

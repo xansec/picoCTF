@@ -14,6 +14,12 @@ import api
 
 def main():
     with api.create_app().app_context():
+        api.scoreboards.add_scoreboard("Global", eligibility_conditions={})
+        api.scoreboards.add_scoreboard("US Students", eligibility_conditions={
+            "country": "US",
+            "usertype": "student",
+        })
+
         settings = api.config.get_settings()
         settings["start_time"] = datetime.now()
         settings["end_time"] = settings["start_time"] + timedelta(weeks=52)

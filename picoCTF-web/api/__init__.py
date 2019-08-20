@@ -25,6 +25,7 @@ import api.group
 import api.logger
 import api.problem
 import api.problem_feedback
+import api.scoreboards
 import api.shell_servers
 import api.stats
 import api.submissions

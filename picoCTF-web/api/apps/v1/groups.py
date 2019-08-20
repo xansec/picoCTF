@@ -2,17 +2,17 @@
 import csv
 import string
 
+import api
+from api import (PicoException, block_before_competition, check_csrf,
+                 rate_limit, require_login, require_teacher)
 from flask import jsonify
 from flask_restplus import Namespace, Resource
-from marshmallow import (fields, post_load, pre_load, RAISE, Schema, validate,
-                         ValidationError)
-
-import api
-from api import (check_csrf, PicoException, rate_limit, require_login,
-                 require_teacher)
+from marshmallow import (RAISE, Schema, ValidationError, fields, post_load,
+                         pre_load, validate)
 
 from .schemas import (batch_registration_req, group_invite_req,
-                      group_patch_req, group_remove_team_req, group_req)
+                      group_patch_req, group_remove_team_req, group_req,
+                      score_progressions_req, scoreboard_page_req)
 
 ns = Namespace('groups', description='Group management')
 
@@ -384,3 +384,79 @@ class BatchRegistrationResponse(Resource):
             'success': True,
             'accounts': created_accounts
         })
+
+
+@ns.route('/<string:group_id>/scoreboard')
+class ScoreboardPage(Resource):
+    """
+    Get a scoreboard page for a group.
+
+    If a page is not specified, will attempt to return the page containing the
+    current team, falling back to the first page if neccessary.
+    """
+    @block_before_competition
+    @ns.response(200, 'Success')
+    @ns.response(403, 'Permission denied')
+    @ns.response(404, 'Group not found')
+    @ns.response(422, 'Competition has not started')
+    @ns.expect(scoreboard_page_req)
+    def get(self, group_id):
+        """Retrieve a scoreboard page for a group."""
+        group = api.group.get_group(gid=group_id)
+        if not group:
+            raise PicoException('Group not found', 404)
+        group_members = [group['owner']] + group['members'] + group['teachers']
+
+        curr_user = api.user.get_user()
+        if (not curr_user or (curr_user['tid'] not in group_members
+                              and not curr_user['admin'])):
+            raise PicoException("You do not have permission to " +
+                                "view this group's scoreboard.", 403)
+
+        req = scoreboard_page_req.parse_args(strict=True)
+        if req['search'] is not None:
+            page = api.stats.get_filtered_scoreboard_page(
+                {'group_id': group_id},
+                req['search'], req['page'] or 1
+            )
+        else:
+            page = api.stats.get_scoreboard_page(
+                {'group_id': group_id}, req['page'])
+        return jsonify({
+            'scoreboard': page[0],
+            'current_page': page[1],
+            'total_pages': page[2]
+        })
+
+
+@ns.route('/<string:group_id>/score_progressions')
+class ScoreProgressionsResult(Resource):
+    """Get a list of score progressions for the top n teams in a group."""
+
+    @block_before_competition
+    @ns.response(200, 'Success')
+    @ns.response(403, 'Permission denied')
+    @ns.response(404, 'Group not found')
+    @ns.response(422, 'Competition has not started')
+    @ns.expect(score_progressions_req)
+    def get(self, group_id):
+        """Get a list of teams' score progressions."""
+        req = score_progressions_req.parse_args(strict=True)
+        group = api.group.get_group(gid=group_id)
+        if not group:
+            raise PicoException('Group not found', 404)
+        group_members = [group['owner']] + group['members'] + group['teachers']
+
+        if (not api.user.is_logged_in() or (
+                api.user.get_user()['tid'] not in group_members
+                and not api.user.get_user()['admin'])):
+            raise PicoException("You do not have permission to " +
+                                "view this group's score progressions.", 403)
+        if req['limit'] and (
+                not api.user.is_logged_in()
+                or not api.user.get_user()['admin']):
+            raise PicoException('Must be admin to specify limit', 403)
+        return jsonify(
+            api.stats.get_top_teams_score_progressions(
+                limit=(req['limit'] or 5), group_id=group_id
+            ))

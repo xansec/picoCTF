@@ -30,7 +30,6 @@ def test_get_my_team(mongo_proc, redis_proc, client): # noqa (fixture)
     expected_fields = {
         'achievements': [],
         'affiliation': STUDENT_DEMOGRAPHICS['affiliation'],
-        'eligible': True,
         'max_team_size': 1,
         'progression': [],
         'score': 0,
@@ -228,8 +227,64 @@ def test_join_team(mongo_proc, redis_proc, client): # noqa (fixture)
     assert res.json['message'] == 'You can not switch teams once you ' + \
                                   'have joined one.'
 
+# @TODO needs to be rewritten to incorporate the concept of 'scoreboards'
+# def test_join_team_ineligible_user(mongo_proc, client):
+#     """Ensure that inelgible users cannot join eligible teams by default."""
+#     clear_db()
+#     register_test_accounts()
+#     client.post('/api/v1/user/login', json={
+#         'username': STUDENT_DEMOGRAPHICS['username'],
+#         'password': STUDENT_DEMOGRAPHICS['password']
+#     })
 
-def test_join_group(mongo_proc, redis_proc, client): # noqa (fixture)
+#     # Update the max_team_size from the default of 1
+#     api.config.get_settings()
+#     db = get_conn()
+#     db.settings.find_one_and_update({}, {'$set': {'max_team_size': 2}})
+
+#     # Create the new team that we will try to join
+#     res = client.post('/api/v1/teams', json={
+#         'team_name': 'newteam',
+#         'team_password': 'newteam'
+#     })
+#     new_tid = res.json['tid']
+
+#     # Log in as an ineligible user and attempt to join the team
+#     client.post('/api/v1/user/login', json={
+#         'username': OTHER_USER_DEMOGRAPHICS['username'],
+#         'password': OTHER_USER_DEMOGRAPHICS['password']
+#     })
+#     res = client.post('/api/v1/team/join', json={
+#         'team_name': 'newteam',
+#         'team_password': 'newteam'
+#     })
+#     assert res.status_code == 403
+#     assert res.json['message'] == 'You cannot join this team as doing so ' + \
+#                             'would make it ineligible for the competition.'
+
+#     # Allow ineligible members to join the team
+#     client.post('/api/v1/user/login', json={
+#         'username': STUDENT_DEMOGRAPHICS['username'],
+#         'password': STUDENT_DEMOGRAPHICS['password']
+#     })
+#     res = client.patch('/api/v1/team', json={
+#         'allow_ineligible_members': True
+#     })
+#     assert res.status_code == 200
+
+#     # Confirm the ineligible member can now join the team
+#     client.post('/api/v1/user/login', json={
+#         'username': OTHER_USER_DEMOGRAPHICS['username'],
+#         'password': OTHER_USER_DEMOGRAPHICS['password']
+#     })
+#     res = client.post('/api/v1/team/join', json={
+#         'team_name': 'newteam',
+#         'team_password': 'newteam'
+#     })
+#     assert res.status_code == 200
+
+
+def test_join_group(mongo_proc, client): # noqa (fixture)
     """Test the /team/join_group endpoint."""
     clear_db()
     register_test_accounts()

@@ -25,9 +25,9 @@ flask_app_rate_limit_bypass: "INSECURE_DEFAULT_CHANGE_ME"
 
 # optional web automation
 enable_basic_auth:      False
-auto_add_shell:         True
-auto_load_problems:     True
-auto_start_competition: True
+auto_add_shell:         False
+auto_load_problems:     False
+auto_start_competition: False
 
 # Prevent script kiddies from using as DOS box
 net_outbound_limit: "40mbit"

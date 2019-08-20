@@ -3,188 +3,219 @@ const renderScoreboardTeamScore = _.template(
     .remove()
     .text()
 );
-const renderScoreboardTabs = _.template(
-  $("#scoreboard-tabs-template")
-    .remove()
-    .text()
-);
 const renderScoreboard = _.template(
   $("#scoreboard-template")
     .remove()
     .text()
 );
-const renderScorepage = _.template(
-  $("#scorepage-template")
+const renderScoreboardPage = _.template(
+  $("#scoreboard-page-template")
     .remove()
     .text()
 );
-
-const load_teamscore = () =>
-  apiCall("GET", "/api/v1/team")
-    .done(data =>
-      $("#scoreboard-teamscore").html(
-        renderScoreboardTeamScore({
-          teamscore: data.score
-        })
-      )
-    )
-    .fail(jqXHR =>
-      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-    );
 
 window.reloadGraph = function() {
   const reload = function() {
     $(".progression-graph").empty();
     const active_tab = $("ul#scoreboard-tabs li.active").data();
-    if (active_tab !== undefined) {
-      const active_gid = active_tab.gid;
+    if (active_tab.sid !== undefined) {
       window.drawTopTeamsProgressionGraph(
-        `#${active_gid}-progression`,
-        active_gid
+        `#${active_tab.sid}-progression`,
+        {'scoreboard_id': active_tab.sid}
+      );
+    }
+    else if (active_tab.gid !== undefined) {
+      window.drawTopTeamsProgressionGraph(
+        `#${active_tab.gid}-progression`,
+        {'group_id': active_tab.gid}
       );
     }
   };
-
   setTimeout(reload, 100);
 };
 
-const load_scoreboard_page = function(boardname, page, tid, gid) {
-  let targetid;
-  if (gid == null) {
-    gid = "";
-  }
-  if (!gid) {
-    targetid = boardname;
+const render_scoreboard = function(board_key, search) {
+  // Re-render the scoreboard display, including the paginator
+
+  // Build the scoreboard page endpoint URL
+  let scoreboard_endpoint = '/api/v1/';
+  if (board_key.hasOwnProperty('group_id')) {
+    scoreboard_endpoint += 'groups/' + board_key.group_id + '/scoreboard';
   } else {
-    boardname = "groups";
-    targetid = gid;
+    scoreboard_endpoint += 'scoreboards/' + board_key.scoreboard_id + '/scoreboard';
   }
-  apiCall(
-    "GET",
-    `/api/v1/stats/scoreboard/page?board=${boardname}&page=${page}&gid=${gid}`
+  if (search !== undefined) {
+    scoreboard_endpoint += '?search=' + search;
+  }
+
+  // If non-group scoreboard, get scoreboard metadata
+  let scoreboard_metadata_endpoint = null;
+  if (board_key.hasOwnProperty('scoreboard_id')) {
+    scoreboard_metadata_endpoint = '/api/v1/scoreboards/' + board_key.scoreboard_id;
+  }
+
+  // Fetch the scoreboard page and re-render the scoreboard display
+  $.when(
+    apiCall("GET", scoreboard_endpoint),
+    (function() {
+      if (scoreboard_metadata_endpoint !== null) {
+        return apiCall("GET", scoreboard_metadata_endpoint)
+      } else {
+        return null
+      }
+    })()
   )
-    .done(data =>
-      $(`#${targetid} tbody`).html(
-        renderScorepage({
-          scorepage: data.scoreboard,
-          page,
-          tid
-        })
-      )
+  .done(function(scoreboard_data, scoreboard_metadata) {
+    let team_data = JSON.parse(localStorage.getItem("/api/v1/team"));
+    let scoreboard_properties = {
+      scorepage: scoreboard_data[0].scoreboard,
+      current_page: scoreboard_data[0].current_page,
+      total_pages: scoreboard_data[0].total_pages,
+      scoreboard_name: null,
+      scoreboard_sponsor: null,
+      scoreboard_logo: null,
+      user_tid: team_data.tid
+    };
+    if (scoreboard_metadata !== null) {
+      scoreboard_properties = Object.assign(scoreboard_properties, {
+        scoreboard_name: scoreboard_metadata[0].name,
+        scoreboard_sponsor: scoreboard_metadata[0].sponsor,
+        scoreboard_logo: scoreboard_metadata[0].logo
+      });
+    }
+    let scoreboardContent = renderScoreboard(scoreboard_properties);
+    $("#scoreboard-container").html(scoreboardContent).promise().then(
+      function(){
+        // Once content has loaded, set up paginator
+        $("#pagination").bootstrapPaginator({
+          totalPages: scoreboard_data[0].total_pages,
+          bootstrapMajorVersion: 3,
+          numberOfPages: 10,
+          currentPage: scoreboard_data[0].current_page,
+          onPageClicked(e, eOriginal, type, page) {
+            let query = $("#search").val();
+            render_scoreboard_page(board_key, query, page);
+          }
+        });
+      }
     )
-    .fail(jqXHR =>
-      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-    );
+  })
+  .fail(jqXHR =>
+    apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+  );
 };
 
-const load_scoreboard = () =>
-  apiCall("GET", "/api/v1/stats/scoreboard")
-    .done(function(data) {
-      $("#scoreboard-tabs")
-        .html(
-          renderScoreboardTabs({
-            data,
-            renderScoreboard
-          })
-        )
-        .promise()
-        .then(function() {
-          const { tid } = data;
-          const paginate = board =>
-            $(`#${board.name}-pagination`).bootstrapPaginator({
-              totalPages: board.pages,
-              bootstrapMajorVersion: 3,
-              numberOfPages: 10,
-              currentPage: board.start_page,
-              onPageClicked(e, eOriginal, type, page) {
-                load_scoreboard_page(
-                  board.name,
-                  page,
-                  data.tid,
-                  board.gid
-                );
-              }
-            });
-          Object.keys(data).forEach(function(e) {
-            if (Array.isArray(data[e])) {
-              data[e].forEach(paginate);
-            } else if (typeof data[e] === "object") {
-              paginate(data[e]);
-            }
-          });
-          let timeoutID_global = null;
-          let timeoutID_student = null;
-          const paginateSearch = (pattern, board) =>
-            $(`#${board.name}-pagination`).bootstrapPaginator({
-              totalPages: Math.max(board.pages, 1),
-              bootstrapMajorVersion: 3,
-              numberOfPages: 10,
-              currentPage: board.start_page,
-              onPageClicked(e, eOriginal, type, page) {
-                searchBoard(pattern, board.name, page);
-              }
-            });
-          var searchBoard = function(pattern, board, page) {
-            let repaginate;
-            if (page == null) {
-              page = 0;
-            }
-            if (page === 0) {
-              repaginate = true;
-              page = 1;
-            }
-            apiCall(
-              "GET",
-              `/api/v1/stats/scoreboard/search?pattern=${pattern}&board=${board}&page=${page}`
-            ).done(function(searchdata) {
-              $(`#${board} tbody`).html(
-                renderScorepage({
-                  scorepage: searchdata.scoreboard,
-                  page,
-                  tid
-                })
-              );
-              if (repaginate) {
-                paginateSearch(pattern, searchdata);
-              }
-            });
-          };
-          $("#global-search").keyup(function(e) {
-            if (e.target.value.length > 2) {
-              clearTimeout(timeoutID_global);
-              timeoutID_global = setTimeout(
-                () => searchBoard(e.target.value, "global"),
-                250
-              );
-            } else if (e.target.value === "") {
-              load_scoreboard();
-              reloadGraph();
-            }
-          });
-          $("#student-search").keyup(function(e) {
-            if (e.target.value.length > 2) {
-              clearTimeout(timeoutID_student);
-              timeoutID_student = setTimeout(
-                () => searchBoard(e.target.value, "student"),
-                250
-              );
-            } else if (e.target.value === "") {
-              load_scoreboard()
-                .promise()
-                .then(function() {
-                  $('#scoreboard-tabs a[href="#student"]').tab("show");
-                  reloadGraph();
-                });
-            }
-          });
-        });
-      reloadGraph();
+const render_scoreboard_page = function(board_key, search, page) {
+  // Re-render only the scoreboard page, keeping search field and pagination
+  let searchValue = $("#search").val();
+
+  // Build the scoreboard page endpoint URL
+  let scoreboard_endpoint = '/api/v1/';
+  if (board_key.hasOwnProperty('group_id')) {
+    scoreboard_endpoint += 'groups/' + board_key.group_id + '/scoreboard';
+  } else {
+    scoreboard_endpoint += 'scoreboards/' + board_key.scoreboard_id + '/scoreboard';
+  }
+  scoreboard_endpoint += '?page=' + page;
+  if (search !== "") {
+    scoreboard_endpoint += '&search=' + searchValue;
+  }
+
+  // Fetch the scoreboard page and re-render the scoreboard display
+  $.when(
+    apiCall("GET", "/api/v1/team"),
+    apiCall("GET", scoreboard_endpoint)
+  )
+  .done(function(team_data, scoreboard_data) {
+      let scoreboardPageContent = renderScoreboardPage({
+        scorepage: scoreboard_data[0].scoreboard,
+        current_page: scoreboard_data[0].current_page,
+        user_tid: team_data[0].tid
+      });
+      $("#scoreboard-container tbody").html(scoreboardPageContent);
     })
-    .fail(jqXHR =>
-      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+  .fail(jqXHR =>
+    apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+  );
+};
+
+const render_scoreboard_navigation = () =>
+  $.when(
+    apiCall("GET", "/api/v1/scoreboards"),
+    apiCall("GET", "/api/v1/team"),
+    apiCall("GET", "/api/v1/groups")
+  ).done(function(scoreboard_data, team_data, group_data) {
+
+    // Update the team score
+    $("#scoreboard-teamscore").html(
+      renderScoreboardTeamScore({
+        teamscore: team_data[0].score
+      })
     );
 
+    // Create the eligible scoreboard and group tabs
+    let eligibleScoreboards = scoreboard_data[0].filter((scoreboard) =>
+      team_data[0].eligibilities.indexOf(scoreboard.sid) !== -1);
+    eligibleScoreboards = _.sortBy(eligibleScoreboards, 'name');
+    eligibleScoreboards = _.sortBy(eligibleScoreboards, function(scoreboard) {
+      // Sort by descending priority order
+      return -(scoreboard['priority']);
+    });
+    let teamGroups = _.sortBy(group_data[0], 'name');
+    const scoreboardTabTemplate = _.template(
+      $("#scoreboard-tabs-template")
+        .remove()
+        .text()
+    );
+    let nav_content = scoreboardTabTemplate({
+      eligibleScoreboards, teamGroups, renderScoreboard
+    });
+    $("#scoreboard-tabs").html(nav_content).promise().done(function(){
+      // Attach listeners to tab links
+      let tab_set = $("#scoreboard-tabs li a");
+      let board_key;
+      tab_set.on("click", function(e) {
+        $("#search").val("");
+        let active_tab = $(e.target).parent().data();
+        if (active_tab.sid !== undefined) {
+          board_key = {'scoreboard_id': active_tab.sid};
+        }
+        else if (active_tab.gid !== undefined) {
+          board_key = {'group_id': active_tab.gid};
+        }
+        reloadGraph();
+        render_scoreboard(board_key);
+      });
+
+      // Attach search field listener
+      $("form[role=search]").on("submit", function(e) {
+        e.preventDefault();
+      });
+      $("#search").on("keyup", function(e) {
+        e.preventDefault();
+        let board_key;
+        clearTimeout(window.searchTimeout);
+        window.searchTimeout = setTimeout(function() {
+          let active_tab = $("#scoreboard-tabs li.active").data();
+          if (active_tab.sid !== undefined) {
+            board_key = {'scoreboard_id': active_tab.sid}
+          }
+          else if (active_tab.gid !== undefined) {
+            board_key = {'group_id': active_tab.gid}
+          }
+          let searchValue = $("#search").val();
+          render_scoreboard(board_key, searchValue);
+        }, 250);
+      });
+
+      // Automatically render the first scoreboard
+      tab_set.first().trigger("click");
+    })
+  })
+  .fail(jqXHR =>
+    apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+  );
+
 $(function() {
-  load_scoreboard();
-  load_teamscore();
+  render_scoreboard_navigation();
 });

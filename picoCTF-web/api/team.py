@@ -50,6 +50,28 @@ def get_team(tid=None, name=None):
     return db.teams.find_one(match, {"_id": 0})
 
 
+def update_team(tid, updates):
+    """
+    Update a team with new properties.
+
+    Args:
+        tid: the tid of the team to update
+        updates: dict of updated properties
+
+    Returns:
+        tid of the updated team (unchanged), or
+        None if the team was not found
+
+    """
+    db = api.db.get_conn()
+    if len(updates) > 0:
+        success = db.teams.find_one_and_update(
+            {'tid': tid}, {'$set': updates})
+        if not success:
+            return None
+    return tid
+
+
 @memoize
 def get_groups(tid):
     """
@@ -130,6 +152,7 @@ def create_and_join_new_team(team_name, team_password, user):
         "affiliation": current_team["affiliation"],
         "creator": user["uid"],
         "country": user["country"],
+        "allow_ineligible_members": False
     })
     join_team(team_name, team_password, user)
 
@@ -264,66 +287,29 @@ def get_team_information(tid):
                             k in PROBLEMSOLVED_FILTER}
         team_info["solved_problems"].append(filtered_problem)
 
-    # Teams flagged as ineligible once will not recalculate their eligibility
-    if team_info.get("eligible", True):
-        eligiblity = is_eligible(tid)
-        team_info["eligible"] = eligiblity
-        if eligiblity is False:  # No point in storing positive results
-            mark_eligiblity(tid, eligiblity)
     return team_info
 
 
-def is_eligible(tid):
-    """
-    Return a team's eligibility for the current event.
-
-    Args:
-        tid: the team id
-    Returns:
-        True or False
-    """
-    members = get_team_members(tid, show_disabled=False)
-    conditions = api.config.get_settings()['eligibility']
-    for member in members:
-        is_eligible = all(
-            (member[k] == conditions[k] for k in conditions.keys()))
-        if not is_eligible:
-            return False
-    return True
-
-
-def mark_eligiblity(tid, status):
-    """Store a team's eligiblity status within their team document."""
-    db = api.db.get_conn()
-    db.teams.find_one_and_update(
-        {'tid': tid}, {'$set': {'eligible': status}}
-    )
-
-
-def get_all_teams(include_ineligible=False, country=None):
+def get_all_teams(scoreboard_id=None):
     """
     Retrieve all teams.
 
     Args:
-        include_ineligible: include ineligible teams in result
-        country: optional country filter
+        scoreboard_id: optional, find only teams eligible for this scoreboard
 
     Returns:
-        A list of all of the teams.
+        A list of all matching teams.
 
     """
     # Ignore empty teams (remnants of single player self-team ids)
-    match = {"size": {"$gt": 0}}
-    if country is not None:
-        match.update({"country": country})
-
     db = api.db.get_conn()
-    teams = list(db.teams.find(match, {"_id": 0}))
+    match = {"size": {"$gt": 0}}
 
-    # Filter out ineligible teams, if desired
-    if not include_ineligible:
-        teams = [t for t in teams if is_eligible(t['tid'])]
-    return teams
+    # If specified, restrict to teams eligible for a certain scoreboard
+    if scoreboard_id:
+        match['eligibilities'] = scoreboard_id
+
+    return list(db.teams.find(match, {"_id": 0}))
 
 
 def join_team(team_name, password, user):
@@ -341,6 +327,7 @@ def join_team(team_name, password, user):
     """
     current_team = api.user.get_team(uid=user["uid"])
     desired_team = api.team.get_team(name=team_name)
+    desired_team_info = api.team.get_team_information(desired_team['tid'])
 
     if current_team["team_name"] != user["username"]:
         raise PicoException(
@@ -354,6 +341,34 @@ def join_team(team_name, password, user):
     if not api.user.confirm_password(password, desired_team["password"]):
         raise PicoException(
             'That is not the correct password to join that team.', 403)
+
+    # Update the team's eligibilities
+    if desired_team_info['size'] == 0:
+        updated_eligible_scoreboards = [
+            scoreboard for scoreboard in api.scoreboards.get_all_scoreboards()
+            if api.scoreboards.is_eligible(user, scoreboard)
+        ]
+    else:
+        currently_eligible_scoreboards = [
+            api.scoreboards.get_scoreboard(sid)
+            for sid in desired_team_info['eligibilities']
+        ]
+        updated_eligible_scoreboards = [
+            scoreboard for scoreboard in currently_eligible_scoreboards
+            if api.scoreboards.is_eligible(user, scoreboard)
+        ]
+        lost_eligibilities = [
+            scoreboard for scoreboard in currently_eligible_scoreboards
+            if scoreboard not in updated_eligible_scoreboards
+        ]
+        if (len(lost_eligibilities) > 0 and
+                not desired_team_info.get('allow_ineligible_members', False)):
+            raise PicoException(
+                'You cannot join this team as doing so would make it ' +
+                'ineligible for the {} scoreboard.'.format(
+                    lost_eligibilities[0]["name"]
+                ), 403
+            )
 
     # Join the new team
     db = api.db.get_conn()
@@ -369,6 +384,14 @@ def join_team(team_name, password, user):
 
     if not user_team_update:
         raise PicoException("There was an issue switching your team!")
+
+    # Update the eligiblities of the new team
+    db.teams.find_one_and_update(
+        {"tid": desired_team["tid"]},
+        {"$set": {
+            "eligibilities": [s['sid'] for s in updated_eligible_scoreboards]
+        }}
+    )
 
     # Update the sizes of the old and new teams
     db.teams.find_one_and_update(

@@ -81,7 +81,7 @@ def run():
         global connections
 
         if api.common.check_competition_active():
-            teams = api.team.get_all_teams(show_ineligible=True)
+            teams = api.team.get_all_teams()
 
             for server in api.shell_servers.get_all_servers():
                 try:

@@ -258,7 +258,7 @@ def add_user(params):
     # Insert the new user in the DB
     uid = api.common.token()
     settings = api.config.get_settings()
-    db.users.insert_one({
+    user = {
         'uid': uid,
         'firstname': params['firstname'],
         'lastname': params['lastname'],
@@ -278,7 +278,21 @@ def add_user(params):
         'completed_minigames': [],
         'unlocked_walkthroughs': [],
         'tokens': 0,
-    })
+    }
+    db.users.insert_one(user)
+
+    # Determine the user team's initial eligibilities
+    initial_eligibilities = [
+        scoreboard['sid'] for scoreboard
+        in api.scoreboards.get_all_scoreboards()
+        if api.scoreboards.is_eligible(user, scoreboard)
+    ]
+    db.teams.find_one_and_update(
+        {"tid": tid},
+        {"$set": {
+            "eligibilities": initial_eligibilities
+        }}
+    )
 
     # If gid was specified, add the newly created team to the group
     if params.get("gid", None):

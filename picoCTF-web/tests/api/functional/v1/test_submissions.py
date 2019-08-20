@@ -10,6 +10,7 @@ from ..common import ( # noqa (fixture)
   register_test_accounts,
   TEACHER_DEMOGRAPHICS,
   STUDENT_DEMOGRAPHICS,
+  STUDENT_2_DEMOGRAPHICS,
   OTHER_USER_DEMOGRAPHICS,
   load_sample_problems,
   get_conn,
@@ -107,8 +108,8 @@ def test_submission(mongo_proc, redis_proc, client): # noqa (fixture)
 
     client.get('/api/v1/user/logout')
     res = client.post('/api/v1/user/login', json={
-        'username': OTHER_USER_DEMOGRAPHICS['username'],
-        'password': OTHER_USER_DEMOGRAPHICS['password'],
+        'username': STUDENT_2_DEMOGRAPHICS['username'],
+        'password': STUDENT_2_DEMOGRAPHICS['password'],
     })
     csrf_t = get_csrf_token(res)
     client.post('/api/v1/team/join', json={

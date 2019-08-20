@@ -7,20 +7,20 @@ from api import (PicoException, block_before_competition, check_csrf,
                  rate_limit, require_login)
 
 from .schemas import (join_group_req, score_progression_req, team_change_req,
-                      update_team_password_req)
+                      team_patch_req, update_team_password_req)
 
 ns = Namespace('team', description="Information about the current user's team")
 
-TEAMDATA_FILTER = ['achievements', 'affiliation', 'eligible', 'max_team_size',
-                   'members', 'progression', 'score', 'size',
-                   'solved_problems', 'team_name', 'tid']
+TEAMDATA_FILTER = ['achievements', 'affiliation', 'allow_ineligible_members',
+                   'eligibilities', 'max_team_size', 'members', 'progression',
+                   'score', 'size', 'solved_problems', 'team_name', 'tid']
 
 TEAMMEMBER_FILTER = ['affiliation', 'country', 'username', 'usertype']
 
 
 @ns.route('')
 class Team(Resource):
-    """Get the current user's team."""
+    """The current user's team."""
 
     @require_login
     @ns.response(200, 'Success')
@@ -35,6 +35,20 @@ class Team(Resource):
                            k in TEAMMEMBER_FILTER}, teamdata['members']))
         teamdata['members'] = members
         return jsonify(teamdata)
+
+    @require_login
+    @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing request')
+    @ns.response(401, 'Not logged in')
+    @ns.expect(team_patch_req)
+    def patch(self):
+        """Update team settings."""
+        req = team_patch_req.parse_args(strict=True)
+        current_tid = api.user.get_user()['tid']
+        api.team.update_team(current_tid, req)
+        return jsonify({
+            'success': True
+        })
 
 
 # @TODO doesn't make sense to return score in both /team and /team/score
