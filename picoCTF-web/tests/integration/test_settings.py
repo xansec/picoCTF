@@ -1,7 +1,7 @@
 """Tests for the /api/v1/settings endpoint."""
 from pytest_mongo import factories
 from pytest_redis import factories
-from ..common import ( # noqa (fixture)
+from .common import ( # noqa (fixture)
   clear_db,
   client,
 )
