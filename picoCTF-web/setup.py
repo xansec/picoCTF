@@ -90,6 +90,7 @@ setup(
             'pytest',
             'pytest-cov',
             'pytest-mongo',
+            'pytest-redis',
             'flake8',
             'pydocstyle',
         ]
