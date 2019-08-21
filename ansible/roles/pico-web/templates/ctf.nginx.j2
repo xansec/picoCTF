@@ -21,7 +21,7 @@ server {
         gzip_disable "msie6";
         gzip_types    text/plain application/javascript text/xml text/css application/json font/woff2;
 
-        client_max_body_size 5k;
+        client_max_body_size 15k;
 
         error_page 404  = /404.html;
         error_page 401  = /401.html;
@@ -43,7 +43,7 @@ server {
         auth_basic "Restricted";
         auth_basic_user_file /etc/nginx/.htpasswd;
         {% endif %}
-        
+
         location ~* \.(js|css)$ {
             expires 1y;
             add_header Cache-Control "public";

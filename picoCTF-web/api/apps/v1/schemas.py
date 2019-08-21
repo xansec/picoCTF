@@ -210,6 +210,10 @@ settings_patch_req.add_argument(
 settings_patch_req.add_argument(
     'eligibility', required=False, type=object_type, location='json'
 )
+settings_patch_req.add_argument(
+    'max_batch_registrations', required=False, type=inputs.natural,
+    location='json', error='max_batch_registrations must be a positive integer'
+)
 
 # Bundle PATCH request schema
 # ("dependencies_enabled" is the only mutable field as the others are managed

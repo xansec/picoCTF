@@ -1,18 +1,20 @@
 """Group manangement."""
+import base64
 import csv
+import io
 import string
 
 import api
-from api import (PicoException, block_before_competition, check_csrf,
+from api import (block_before_competition, check_csrf, PicoException,
                  rate_limit, require_login, require_teacher)
 from flask import jsonify
 from flask_restplus import Namespace, Resource
-from marshmallow import (RAISE, Schema, ValidationError, fields, post_load,
-                         pre_load, validate)
+from marshmallow import (fields, post_load, pre_load, RAISE, Schema, validate,
+                         validates_schema, ValidationError)
 
-from .schemas import (batch_registration_req, group_invite_req,
-                      group_patch_req, group_remove_team_req, group_req,
-                      score_progressions_req, scoreboard_page_req)
+from .schemas import (batch_registration_req, group_invite_req, group_patch_req,
+                      group_remove_team_req, group_req, score_progressions_req,
+                      scoreboard_page_req)
 
 ns = Namespace('groups', description='Group management')
 
@@ -301,6 +303,7 @@ class BatchRegistrationResponse(Resource):
     @require_teacher
     @rate_limit(limit=1, duration=30)
     @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing CSV')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Permission denied')
     @ns.response(404, 'Group not found')
@@ -321,10 +324,31 @@ class BatchRegistrationResponse(Resource):
                 f"Error reading CSV at line {csv_reader.line_num}: {e}",
                 status_code=400)
 
+        # Check whether registering these students would exceed maximum
+        # batch registrations per teacher account
+        config = api.config.get_settings()
+        teacher_metadata = api.token.find_key({
+            'uid': api.user.get_user()['uid']
+        })
+        if not teacher_metadata:
+            existing_batch_count = 0
+        else:
+            existing_batch_count = teacher_metadata.get(
+                "tokens", {}).get('batch_registered_students', 0)
+        potential_batch_count = existing_batch_count + len(students)
+        if (potential_batch_count > config['max_batch_registrations']):
+            raise PicoException(
+                "You have exceeded the maximum number of batch-registered " +
+                "student accounts. Please contact an administrator.", 403
+            )
+
         # Validate demographics
         def validate_current_year(s):
-            n = int(s)
-            if not (1 <= n <= 12):
+            try:
+                n = int(s)
+                if not (1 <= n <= 12):
+                    raise ValueError
+            except ValueError:
                 raise ValidationError(
                     f'Grade must be between 1 and 12 (provided {s})')
 
@@ -362,6 +386,16 @@ class BatchRegistrationResponse(Resource):
                           "the corresponding code from: {choices}."
                 )
             )
+            parent_email = fields.Email(
+                data_key='Parent Email (if under 18)', required=True,
+                allow_none=True
+            )
+            @validates_schema
+            def validate_parent_email(self, data):
+                if (data['age'] == '13-17' and
+                        data['parent_email'] is None):
+                    raise ValidationError(
+                        'Parent email must be specified for students under 18')
 
         try:
             students = BatchRegistrationUserSchema().load(
@@ -380,9 +414,35 @@ class BatchRegistrationResponse(Resource):
                 f"The first {len(created_accounts)} were created. " +
                 "Please contact an administrator."
             )
+
+        output = []
+        for i in range(len(students)):
+            output.append({
+                'Grade (1-12)': students[i]['current_year'],
+                'Age (13-17 or 18+)': students[i]['age'],
+                'Gender': students[i]['gender'],
+                'Parent Email (if under 18)': students[i]['parent_email'],
+                'Username': created_accounts[i]['username'],
+                'Password': created_accounts[i]['password']
+            })
+
+        buffer = io.StringIO()
+        csv_writer = csv.DictWriter(buffer, [
+            'Grade (1-12)',
+            'Age (13-17 or 18+)',
+            'Gender',
+            'Parent Email (if under 18)',
+            'Username',
+            'Password'
+        ])
+        csv_writer.writeheader()
+        csv_writer.writerows(output)
+        output_csv_bytes = buffer.getvalue().encode('utf-8')
+
         return jsonify({
             'success': True,
-            'accounts': created_accounts
+            'accounts': created_accounts,
+            'as_csv': base64.b64encode(output_csv_bytes).decode('utf-8')
         })
 
 

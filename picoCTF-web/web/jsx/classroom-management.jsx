@@ -161,50 +161,62 @@ const BatchRegistrationPanel = React.createClass({
     };
     $.ajax(params)
       .done(data => {
+        let csv_content = "data:text/csv;charset=utf-8," + atob(data.as_csv);
+        let encoded_uri = encodeURI(csv_content);
+
         let response_html =
           '<div class="panel panel-success batch-registration-response"><div class="panel-heading"><h4>Accounts successfully created!</h4>' +
-          "<p>Usernames and passwords are displayed below in the order of the input CSV.</p>" +
-          "<p>Please copy these credentials, as they will only be displayed once.</p>" +
-          '<table class="table">';
-        for (let i = 0; i < data.accounts.length; i++) {
-          response_html += `<tr><td>${data.accounts[i].username}</td><td>${data.accounts[i].password}</td></tr>`;
-        }
-        response_html += "</table></div></div>";
+          "<p>You have been prompted to download an updated CSV containing usernames and passwords for your students' accounts.</p>" +
+          "<p>Make sure to save this file, as it will not available after leaving this page.</p>" +
+          '<a class="btn btn-default" id="batch-credentials-download" href="' + encoded_uri + '" download="registered_accounts.csv">Redownload Account Credentials</a>' +
+          "</div></div>"
         $(".batch-registration-response").remove();
-        $("#batch-registration-panel").append(response_html);
+        $("#batch-registration-panel").append(response_html).promise()
+          .then(function() {
+            // Automatically attempt to download account credentials
+            $("#batch-credentials-download")[0].click()
+          });
         this.props.refresh();
       })
       .fail(jqXHR => {
-        // If the error is a string
-        if (typeof jqXHR.responseJSON.message === "string") {
-          apiNotify({ status: 0, message: jqXHR.responseJSON.message });
+        if (jqXHR.responseJSON !== undefined) {
+          // If the error response comes from Flask
+          if (typeof jqXHR.responseJSON.message === "object") {
+            // If the error is an object of validation errors
+            const errors = jqXHR.responseJSON.message;
+            let response_html =
+              '<div class="panel panel-danger batch-registration-response"><div class="panel-heading"><h4>Errors found in CSV.</h4>' +
+              "<p>Please resolve the issues below and resubmit:</p>";
+            for (let row_num in errors) {
+              const row = errors[row_num];
+              response_html += `<p><strong>Row ${parseInt(row_num) +
+                1}:</strong></p><ul>`;
+              for (let field in row) {
+                const err_messages = row[field];
+                for (let err_message of err_messages) {
+                  if (field === "_schema") {
+                    response_html += `<li>${_.escape(err_message)}</li>`;
+                  } else {
+                    response_html += `<li>${_.escape(field)}: ${_.escape(
+                      err_message
+                    )}</li>`;
+                  }
+                }
+              }
+              response_html += "</ul>";
+            }
+            $(".batch-registration-response").remove();
+            $("#batch-registration-panel").append(response_html);
+          } else {
+            // Otherwise, assume a normal error message
+            apiNotify({ status: 0, message: jqXHR.responseJSON.message });
+            return;
+          }
+        } else {
+          // If the response contains only a status code (e.g. from nginx)
+          apiNotify({ status: 0, message: jqXHR.statusText });
           return;
         }
-        // Otherwise, the error is an object of validation errors
-        const errors = jqXHR.responseJSON.message;
-        let response_html =
-          '<div class="panel panel-danger batch-registration-response"><div class="panel-heading"><h4>Errors found in CSV.</h4>' +
-          "<p>Please resolve the issues below and resubmit:</p>";
-        for (let row_num in errors) {
-          const row = errors[row_num];
-          response_html += `<p><strong>Row ${parseInt(row_num) +
-            1}:</strong></p><ul>`;
-          for (let field in row) {
-            const err_messages = row[field];
-            for (let err_message of err_messages) {
-              if (field === "_schema") {
-                response_html += `<li>${_.escape(err_message)}</li>`;
-              } else {
-                response_html += `<li>${_.escape(field)}: ${_.escape(
-                  err_message
-                )}</li>`;
-              }
-            }
-          }
-          response_html += "</ul>";
-        }
-        $(".batch-registration-response").remove();
-        $("#batch-registration-panel").append(response_html);
       });
   },
 
@@ -214,19 +226,17 @@ const BatchRegistrationPanel = React.createClass({
         <Row>
           <Col xs={12}>
             <p>
-              Batch-register students into this classroom by uploading a CSV of
-              student demographic information. Usernames and passwords will be
-              automatically generated.
+              Batch-register students into this classroom by uploading a CSV file
+              containing student demographic information.
             </p>
             <p>
-              Please note that your account's email address will be associated
-              with any student accounts created via batch registration.
+            Usernames and passwords will be automatically generated.
             </p>
           </Col>
         </Row>
         <Row>
           <Col xs={6}>
-            <Button href="/files/picoctf_batch_import.csv">
+            <Button href="/files/batch_registration_template.csv">
               Download Template
             </Button>
           </Col>

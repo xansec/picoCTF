@@ -89,6 +89,16 @@ const GeneralTab = React.createClass({
     );
   },
 
+  updateMaxBatchRegistrations(e) {
+    this.setState(
+      update(this.state, {
+        $set: {
+          max_batch_registrations: parseInt(e.target.value)
+        }
+      })
+    );
+  },
+
   pushUpdates() {
     const data = {
       enable_feedback: this.state.enable_feedback,
@@ -97,7 +107,8 @@ const GeneralTab = React.createClass({
       start_time: new Date(this.state.start_time).toUTCString(),
       end_time: new Date(this.state.end_time).toUTCString(),
       max_team_size: this.state.max_team_size,
-      username_blacklist: this.state.username_blacklist
+      username_blacklist: this.state.username_blacklist,
+      max_batch_registrations: this.state.max_batch_registrations,
     };
     apiCall("PATCH", "/api/v1/settings", data)
       .done(data => {
@@ -126,6 +137,8 @@ their passwords.`;
       "Maximum number of users that can join a single team.";
     const usernameBlacklistDescription =
       "Usernames that are unavailable for registration.";
+    const maxBatchRegistrationsDescription =
+      "Maximum number of student accounts a teacher can create via batch registration.";
 
     return (
       <Well>
@@ -174,6 +187,13 @@ their passwords.`;
           type="textarea"
           onChange={this.updateUsernameBlacklist}
           description={usernameBlacklistDescription}
+        />
+        <TextEntry
+          name="Max Batch Registrations per Teacher"
+          value={this.state.max_batch_registrations}
+          type="number"
+          onChange={this.updateMaxBatchRegistrations}
+          description={maxBatchRegistrationsDescription}
         />
         <Row>
           <div className="text-center">
@@ -892,7 +912,8 @@ const SettingsTab = React.createClass({
         eligibility: {
           usertype: "student",
           country: "US"
-        }
+        },
+        max_batch_registrations: 250
       },
 
       tabKey: "general"
@@ -933,7 +954,8 @@ const SettingsTab = React.createClass({
       start_time: this.state.settings.start_time,
       end_time: this.state.settings.end_time,
       max_team_size: this.state.settings.max_team_size,
-      username_blacklist: this.state.settings.username_blacklist
+      username_blacklist: this.state.settings.username_blacklist,
+      max_batch_registrations: this.state.settings.max_batch_registrations
     };
     return (
       <Well>

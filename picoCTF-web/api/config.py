@@ -23,13 +23,16 @@ default_settings = {
     # COMPETITION INFORMATION
     "competition_name": "CTF Placeholder",
     "competition_url": "http://192.168.2.2",
-    "admin_email": "email@example.com", # Contact given to parents
+    "admin_email": "email@example.com",  # Contact given to parents
 
     # EMAIL WHITELIST
     "email_filter": [],
 
     # TEAMS
     "max_team_size": 1,
+
+    # BATCH REGISTRATION
+    "max_batch_registrations": 250,  # Maximum batch registrations / teacher
 
     # ACHIEVEMENTS
     "achievements": {
@@ -171,7 +174,7 @@ Good luck!
 The {competition_name} Team""", # noqa (79char)
 ############ Readablity spacing ############
         "deletion_notification_body": """
-This is a notification that the following {competition_name} account associated with this 
+This is a notification that the following {competition_name} account associated with this
 email address has been deleted:
 
 \t{username}
