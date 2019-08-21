@@ -325,8 +325,11 @@ class BatchRegistrationResponse(Resource):
 
         # Validate demographics
         def validate_current_year(s):
-            n = int(s)
-            if not (1 <= n <= 12):
+            try:
+                n = int(s)
+                if not (1 <= n <= 12):
+                    raise ValueError
+            except ValueError:
                 raise ValidationError(
                     f'Grade must be between 1 and 12 (provided {s})')
 
