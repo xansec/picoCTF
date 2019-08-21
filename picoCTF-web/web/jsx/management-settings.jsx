@@ -803,76 +803,6 @@ const CaptchaTab = React.createClass({
   }
 });
 
-const EligibilityTab = React.createClass({
-  propTypes: {
-    refresh: React.PropTypes.func.isRequired,
-    eligibilitySettings: React.PropTypes.object.isRequired
-  },
-
-  getInitialState() {
-    return this.props.eligibilitySettings;
-  },
-
-  updateCountry(e) {
-    this.setState(
-      update(this.state, {
-        $set: {
-          country: e.target.value
-        }
-      })
-    );
-  },
-
-  pushUpdates(makeChange) {
-    let pushData = {
-      eligibility: {
-        country: this.state.country
-      }
-    };
-
-    if (typeof makeChange === "function") {
-      pushData = makeChange(pushData);
-    }
-
-    apiCall("PATCH", "/api/v1/settings", pushData)
-      .done(data => {
-        apiNotify({ status: 1, message: "Settings updated successfully" });
-        this.props.refresh();
-      })
-      .fail(jqXHR =>
-        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-      );
-  },
-
-  render() {
-    const countryDescription =
-      "2-character code of the country considered eligible for this competition";
-
-    return (
-      <Well>
-        <Row>
-          <Col sm={8}>
-            <TextEntry
-              name="Country"
-              type="text"
-              value={this.state.country}
-              onChange={this.updateCountry}
-              description={countryDescription}
-            />
-            <Row>
-              <div className="text-center">
-                <ButtonToolbar>
-                  <Button onClick={this.pushUpdates}>Update</Button>
-                </ButtonToolbar>
-              </div>
-            </Row>
-          </Col>
-        </Row>
-      </Well>
-    );
-  }
-});
-
 const SettingsTab = React.createClass({
   getInitialState() {
     return {
@@ -908,10 +838,6 @@ const SettingsTab = React.createClass({
           captcha_url: "",
           reCAPTCHA_public_key: "",
           reCAPTCHA_private_key: ""
-        },
-        eligibility: {
-          usertype: "student",
-          country: "US"
         },
         max_batch_registrations: 250
       },
@@ -993,13 +919,6 @@ const SettingsTab = React.createClass({
               <CaptchaTab
                 refresh={this.refresh}
                 captchaSettings={this.state.settings.captcha}
-                key={Math.random()}
-              />
-            </Tab>
-            <Tab eventKey="eligibility" title="Eligibility">
-              <EligibilityTab
-                refresh={this.refresh}
-                eligibilitySettings={this.state.settings.eligibility}
                 key={Math.random()}
               />
             </Tab>

@@ -202,13 +202,6 @@ The {competition_name} Team""" # noqa (79char)
         "limit_added_range": False,
     },
 
-    # ELIGIBILITY CONDITIONS
-    # (user properties)
-    "eligibility": {
-        "usertype": "student",
-        "country": "US"
-    },
-
     # MINIGAME TOKEN VALUES
     "minigame": {
         "secret": "foo",

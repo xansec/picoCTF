@@ -208,9 +208,6 @@ settings_patch_req.add_argument(
     'shell_servers', required=False, type=object_type, location='json'
 )
 settings_patch_req.add_argument(
-    'eligibility', required=False, type=object_type, location='json'
-)
-settings_patch_req.add_argument(
     'max_batch_registrations', required=False, type=inputs.natural,
     location='json', error='max_batch_registrations must be a positive integer'
 )
