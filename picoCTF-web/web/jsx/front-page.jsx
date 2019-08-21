@@ -927,7 +927,7 @@ const AuthPanel = React.createClass({
             .done(loginData => {
               apiCall("GET", "/api/v1/user")
                 .done(userData => {
-                  if (data.teacher) {
+                  if (userData.teacher) {
                     apiNotify(successAlert, "/profile");
                   } else if (this.state.settings.max_team_size > 1) {
                     apiNotify(successAlert);
