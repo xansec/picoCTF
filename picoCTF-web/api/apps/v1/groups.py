@@ -1,4 +1,4 @@
-"""Group manangement."""
+"""Group (a.k.a Classroom) management."""
 import base64
 import csv
 import io
@@ -34,12 +34,12 @@ class GroupList(Resource):
     @check_csrf
     @require_teacher
     @rate_limit(limit=1, duration=10)
-    @ns.response(201, 'Group added')
+    @ns.response(201, 'Classroom added')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
-    @ns.response(403, 'You do not have permission to create a group ' +
+    @ns.response(403, 'You do not have permission to create a classroom ' +
                       'or CSRF token invalid')
-    @ns.response(409, 'You already have a group with that name')
+    @ns.response(409, 'You already have a classroom with that name')
     @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(group_req)
     def post(self):
@@ -72,7 +72,7 @@ class GroupList(Resource):
 @ns.response(200, 'Success')
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Permission denied')
-@ns.response(404, 'Group not found')
+@ns.response(404, 'Classroom not found')
 @ns.route('/<string:group_id>')
 class Group(Resource):
     """Get a specific group."""
@@ -81,7 +81,7 @@ class Group(Resource):
         """Get a specific group."""
         group = api.group.get_group(gid=group_id)
         if not group:
-            raise PicoException('Group not found', 404)
+            raise PicoException('Classroom not found', 404)
 
         group_members = [group['owner']] + group['members'] + group['teachers']
         group_teachers = [group['owner']] + group['teachers']
@@ -118,7 +118,7 @@ class Group(Resource):
     @require_teacher
     @ns.response(400, 'Error parsing request')
     @ns.response(403, 'CSRF token incorrect')
-    @ns.response(422, 'Cannot make a previously hidden group public')
+    @ns.response(422, 'Cannot make a previously hidden classroom public')
     @ns.expect(group_patch_req)
     def patch(self, group_id):
         """Modify a group's settings (other fields are not available)."""
@@ -126,13 +126,13 @@ class Group(Resource):
 
         group = api.group.get_group(gid=group_id)
         if not group:
-            raise PicoException('Group not found', 404)
+            raise PicoException('Classroom not found', 404)
 
         curr_user = api.user.get_user()
         if (curr_user['tid'] not in ([group['owner']] + group['teachers'])
                 and not curr_user['admin']):
             raise PicoException(
-                'You do not have permission to modify this group.', 403
+                'You do not have permission to modify this classroom.', 403
             )
 
         api.group.change_group_settings(group_id, req['settings'])
@@ -146,13 +146,13 @@ class Group(Resource):
         """Delete a group. Must be the owner of the group."""
         group = api.group.get_group(gid=group_id)
         if not group:
-            raise PicoException('Group not found', 404)
+            raise PicoException('Classroom not found', 404)
 
         curr_user = api.user.get_user()
         if (curr_user['tid'] != group['owner']
                 and not curr_user['admin']):
             raise PicoException(
-                'You do not have permission to delete this group.', 403
+                'You do not have permission to delete this classroom.', 403
             )
 
         api.group.delete_group(group_id)
@@ -164,8 +164,8 @@ class Group(Resource):
 @ns.response(200, 'Success')
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Permission denied or CSRF token invalid')
-@ns.response(404, 'Group not found')
-@ns.response(422, 'Specified team is not a member of the group')
+@ns.response(404, 'Classroom not found')
+@ns.response(422, 'Specified team is not a member of the classroom')
 @ns.route('/<string:group_id>/remove_team')
 class RemoveTeamResponse(Resource):
     """
@@ -181,13 +181,13 @@ class RemoveTeamResponse(Resource):
         """Remove your own team from this group."""
         group = api.group.get_group(group_id)
         if not group:
-            raise PicoException('Group not found', 404)
+            raise PicoException('Classroom not found', 404)
         eligible_for_removal = group['members'] + group['teachers']
         curr_tid = api.user.get_user()['tid']
 
         if curr_tid not in eligible_for_removal:
             raise PicoException(
-                'Specified team is not eligible for removal from this group',
+                'Specified team is not eligible for removal from this classroom',
                 status_code=422
             )
         api.group.leave_group(group_id, curr_tid)
@@ -207,7 +207,7 @@ class RemoveTeamResponse(Resource):
         req = group_remove_team_req.parse_args(strict=True)
         group = api.group.get_group(group_id)
         if not group:
-            raise PicoException('Group not found', 404)
+            raise PicoException('Classroom not found', 404)
         group_teachers = [group['owner']] + group['teachers']
         eligible_for_removal = group['members'] + group['teachers']
         curr_tid = api.user.get_user()['tid']
@@ -215,14 +215,14 @@ class RemoveTeamResponse(Resource):
         # Ensure the user has a teacher role within the group
         if curr_tid not in group_teachers:
             raise PicoException(
-                'You must be a teacher in this group to remove a team.',
+                'You must be a teacher in this classroom to remove a team.',
                 status_code=403
             )
 
         # Ensure the specified tid is a member of the group
         if req['team_id'] not in eligible_for_removal:
             raise PicoException(
-                'Specified team is not eligible for removal from this group',
+                'Specified team is not eligible for removal from this classroom',
                 status_code=422
             )
 
@@ -235,7 +235,7 @@ class RemoveTeamResponse(Resource):
 @ns.response(200, 'Success')
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Permission denied')
-@ns.response(404, 'Group not found')
+@ns.response(404, 'Classroom not found')
 @ns.route('/<string:group_id>/flag_sharing')
 class FlagSharingInfo(Resource):
     """Get flag sharing statistics for a specific group."""
@@ -245,7 +245,7 @@ class FlagSharingInfo(Resource):
         """Get flag sharing statistics for a specific group."""
         group = api.group.get_group(gid=group_id)
         if not group:
-            raise PicoException('Group not found', 404)
+            raise PicoException('Classroom not found', 404)
 
         curr_user = api.user.get_user()
         if (curr_user['tid'] not in (group['teachers'] + [group['owner']])
@@ -261,7 +261,7 @@ class FlagSharingInfo(Resource):
 @ns.response(200, 'Success')
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Permission denied')
-@ns.response(404, 'Group not found')
+@ns.response(404, 'Classroom not found')
 @ns.route('/<string:group_id>/invite')
 class InviteResponse(Resource):
     """Send an email invite to join this team."""
@@ -275,13 +275,13 @@ class InviteResponse(Resource):
         req = group_invite_req.parse_args(strict=True)
         group = api.group.get_group(gid=group_id)
         if not group:
-            raise PicoException('Group not found', 404)
+            raise PicoException('Classroom not found', 404)
 
         curr_user = api.user.get_user()
         if (curr_user['tid'] not in (group['teachers'] + [group['owner']])
                 and not curr_user['admin']):
             raise PicoException(
-                'You do not have permission to invite members to this group.',
+                'You do not have permission to invite members to this classroom.',
                 status_code=403
             )
 
@@ -306,7 +306,7 @@ class BatchRegistrationResponse(Resource):
     @ns.response(400, 'Error parsing CSV')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Permission denied')
-    @ns.response(404, 'Group not found')
+    @ns.response(404, 'Classroom not found')
     @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(batch_registration_req)
     def post(self, group_id):
@@ -457,21 +457,21 @@ class ScoreboardPage(Resource):
     @block_before_competition
     @ns.response(200, 'Success')
     @ns.response(403, 'Permission denied')
-    @ns.response(404, 'Group not found')
+    @ns.response(404, 'Classroom not found')
     @ns.response(422, 'Competition has not started')
     @ns.expect(scoreboard_page_req)
     def get(self, group_id):
         """Retrieve a scoreboard page for a group."""
         group = api.group.get_group(gid=group_id)
         if not group:
-            raise PicoException('Group not found', 404)
+            raise PicoException('Classroom not found', 404)
         group_members = [group['owner']] + group['members'] + group['teachers']
 
         curr_user = api.user.get_user()
         if (not curr_user or (curr_user['tid'] not in group_members
                               and not curr_user['admin'])):
             raise PicoException("You do not have permission to " +
-                                "view this group's scoreboard.", 403)
+                                "view this classroom's scoreboard.", 403)
 
         req = scoreboard_page_req.parse_args(strict=True)
         if req['search'] is not None:
@@ -496,7 +496,7 @@ class ScoreProgressionsResult(Resource):
     @block_before_competition
     @ns.response(200, 'Success')
     @ns.response(403, 'Permission denied')
-    @ns.response(404, 'Group not found')
+    @ns.response(404, 'Classroom not found')
     @ns.response(422, 'Competition has not started')
     @ns.expect(score_progressions_req)
     def get(self, group_id):
@@ -504,14 +504,14 @@ class ScoreProgressionsResult(Resource):
         req = score_progressions_req.parse_args(strict=True)
         group = api.group.get_group(gid=group_id)
         if not group:
-            raise PicoException('Group not found', 404)
+            raise PicoException('Classroom not found', 404)
         group_members = [group['owner']] + group['members'] + group['teachers']
 
         if (not api.user.is_logged_in() or (
                 api.user.get_user()['tid'] not in group_members
                 and not api.user.get_user()['admin'])):
             raise PicoException("You do not have permission to " +
-                                "view this group's score progressions.", 403)
+                                "view this classroom's score progressions.", 403)
         if req['limit'] and (
                 not api.user.is_logged_in()
                 or not api.user.get_user()['admin']):

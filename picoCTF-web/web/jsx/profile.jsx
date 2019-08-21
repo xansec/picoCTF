@@ -43,7 +43,7 @@ const join_group = function(group_name, group_owner) {
   const data = { group_name: group_name, group_owner: group_owner };
   apiCall("POST", "/api/v1/team/join_group", data, "Team", "JoinGroup")
     .done(function(data) {
-      apiNotify({ status: 1, message: "Successfully joined group" });
+      apiNotify({ status: 1, message: "Successfully joined classroom" });
       load_group_info();
     })
     .fail(jqXHR =>
@@ -60,7 +60,7 @@ const leave_group = gid =>
     "LeaveGroup"
   )
     .done(function(data) {
-      apiNotify({ status: 1, message: "Successfully left group" });
+      apiNotify({ status: 1, message: "Successfully left classroom" });
       load_group_info();
     })
     .fail(jqXHR =>
