@@ -303,6 +303,7 @@ class BatchRegistrationResponse(Resource):
     @require_teacher
     @rate_limit(limit=1, duration=30)
     @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing CSV')
     @ns.response(401, 'Not logged in')
     @ns.response(403, 'Permission denied')
     @ns.response(404, 'Group not found')
@@ -322,6 +323,24 @@ class BatchRegistrationResponse(Resource):
             raise PicoException(
                 f"Error reading CSV at line {csv_reader.line_num}: {e}",
                 status_code=400)
+
+        # Check whether registering these students would exceed maximum
+        # batch registrations per teacher account
+        config = api.config.get_settings()
+        teacher_metadata = api.token.find_key({
+            'uid': api.user.get_user()['uid']
+        })
+        if not teacher_metadata:
+            existing_batch_count = 0
+        else:
+            existing_batch_count = teacher_metadata.get(
+                "tokens", {}).get('batch_registered_students', 0)
+        potential_batch_count = existing_batch_count + len(students)
+        if (potential_batch_count > config['max_batch_registrations']):
+            raise PicoException(
+                "You have exceeded the maximum number of batch-registered " +
+                "student accounts. Please contact an administrator.", 403
+            )
 
         # Validate demographics
         def validate_current_year(s):
