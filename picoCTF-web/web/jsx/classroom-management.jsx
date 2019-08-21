@@ -179,36 +179,44 @@ const BatchRegistrationPanel = React.createClass({
         this.props.refresh();
       })
       .fail(jqXHR => {
-        // If the error is a string
-        if (typeof jqXHR.responseJSON.message === "string") {
-          apiNotify({ status: 0, message: jqXHR.responseJSON.message });
+        if (jqXHR.responseJSON !== undefined) {
+          // If the error response comes from Flask
+          if (typeof jqXHR.responseJSON.message === "object") {
+            // If the error is an object of validation errors
+            const errors = jqXHR.responseJSON.message;
+            let response_html =
+              '<div class="panel panel-danger batch-registration-response"><div class="panel-heading"><h4>Errors found in CSV.</h4>' +
+              "<p>Please resolve the issues below and resubmit:</p>";
+            for (let row_num in errors) {
+              const row = errors[row_num];
+              response_html += `<p><strong>Row ${parseInt(row_num) +
+                1}:</strong></p><ul>`;
+              for (let field in row) {
+                const err_messages = row[field];
+                for (let err_message of err_messages) {
+                  if (field === "_schema") {
+                    response_html += `<li>${_.escape(err_message)}</li>`;
+                  } else {
+                    response_html += `<li>${_.escape(field)}: ${_.escape(
+                      err_message
+                    )}</li>`;
+                  }
+                }
+              }
+              response_html += "</ul>";
+            }
+            $(".batch-registration-response").remove();
+            $("#batch-registration-panel").append(response_html);
+          } else {
+            // Otherwise, assume a normal error message
+            apiNotify({ status: 0, message: jqXHR.responseJSON.message });
+            return;
+          }
+        } else {
+          // If the response contains only a status code (e.g. from nginx)
+          apiNotify({ status: 0, message: jqXHR.statusText });
           return;
         }
-        // Otherwise, the error is an object of validation errors
-        const errors = jqXHR.responseJSON.message;
-        let response_html =
-          '<div class="panel panel-danger batch-registration-response"><div class="panel-heading"><h4>Errors found in CSV.</h4>' +
-          "<p>Please resolve the issues below and resubmit:</p>";
-        for (let row_num in errors) {
-          const row = errors[row_num];
-          response_html += `<p><strong>Row ${parseInt(row_num) +
-            1}:</strong></p><ul>`;
-          for (let field in row) {
-            const err_messages = row[field];
-            for (let err_message of err_messages) {
-              if (field === "_schema") {
-                response_html += `<li>${_.escape(err_message)}</li>`;
-              } else {
-                response_html += `<li>${_.escape(field)}: ${_.escape(
-                  err_message
-                )}</li>`;
-              }
-            }
-          }
-          response_html += "</ul>";
-        }
-        $(".batch-registration-response").remove();
-        $("#batch-registration-panel").append(response_html);
       });
   },
 
