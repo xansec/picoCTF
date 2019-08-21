@@ -1,18 +1,349 @@
-const renderTeamInformation = _.template(
-  $("#team-info-template")
-    .remove()
-    .text()
-);
-const renderGroupInformation = _.template(
-  $("#group-info-template")
-    .remove()
-    .text()
-);
-const renderAchievementInformation = _.template(
-  $("#achievement-info-template")
-    .remove()
-    .text()
-);
+const { Input, Row, Col, Button, Panel,
+        Glyphicon, ButtonInput, ButtonGroup } = ReactBootstrap;
+const { update } = React.addons;
+
+const updatePassword = function(e) {
+  e.preventDefault();
+  const data = {
+    current_password: $("#current-password").val(),
+    new_password: $("#new-password").val(),
+    new_password_confirmation: $("#new-password-confirmation").val()
+  };
+  apiCall(
+    "POST",
+    "/api/v1/user/update_password",
+    data,
+    "Authentication",
+    "UpdatePassword"
+  )
+    .done(data =>
+      apiNotify(
+        { status: 1, message: "Your password has been successfully updated!" },
+        "/profile"
+      )
+    )
+    .fail(jqXHR =>
+      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+    );
+};
+
+const resetPassword = function(e) {
+  e.preventDefault();
+  const data = {
+    reset_token: window.location.hash.substring(1),
+    new_password: $("#password-reset-form input[name=new-password]").val(),
+    new_password_confirmation: $(
+      "#password-reset-form input[name=new-password-confirmation]"
+    ).val()
+  };
+  apiCall(
+    "POST",
+    "/api/v1/user/reset_password",
+    data,
+    "Authentication",
+    "ResetPassword"
+  )
+    .done(function(data) {
+      ga("send", "event", "Authentication", "ResetPassword", "Success");
+      apiNotify(
+        { status: 1, message: "Your password has been reset" },
+        "/"
+      );
+    })
+    .fail(jqXHR =>
+      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+    );
+};
+
+const disableAccount = function(e) {
+  e.preventDefault();
+  confirmDialog(
+    "This will delete your account, drop you from your team, and prevent you from playing!",
+    "Delete Account Confirmation",
+    "Delete Account",
+    "Cancel",
+    function() {
+      const data = {
+        password: $("#disable-account-form input[name=current-password]").val()
+      };
+      apiCall(
+        "POST",
+        "/api/v1/user/disable_account",
+        data,
+        "Authentication",
+        "DisableAccount"
+      )
+        .done(data =>
+          apiNotify(
+            { status: 1, message: "Your account has been deleted." },
+            "/"
+          )
+        )
+        .fail(jqXHR =>
+          apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+        );
+    }
+  );
+};
+
+const downloadData = function(e) {
+  e.preventDefault();
+  apiCall("GET", "/api/v1/user/export")
+    .done(data =>
+      download(
+        JSON.stringify(data, null, 2),
+        "Account Data.txt",
+        "application/json"
+      )
+    )
+    .fail(jqXHR =>
+      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+    );
+};
+
+// Should figure out how we want to share components.
+const TeamManagementForm = React.createClass({
+  mixins: [React.addons.LinkedStateMixin],
+
+  getInitialState() {
+    return {
+      user: {},
+      scoreboards: [],
+      team: {},
+      team_name: "",
+      team_password: ""
+    };
+  },
+
+  componentWillMount() {
+    addAjaxListener("teamManagementFormState", "/api/v1/user", data => {
+      this.setState({ user: data });
+    });
+    apiCall("GET", "/api/v1/team").done(data => {
+      this.setState({ team: data });
+    });
+    apiCall("GET", "/api/v1/scoreboards").done(data => {
+      this.setState({ scoreboards: data });
+    });
+  },
+
+  onTeamRegistration(e) {
+    e.preventDefault();
+    if (!this.state.team_name || !this.state.team_password) {
+      apiNotify({
+        status: 0,
+        message: "Invalid team name or password."
+      });
+    } else {
+      const data = {
+        team_name: this.state.team_name,
+        team_password: this.state.team_password
+      };
+      apiCall("POST", "/api/v1/teams", data)
+        .done(data => (document.location.href = "/profile"))
+        .fail(jqXHR =>
+          apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+        );
+    }
+  },
+
+  onTeamJoin(e) {
+    e.preventDefault();
+    const data = {
+      team_name: this.state.team_name,
+      team_password: this.state.team_password
+    };
+    apiCall("POST", "/api/v1/team/join", data)
+      .done(data => (document.location.href = "/profile"))
+      .fail(jqXHR =>
+        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+      );
+  },
+
+  toggleAllowIneligibleMembers(e) {
+    e.preventDefault();
+    const data = {
+      allow_ineligible_members: !this.state.team.allow_ineligible_members
+    };
+    let dialogMsg = (this.state.team.allow_ineligible_members) ?
+      "This will allow users to join your team ONLY if doing so would keep " +
+      "your team ELIGIBLE for all of its current scoreboards." :
+      "This will allow users to join your team even if doing so would cause " +
+      "your team to become INELIGIBLE for any of its current scoreboards.";
+    confirmDialog(
+      dialogMsg,
+      "Scoreboard Eligibility Lock",
+      "Confirm",
+      "Cancel",
+      ()=> {
+        apiCall("PATCH", "/api/v1/team", data)
+          .done(response => {
+            this.setState(update(this.state, {team: {$merge: data}}));
+            apiNotify(
+              {
+                status: 1,
+                message: "Settings updated successfully"
+              }
+            )
+          })
+          .fail(jqXHR =>
+            apiNotify({status: 0, message: jqXHR.responseJSON.message})
+          );
+      }
+    );
+  },
+
+  onTeamPasswordChange(e) {
+    e.preventDefault();
+    if (this.state.team_password !== this.state.confirm_team_password) {
+      apiNotify({ status: 0, message: "Passwords do not match." });
+    } else {
+      const newpass = this.state.team_password;
+      const newpass_confirm = this.state.confirm_team_password;
+      confirmDialog(
+        "This will change the password needed to join your team.",
+        "Team Password Change Confirmation",
+        "Confirm",
+        "Cancel",
+        function() {
+          const data = {
+            new_password: newpass,
+            new_password_confirmation: newpass_confirm
+          };
+          apiCall("POST", "/api/v1/team/update_password", data)
+            .done(data =>
+              apiNotify(
+                {
+                  status: 1,
+                  message: "Your team password has been successfully updated!"
+                },
+                "/profile"
+              )
+            )
+            .fail(jqXHR =>
+              apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+            );
+        }
+      );
+    }
+  },
+
+  listMembers() {
+    return this.state.team["members"].map((member, i) => (
+      <li key={i}>
+        {member.username} (
+        <span className="capitalize">
+          {member.usertype} - {member.country}
+        </span>
+        )
+      </li>
+    ));
+  },
+
+  listEligibleScoreboards() {
+    const eligibleScoreboards = this.state.scoreboards.filter((scoreboard) =>
+      this.state.team.eligibilities.indexOf(scoreboard.sid) != -1)
+    const scoreboardList = eligibleScoreboards.map((scoreboard, i) =>
+        <li key={i}>{scoreboard.name}</li>
+    )
+    return scoreboardList
+  },
+
+  renderIneligibleMemberToggle() {
+    return (
+      <Col className="form-group">
+        <p>Currently, new users are <b>{this.state.team.allow_ineligible_members ? 'allowed to join' : 'prevented from joining'}</b> your team if doing so would cause your team to become ineligible for any of its current scoreboards.</p>
+        <Button onClick={this.toggleAllowIneligibleMembers}>
+        {this.state.team.allow_ineligible_members ? 'Prevent Ineligible Users From Joining Team' : 'Allow Ineligible Users To Join Team'}
+        </Button>
+      </Col>
+    )
+  },
+
+  render() {
+    if (this.state.team.max_team_size > 1 && !this.state.user.teacher) {
+      const towerGlyph = <Glyphicon glyph="tower" />;
+      const lockGlyph = <Glyphicon glyph="lock" />;
+
+      const teamCreated =
+        this.state.user &&
+        this.state.user.username !== this.state.team.team_name;
+      if (teamCreated) {
+        return (
+          <Panel header="Team Management">
+            <p>
+              <strong>Team Name:</strong> {this.state.team.team_name}
+            </p>
+            <p>
+              <strong>Members</strong> ({this.state.team.members.length}/
+              {this.state.team.max_team_size}):
+            </p>
+            <ul>{this.listMembers()}</ul>
+            <hr />
+            <form onSubmit={this.onTeamPasswordChange}>
+              <Input
+                type="password"
+                valueLink={this.linkState("team_password")}
+                addonBefore={lockGlyph}
+                label="New Team Password"
+                required={true}
+              />
+              <Input
+                type="password"
+                valueLink={this.linkState("confirm_team_password")}
+                addonBefore={lockGlyph}
+                label="Confirm New Team Password"
+                required={true}
+              />
+              <Button type="submit">Change Team Password</Button>
+            </form>
+
+            <hr/>
+            <p><strong>Scoreboard Eligibility</strong></p>
+            <p>Your team is eligible to appear on these scoreboards:</p>
+            <ul>{this.listEligibleScoreboards()}</ul>
+            {this.renderIneligibleMemberToggle()}
+          </Panel>
+        );
+      } else {
+        return (
+          <Panel header="Team Management">
+            <p>{`Your team name may be visible to other users. Do not include your real name or any other personal information.
+Also, to avoid confusion on the scoreboard, you may not create a team that shares the same name as an existing user.`}</p>
+            <form onSubmit={this.onTeamJoin}>
+              <Input
+                type="text"
+                valueLink={this.linkState("team_name")}
+                addonBefore={towerGlyph}
+                label="Team Name"
+                required={true}
+              />
+              <Input
+                type="password"
+                valueLink={this.linkState("team_password")}
+                addonBefore={lockGlyph}
+                label="Team Password"
+                required={true}
+              />
+              <Col md={6}>
+                <span>
+                  <Button type="submit">Join Team</Button>
+                  <Button onClick={this.onTeamRegistration}>
+                    Register Team
+                  </Button>
+                </span>
+              </Col>
+            </form>
+          </Panel>
+        );
+      }
+    } else {
+      return <div />;
+    }
+  }
+});
+
+// Begin classroom panel. TODO: convert to react components
 
 const load_group_info = () =>
   apiCall("GET", "/api/v1/groups", null, "Team", "GroupLoad")
@@ -28,16 +359,6 @@ const load_group_info = () =>
         leave_group($(e.target).data("gid"))
       );
     });
-
-// load_achievement_info = ->
-//     apiCall "GET", "/api/v1/achievements"
-//     .done (data) ->
-//       switch data['status']
-//         when 0
-//             apiNotify(data)
-//             ga('send', 'event', 'Achievements', 'LoadFailure', data.message);
-//         when 1
-//             $("#achievement-info").html renderAchievementInformation({data: data.data})
 
 const join_group = function(group_name, group_owner) {
   const data = { group_name: group_name, group_owner: group_owner };
@@ -89,132 +410,25 @@ const join_group_request = function(e) {
   join_group(group_name, group_owner);
 };
 
-const { update } = React.addons;
-const { Panel } = ReactBootstrap;
-const { ProgressBar } = ReactBootstrap;
-const { Glyphicon } = ReactBootstrap;
-const { Row } = ReactBootstrap;
-const { Col } = ReactBootstrap;
-
-const ProblemInfo = React.createClass({
-  getInitialState() {
-    return {
-      solvedProblems: [],
-      problems: [],
-      team: {},
-      user: {}
-    };
-  },
-
-  componentWillMount() {
-    apiCall("GET", "/api/v1/team")
-      .done(data => {
-        this.setState(update(this.state, { team: { $set: data } }));
-      })
-      .fail(jqXHR =>
-        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-      );
-
-    apiCall("GET", "/api/v1/problems")
-      .done(data => {
-        this.setState(update(this.state, { problems: { $set: data } }));
-        this.setState(update(this.state, { solvedProblems: {
-          $set: data.filter(problem => problem.solved)
-        }}));
-      })
-      .fail(jqXHR =>
-        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-      );
-
-    addAjaxListener("problemInfoState", "/api/v1/user", data => {
-      this.setState(update(this.state, { user: { $set: data } }));
-    });
-  },
-
-  render() {
-    let panelHeader;
-    const allProblemsByCategory = _.groupBy(this.state.problems, "category");
-    const solvedProblemsByCategory = _.groupBy(
-      this.state.solvedProblems,
-      "category"
-    );
-
-    const categories = _.keys(allProblemsByCategory);
-
-    const styles = ["success", "info", "primary", "warning", "danger"];
-
-    const glyphs = {
-      Cryptography: "/img/lock.svg",
-      "Web Exploitation": "/img/browser.svg",
-      "Binary Exploitation": "/img/binary.svg",
-      "Reverse Engineering": "/img/reversecog.svg",
-      Forensics: "/img/search.svg",
-      Tutorial: "/img/laptop.svg"
-    };
-
-    if (
-      this.state.team &&
-      this.state.team.length > 0 &&
-      this.state.user.username !== this.state.team.team_name &&
-      this.state.team.team_name.length > 0
-    ) {
-      panelHeader = (
-        <div>
-          Progress Overview
-          <span className="pull-right">
-            Team: <b>{this.state.team.team_name}</b>
-          </span>
-        </div>
-      );
-    } else {
-      panelHeader = <div>Progress Overview</div>;
-    }
-
-    return (
-      <Panel key={categories} header={panelHeader}>
-        {categories.map(function(category, i) {
-          const currentlySolved = solvedProblemsByCategory[category]
-            ? solvedProblemsByCategory[category].length
-            : 0;
-          return (
-            <Row key={i}>
-              <Col xs={8} sm={8} md={6} lg={8} className="progress-container">
-                <ProgressBar
-                  now={currentlySolved}
-                  bsStyle={styles[i % styles.length]}
-                  max={allProblemsByCategory[category].length}
-                  label="%(now)s / %(max)s"
-                />
-              </Col>
-              <Col xs={4} sm={4} md={6} lg={4} className="progress-label">
-                <img
-                  className="category-icon"
-                  src={glyphs[category] ? glyphs[category] : "/img/laptop.svg"}
-                />
-                <div className="pull-right">{category}</div>
-              </Col>
-            </Row>
-          );
-        })}
-      </Panel>
-    );
-  }
-});
+const renderGroupInformation = _.template(
+  $("#group-info-template")
+    .remove()
+    .text()
+);
 
 $(function() {
+  $("#password-update-form").on("submit", updatePassword);
+  $("#password-reset-form").on("submit", resetPassword);
+  $("#disable-account-form").on("submit", disableAccount);
+  $("#download-data-form").on("submit", downloadData);
+
+  ReactDOM.render(
+    <TeamManagementForm />,
+    document.getElementById("team-management")
+  );
   addAjaxListener("isTeacher", "/api/v1/user", function (data) {
-    if (data.teacher) {
-      window.isTeacher = true;
-    }
+    window.isTeacher = data.teacher;
     window.username = data.username;
   });
-
-  //load_team_info()
-  ReactDOM.render(<ProblemInfo />, document.getElementById("progress-info"));
   load_group_info();
-  // load_achievement_info()
-  window.drawTeamProgressionGraph(
-    "#team-progression-graph",
-    "#team-progression-graph-container"
-  );
 });
