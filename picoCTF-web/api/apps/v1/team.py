@@ -154,9 +154,9 @@ class TeamJoinResponse(Resource):
 @ns.response(200, 'Success')
 @ns.response(400, 'Error parsing request')
 @ns.response(401, 'Not logged in')
-@ns.response(403, 'Ineligible to join this group or CSRF token invalid')
-@ns.response(404, 'Group or group owner not found')
-@ns.response(409, 'Already a member of this group')
+@ns.response(403, 'Ineligible to join this classroom or CSRF token invalid')
+@ns.response(404, 'Classroom or classroom owner not found')
+@ns.response(409, 'Already a member of this classroom')
 @ns.expect(join_group_req)
 @ns.route('/join_group')
 class GroupJoinResponse(Resource):
@@ -171,20 +171,20 @@ class GroupJoinResponse(Resource):
         # Make sure the specified group and owner exist
         owner_team = api.team.get_team(name=req['group_owner'])
         if owner_team is None:
-            raise PicoException('Group owner not found', 404)
+            raise PicoException('Classroom owner not found', 404)
 
         group = api.group.get_group(
             name=req['group_name'],
             owner_tid=owner_team['tid']
         )
         if group is None:
-            raise PicoException('Group not found', 404)
+            raise PicoException('Classroom not found', 404)
 
         # Make sure the current user's team is not already in the group
         group_members = [group['owner']] + group['members'] + group['teachers']
         if curr_user['tid'] in group_members:
             raise PicoException(
-                'Your team is already a member of this group.', 409
+                'Your team is already a member of this classroom.', 409
             )
 
         # Make sure each member of the current user's team passes the group's

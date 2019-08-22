@@ -541,8 +541,8 @@ score_progressions_req.add_argument(
 group_req = reqparse.RequestParser()
 group_req.add_argument(
     'name', required=True, type=length_restricted(3, 100, str),
-    location='json', help='Name for the new group.',
-    error='Group name is required'
+    location='json', help='Name for the new classroom.',
+    error='Classroom name is required'
 )
 
 # Group patch request
@@ -566,12 +566,12 @@ group_remove_team_req.add_argument(
 group_invite_req = reqparse.RequestParser()
 group_invite_req.add_argument(
     'email', required=True, type=inputs.email(), location='json',
-    help='Email address to invite to the group.',
+    help='Email address to invite to the classroom.',
     error='Must be a valid email address'
 )
 group_invite_req.add_argument(
     'as_teacher', required=True, type=inputs.boolean, location='json',
-    default=False, help='Invite this user to be a teacher in the group, ' +
+    default=False, help='Invite this user to be a teacher in the classroom, ' +
                         'rather than a regular member.',
     error='as_teacher must be a boolean value'
 )
@@ -581,12 +581,12 @@ join_group_req = reqparse.RequestParser()
 join_group_req.add_argument(
     'group_name', required=True, type=length_restricted(3, 100, str),
     location='json', help='Name of the group to join.',
-    error='Group name is required'
+    error='Classroom name is required'
 )
 join_group_req.add_argument(
     'group_owner', required=True, type=length_restricted(3, 40, str),
     location='json', help='Name of the teacher who owns the group.',
-    error='Group owner is required'
+    error='Classroom owner is required'
 )
 
 # Minigame submission request

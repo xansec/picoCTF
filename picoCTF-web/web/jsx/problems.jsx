@@ -1,37 +1,9 @@
-const { Panel } = ReactBootstrap;
-const { Button } = ReactBootstrap;
-const { ButtonGroup } = ReactBootstrap;
-const { Glyphicon } = ReactBootstrap;
-const { Col } = ReactBootstrap;
-const { Input } = ReactBootstrap;
-const { Label } = ReactBootstrap;
-const { PanelGroup } = ReactBootstrap;
-const { Row } = ReactBootstrap;
-const { ListGroup } = ReactBootstrap;
-const { ListGroupItem } = ReactBootstrap;
-const { Collapse } = ReactBootstrap;
-const { Table } = ReactBootstrap;
-const { Badge } = ReactBootstrap;
-const { Tabs } = ReactBootstrap;
-const { Tab } = ReactBootstrap;
-const { NavItem } = ReactBootstrap;
+const { Badge, Button, ButtonGroup, Glyphicon, Col, Input, ListGroup,
+        ListGroupItem, NavItem, Panel, PanelGroup, ProgressBar, Row, Tab,
+        Table, Tabs } = ReactBootstrap;
 const { update } = React.addons;
 
-const renderProblemList = _.template(
-  $("#problem-list-template")
-    .remove()
-    .text()
-);
-const renderProblem = _.template(
-  $("#problem-template")
-    .remove()
-    .text()
-);
-const renderProblemSubmit = _.template(
-  $("#problem-submit-template")
-    .remove()
-    .text()
-);
+
 const renderAchievementMessage = _.template(
   $("#achievement-message-template")
     .remove()
@@ -141,15 +113,6 @@ const loadProblems = () =>
       addScoreToTitle("#title");
       apiCall("GET", "/api/v1/feedback")
         .done(function(reviewData) {
-          /*$("#problem-list-holder").html(
-            renderProblemList({
-              problems: data,
-              reviewData,
-              renderProblem,
-              renderProblemSubmit,
-              sanitizeMetricName
-            })
-          );*/
           ReactDOM.render(
             <ProblemView
               problems={data}
@@ -456,13 +419,7 @@ const ProblemSubmit = React.createClass({
     }
   },
   handleChange(e) {
-    this.setState(
-      update(this.state, {
-        $set: {
-          value: e.target.value
-        }
-      })
-    );
+    this.setState({ value: e.target.value })
   },
   submitProblem (e) {
    e.preventDefault();
@@ -711,17 +668,13 @@ const ProblemView = React.createClass({
   onFilterChange(filter) {
     try {
       const newFilter = new RegExp(filter, "i");
-      this.setState(
-        update(this.state, { filterRegex: { $set: newFilter } })
-      );
+      this.setState({ filterRegex: newFilter });
     } catch (error) {}
   },
   // We shouldn't do anything.
 
   onSortChange(name, ascending) {
-    this.setState(
-      update(this.state, { activeSort: { $set: { name, ascending } } })
-    );
+    this.setState({ activeSort: { name, ascending }})
   },
 
   setClassifier(classifierState, classifier, name) {
@@ -736,9 +689,7 @@ const ProblemView = React.createClass({
         this.state.problemClassifier,
         classifierObject => classifierObject.name !== name
       );
-      this.setState(
-        update(this.state, { problemClassifier: { $set: otherClassifiers } })
-      );
+      this.setState({ problemClassifier: otherClassifiers });
     }
   },
 
@@ -797,5 +748,107 @@ const ProblemView = React.createClass({
   }
 });
 
+const ProblemProgress = React.createClass({
+  getInitialState() {
+    return {
+      solvedProblems: [],
+      problems: [],
+      team: {},
+      user: {}
+    };
+  },
+  componentDidMount() {
+    apiCall("GET", "/api/v1/team")
+      .done(data => {
+        this.setState({ team: data })
+      })
+      .fail(jqXHR =>
+        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+      );
 
-$(() => loadProblems());
+    addAjaxListener("problemProgress", "/api/v1/problems", data => {
+        this.setState({ problems: data });
+        this.setState({ solvedProblems: data.filter(problem => problem.solved) });
+    });
+
+    addAjaxListener("problemInfoState", "/api/v1/user", data => {
+      this.setState({ user: data });
+    });
+  },
+
+  render() {
+    let panelHeader;
+    const allProblemsByCategory = _.groupBy(this.state.problems, "category");
+    const solvedProblemsByCategory = _.groupBy(
+      this.state.solvedProblems,
+      "category"
+    );
+
+    const categories = _.keys(allProblemsByCategory);
+
+    const styles = ["success", "info", "primary", "warning", "danger"];
+
+    const glyphs = {
+      Cryptography: "/img/lock.svg",
+      "Web Exploitation": "/img/browser.svg",
+      "Binary Exploitation": "/img/binary.svg",
+      "Reverse Engineering": "/img/reversecog.svg",
+      Forensics: "/img/search.svg",
+      Tutorial: "/img/laptop.svg"
+    };
+
+    if (
+      this.state.team &&
+      this.state.team.length > 0 &&
+      this.state.user.username !== this.state.team.team_name &&
+      this.state.team.team_name.length > 0
+    ) {
+      panelHeader = (
+        <div>
+          Category Overview
+          <span className="pull-right">
+            Team: <b>{this.state.team.team_name}</b>
+          </span>
+        </div>
+      );
+    } else {
+      panelHeader = <div>Category Overview</div>;
+    }
+
+    return (
+      <Panel header={panelHeader}>
+        {categories.map(function(category, i) {
+          const currentlySolved = solvedProblemsByCategory[category]
+            ? solvedProblemsByCategory[category].length
+            : 0;
+          return (
+            <Row key={i}>
+              <Col sm={8} md={6} lg={8} className="progress-container">
+                <ProgressBar
+                  now={currentlySolved}
+                  bsStyle={styles[i % styles.length]}
+                  max={allProblemsByCategory[category].length}
+                  label="%(now)s / %(max)s"
+                />
+              </Col>
+              <Col sm={4} md={6} lg={4} className="progress-label">
+                <img
+                  className="category-icon"
+                  src={glyphs[category] ? glyphs[category] : "/img/laptop.svg"}
+                />
+                <div className="pull-right">{category}</div>
+              </Col>
+            </Row>
+          );
+        })}
+      </Panel>
+    );
+  }
+});
+
+
+$(() => {
+    loadProblems();
+    ReactDOM.render(<ProblemProgress />, document.getElementById("progress-info"));
+    window.drawTeamProgressionGraph("#team-progression-graph");
+});

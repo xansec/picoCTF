@@ -274,7 +274,7 @@ window.renderTeamProgressionGraph = function(selector, data) {
     });
 };
 
-window.drawTeamProgressionGraph = (selector, container_selector) =>
+window.drawTeamProgressionGraph = (selector) =>
   apiCall("GET", "/api/v1/team/score_progression")
     .done(data => renderTeamProgressionGraph(selector, data))
     .fail(jqXHR =>

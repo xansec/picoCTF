@@ -311,14 +311,14 @@ def test_join_group(mongo_proc, client): # noqa (fixture)
         'group_owner': TEACHER_DEMOGRAPHICS['username']
     }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 404
-    assert res.json['message'] == 'Group not found'
+    assert res.json['message'] == 'Classroom not found'
 
     res = client.post('/api/v1/team/join_group', json={
         'group_name': 'newgroup',
         'group_owner': 'invalid'
     }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 404
-    assert res.json['message'] == 'Group owner not found'
+    assert res.json['message'] == 'Classroom owner not found'
 
     # Attempt to join a group that we don't pass the email whitelist for
     db = get_conn()
@@ -356,7 +356,7 @@ def test_join_group(mongo_proc, client): # noqa (fixture)
     }, headers=[('X-CSRF-Token', csrf_t)])
     assert res.status_code == 409
     assert res.json['message'] == 'Your team is already a member of ' + \
-                                  'this group.'
+                                  'this classroom.'
 
     # Join a group as a user with teacher permissions
     client.get('/api/v1/user/logout')
