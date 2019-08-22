@@ -611,10 +611,13 @@ def rate_limit(limit=5, duration=60, by_ip=False, allow_bypass=False):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            conf = current_app.config
-            if allow_bypass or conf.get('TESTING', False):
+            settings = api.config.get_settings()
+            if not settings.get('enable_rate_limiting', True):
+                return f(*args, **kwargs)
+            app_config = current_app.config
+            if allow_bypass or app_config.get('TESTING', False):
                 bypass_header = request.headers.get('Limit-Bypass')
-                if bypass_header == conf["RATE_LIMIT_BYPASS"]:
+                if bypass_header == app_config["RATE_LIMIT_BYPASS"]:
                     return f(*args, **kwargs)
 
             key_id = request.remote_addr
