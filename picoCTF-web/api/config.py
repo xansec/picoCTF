@@ -214,7 +214,10 @@ The {competition_name} Team""" # noqa (79char)
             "b3": 45,
             "c3": 20,
         },
-    }
+    },
+
+    # RATE LIMITING
+    "enable_rate_limiting": True,
 }
 
 

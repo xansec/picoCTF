@@ -211,6 +211,10 @@ settings_patch_req.add_argument(
     'max_batch_registrations', required=False, type=inputs.natural,
     location='json', error='max_batch_registrations must be a positive integer'
 )
+settings_patch_req.add_argument(
+    'enable_rate_limiting', required=False, type=inputs.boolean,
+    location='json'
+)
 
 # Bundle PATCH request schema
 # ("dependencies_enabled" is the only mutable field as the others are managed

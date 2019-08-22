@@ -99,6 +99,16 @@ const GeneralTab = React.createClass({
     );
   },
 
+  toggleRateLimiting() {
+    this.setState(
+      update(this.state, {
+        $set: {
+          enable_rate_limiting: !this.state.enable_rate_limiting
+        }
+      })
+    );
+  },
+
   pushUpdates() {
     const data = {
       enable_feedback: this.state.enable_feedback,
@@ -109,6 +119,7 @@ const GeneralTab = React.createClass({
       max_team_size: this.state.max_team_size,
       username_blacklist: this.state.username_blacklist,
       max_batch_registrations: this.state.max_batch_registrations,
+      enable_rate_limiting: this.state.enable_rate_limiting,
     };
     apiCall("PATCH", "/api/v1/settings", data)
       .done(data => {
@@ -139,6 +150,9 @@ their passwords.`;
       "Usernames that are unavailable for registration.";
     const maxBatchRegistrationsDescription =
       "Maximum number of student accounts a teacher can create via batch registration.";
+
+    const rateLimitingDescription =
+      "Whether to enable rate limiting for certain endpoints.";
 
     return (
       <Well>
@@ -194,6 +208,12 @@ their passwords.`;
           type="number"
           onChange={this.updateMaxBatchRegistrations}
           description={maxBatchRegistrationsDescription}
+        />
+        <BooleanEntry
+          name="Enable Rate Limiting"
+          value={this.state.enable_rate_limiting}
+          onChange={this.toggleRateLimiting}
+          description={rateLimitingDescription}
         />
         <Row>
           <div className="text-center">
@@ -839,7 +859,8 @@ const SettingsTab = React.createClass({
           reCAPTCHA_public_key: "",
           reCAPTCHA_private_key: ""
         },
-        max_batch_registrations: 250
+        max_batch_registrations: 250,
+        enable_rate_limiting: true
       },
 
       tabKey: "general"
@@ -881,7 +902,8 @@ const SettingsTab = React.createClass({
       end_time: this.state.settings.end_time,
       max_team_size: this.state.settings.max_team_size,
       username_blacklist: this.state.settings.username_blacklist,
-      max_batch_registrations: this.state.settings.max_batch_registrations
+      max_batch_registrations: this.state.settings.max_batch_registrations,
+      enable_rate_limiting: this.state.settings.enable_rate_limiting
     };
     return (
       <Well>
