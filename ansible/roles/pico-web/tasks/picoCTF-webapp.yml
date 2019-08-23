@@ -55,3 +55,12 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
   no_log: True
+
+- name: Copy mongodb public cert if TLS enabled
+  copy:
+    src: mongodb_tls.pem
+    dest: /etc/ssl/certs/mongodb_tls.pem
+    owner: root
+    group: root
+    mode: 0644
+  when: mongodb_tls_enabled | bool

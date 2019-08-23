@@ -6,6 +6,12 @@ MONGO_PORT = "{{ mongodb_conf_port | default(27017)}}"
 MONGO_USER = "{{ mongodb_web_user | default("picoWeb") }}"
 MONGO_PW = "{{ picoWeb_db_password }}"
 {% endif %}
+{% if mongodb_documentdb_cluster %}
+MONGO_REPLICA_SETTINGS = "replicaSet=rs0&readPreference=secondaryPreferred"
+{% endif %}
+{% if mongodb_tls_enabled %}
+MONGO_TLS_SETTINGS = "ssl=true&ssl_ca_certs=/etc/ssl/certs/mongodb_tls.pem"
+{% endif %}
 
 REDIS_DB_NUMBER = "{{ redis_db_number | default(0) }}"
 REDIS_ADDR = "{{ redis_private_ip | default(db_private_ip) }}"
