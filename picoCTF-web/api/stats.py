@@ -435,13 +435,13 @@ def get_scoreboard_page(scoreboard_key, page_number=None):
     """
     board_cache = get_scoreboard_cache(**scoreboard_key)
     if not page_number:
-        user = api.user.get_user()
-        if user:
+        try:
+            user = api.user.get_user()
             team = api.team.get_team(tid=user['tid'])
             team_position = board_cache.rank(get_scoreboard_key(team),
                                              reverse=True) or 0
             page_number = math.floor(team_position / SCOREBOARD_PAGE_LEN) + 1
-        else:
+        except PicoException:
             page_number = 1
     start = SCOREBOARD_PAGE_LEN * (page_number - 1)
     end = start + SCOREBOARD_PAGE_LEN - 1
@@ -450,7 +450,7 @@ def get_scoreboard_page(scoreboard_key, page_number=None):
                       start, end, with_scores=True, reverse=True)]
 
     available_pages = max(math.ceil(len(board_cache) / SCOREBOARD_PAGE_LEN), 1)
-    return (board_page, page_number, available_pages)
+    return board_page, page_number, available_pages
 
 
 def get_filtered_scoreboard_page(scoreboard_key, pattern, page_number=1):
