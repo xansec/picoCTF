@@ -77,16 +77,18 @@ def pam_sm_open_session(_pamh, flags, argv):
     totalmem_mb = (os.sysconf('SC_PAGE_SIZE') *
                    os.sysconf('SC_PHYS_PAGES')) / 1024.0 / 1024.0
     memlimit_mb = totalmem_mb - minsysmem_mb
+    memhigh_mb = memlimit_mb * 0.95
 
     # This applies to user.slice, so
     # *Accounting=yes enforces fair sharing where possible for the group of
     # user processes *against* the group of system processes
     #
-    # Setting a specific CPUShares is so that in the worst case, the system
+    # Setting a specific CPUWeight is so that in the worst case, the system
     # doesn't use the same amount as the users.  We can bias it for the users
     # but to a specified limit.
-    # CPUShares is used here instead of CPUQuota so the setting doesn't need to
+    # CPUWeight is used here instead of CPUQuota so the setting doesn't need to
     # know how many cores are available.
+    # CPUWeight replaces CPUShares from Ubuntu 16.04
     #
     # With shares_from_percentage(90) we let users use at most 90% of the
     # available CPU resources when the system wants resources, instead of using
@@ -101,11 +103,12 @@ def pam_sm_open_session(_pamh, flags, argv):
     all_properties = [
         "CPUAccounting=yes",
         "CPUQuota=",  # clear this so no interaction with CPUShares
-        "CPUShares=%d" % (shares_from_percentage(90),),
+        "CPUWeight=%d" % (shares_from_percentage(90),),
         "MemoryAccounting=yes",
-        "MemoryLimit=%dM" % memlimit_mb,
+        "MemoryHigh=%dM" % memhigh_mb,
+        "MemoryMax=%dM" % memlimit_mb,
         "TasksAccounting=yes",
-        "BlockIOAccounting=true",
+        "IOAccounting=true",
     ]
 
     slice_name = 'user.slice'.format(uid=entry.pw_uid)
@@ -162,17 +165,17 @@ def pam_sm_open_session(_pamh, flags, argv):
     # This applies to user-{uid}.slice, so
     # *Accounting=yes enforces fair sharing (where possible) among users
     # CPUQuota sets a maximum for each user (aggregate is limited via all_properties settings)
-    # MemoryLimit sets a maximum for each user (doesn't seem to be a way to handle the aggregate, unfortunately)
+    # MemoryMax sets a maximum for each user (doesn't seem to be a way to handle the aggregate, unfortunately)
     # TasksMax sets a maximum for each user (aggregate can have a max set in all_properties but maybe not useful)
     each_properties = [
         "CPUAccounting=yes",
         "CPUQuota=20%",
-        "CPUShares=",  # clear this so no interaction with CPUQuota
+        "CPUWeight=",  # clear this so no interaction with CPUQuota
         "MemoryAccounting=yes",
-        "MemoryLimit=128M",
+        "MemoryMax=128M",
         "TasksAccounting=yes",
         "TasksMax=100",
-        "BlockIOAccounting=true",
+        "IOAccounting=true",
     ]
 
     slice_name = 'user-{uid}.slice'.format(uid=entry.pw_uid)
@@ -191,11 +194,11 @@ def pam_sm_close_session(pamh, flags, argv):
     return pamh.PAM_SUCCESS
 
 
-def shares_from_percentage(p, other_shares=1024, others=1):
-    '''Calculate CPUShares value given percentage p.  p should
+def shares_from_percentage(p, other_shares=100, others=1):
+    '''Calculate CPUWeight value given percentage p.  p should
     be in [0-100]
 
-    We expect CPUShares is 1024 by default and only 1 other party.
+    We expect CPUWeight is 100 by default and only 1 other party.
 
     So, to set a relative percentage P where P = p/100, S=other_shares*others
         total shares = S + x
