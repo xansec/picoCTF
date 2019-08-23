@@ -93,6 +93,7 @@ setup(
             'pytest-redis',
             'flake8',
             'pydocstyle',
+            'locustio',
         ]
     },
     entry_points={
