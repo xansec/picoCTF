@@ -188,6 +188,11 @@ const render_scoreboard_navigation = () =>
         apiCall("GET", "/api/v1/team"),
         apiCall("GET", "/api/v1/groups")
       ).done(function (scoreboard_data, team_data, group_data) {
+        if (!team_data[0].eligibilities.length) {
+          $("scoreboard-container").html('<div class="text-center well">No eligible scoreboards</div>');
+          return;
+        }
+
         // Update the team score
         $("#scoreboard-teamscore").html(
           renderScoreboardTeamScore({
