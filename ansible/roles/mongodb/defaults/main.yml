@@ -26,8 +26,6 @@ mongodb_apt_key_id: 9DA31620334BD75D9DCB49F368818C72E52529D4
 mongodb_repo: 'deb http://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse'
 
 mongodb_conf_auth: true                                               # Run with security
-mongodb_documentdb_cluster: false
-mongodb_tls_enabled: false
 mongodb_conf_bind_ip: "0.0.0.0"                                       # IP addresses to listen on (Static)
 mongodb_conf_port: 27017                                              # Port number
 mongodb_conf_journal: true                                            # Enable journaling
