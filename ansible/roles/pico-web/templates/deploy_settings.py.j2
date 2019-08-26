@@ -10,7 +10,7 @@ MONGO_PW = "{{ picoWeb_db_password }}"
 MONGO_REPLICA_SETTINGS = "replicaSet=rs0"
 {% endif %}
 {% if mongodb_tls_enabled %}
-MONGO_TLS_SETTINGS = "ssl=true&ssl_ca_certs=/etc/ssl/certs/mongodb_tls.pem"
+MONGO_TLS_SETTINGS = "tls=true&tlsCAFile=/etc/ssl/certs/mongodb_tls.pem"
 {% endif %}
 
 REDIS_DB_NUMBER = "{{ redis_db_number | default(0) }}"
