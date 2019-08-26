@@ -446,7 +446,7 @@ const EmailWhitelistItem = React.createClass({
 
   render() {
     const removeEmail = this.props.pushUpdates.bind(null, data => {
-      update(data, {
+      return update(data, {
         email_filter: { $apply: _.partial(_.without, _, this.props.email) }
       });
     });
@@ -501,9 +501,8 @@ const GroupEmailWhitelist = React.createClass({
       });
     } else {
       this.props.pushUpdates(data => {
-        //Fine because @setState won't affect the next line
-        this.setState(update(this.state, { $set: { emailDomain: "" } }));
-        update(data, {
+        this.setState({ emailDomain: "" });
+        return update(data, {
           email_filter: { $push: [this.state.emailDomain] }
         });
       });
