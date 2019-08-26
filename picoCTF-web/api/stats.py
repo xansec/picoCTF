@@ -71,7 +71,7 @@ def get_score(tid=None, uid=None, time_weighted=True):
                     }
                 }
             query = db.submissions.find(solved_args).limit(1).sort(
-                [('$natural', pymongo.DESCENDING)])
+                [('_id', pymongo.DESCENDING)])
             if query.count() > 0:
                 last_submitted = query[0]['timestamp']
             # Weight returns a float based on last submission time.
