@@ -182,7 +182,7 @@ def send_email_invite(gid, email, teacher=False):
     registration_link = "{}/#g={}&r={}".\
         format(settings["competition_url"], group["gid"], token_value)
 
-    body = settings["email"]["verification_parent_body"].format(
+    body = settings["email"]["invite_body"].format(
         competition_name = settings["competition_name"],
         group_name = group["name"],
         registration_link = registration_link) # noqa (79char)
