@@ -639,6 +639,8 @@ def rate_limit(limit=5, duration=60, by_ip=False, allow_bypass=False):
             if count is not None and count <= limit:
                 return f(*args, **kwargs)
             else:
-                raise PicoException('Too many requests, slow down!', 429)
+                limit_msg = "Too many requests, slow down! " \
+                      "Limit: {}, {}s duration".format(limit, duration)
+                raise PicoException(limit_msg, 429)
         return wrapper
     return decorator
