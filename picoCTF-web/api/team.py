@@ -425,7 +425,6 @@ def join_team(team_name, password, user):
                     gid=group["gid"], tid=desired_team["tid"])
 
     # Immediately invalidate some caches
-
     cache.invalidate(api.stats.get_score, desired_team['tid'])
     cache.invalidate(api.stats.get_score, user['uid'])
     cache.invalidate(api.problem.get_unlocked_pids, desired_team['tid'])

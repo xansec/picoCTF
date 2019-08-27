@@ -357,7 +357,7 @@ def get_top_teams_score_progressions(
     return [output_item(team_item) for team_item in team_items]
 
 
-@memoize()
+@memoize
 def check_invalid_instance_submissions(gid=None):
     """Get submissions of keys for the wrong problem instance."""
     db = api.db.get_conn()
