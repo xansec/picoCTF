@@ -101,8 +101,9 @@ const addProblemReview = function(e) {
 //     new_achievements = (x for x in data.data when !x.seen)
 //     constructAchievementCallbackChain new_achievements
 
-const addScoreToTitle = selector =>
-  apiCall("GET", "/api/v1/team/score").done(function(data) {
+const updateScoreStats = selector => {
+  drawTeamProgressionGraph("#team-progression-graph");
+  apiCall("GET", "/api/v1/team/score").done(function (data) {
     if (data) {
       $(selector)
         .children("#team-score")
@@ -112,6 +113,7 @@ const addScoreToTitle = selector =>
       );
     }
   });
+};
 
 const SortableButton = React.createClass({
   propTypes: {
@@ -594,7 +596,6 @@ const ProblemList = React.createClass({
 const ProblemView = React.createClass({
   getInitialState() {
     return {
-      problems: [],
       reviewData: [],
       filterRegex: /.*/,
       activeSort: {
@@ -613,19 +614,7 @@ const ProblemView = React.createClass({
   },
 
   componentDidMount() {
-    this.updateProblemsList();
     this.updateFeedback();
-  },
-
-  updateProblemsList() {
-    addScoreToTitle("#title");
-    apiCall("GET", "/api/v1/problems")
-      .done(data => {
-        this.setState({ problems: data })
-      })
-      .fail(jqXHR =>
-        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-      );
   },
 
   updateFeedback() {
@@ -691,7 +680,7 @@ const ProblemView = React.createClass({
   },
 
   render() {
-    const filteredProblems = this.filterProblems(this.state.problems);
+    const filteredProblems = this.filterProblems(this.props.problems);
     return (
       <Row className="pad">
         <Col md={3}>
@@ -714,7 +703,7 @@ const ProblemView = React.createClass({
           <ProblemList
             problems={filteredProblems}
             reviewData={this.state.reviewData}
-            updateProblemsList={this.updateProblemsList}
+            updateProblemsList={this.props.updateProblemsList}
           />
         </Col>
       </Row>
@@ -725,8 +714,6 @@ const ProblemView = React.createClass({
 const ProblemProgress = React.createClass({
   getInitialState() {
     return {
-      solvedProblems: [],
-      problems: [],
       team: {},
       user: {}
     };
@@ -740,11 +727,6 @@ const ProblemProgress = React.createClass({
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
       );
 
-    addAjaxListener("problemProgress", "/api/v1/problems", data => {
-        this.setState({ problems: data });
-        this.setState({ solvedProblems: data.filter(problem => problem.solved) });
-    });
-
     addAjaxListener("problemInfoState", "/api/v1/user", data => {
       this.setState({ user: data });
     });
@@ -752,9 +734,9 @@ const ProblemProgress = React.createClass({
 
   render() {
     let panelHeader;
-    const allProblemsByCategory = _.groupBy(this.state.problems, "category");
+    const allProblemsByCategory = _.groupBy(this.props.problems, "category");
     const solvedProblemsByCategory = _.groupBy(
-      this.state.solvedProblems,
+      this.props.solvedProblems,
       "category"
     );
 
@@ -821,8 +803,63 @@ const ProblemProgress = React.createClass({
 });
 
 
+const ProblemRoot = React.createClass({
+  getInitialState() {
+    return {
+      problems: [],
+      solvedProblems: [],
+    };
+  },
+
+  componentDidMount() {
+    this.updateProblemsList()
+  },
+
+  updateProblemsList() {
+    updateScoreStats("#title");
+    apiCall("GET", "/api/v1/problems")
+      .done(data => {
+        this.setState({ problems: data });
+        this.setState({ solvedProblems: data.filter(problem => problem.solved) });
+      })
+      .fail(jqXHR =>
+        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+      );
+  },
+
+  render() {
+    let progressHeader = (<div><Glyphicon glyph="stats"/>{" Progress Tracker"}</div>);
+    return (
+      <div>
+        <Row>
+          <Panel header={progressHeader} defaultExpanded={false} collapsible={true}>
+            <Row>
+              <Col md={6}>
+                <ProblemProgress
+                  problems={this.state.problems}
+                  solvedProblems={this.state.solvedProblems}
+                />
+              </Col>
+              <Col md={6}>
+                <Panel header="Score Progression over Time">
+                  <div id="team-progression-graph"/>
+                </Panel>
+              </Col>
+            </Row>
+          </Panel>
+        </Row>
+        <Row>
+          <ProblemView
+            problems={this.state.problems}
+            updateProblemsList={this.updateProblemsList}
+          />
+        </Row>
+      </div>
+    );
+  }
+});
+
+
 $(() => {
-    ReactDOM.render(<ProblemView />, document.getElementById("problem-list-holder"));
-    ReactDOM.render(<ProblemProgress />, document.getElementById("progress-info"));
-    window.drawTeamProgressionGraph("#team-progression-graph");
+    ReactDOM.render(<ProblemRoot />, document.getElementById("problem-root-holder"));
 });
