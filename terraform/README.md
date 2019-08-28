@@ -73,12 +73,12 @@ After following above, you will have the bare-boned hardware neccesary to run Pi
 1. Deploy (copy) your picoCTF repository to `/picoCTF` on the newly created instances. The below list of steps is the simplest method for demonstration purpose, but [mkdeploy.sh](../mkdeploy.sh) was developed to deploy your own custom repo. Read this script to learn how to use it.
     
     - `sudo git clone https://github.com/picoCTF/picoCTF.git /picoCTF`
-    - `chown -R ubuntu:ubuntu /picoCTF`
+    - `sudo chown -R ubuntu:ubuntu /picoCTF`
 
 2. Install ansible on terraformed instances
 
-    - `chmod +x /picoCTF/vagrant/provision_scripts`
-    - `/picoCTF/vagrant/provision_scripts/install_ansible`
+    - `chmod +x /picoCTF/vagrant/provision_scripts/*`
+    - `/picoCTF/vagrant/provision_scripts/install_ansible.sh`
 
 3. Update the appropriate ansible inventory (see [remote_aws_single_tier_example](../ansible/inventories/remote_aws_single_tier_example) for a very simple example of a single tier AWS inventory).
 
