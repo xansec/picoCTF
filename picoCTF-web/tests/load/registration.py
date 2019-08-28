@@ -36,9 +36,11 @@ class RegistrationTasks(TaskSet):
     @task(weight=10)
     def successfully_register(l):
         user_demographics = generate_user()
-        get_db().users.insert_one(user_demographics.copy())
+        with l.client.post(REGISTRATION_ENDPOINT, json=user_demographics,
+                catch_response=True) as res:
+            if res.status_code == 201:
+                get_db().users.insert_one(user_demographics.copy())
 
-        l.client.post(REGISTRATION_ENDPOINT, json=user_demographics)
         raise StopLocust # Terminate after successful registration
 
     @task(weight=1)

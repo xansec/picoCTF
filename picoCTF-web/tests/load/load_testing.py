@@ -15,7 +15,7 @@ from demographics_generator import (get_affiliation, get_country_code,
                                     get_user_type, get_username)
 from util import (GAME_PAGE_URL, get_db, GROUPS_ENDPOINT, LOGIN_ENDPOINT,
                   LOGOUT_ENDPOINT, SCOREBOARD_PAGE_URL, SCOREBOARDS_ENDPOINT,
-                  SHELL_PAGE_URL, REGISTRATION_ENDPOINT)
+                  SHELL_PAGE_URL, REGISTRATION_ENDPOINT, FEEDBACK_ENDPOINT, PROBLEMS_ENDPOINT, PROBLEMS_PAGE_URL)
 
 
 def generate_user():
@@ -40,13 +40,16 @@ def register_and_expect_failure(l, user_demographics):
 def acquire_user(properties={}):
     """Retrieve an available test user with the specified properties."""
     properties['in_use'] = {'$in': [False, None]}
-    return get_db().users.find_one_and_update(
+    user = get_db().users.find_one_and_update(
         properties, {'$set': {'in_use': True}}, {'_id': 0})
+    return user
 
 def release_user(username):
     """Release a test user for usage by other threads."""
-    get_db().users.find_one_and_update(
+    res = get_db().users.find_one_and_update(
         {'username': username}, {'$set': {'in_use': False}})
+    if not res:
+        raise Exception("Could not release user " + username)
 
 def login(l, username=None, password=None):
     if not username:
@@ -55,10 +58,12 @@ def login(l, username=None, password=None):
         user = dict()
         user['username'] = username
         user['password'] = password
-    l.client.post(LOGIN_ENDPOINT, json={
+    res = l.client.post(LOGIN_ENDPOINT, json={
         'username': user['username'],
         'password': user['password']
-    })
+    }, catch_response = True)
+    if res.status_code == 401:
+        raise Exception('Could not log in as {}'.format(user['username']))
     return user['username']
 
 def logout(l):
@@ -86,6 +91,11 @@ def get_valid_scoreboard_endpoint(l):
 class LoadTestingTasks(TaskSet):
 
     @task
+    def load_login_page(l):
+        """Simulate loading the login page."""
+        l.client.get("")
+
+    @task
     def load_shell_page(l):
         """Simulate loading the shell page."""
         username = login(l)
@@ -104,6 +114,41 @@ class LoadTestingTasks(TaskSet):
             logout(l)
         finally:
             release_user(username)
+
+    @task
+    class ProblemTasks(TaskSet):
+        """Simulate actions on the problems page."""
+
+        @task
+        def load_problems_page(l):
+            """Load the problems page without solving anything."""
+            username = login(l)
+            try:
+                l.client.get(PROBLEMS_PAGE_URL)
+                logout(l)
+            finally:
+                release_user(username)
+                l.interrupt()
+
+        @task
+        def send_feedback(l):
+            """Submit feedback for an unlocked problem."""
+            username = login(l)
+            try:
+                l.client.get(PROBLEMS_PAGE_URL)
+                unlocked_problems = l.client.get(PROBLEMS_ENDPOINT).json()
+                problem = random.choice(unlocked_problems)
+                l.client.post(FEEDBACK_ENDPOINT, json={
+                    'pid': problem['pid'],
+                    'feedback': {
+                        'liked': True
+                    }
+                }, headers={
+                    'X-CSRF-Token': l.client.cookies['token']
+                })
+            finally:
+                release_user(username)
+                l.interrupt()
 
     @task
     class ScoreboardTasks(TaskSet):
@@ -151,9 +196,10 @@ class LoadTestingTasks(TaskSet):
         @task(weight=10)
         def successfully_register(l):
             user_demographics = generate_user()
-            get_db().users.insert_one(user_demographics.copy())
-
-            l.client.post(REGISTRATION_ENDPOINT, json=user_demographics)
+            with l.client.post(REGISTRATION_ENDPOINT, json=user_demographics,
+                    catch_response=True) as res:
+                if res.status_code == 201:
+                    get_db().users.insert_one(user_demographics.copy())
             l.interrupt()
 
         @task(weight=1)

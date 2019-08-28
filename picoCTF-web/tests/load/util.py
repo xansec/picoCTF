@@ -17,10 +17,13 @@ LOGIN_ENDPOINT = API_BASE_URL + '/user/login'
 LOGOUT_ENDPOINT = API_BASE_URL + '/user/logout'
 SCOREBOARDS_ENDPOINT = API_BASE_URL + '/scoreboards'
 GROUPS_ENDPOINT = API_BASE_URL + '/groups'
+FEEDBACK_ENDPOINT = API_BASE_URL + '/feedback'
+PROBLEMS_ENDPOINT = API_BASE_URL + '/problems'
 
 SHELL_PAGE_URL = 'shell'
 GAME_PAGE_URL = 'game'
 SCOREBOARD_PAGE_URL = 'scoreboard'
+PROBLEMS_PAGE_URL = 'problems'
 
 def get_db():
     global db
