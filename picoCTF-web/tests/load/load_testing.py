@@ -9,9 +9,33 @@ import random
 
 from locust import HttpLocust, task, TaskSet
 
-from util import get_db, LOGIN_ENDPOINT, LOGOUT_ENDPOINT, SHELL_PAGE_URL, GAME_PAGE_URL, SCOREBOARDS_ENDPOINT, GROUPS_ENDPOINT
-from demographics_generator import get_affiliation
+import registration
+from demographics_generator import (get_affiliation, get_country_code,
+                                    get_demographics, get_email, get_password,
+                                    get_user_type, get_username)
+from util import (GAME_PAGE_URL, get_db, GROUPS_ENDPOINT, LOGIN_ENDPOINT,
+                  LOGOUT_ENDPOINT, SCOREBOARD_PAGE_URL, SCOREBOARDS_ENDPOINT,
+                  SHELL_PAGE_URL, REGISTRATION_ENDPOINT)
 
+
+def generate_user():
+    """Generate a set of valid demographics for the given user type."""
+    user_fields =  {
+        'username': get_username(),
+        'password': 'password',
+        'email': get_email(),
+        'affiliation': get_affiliation(),
+        'country': get_country_code(),
+        'usertype': get_user_type(),
+        'demo': get_demographics(),
+    }
+    return user_fields
+
+def register_and_expect_failure(l, user_demographics):
+    with l.client.post(REGISTRATION_ENDPOINT,
+            json=user_demographics, catch_response=True) as res:
+        if res.status_code == 400:
+            res.success()
 
 def acquire_user(properties={}):
     """Retrieve an available test user with the specified properties."""
@@ -63,6 +87,7 @@ class LoadTestingTasks(TaskSet):
 
     @task
     def load_shell_page(l):
+        """Simulate loading the shell page."""
         username = login(l)
         try:
             l.client.get(SHELL_PAGE_URL)
@@ -72,6 +97,7 @@ class LoadTestingTasks(TaskSet):
 
     @task
     def load_game_page(l):
+        """Simulate loading the Unity game page."""
         username = login(l)
         try:
             l.client.get(GAME_PAGE_URL)
@@ -81,12 +107,15 @@ class LoadTestingTasks(TaskSet):
 
     @task
     class ScoreboardTasks(TaskSet):
+        """Simulate actions on the scoreboards page."""
 
         @task
         def load_scoreboard_pages(l):
             """Load several pages of a random scoreboard."""
             username = login(l)
             try:
+                l.client.get(SCOREBOARD_PAGE_URL)
+
                 endpoint = get_valid_scoreboard_endpoint(l)
                 initial_page_res = l.client.get(endpoint).json()
                 for i in range(0, random.randrange(1, 10)):
@@ -102,6 +131,8 @@ class LoadTestingTasks(TaskSet):
             """Load several pages of a filtered random scoreboard."""
             username = login(l)
             try:
+                l.client.get(SCOREBOARD_PAGE_URL)
+
                 endpoint = get_valid_scoreboard_endpoint(l)
                 initial_page_res = l.client.get(endpoint).json()
                 endpoint += '&search=' + get_affiliation()
@@ -113,6 +144,88 @@ class LoadTestingTasks(TaskSet):
                 release_user(username)
                 l.interrupt()
 
+    @task
+    class OngoingRegistrationTasks(TaskSet):
+        """Simulate registration activity."""
+
+        @task(weight=10)
+        def successfully_register(l):
+            user_demographics = generate_user()
+            get_db().users.insert_one(user_demographics.copy())
+
+            l.client.post(REGISTRATION_ENDPOINT, json=user_demographics)
+            l.interrupt()
+
+        @task(weight=1)
+        class RegistrationErrorTasks(TaskSet):
+            """Tasks which fail registration for various reasons."""
+
+            @task
+            def missing_field_error(l):
+                user_demographics = generate_user()
+                to_delete = random.choice([
+                    'username', 'password', 'email', 'affiliation', 'country', 'usertype', 'demo'
+                ])
+                del user_demographics[to_delete]
+                register_and_expect_failure(l, user_demographics)
+                l.interrupt()
+
+            @task
+            def username_error(l):
+                user_demographics = generate_user()
+                user_demographics['username'] = ''
+                register_and_expect_failure(l, user_demographics)
+                l.interrupt()
+
+            @task
+            def password_error(l):
+                user_demographics = generate_user()
+                user_demographics['password'] = 'ooo'
+                register_and_expect_failure(l, user_demographics)
+                l.interrupt()
+
+            @task
+            def email_error(l):
+                user_demographics = generate_user()
+                user_demographics['email'] = 'invalid_email_address'
+                register_and_expect_failure(l, user_demographics)
+                l.interrupt()
+
+            @task
+            def affiliation_error(l):
+                user_demographics = generate_user()
+                user_demographics['affiliation'] = ''
+                register_and_expect_failure(l, user_demographics)
+                l.interrupt()
+
+            @task
+            def country_error(l):
+                user_demographics = generate_user()
+                user_demographics['country'] = 'xx'
+                register_and_expect_failure(l, user_demographics)
+                l.interrupt()
+
+            @task
+            def usertype_error(l):
+                user_demographics = generate_user()
+                user_demographics['usertype'] = 'invalid_user_type'
+                register_and_expect_failure(l, user_demographics)
+                l.interrupt()
+
+            @task
+            def demo_error(l):
+                user_demographics = generate_user()
+                user_demographics['demo']['age'] = 'invalid_age'
+                register_and_expect_failure(l, user_demographics)
+                l.interrupt()
+
+            @task
+            def require_parent_email_error(l):
+                user_demographics = generate_user()
+                user_demographics['demo']['age'] = '13-17'
+                user_demographics['demo']['parentemail'] = ''
+                register_and_expect_failure(l, user_demographics)
+                l.interrupt()
 
 class LoadTestingLocust(HttpLocust):
     task_set = LoadTestingTasks

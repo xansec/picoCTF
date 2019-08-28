@@ -20,6 +20,7 @@ GROUPS_ENDPOINT = API_BASE_URL + '/groups'
 
 SHELL_PAGE_URL = 'shell'
 GAME_PAGE_URL = 'game'
+SCOREBOARD_PAGE_URL = 'scoreboard'
 
 def get_db():
     global db
