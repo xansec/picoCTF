@@ -21,9 +21,9 @@ variable "availability_zone" {
 # Configured to get access_key and secret_key from  environment variables
 # For additional methods: https://www.terraform.io/docs/providers/aws/
 provider "aws" {
-    region = "${var.region}"
-    #access_key = "${var.access_key}"
-    #secret_key = "${var.secret_key}"
+    region = var.region
+    #access_key = var.access_key
+    #secret_key = var.secret_key
 }
 
 ###
@@ -37,8 +37,8 @@ module "single_tier_aws" {
     source = "../modules/single_tier_aws"
 
     ## AWS Configuration
-    region = "${var.region}"
-    availability_zone = "${var.availability_zone}"
+    region = var.region
+    availability_zone = var.availability_zone
 
     ## SSH
     key_name = "pico_testing"
@@ -58,8 +58,8 @@ module "single_tier_aws" {
 ###
 
 output "Web Elastic IP address" {
-    value = "${module.single_tier_aws.web_eip}"
+    value = module.single_tier_aws.web_eip
 }
 output "Shell Elastic IP address" {
-    value = "${module.single_tier_aws.shell_eip}"
+    value = module.single_tier_aws.shell_eip
 }

@@ -6,10 +6,10 @@ variable "shell_id" {}
 
 # Outputs:
 output "web_eip" {
-    value = "${aws_eip.web.public_ip}"
+    value = aws_eip.web.public_ip
 }
 output "shell_eip" {
-    value = "${aws_eip.shell.public_ip}"
+    value = aws_eip.shell.public_ip
 }
 
 ###
@@ -20,12 +20,12 @@ output "shell_eip" {
 
 # Create Elastic IP for web server
 resource "aws_eip" "web" {
-    instance = "${var.web_id}"
+    instance = var.web_id
     vpc = true
 }
 
 # Create Elastic IP for shell server
 resource "aws_eip" "shell" {
-    instance = "${var.shell_id}"
+    instance = var.shell_id
     vpc = true
 }
