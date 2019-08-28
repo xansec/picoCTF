@@ -144,6 +144,11 @@
     name: competitors
     state: present
 
+- name: Add problems group
+  group:
+    name: problems
+    state: present
+
 - name: Copy over login.defs
   copy:
     src: login.defs

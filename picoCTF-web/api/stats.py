@@ -71,7 +71,7 @@ def get_score(tid=None, uid=None, time_weighted=True):
                     }
                 }
             query = db.submissions.find(solved_args).limit(1).sort(
-                [('$natural', pymongo.DESCENDING)])
+                [('_id', pymongo.DESCENDING)])
             if query.count() > 0:
                 last_submitted = query[0]['timestamp']
             # Weight returns a float based on last submission time.
@@ -357,7 +357,7 @@ def get_top_teams_score_progressions(
     return [output_item(team_item) for team_item in team_items]
 
 
-@memoize()
+@memoize
 def check_invalid_instance_submissions(gid=None):
     """Get submissions of keys for the wrong problem instance."""
     db = api.db.get_conn()
@@ -435,13 +435,13 @@ def get_scoreboard_page(scoreboard_key, page_number=None):
     """
     board_cache = get_scoreboard_cache(**scoreboard_key)
     if not page_number:
-        user = api.user.get_user()
-        if user:
+        try:
+            user = api.user.get_user()
             team = api.team.get_team(tid=user['tid'])
             team_position = board_cache.rank(get_scoreboard_key(team),
                                              reverse=True) or 0
             page_number = math.floor(team_position / SCOREBOARD_PAGE_LEN) + 1
-        else:
+        except PicoException:
             page_number = 1
     start = SCOREBOARD_PAGE_LEN * (page_number - 1)
     end = start + SCOREBOARD_PAGE_LEN - 1
@@ -450,7 +450,7 @@ def get_scoreboard_page(scoreboard_key, page_number=None):
                       start, end, with_scores=True, reverse=True)]
 
     available_pages = max(math.ceil(len(board_cache) / SCOREBOARD_PAGE_LEN), 1)
-    return (board_page, page_number, available_pages)
+    return board_page, page_number, available_pages
 
 
 def get_filtered_scoreboard_page(scoreboard_key, pattern, page_number=1):

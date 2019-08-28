@@ -266,7 +266,7 @@ def batch_register(students, teacher, gid):
                 },
                 'gid': gid,
                 'rid': rid
-            })
+            }, batch_registration=True)
             api.token.set_token(
                 {'uid': teacher['uid']},
                 'batch_registered_students',

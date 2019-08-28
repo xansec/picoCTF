@@ -30,40 +30,15 @@ const MemberManagementItem = React.createClass({
       });
   },
 
-  // switchUserRole: (tid, role) ->
-  //   apiCall "POST", "/api/v1/group/teacher/role_switch", {gid: @props.gid, tid: tid, role: role}
-  //   .done ((resp) ->
-  //     apiNotify resp
-  //     @props.refresh()
-  //   ).bind this
-
   render() {
-    let userButton;
-    if (this.props.teacher) {
-      userButton = (
-        <Button bsStyle="success" className="btn-sq">
-          <Glyphicon glyph="user" bsSize="large" />
-          <p className="text-center">Teacher</p>
-        </Button>
-      );
-    } else {
-      userButton = (
-        <Button bsStyle="primary" className="btn-sq">
-          <Glyphicon glyph="user" bsSize="large" />
-          <p className="text-center">User</p>
-        </Button>
-      );
-    }
-
-    // if @props.teacher
-    //   switchUser = <Button onClick={@switchUserRole.bind(null, @props.tid, "member")}>Make Member</Button>
-    // else
-    //   switchUser = <Button onClick={@switchUserRole.bind(null, @props.tid, "teacher")}>Make Teacher</Button>
-
     return (
       <ListGroupItem>
         <Row className="row">
-          <Col xs={2}>{userButton}</Col>
+          <Col xs={2}>
+            <Button bsStyle="primary" className="btn-sq">
+              <Glyphicon glyph="user" bsSize="large" />
+            </Button>
+          </Col>
           <Col xs={6}>
             <h4>{this.props.team_name}</h4>
             <p>
@@ -72,7 +47,7 @@ const MemberManagementItem = React.createClass({
           </Col>
           <Col xs={4}>
             <ButtonGroup vertical={true}>
-              <Button onClick={this.removeTeam}>Remove User</Button>
+              <Button onClick={this.removeTeam}>Remove Team</Button>
             </ButtonGroup>
           </Col>
         </Row>
@@ -446,7 +421,7 @@ const EmailWhitelistItem = React.createClass({
 
   render() {
     const removeEmail = this.props.pushUpdates.bind(null, data => {
-      update(data, {
+      return update(data, {
         email_filter: { $apply: _.partial(_.without, _, this.props.email) }
       });
     });
@@ -501,9 +476,8 @@ const GroupEmailWhitelist = React.createClass({
       });
     } else {
       this.props.pushUpdates(data => {
-        //Fine because @setState won't affect the next line
-        this.setState(update(this.state, { $set: { emailDomain: "" } }));
-        update(data, {
+        this.setState({ emailDomain: "" });
+        return update(data, {
           email_filter: { $push: [this.state.emailDomain] }
         });
       });

@@ -9,6 +9,8 @@ from time import time
 
 from spur import LocalShell
 
+PROBLEMS_GROUP = "problems"
+
 
 class TimeoutError(Exception):
     """
@@ -59,4 +61,4 @@ def create_user(username):
 
     """
 
-    execute(["useradd", "-s", "/bin/bash", username])
+    execute(["useradd", "-G", PROBLEMS_GROUP, "-s", "/bin/bash", username])

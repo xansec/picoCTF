@@ -169,7 +169,7 @@ def _validate_captcha(data):
 
 
 @log_action
-def add_user(params):
+def add_user(params, batch_registration=False):
     """
     Register a new user and creates a team for them automatically.
 
@@ -188,6 +188,7 @@ def add_user(params):
             demo: arbitrary dict of demographic data
             gid (optional): group registration
             rid (optional): registration id
+        batch_registration: Allows bypass of recaptcha in class batch regs
     """
     # Make sure the username is unique
     db = api.db.get_conn()
@@ -230,9 +231,9 @@ def add_user(params):
                 "Your email does not belong to the whitelist. " +
                 "Please see the registration form for details.")
 
-    # If CAPTCHAs are enabled, validate the submission
+    # If CAPTCHAs are enabled, validate the submission if not batch registration
     if (api.config.get_settings()["captcha"]["enable_captcha"] and not
-            _validate_captcha(params)):
+       batch_registration and not _validate_captcha(params)):
         raise PicoException("Incorrect captcha!")
 
     # Create a team for the new user and set its count to 1
@@ -639,6 +640,8 @@ def rate_limit(limit=5, duration=60, by_ip=False, allow_bypass=False):
             if count is not None and count <= limit:
                 return f(*args, **kwargs)
             else:
-                raise PicoException('Too many requests, slow down!', 429)
+                limit_msg = "Too many requests, slow down! " \
+                      "Limit: {}, {}s duration".format(limit, duration)
+                raise PicoException(limit_msg, 429)
         return wrapper
     return decorator
