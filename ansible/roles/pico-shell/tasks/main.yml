@@ -21,6 +21,8 @@
 
 - include: deploy_problems.yml
 
+- include: permissions.yml
+
 - name: Ensure nginx is running
   service:
     name: nginx
