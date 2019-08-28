@@ -89,20 +89,30 @@ variable "db_ebs_name" {
 }
 
 # Default AMI mapping
-# Debian Jessie 8.3 hvm x86_64 ebs
-# https://wiki.debian.org/Cloud/AmazonEC2Image/Jessie
-# http://docs.aws.amazon.com/general/latest/gr/rande.html#ec2_region
+# should replace with dynamic AMI mapping
+# https://github.com/cloudposse/terraform-aws-ec2-instance/blob/master/main.tf
+# https://aws.amazon.com/marketplace/pp/B07J5RRYGN
+# http://cloud-images.ubuntu.com/locator/ec2/
+
 variable "amis" {
-    description = "Debian Jessie 8.3 AMI to use"
+    description = "Ubuntu bionic 18.04 LTS AMI to use"
     default = {
-        ap-northeast-1 = "ami-899091e7"
-        ap-southeast-1 = "ami-7bb47d18"
-        ap-southeast-2 = "ami-9a7056f9"
-        eu-central-1 = "ami-2638224a"
-        eu-west-1 = "ami-11c57862"
-        sa-east-1 = "ami-651f9c09"
-        us-east-1 = "ami-f0e7d19a"
-        us-west-1 = "ami-f28bfa92"
-        us-west-2 = "ami-837093e3"
+    us-west-2   = "ami-04aac3d7ea7609469"
+    us-west-1   = "ami-03c9dad75296f9e90"
+    us-east-2   = "ami-02fd7546f0f6effb6"
+    us-east-1   = "ami-095192256fe1477ad"
+    sa-east-1   = "ami-0fcd3565c065e9238"
+    eu-west-3   = "ami-074f4c146d4f5d466"
+    eu-west-2   = "ami-0ee246e709782b1be"
+    eu-west-1 = "ami-08b1cea5487c762b3"
+    eu-north-1 = "ami-1b33bb65"
+    eu-central-1 = "ami-05b5a98cd34853d29"
+    ca-central-1 = "ami-0b08c6831ffd5ea84"
+    ap-southeast-2 = "ami-035c8e816223729a6"
+    ap-southeast-1 = "ami-0c2e7524d47186df7"
+    ap-south-1 = "ami-027d1dd332103051b"
+    ap-northeast-3 = "ami-0dd67b62d9f8adc65"
+    ap-northeast-2 = "ami-06d2ca2471c251818"
+    ap-northeast-1 = "ami-032cf5e284518543d"
     }
 }

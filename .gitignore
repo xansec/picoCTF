@@ -1,7 +1,7 @@
 **/*-console.log
-/.terraform
+**/.terraform
 /.vagrant
-/terraform.tfstate*
+**/terraform.tfstate*
 /dist
 **/*.egg-info
 **/.pytest_cache

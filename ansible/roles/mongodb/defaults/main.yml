@@ -51,5 +51,6 @@ on_aws: False
 db_data_device: "/dev/xvdf"
 # For nvme EBS, use db_data_device: "/dev/nvme0n1p1"
 db_data_device_fstype: "ext4"
-db_data_mount_opts: "defaults,auto,noatime,noexec 0 0"
+# db_data_mount_opts: "defaults,auto,noatime,noexec 0 0"
+db_data_mount_opts: "defaults,auto,noatime,noexec"
 

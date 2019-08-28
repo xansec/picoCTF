@@ -37,6 +37,7 @@ export AWS_SECRET_ACCESS_KEY="XXX_PUT_AWS_ACCESS_KEY_XXX"
 cd production
 
 terraform get
+terraform init
 terrafrom plan
 terraform apply
 ```
@@ -51,11 +52,39 @@ Following these steps will automatically create the following resources on AWS:
 
 If that completed successfully, you now have two servers (`web` and `shell`) running on AWS ready to host your competition. The IP addresses should have been provided at the completion of `terraform apply`.  In order to actually start a competition you need to provision the servers with [Ansible](../ansible/README.md). 
 
+**NOTE:** You might not see these resources in your [AWS EC2 Dashboard](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1) if your region does not match the region in which you created your terraform instances. The terraform default is **us-east-1 (N. Virgina)**. You can change your AWS default region using the dropdown menu to the left of support (to the right of your user-name).
+
+You should be able to ssh into your remote instances at this point. By default, this script uses `~/.ssh/picoCTF_production_rsa` as your ssh key, and `ubuntu` is the default user account for Ubuntu bionic 18.04 LTS. As such, you can test sshing into your instances using the below command:
+    
+    ssh -i ~/.ssh/picoCTF_production_rsa ubuntu@<instance-elastic-IP-address>
+
 If you just wanted to test this script and are not ready to run a competition  you should be sure to destroy all the resources that where created.  Don't worry it's just as easy to get them back later thanks to the power of Terraform. To destroy the servers and resources that where created run:
 
     terraform destroy
 
 Please consider reading along for a more in depth explanation of how our Terraform configuration is structured. Also this will discuss how you can modify the configuration to meet your needs.
+
+## Follow-on Steps
+
+After following above, you will have the bare-boned hardware neccesary to run Pico remotely (on AWS), but these instances have none of the required software installed. Other sections cover the below steps in more detail but here is a quick summary of the basic next steps to get the competition up and running:
+
+1. Deploy (copy) your picoCTF repository to `/picoCTF` on the newly created instances. The below list of steps is the simplest method for demonstration purpose, but [mkdeploy.sh](../mkdeploy.sh) was developed to deploying your own custom repo. Read this script to learn how to use it.
+    
+    sudo git clone https://github.com/picoCTF/picoCTF.git /picoCTF
+    chown -R ubuntu:ubuntu /picoCTF
+
+2. Install ansible on terraformed instances
+
+    chmod +x /picoCTF/vagrant/provision_scripts
+    /picoCTF/vagrant/provision_scripts/install_ansible
+
+3. Update the appropriate ansible inventory (see [remote_aws_single_tier_example](../ansible/inventories/remote_aws_single_tier_example) for a very simple example of a single tier AWS inventory).
+
+4. Update the appropriate ansible vault. You must update the passwords in your group_vars [vault.yml](../ansible/group_vars/remote_aws/vault.yml). Pico developed [rekey.py](../deploy/rekey.py) to assist in this process but do not ever reference it in any documentation I could find. You can also manually update these values simply by running the command `ansible-vault edit vault.yml` with the password of **pico**. The most important piece is that the `vault_shell_admin_password_crypt` must be the correctly formated hash of the `vault_shell_pass`. You can generate this hash on your own simply by running `perl -e 'print crypt("<vault_shell_pass>","\$6\$saltsalt\$") . "\n"'` in addition to the method suggested in the current _vault.yml_. You should also change your vault password with `ansible-vault rekey vault.yml`.
+
+5. Run ansible playbook on your terraformed instances. See the [ansible README](../ansible/README.md) for more information but you can simply run `ansible-playbook --vault-id @prompt -i /picoCTF/ansible/inventories/remote_aws --limit="shell"  "$@" site.yml` for shell or `ansible-playbook --vault-id @prompt -i /picoCTF/ansible/inventories/remote_aws --limit="db,web"  "$@" site.yml` for the web/db from `\picoCTF\ansible`. When prompted, the default vault password is `pico` (you should have changed that however in the above step).
+
+At this point, your ctf should be up and running. You can browse to your web elastic IP address and register (the first account will be your admin). You will still need to deploy problems on your shell server as well as to add them your shell server to your web management. You can also simply update *auto_add_shell*, *auto_load_problems*, and *auto_start_competition* in [vars.yml](../ansible/groups_vars/remote_aws/vars.yml) to **True** and re-run your ansible playbook on shell first and then web to automate this process. Good luck.
 
 ## Overview of Files
 
@@ -99,6 +128,7 @@ Alternatively Terraform provides a number of more complex options for [remote st
 2. Check what changes it will have
     - `terraform plan`
     - look for things like improperly templated/applied variables
+    - `terraform init`
 3. Apply the changes
     - `terraform apply` 
 4. If you are tracking `terraform.tfstate` in private source control commit the newly modified `terraform.tfstate`
