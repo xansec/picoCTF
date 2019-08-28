@@ -14,6 +14,7 @@ from ..common import ( # noqa (fixture)
   RATE_LIMIT_BYPASS,
 )
 import api
+from re import match
 
 
 def test_login(mongo_proc, redis_proc, client): # noqa (fixture)
@@ -80,6 +81,7 @@ def test_login(mongo_proc, redis_proc, client): # noqa (fixture)
 
 
 def test_login_rate_limit(mongo_proc, redis_proc, client): # noqa (fixture)
+    regex = r"Too many requests, slow down! Limit: (\d*), (\d*)s duration"
     # Repeated attempts to login with an incorrect password
     res = None
     for _ in range(21):
@@ -88,7 +90,7 @@ def test_login_rate_limit(mongo_proc, redis_proc, client): # noqa (fixture)
             'password': 'invalid'
         })
     assert res.status_code == 429
-    assert res.json['message'] == 'Too many requests, slow down!'
+    assert match(regex, res.json['message']) is not None
 
     # Repeated attempts to login with an incorrect password, wrong bypass
     for _ in range(21):
@@ -97,7 +99,7 @@ def test_login_rate_limit(mongo_proc, redis_proc, client): # noqa (fixture)
             'password': 'invalid'
         }, headers=[('Limit-Bypass', "invalid")])
     assert res.status_code == 429
-    assert res.json['message'] == 'Too many requests, slow down!'
+    assert match(regex, res.json['message']) is not None
 
     # Attempt to login with an incorrect password, correct bypass,
     # immediately following rate_limit state

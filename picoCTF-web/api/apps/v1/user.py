@@ -13,8 +13,8 @@ ns = Namespace('user', description='Authentication and information about ' +
                                    'current user')
 
 USERDATA_FILTER = ['admin', 'extdata', 'completed_minigames', 'logged_in',
-                    'teacher', 'tokens', 'unlocked_walkthroughs', 'username',
-                    'verified']
+                   'teacher', 'tid', 'tokens', 'unlocked_walkthroughs',
+                   'username', 'verified']
 
 @ns.route('')
 class User(Resource):

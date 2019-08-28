@@ -245,7 +245,6 @@ def filter_problem_instances(problem, tid):
     return problem
 
 
-@memoize
 def get_problem(pid):
     """
     Get a single problem.

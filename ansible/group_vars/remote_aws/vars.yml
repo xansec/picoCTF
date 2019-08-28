@@ -59,9 +59,16 @@ virtualenv_dir: "/picoCTF-env"
 on_aws: True
 db_private_ip: "{{ hostvars['pico_db']['ansible_host'] }}"
 mongodb_conf_auth: True
-redis_conf_auth: True
+mongodb_documentdb_cluster: False
+mongodb_tls_enabled: False
 picoAdmin_db_password: "{{ vault_picoAdmin_db_password }}"
 picoWeb_db_password: "{{ vault_picoWeb_db_password }}"
+
+redis_private_ip: "{{ hostvars['pico_db']['redis_private_ip'] | default(db_private_ip) }}"
+aws_elasticache: False
+redis_db_number: 0
+redis_conf_auth: False
+redis_db_password: None
 
 env_db_users:
   - {

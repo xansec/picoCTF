@@ -29,6 +29,10 @@ def get_conn():
             uri = "mongodb://{}:{}@{}:{}/{}?authMechanism=SCRAM-SHA-1".format(
                 conf["MONGO_USER"], conf["MONGO_PW"], conf["MONGO_ADDR"],
                 conf["MONGO_PORT"], conf["MONGO_DB_NAME"])
+            if conf["MONGO_REPLICA_SETTINGS"]:
+                uri = "{}&{}".format(uri, conf["MONGO_REPLICA_SETTINGS"])
+            if conf["MONGO_TLS_SETTINGS"]:
+                uri = "{}&{}".format(uri, conf["MONGO_TLS_SETTINGS"])
         else:
             uri = "mongodb://{}:{}/{}".format(
                 conf["MONGO_ADDR"], conf["MONGO_PORT"], conf["MONGO_DB_NAME"])

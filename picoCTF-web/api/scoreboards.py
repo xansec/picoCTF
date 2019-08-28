@@ -33,7 +33,7 @@ def get_scoreboard(sid):
 
 
 def add_scoreboard(
-        name, eligibility_conditions={}, priority=0, sponsor=None, logo=None):
+        name, eligibility_conditions=None, priority=1, sponsor=None, logo=None):
     """
     Add a scoreboard to the database.
 
@@ -47,6 +47,8 @@ def add_scoreboard(
     Returns:
         ID of the newly created scoreboard
     """
+    if eligibility_conditions is None:
+        eligibility_conditions = {}
     db = api.db.get_conn()
     sid = api.common.token()
     db.scoreboards.insert({

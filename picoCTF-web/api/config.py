@@ -148,7 +148,7 @@ The {competition_name} Team""", # noqa (79char)
         "verification_parent_body": """
 Welcome to {competition_name}!
 
-An user account has just been created on our platform and your email address was
+A user account has just been created on our platform and your email address was
 submitted by the user as the email address of the user's parent.
 
 Thank you for authorizing the participation of your child age 13-17 in

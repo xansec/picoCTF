@@ -55,3 +55,7 @@ htpasswd_accounts: []
 
 # SSL requires cert and vault-encrypted key
 enable_web_ssl: False
+
+# mongodb connect settings
+mongodb_documentdb_cluster: false
+mongodb_tls_enabled: false

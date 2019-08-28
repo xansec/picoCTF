@@ -841,24 +841,21 @@ const AuthPanel = React.createClass({
         message: "Invalid verification code. Please contact an administrator."
       });
     }
-    if (this.state.gid) {
-      apiCall("GET", `/api/v1/groups/${this.state.gid}`).done(data => {
-        this.setState(
-          update(this.state, {
-            groupName: { $set: data.name },
-            affiliation: { $set: data.name },
-            settings: { $merge: data.settings },
-            page: { $set: "Register" }
-          })
-        );
-      });
-    } else {
-      apiCall("GET", "/api/v1/settings").done(data => {
-        this.setState(
-          update(this.state, { settings: { $merge: data } })
-        );
-      });
-    }
+    apiCall("GET", "/api/v1/settings").done(data => {
+      this.setState({ settings: data });
+      if (this.state.gid) {
+        apiCall("GET", `/api/v1/groups/${this.state.gid}`).done(data => {
+          this.setState(
+            update(this.state, {
+              groupName: { $set: data.name },
+              affiliation: { $set: data.name },
+              settings: { $merge: data.settings },
+              page: { $set: "Register" }
+            })
+          );
+        });
+      }
+    });
 
     apiCall("GET", "/api/v1/stats/registration").done(data => {
       this.setState(update(this.state, { regStats: { $set: data } }));
