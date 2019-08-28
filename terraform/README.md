@@ -62,25 +62,27 @@ If you just wanted to test this script and are not ready to run a competition  y
 
     terraform destroy
 
+**Note:** `terraform destroy` will hang due to the ebs as noted in https://github.com/picoCTF/picoCTF/issues/33 which references https://github.com/hashicorp/terraform/issues/2957 . It is good practice to manually shutdown the instances prior to destroying them to make this process go faster.
+
 Please consider reading along for a more in depth explanation of how our Terraform configuration is structured. Also this will discuss how you can modify the configuration to meet your needs.
 
 ## Follow-on Steps
 
 After following above, you will have the bare-boned hardware neccesary to run Pico remotely (on AWS), but these instances have none of the required software installed. Other sections cover the below steps in more detail but here is a quick summary of the basic next steps to get the competition up and running:
 
-1. Deploy (copy) your picoCTF repository to `/picoCTF` on the newly created instances. The below list of steps is the simplest method for demonstration purpose, but [mkdeploy.sh](../mkdeploy.sh) was developed to deploying your own custom repo. Read this script to learn how to use it.
+1. Deploy (copy) your picoCTF repository to `/picoCTF` on the newly created instances. The below list of steps is the simplest method for demonstration purpose, but [mkdeploy.sh](../mkdeploy.sh) was developed to deploy your own custom repo. Read this script to learn how to use it.
     
-    sudo git clone https://github.com/picoCTF/picoCTF.git /picoCTF
-    chown -R ubuntu:ubuntu /picoCTF
+    - `sudo git clone https://github.com/picoCTF/picoCTF.git /picoCTF`
+    - `chown -R ubuntu:ubuntu /picoCTF`
 
 2. Install ansible on terraformed instances
 
-    chmod +x /picoCTF/vagrant/provision_scripts
-    /picoCTF/vagrant/provision_scripts/install_ansible
+    - `chmod +x /picoCTF/vagrant/provision_scripts`
+    - `/picoCTF/vagrant/provision_scripts/install_ansible`
 
 3. Update the appropriate ansible inventory (see [remote_aws_single_tier_example](../ansible/inventories/remote_aws_single_tier_example) for a very simple example of a single tier AWS inventory).
 
-4. Update the appropriate ansible vault. You must update the passwords in your group_vars [vault.yml](../ansible/group_vars/remote_aws/vault.yml). Pico developed [rekey.py](../deploy/rekey.py) to assist in this process but do not ever reference it in any documentation I could find. You can also manually update these values simply by running the command `ansible-vault edit vault.yml` with the password of **pico**. The most important piece is that the `vault_shell_admin_password_crypt` must be the correctly formated hash of the `vault_shell_pass`. You can generate this hash on your own simply by running `perl -e 'print crypt("<vault_shell_pass>","\$6\$saltsalt\$") . "\n"'` in addition to the method suggested in the current _vault.yml_. You should also change your vault password with `ansible-vault rekey vault.yml`.
+4. Update the appropriate ansible vault. You must update the passwords in your group_vars [vault.yml](../ansible/group_vars/remote_aws/vault.yml). Pico developed [rekey.py](../deploy/rekey.py) to assist in this process. You can also manually update these values simply by running the command `ansible-vault edit vault.yml` with the password of **pico**. The most important piece is that the `vault_shell_admin_password_crypt` must be the correctly formated hash of the `vault_shell_pass`. You can generate this hash on your own simply by running `perl -e 'print crypt("<vault_shell_pass>","\$6\$saltsalt\$") . "\n"'` in addition to the method suggested in the current _vault.yml_. You should also change your vault password with `ansible-vault rekey vault.yml`.
 
 5. Run ansible playbook on your terraformed instances. See the [ansible README](../ansible/README.md) for more information but you can simply run `ansible-playbook --vault-id @prompt -i /picoCTF/ansible/inventories/remote_aws --limit="shell"  "$@" site.yml` for shell or `ansible-playbook --vault-id @prompt -i /picoCTF/ansible/inventories/remote_aws --limit="db,web"  "$@" site.yml` for the web/db from `\picoCTF\ansible`. When prompted, the default vault password is `pico` (you should have changed that however in the above step).
 
