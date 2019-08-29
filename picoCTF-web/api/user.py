@@ -618,7 +618,7 @@ def rate_limit(limit=5, duration=60, by_ip=False, allow_bypass=False):
             app_config = current_app.config
             if allow_bypass or app_config.get('TESTING', False):
                 bypass_header = request.headers.get('Limit-Bypass')
-                if bypass_header == app_config["RATE_LIMIT_BYPASS"]:
+                if bypass_header == app_config["RATE_LIMIT_BYPASS_KEY"]:
                     return f(*args, **kwargs)
 
             key_id = request.remote_addr

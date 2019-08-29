@@ -9,7 +9,7 @@ import pytest
 
 import api
 
-RATE_LIMIT_BYPASS = "test_bypass"
+RATE_LIMIT_BYPASS_KEY = "test_bypass"
 TESTING_DB_NAME = 'ctf_test'
 db = None
 
@@ -52,7 +52,7 @@ def client():
         'TESTING': True,
         'MONGO_DB_NAME': TESTING_DB_NAME,
         'MONGO_PORT': 27018,
-        'RATE_LIMIT_BYPASS': RATE_LIMIT_BYPASS
+        'RATE_LIMIT_BYPASS_KEY': RATE_LIMIT_BYPASS_KEY
     })
     return app.test_client()
 

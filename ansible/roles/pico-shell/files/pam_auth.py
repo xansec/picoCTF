@@ -15,7 +15,7 @@ COMPETITORS_GROUP = "competitors"
 config_file = join(LOCAL_ROOT, "local_config.json")
 config = json.loads(open(config_file).read())
 SERVER = config["web_server"]
-LIMIT_BYPASS = config['rate_limit_bypass']
+LIMIT_BYPASS = config['rate_limit_bypass_key']
 TIMEOUT = 5
 
 pamh = None

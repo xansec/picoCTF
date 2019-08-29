@@ -18,7 +18,7 @@ from ..common import ( # noqa (fixture)
   enable_sample_problems,
   get_problem_key,
   cache,
-  RATE_LIMIT_BYPASS,
+  RATE_LIMIT_BYPASS_KEY,
   update_all_scoreboards
 )
 import api

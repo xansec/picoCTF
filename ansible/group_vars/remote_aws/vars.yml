@@ -21,7 +21,7 @@ htpasswd_accounts: "{{ vault_htpasswd_accounts }}"
 flask_app_server_name: "{{ web_fqdn }}"
 flask_app_cookie_domain: "\"{{ web_fqdn }}\""
 flask_app_secret_key: "{{ vault_flask_app_secret_key }}"
-flask_app_rate_limit_bypass: "INSECURE_DEFAULT_CHANGE_ME"
+flask_app_rate_limit_bypass_key: {{ vault_flask_app_rate_limit_bypass_key }}
 
 # optional web automation
 enable_basic_auth:      False
