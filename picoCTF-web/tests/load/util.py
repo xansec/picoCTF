@@ -19,11 +19,16 @@ SCOREBOARDS_ENDPOINT = API_BASE_URL + '/scoreboards'
 GROUPS_ENDPOINT = API_BASE_URL + '/groups'
 FEEDBACK_ENDPOINT = API_BASE_URL + '/feedback'
 PROBLEMS_ENDPOINT = API_BASE_URL + '/problems'
+SUBMISSIONS_ENDPOINT = API_BASE_URL + '/submissions'
 
 SHELL_PAGE_URL = 'shell'
 GAME_PAGE_URL = 'game'
 SCOREBOARD_PAGE_URL = 'scoreboard'
 PROBLEMS_PAGE_URL = 'problems'
+
+# Need credentials of a platform admin to retrieve problem flags
+ADMIN_USERNAME = 'adminuser'
+ADMIN_PASSWORD = 'adminpw'
 
 def get_db():
     global db

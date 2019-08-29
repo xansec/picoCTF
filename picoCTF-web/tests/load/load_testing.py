@@ -13,9 +13,11 @@ import registration
 from demographics_generator import (get_affiliation, get_country_code,
                                     get_demographics, get_email, get_password,
                                     get_user_type, get_username)
-from util import (GAME_PAGE_URL, get_db, GROUPS_ENDPOINT, LOGIN_ENDPOINT,
-                  LOGOUT_ENDPOINT, SCOREBOARD_PAGE_URL, SCOREBOARDS_ENDPOINT,
-                  SHELL_PAGE_URL, REGISTRATION_ENDPOINT, FEEDBACK_ENDPOINT, PROBLEMS_ENDPOINT, PROBLEMS_PAGE_URL)
+from util import (FEEDBACK_ENDPOINT, GAME_PAGE_URL, get_db, GROUPS_ENDPOINT,
+                  LOGIN_ENDPOINT, LOGOUT_ENDPOINT, PROBLEMS_ENDPOINT,
+                  PROBLEMS_PAGE_URL, REGISTRATION_ENDPOINT, SCOREBOARD_PAGE_URL,
+                  SCOREBOARDS_ENDPOINT, SHELL_PAGE_URL, SUBMISSIONS_ENDPOINT, ADMIN_USERNAME,
+                  ADMIN_PASSWORD)
 
 
 def generate_user():
@@ -88,6 +90,10 @@ def get_valid_scoreboard_endpoint(l):
         endpoint = GROUPS_ENDPOINT + '/' + board['group'] + '/scoreboard'
     return endpoint
 
+def get_problem_flags(pid):
+    """Retrieve a list of all instance flags for a problem from the DB."""
+    return get_db().problems.find_one({'pid': pid}).get('flags', [])
+
 class LoadTestingTasks(TaskSet):
 
     @task
@@ -119,6 +125,21 @@ class LoadTestingTasks(TaskSet):
     class ProblemTasks(TaskSet):
         """Simulate actions on the problems page."""
 
+        def setup(l):
+            # Retrieve problem flags using the admin endpoint
+            get_db().problems.delete_many({})
+            login(l, username=ADMIN_USERNAME, password=ADMIN_PASSWORD)
+            all_problems = l.client.get(
+                PROBLEMS_ENDPOINT + '?unlocked_only=false').json()
+            flag_maps = []
+            for problem in all_problems:
+                flag_maps.append({
+                    'pid': problem['pid'],
+                    'flags':  [i['flag'] for i in problem['instances']]
+                })
+            get_db().problems.insert_many(flag_maps)
+            logout(l)
+
         @task
         def load_problems_page(l):
             """Load the problems page without solving anything."""
@@ -126,6 +147,28 @@ class LoadTestingTasks(TaskSet):
             try:
                 l.client.get(PROBLEMS_PAGE_URL)
                 logout(l)
+            finally:
+                release_user(username)
+                l.interrupt()
+
+        @task
+        def submit_problem_solution(l):
+            """Submit a solution to a problem."""
+            username = login(l)
+            try:
+                l.client.get(PROBLEMS_PAGE_URL)
+                unlocked_problems = l.client.get(PROBLEMS_ENDPOINT).json()
+                problem = random.choice(unlocked_problems)
+                # Select a flag from the pool of possible instance flags:
+                # probability of a correct submission is 1/(num instances)
+                flag = random.choice(get_problem_flags(problem['pid']))
+                l.client.post(SUBMISSIONS_ENDPOINT, json={
+                    'pid': problem['pid'],
+                    'key': flag,
+                    'method': 'testing'
+                }, headers={
+                    'X-CSRF-Token': l.client.cookies['token']
+                })
             finally:
                 release_user(username)
                 l.interrupt()
