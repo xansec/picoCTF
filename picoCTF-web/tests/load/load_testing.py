@@ -17,7 +17,7 @@ from util import (FEEDBACK_ENDPOINT, GAME_PAGE_URL, get_db, GROUPS_ENDPOINT,
                   LOGIN_ENDPOINT, LOGOUT_ENDPOINT, PROBLEMS_ENDPOINT,
                   PROBLEMS_PAGE_URL, REGISTRATION_ENDPOINT, SCOREBOARD_PAGE_URL,
                   SCOREBOARDS_ENDPOINT, SHELL_PAGE_URL, SUBMISSIONS_ENDPOINT, ADMIN_USERNAME,
-                  ADMIN_PASSWORD, PROFILE_PAGE_URL, USER_PASSWORD_CHANGE_ENDPOINT)
+                  ADMIN_PASSWORD, PROFILE_PAGE_URL, USER_PASSWORD_CHANGE_ENDPOINT, USER_ENDPOINT)
 
 
 def generate_user():
@@ -120,6 +120,16 @@ class LoadTestingTasks(TaskSet):
         username = login(l)
         try:
             l.client.get(GAME_PAGE_URL)
+            logout(l)
+        finally:
+            release_user(username)
+
+    @task
+    def call_user_endpoint(l):
+        """Just calls the user endpoint, as if updating the score display."""
+        username = login(l)
+        try:
+            l.client.get(USER_ENDPOINT)
             logout(l)
         finally:
             release_user(username)
