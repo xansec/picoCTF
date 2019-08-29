@@ -18,7 +18,6 @@ web_address: "http://10.0.5.10"
 nginx_server_name: "_"
 flask_app_server_name: "{{ web_fqdn }}"
 web_address_internal: "{{ web_address }}"
-flask_app_rate_limit_bypass_key: "{{ vault_flask_app_rate_limit_bypass_key }}"
 
 # optional web automation
 enable_basic_auth:      False
