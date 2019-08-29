@@ -1,7 +1,7 @@
 const apiOffline = { News: "/news" };
 
 const teacherLoggedIn = {
-  Problems: "/problems",
+  "Challenge Problems": "/problems",
   Shell: "/shell",
   Scoreboards: "/scoreboard",
   Classroom: "/classroom",
@@ -15,7 +15,7 @@ const teacherLoggedInNoCompetition = {
 };
 
 const userLoggedIn = {
-  Problems: "/problems",
+  "Challenge Problems": "/problems",
   Shell: "/shell",
   Scoreboards: "/scoreboard",
   News: "/news"
