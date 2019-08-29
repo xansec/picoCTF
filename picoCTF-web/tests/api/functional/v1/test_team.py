@@ -13,7 +13,7 @@ from ..common import ( # noqa (fixture)
   STUDENT_2_DEMOGRAPHICS,
   OTHER_USER_DEMOGRAPHICS,
   get_conn,
-  RATE_LIMIT_BYPASS,
+  RATE_LIMIT_BYPASS_KEY,
 )
 import api
 
@@ -147,13 +147,13 @@ def test_join_team(mongo_proc, redis_proc, client): # noqa (fixture)
     client.post('/api/v1/user/login', json={
         'username': STUDENT_DEMOGRAPHICS['username'],
         'password': STUDENT_DEMOGRAPHICS['password']
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
 
     # Create the new team that we will try to join
     res = client.post('/api/v1/teams', json={
         'team_name': 'newteam',
         'team_password': 'newteam'
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     new_tid = res.json['tid']
 
     # Attempt to join as a teacher
@@ -161,11 +161,11 @@ def test_join_team(mongo_proc, redis_proc, client): # noqa (fixture)
     client.post('/api/v1/user/login', json={
         'username': TEACHER_DEMOGRAPHICS['username'],
         'password': TEACHER_DEMOGRAPHICS['password']
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     res = client.post('/api/v1/team/join', json={
         'team_name': 'newteam',
         'team_password': 'newteam'
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 403
     assert res.json['message'] == 'Teachers may not join teams!'
 
@@ -174,11 +174,11 @@ def test_join_team(mongo_proc, redis_proc, client): # noqa (fixture)
     client.post('/api/v1/user/login', json={
         'username': STUDENT_2_DEMOGRAPHICS['username'],
         'password': STUDENT_2_DEMOGRAPHICS['password']
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     res = client.post('/api/v1/team/join', json={
         'team_name': 'invalid',
         'team_password': 'newteam'
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 404
     assert res.json['message'] == 'Team not found'
 
@@ -186,7 +186,7 @@ def test_join_team(mongo_proc, redis_proc, client): # noqa (fixture)
     res = client.post('/api/v1/team/join', json={
         'team_name': 'newteam',
         'team_password': 'newteam'
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 403
     assert res.json['message'] == 'That team is already at maximum capacity.'
 
@@ -198,7 +198,7 @@ def test_join_team(mongo_proc, redis_proc, client): # noqa (fixture)
     res = client.post('/api/v1/team/join', json={
         'team_name': 'newteam',
         'team_password': 'invalid'
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 403
     assert res.json['message'] == 'That is not the correct password to ' + \
                                   'join that team.'
@@ -211,7 +211,7 @@ def test_join_team(mongo_proc, redis_proc, client): # noqa (fixture)
     res = client.post('/api/v1/team/join', json={
         'team_name': 'newteam',
         'team_password': 'newteam'
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 200
     assert res.json['success'] is True
     assert db.users.find_one({'uid': uid})['tid'] == new_tid
@@ -222,7 +222,7 @@ def test_join_team(mongo_proc, redis_proc, client): # noqa (fixture)
     res = client.post('/api/v1/team/join', json={
         'team_name': STUDENT_2_DEMOGRAPHICS['username'],
         'team_password': STUDENT_2_DEMOGRAPHICS['password']
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 403
     assert res.json['message'] == 'You can not switch teams once you ' + \
                                   'have joined one.'

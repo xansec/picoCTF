@@ -12,7 +12,7 @@ LOCAL_ROOT = "/opt/hacksports/local/"
 config_file = path.join(LOCAL_ROOT, "local_config.json")
 config = json.loads(open(config_file).read())
 SERVER = config["web_server"]
-LIMIT_BYPASS = config['rate_limit_bypass']
+LIMIT_BYPASS = config['rate_limit_bypass_key']
 TIMEOUT = 5
 SYSTEM_USERS = ["vagrant", "ubuntu"]
 

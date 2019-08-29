@@ -17,7 +17,7 @@ from ..common import ( # noqa (fixture)
   ensure_within_competition,
   enable_sample_problems,
   get_problem_key,
-  RATE_LIMIT_BYPASS,
+  RATE_LIMIT_BYPASS_KEY,
 )
 import api
 
@@ -131,7 +131,7 @@ def test_submission(mongo_proc, redis_proc, client): # noqa (fixture)
         'method': 'testing'
     }, headers=[
         ('X-CSRF-Token', csrf_t),
-        ('Limit-Bypass', RATE_LIMIT_BYPASS)
+        ('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)
     ])
     assert res.status_code == 201
     assert res.json['correct'] is True
@@ -150,7 +150,7 @@ def test_submission(mongo_proc, redis_proc, client): # noqa (fixture)
         'method': 'testing'
     }, headers=[
         ('X-CSRF-Token', csrf_t),
-        ('Limit-Bypass', RATE_LIMIT_BYPASS)
+        ('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)
     ])
     assert res.status_code == 201
     assert res.json['correct'] is False
@@ -164,7 +164,7 @@ def test_submission(mongo_proc, redis_proc, client): # noqa (fixture)
         'method': 'testing'
     }, headers=[
         ('X-CSRF-Token', csrf_t),
-        ('Limit-Bypass', RATE_LIMIT_BYPASS)
+        ('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)
     ])
     assert res.status_code == 201
     assert res.json['correct'] is True
@@ -200,7 +200,7 @@ def test_clear_all_submissions(mongo_proc, redis_proc, client): # noqa (fixture)
             'method': 'testing'
         }, headers=[
             ('X-CSRF-Token', csrf_t),
-            ('Limit-Bypass', RATE_LIMIT_BYPASS)
+            ('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)
         ])
         res = client.post('/api/v1/submissions', json={
             'pid': pid,
@@ -208,7 +208,7 @@ def test_clear_all_submissions(mongo_proc, redis_proc, client): # noqa (fixture)
             'method': 'testing'
         }, headers=[
             ('X-CSRF-Token', csrf_t),
-            ('Limit-Bypass', RATE_LIMIT_BYPASS)
+            ('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)
         ])
     db = get_conn()
     assert db.submissions.count_documents({}) == 6

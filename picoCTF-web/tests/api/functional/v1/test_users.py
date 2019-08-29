@@ -13,7 +13,7 @@ from ..common import ( # noqa (fixture)
   STUDENT_2_DEMOGRAPHICS,
   OTHER_USER_DEMOGRAPHICS,
   get_conn,
-  RATE_LIMIT_BYPASS
+  RATE_LIMIT_BYPASS_KEY
 )
 import api
 
@@ -25,7 +25,7 @@ def test_get_users(mongo_proc, redis_proc, client): # noqa (fixture)
     client.post('/api/v1/user/login', json={
         'username': ADMIN_DEMOGRAPHICS['username'],
         'password': ADMIN_DEMOGRAPHICS['password']
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
 
     res = client.get('/api/v1/users')
     assert res.status_code == 200
@@ -57,7 +57,7 @@ def test_add_user(mongo_proc, redis_proc, client): # noqa (fixture)
         'demo': {
             'age': 'invalid'
         }
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 400
     assert res.json['message'] == \
         "'age' must be specified in the 'demo' object. Valid values " + \
@@ -81,7 +81,7 @@ def test_add_user(mongo_proc, redis_proc, client): # noqa (fixture)
         'demo': {
             'age': '13-17'
         }
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 400
     assert res.json['message'] == \
         "Must provide a valid parent email address under the key " + \
@@ -101,7 +101,7 @@ def test_add_user(mongo_proc, redis_proc, client): # noqa (fixture)
             'age': '13-17',
             'parentemail': 'parent@sample.com'
         }
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 400
     assert res.json['message'] == "Usernames must be alphanumeric."
 
@@ -119,7 +119,7 @@ def test_add_user(mongo_proc, redis_proc, client): # noqa (fixture)
             'age': '13-17',
             'parentemail': 'parent@sample.com'
         }
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 201
     assert res.json['success'] is True
     uid = res.json['uid']
@@ -169,7 +169,7 @@ def test_add_user(mongo_proc, redis_proc, client): # noqa (fixture)
         'demo': {
             'age': '18+'
         }
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 201
     assert res.json['success'] is True
     uid = res.json['uid']
@@ -190,7 +190,7 @@ def test_add_user(mongo_proc, redis_proc, client): # noqa (fixture)
         'demo': {
             'age': '18+'
         }
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 201
     assert res.json['success'] is True
     uid = res.json['uid']
@@ -206,7 +206,7 @@ def test_get_one_user(mongo_proc, redis_proc, client): # noqa (fixture)
     client.post('/api/v1/user/login', json={
         'username': ADMIN_DEMOGRAPHICS['username'],
         'password': ADMIN_DEMOGRAPHICS['password']
-    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS)])
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
 
     db = get_conn()
     test_account_uid = db.users.find_one({
