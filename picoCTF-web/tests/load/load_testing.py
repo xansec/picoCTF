@@ -13,11 +13,13 @@ import registration
 from demographics_generator import (get_affiliation, get_country_code,
                                     get_demographics, get_email, get_password,
                                     get_user_type, get_username)
-from util import (FEEDBACK_ENDPOINT, GAME_PAGE_URL, get_db, GROUPS_ENDPOINT,
-                  LOGIN_ENDPOINT, LOGOUT_ENDPOINT, PROBLEMS_ENDPOINT,
-                  PROBLEMS_PAGE_URL, REGISTRATION_ENDPOINT, SCOREBOARD_PAGE_URL,
-                  SCOREBOARDS_ENDPOINT, SHELL_PAGE_URL, SUBMISSIONS_ENDPOINT, ADMIN_USERNAME,
-                  ADMIN_PASSWORD, PROFILE_PAGE_URL, USER_PASSWORD_CHANGE_ENDPOINT, USER_ENDPOINT)
+from util import (ADMIN_PASSWORD, ADMIN_USERNAME, FEEDBACK_ENDPOINT,
+                  GAME_PAGE_URL, get_db, GROUPS_ENDPOINT, LOGIN_ENDPOINT,
+                  LOGOUT_ENDPOINT, PROBLEMS_ENDPOINT, PROBLEMS_PAGE_URL,
+                  PROFILE_PAGE_URL, REGISTRATION_ENDPOINT, SCOREBOARD_PAGE_URL,
+                  SCOREBOARDS_ENDPOINT, SHELL_PAGE_URL, SUBMISSIONS_ENDPOINT,
+                  USER_ENDPOINT, USER_EXPORT_ENDPOINT,
+                  USER_PASSWORD_CHANGE_ENDPOINT, NEWS_PAGE_URL, USER_DELETE_ACCOUNT_ENDPOINT)
 
 
 def generate_user():
@@ -42,6 +44,7 @@ def register_and_expect_failure(l, user_demographics):
 def acquire_user(properties={}):
     """Retrieve an available test user with the specified properties."""
     properties['in_use'] = {'$in': [False, None]}
+    properties['deleted'] = {'$in': [False, None]}
     user = get_db().users.find_one_and_update(
         properties, {'$set': {'in_use': True}}, {'_id': 0})
     if not user:
@@ -123,6 +126,11 @@ class LoadTestingTasks(TaskSet):
             logout(l)
         finally:
             release_user(username)
+
+    @task
+    def load_news_page(l):
+        """Simulate loading the news page."""
+        l.client.get(NEWS_PAGE_URL)
 
     @task
     def call_user_endpoint(l):
@@ -286,6 +294,38 @@ class LoadTestingTasks(TaskSet):
                 logout(l)
                 login(l, username=user['username'], password=new_password)
                 logout()
+            finally:
+                release_user(user['username'])
+                l.interrupt()
+
+        @task
+        def export_account_data(l):
+            """Export a user's account data."""
+            username = login(l)
+            try:
+                l.client.get(PROFILE_PAGE_URL)
+                l.client.get(USER_EXPORT_ENDPOINT)
+                logout(l)
+            finally:
+                release_user(username)
+                l.interrupt()
+
+        @task
+        def delete_account(l):
+            """Delete a user's account."""
+            user = acquire_user()
+            try:
+                login(l, username=user['username'], password=user['password'])
+                l.client.get(PROFILE_PAGE_URL)
+                with l.client.post(USER_DELETE_ACCOUNT_ENDPOINT, json={
+                            'password': user['password']
+                        }, headers={
+                            'X-CSRF-Token': l.client.cookies['token']
+                        }, catch_response=True) as res:
+                    if res.status_code == 200:
+                        get_db().users.find_one_and_update({
+                            'username': user['username']
+                        }, {'$set': {'deleted': True}})
             finally:
                 release_user(user['username'])
                 l.interrupt()
