@@ -189,6 +189,9 @@
         mode: 0644
     - name: Get systemd to pickup tc-limit.service
       command: systemctl daemon-reload
+    - name: Remove tc rules if they already exist, ignore error if they don't
+      command: "tc qdisc del dev {{ ansible_default_ipv4.interface }} handle 1: root htb default 11"
+      ignore_errors: True
     - name: Ensure limit-tc is enabled and started
       service:
         name: tc-limit.service
