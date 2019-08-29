@@ -122,18 +122,20 @@ def pam_sm_open_session(_pamh, flags, argv):
 
     # manually set the memory.memsw.limit_in_bytes limit for user.slice if possible so we don't run out of swap.
     # this requires swapaccount=1 enabled on the kernel command line at boot (and propertly build/configured kernel)
+    #
+    # NOTE: As of 18.04 LTS AMI, aws kernel is not set by default for swapaccount, use memory.limit_in_bytes instead
     try:
         with open(
-                '/sys/fs/cgroup/memory/user.slice/memory.memsw.limit_in_bytes',
+                '/sys/fs/cgroup/memory/user.slice/memory.limit_in_bytes',
                 'wb') as fobj:
             fobj.write('%dM' % memlimit_mb)
         syslog.syslog(
             syslog.LOG_DEBUG,
-            "pam_session.py: set memory.memsw.limit_in_bytes to match")
+            "pam_session.py: set memory.limit_in_bytes to match")
     except:
         syslog.syslog(
             syslog.LOG_DEBUG,
-            "pam_session.py: failed to modify memory.memsw.limit_in_bytes")
+            "pam_session.py: failed to modify memory.limit_in_bytes")
 
 
 ###### doesnt work since cgroup already has tasks (see kernel cgroup docs)
