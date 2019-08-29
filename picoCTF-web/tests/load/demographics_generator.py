@@ -35,7 +35,7 @@ def get_username():
 
 def get_password():
     """Return a valid password."""
-    pass
+    return str(uuid.uuid4().hex)[:20]
 
 def get_tld():
     """Return a valid TLD."""

@@ -20,11 +20,13 @@ GROUPS_ENDPOINT = API_BASE_URL + '/groups'
 FEEDBACK_ENDPOINT = API_BASE_URL + '/feedback'
 PROBLEMS_ENDPOINT = API_BASE_URL + '/problems'
 SUBMISSIONS_ENDPOINT = API_BASE_URL + '/submissions'
+USER_PASSWORD_CHANGE_ENDPOINT = API_BASE_URL + '/user/update_password'
 
 SHELL_PAGE_URL = 'shell'
 GAME_PAGE_URL = 'game'
 SCOREBOARD_PAGE_URL = 'scoreboard'
 PROBLEMS_PAGE_URL = 'problems'
+PROFILE_PAGE_URL = 'profile'
 
 # Need credentials of a platform admin to retrieve problem flags
 ADMIN_USERNAME = 'adminuser'

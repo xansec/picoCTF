@@ -17,7 +17,7 @@ from util import (FEEDBACK_ENDPOINT, GAME_PAGE_URL, get_db, GROUPS_ENDPOINT,
                   LOGIN_ENDPOINT, LOGOUT_ENDPOINT, PROBLEMS_ENDPOINT,
                   PROBLEMS_PAGE_URL, REGISTRATION_ENDPOINT, SCOREBOARD_PAGE_URL,
                   SCOREBOARDS_ENDPOINT, SHELL_PAGE_URL, SUBMISSIONS_ENDPOINT, ADMIN_USERNAME,
-                  ADMIN_PASSWORD)
+                  ADMIN_PASSWORD, PROFILE_PAGE_URL, USER_PASSWORD_CHANGE_ENDPOINT)
 
 
 def generate_user():
@@ -44,6 +44,9 @@ def acquire_user(properties={}):
     properties['in_use'] = {'$in': [False, None]}
     user = get_db().users.find_one_and_update(
         properties, {'$set': {'in_use': True}}, {'_id': 0})
+    if not user:
+        raise Exception(
+            "Could not acquire user with properties " + str(properties))
     return user
 
 def release_user(username):
@@ -184,7 +187,7 @@ class LoadTestingTasks(TaskSet):
                 l.client.post(FEEDBACK_ENDPOINT, json={
                     'pid': problem['pid'],
                     'feedback': {
-                        'liked': True
+                        'liked': random.choice([True, False])
                     }
                 }, headers={
                     'X-CSRF-Token': l.client.cookies['token']
@@ -230,6 +233,51 @@ class LoadTestingTasks(TaskSet):
                 logout(l)
             finally:
                 release_user(username)
+                l.interrupt()
+
+    @task
+    class ProfileTasks(TaskSet):
+        """Simulate profile page actions."""
+
+        @task
+        def load_profile_page(l):
+            """Just load the profile page."""
+            username = login(l)
+            try:
+                l.client.get(PROFILE_PAGE_URL)
+                logout(l)
+            finally:
+                release_user(username)
+                l.interrupt()
+
+        @task
+        def change_password(l):
+            """Change a user's password."""
+            user = acquire_user()
+            try:
+                login(l, username=user['username'], password=user['password'])
+                l.client.get(PROFILE_PAGE_URL)
+                new_password = get_password()
+                with l.client.post(
+                        USER_PASSWORD_CHANGE_ENDPOINT,
+                        json={
+                            'current_password': user['password'],
+                            'new_password': new_password,
+                            'new_password_confirmation': new_password,
+                        }, headers={
+                            'X-CSRF-Token': l.client.cookies['token']
+                        }, catch_response=True) as res:
+                    if res.status_code == 200:
+                        get_db().users.find_one_and_update(
+                            {'username': user['username']},
+                            {'$set': {
+                                'password': new_password
+                            }})
+                logout(l)
+                login(l, username=user['username'], password=new_password)
+                logout()
+            finally:
+                release_user(user['username'])
                 l.interrupt()
 
     @task
