@@ -11,6 +11,13 @@ import requests
 DEFAULT_USER = "nobody"
 LOCAL_ROOT = "/opt/hacksports/local/"
 COMPETITORS_GROUP = "competitors"
+USER_QUOTA_FILE = "/aquota.user"
+USER_QUOTA = {
+    "block_soft": "97M",
+    "block_hard": "100M",
+    "inode_soft": "2950",
+    "inode_hard": "3000"
+}
 
 config_file = join(LOCAL_ROOT, "local_config.json")
 config = json.loads(open(config_file).read())
@@ -96,6 +103,13 @@ def secure_user(user):
     subprocess.check_output(["chown", "root:" + user, home])
     subprocess.check_output(["chmod", "1770", home])
 
+    # Check if user quota is enabled, if so, add quota for this user
+    if os.path.exists(USER_QUOTA_FILE):
+        subprocess.check_output(
+            ["/usr/sbin/setquota", user, USER_QUOTA["block_soft"],
+             USER_QUOTA["block_hard"], USER_QUOTA["inode_soft"],
+             USER_QUOTA["inode_hard"], "/"])
+
 
 def pam_sm_authenticate(pam_handle, flags, argv):
     global pamh
@@ -147,3 +161,7 @@ def pam_sm_authenticate(pam_handle, flags, argv):
     # sleep before failing to slow down scanners
     time.sleep(3)
     return pamh.PAM_AUTH_ERR
+
+
+def pam_sm_setcred(pamh, flags, argv):
+    return pamh.PAM_SUCCESS
