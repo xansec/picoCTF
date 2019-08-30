@@ -9,10 +9,10 @@ import random
 
 from locust import HttpLocust, task, TaskSet
 
-from registration import register_and_expect_failure
 from demographics_generator import (get_affiliation, get_country_code,
                                     get_demographics, get_email, get_password,
                                     get_user_type, get_username)
+from registration import register_and_expect_failure
 from util import (ADMIN_PASSWORD, ADMIN_USERNAME, FEEDBACK_ENDPOINT,
                   GAME_PAGE_URL, get_db, GROUPS_ENDPOINT, LOGIN_ENDPOINT,
                   LOGOUT_ENDPOINT, NEWS_PAGE_URL, PROBLEMS_ENDPOINT,
@@ -89,18 +89,20 @@ def get_valid_scoreboard_base_endpoint(l):
     groups = l.client.get(GROUPS_ENDPOINT).json()
 
     # Load the initial page of one of the scoreboards
-    possible_boards = set()
+    possible_boards = []
     for board in scoreboards:
-        possible_boards.add({'scoreboard', board['sid']})
+        possible_boards.append(('scoreboard', board['sid']))
     for group in groups:
-        possible_boards.add({'group', group['gid']})
+        possible_boards.append(('group', group['gid']))
 
     board = random.choice(possible_boards)
-    if board['scoreboard']:
-        endpoint = SCOREBOARDS_ENDPOINT + '/' + board['scoreboard']
+    if board[0] == 'scoreboard':
+        endpoint = SCOREBOARDS_ENDPOINT + '/' + board[1]
+        call_label = SCOREBOARDS_ENDPOINT + '/[sid]'
     else:
-        endpoint = GROUPS_ENDPOINT + '/' + board['group']
-    return endpoint
+        endpoint = GROUPS_ENDPOINT + '/' + board[1]
+        call_label = GROUPS_ENDPOINT + '/[gid]'
+    return (endpoint, call_label)
 
 def get_problem_flags(pid):
     """Retrieve a list of all instance flags for a problem from the DB."""
@@ -289,14 +291,17 @@ class LoadTestingTasks(TaskSet):
             try:
                 simulate_loading_scoreboard_page(l)
 
-                endpoint = get_valid_scoreboard_base_endpoint(l)
-                l.client.get(endpoint + '/score_progressions')
+                endpoint, call_label = get_valid_scoreboard_base_endpoint(l)
+                l.client.get(endpoint + '/score_progressions',
+                    name=(call_label + '/score_progressions'))
                 initial_page_res = l.client.get(
-                    endpoint + '/scoreboard').json()
+                    endpoint + '/scoreboard',
+                    name=(call_label + '/scoreboard')).json()
                 for i in range(0, random.randrange(1, 10)):
                     p = random.randrange(
                         1, initial_page_res['total_pages'] + 1)
-                    l.client.get(endpoint + '/scoreboard?page=' + p)
+                    l.client.get(endpoint + '/scoreboard?page=' + str(p),
+                        name=(call_label + '/scoreboard?page=[p]'))
                 logout(l)
             finally:
                 release_user(username)
@@ -309,15 +314,19 @@ class LoadTestingTasks(TaskSet):
             try:
                 simulate_loading_scoreboard_page(l)
 
-                endpoint = get_valid_scoreboard_base_endpoint(l)
-                l.client.get(endpoint + '/score_progressions')
+                endpoint, call_label = get_valid_scoreboard_base_endpoint(l)
+                l.client.get(endpoint + '/score_progressions',
+                    name=(call_label + '/score_progressions'))
                 initial_page_res = l.client.get(
-                    endpoint + '/scoreboard').json()
-                search_endpoint += '/scoreboard?search=' + get_affiliation()
+                    endpoint + '/scoreboard',
+                    name=(call_label + '/scoreboard')).json()
+                search_endpoint = (
+                    endpoint + '/scoreboard?search=' + get_affiliation())
                 for i in range(0, random.randrange(1, 10)):
                     p = random.randrange(
                         1, initial_page_res['total_pages'] + 1)
-                    l.client.get(search_endpoint + '&page=' + p)
+                    l.client.get(search_endpoint + '&page=' + str(p),
+                        name=(call_label + '/scoreboard?search=[q]&page=[p]'))
                 logout(l)
             finally:
                 release_user(username)
