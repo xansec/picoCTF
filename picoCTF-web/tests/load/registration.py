@@ -25,22 +25,30 @@ def generate_user():
     return user_fields
 
 def register_and_expect_failure(l, user_demographics):
+    """Attempt to register an invalid account, expecting a 400 response."""
     with l.client.post(REGISTRATION_ENDPOINT,
             json=user_demographics, catch_response=True) as res:
         if res.status_code == 400:
             res.success()
+        else:
+            res.failure(
+                'Registration not caught as invalid: parameters={}, status={}'
+                .format(str(user_demographics), str(res.status_code)))
 
 class RegistrationTasks(TaskSet):
     """Tasks for both successful and failed registrations."""
 
     @task(weight=10)
     def successfully_register(l):
+        """Register a valid test user and store credentials in DB."""
         user_demographics = generate_user()
         with l.client.post(REGISTRATION_ENDPOINT, json=user_demographics,
                 catch_response=True) as res:
             if res.status_code == 201:
                 get_db().users.insert_one(user_demographics.copy())
-
+                res.success()
+            else:
+                res.failure('Failed to register user')
         raise StopLocust # Terminate after successful registration
 
     @task(weight=1)
@@ -49,6 +57,7 @@ class RegistrationTasks(TaskSet):
 
         @task
         def missing_field_error(l):
+            """Fail registration due to a missing required field."""
             user_demographics = generate_user()
             to_delete = random.choice([
                 'username', 'password', 'email', 'affiliation', 'country', 'usertype', 'demo'
@@ -59,6 +68,7 @@ class RegistrationTasks(TaskSet):
 
         @task
         def username_error(l):
+            """Fail registration due to an invalid username."""
             user_demographics = generate_user()
             user_demographics['username'] = ''
             register_and_expect_failure(l, user_demographics)
@@ -66,6 +76,7 @@ class RegistrationTasks(TaskSet):
 
         @task
         def password_error(l):
+            """Fail registration due to an invalid password."""
             user_demographics = generate_user()
             user_demographics['password'] = 'oo'
             register_and_expect_failure(l, user_demographics)
@@ -73,6 +84,7 @@ class RegistrationTasks(TaskSet):
 
         @task
         def email_error(l):
+            """Fail registration due to an invalid email address."""
             user_demographics = generate_user()
             user_demographics['email'] = 'invalid_email_address'
             register_and_expect_failure(l, user_demographics)
@@ -80,6 +92,7 @@ class RegistrationTasks(TaskSet):
 
         @task
         def affiliation_error(l):
+            """Fail registration due to an invalid affiliation."""
             user_demographics = generate_user()
             user_demographics['affiliation'] = ''
             register_and_expect_failure(l, user_demographics)
@@ -87,6 +100,7 @@ class RegistrationTasks(TaskSet):
 
         @task
         def country_error(l):
+            """Fail registration due to an invalid country."""
             user_demographics = generate_user()
             user_demographics['country'] = 'invalid_country_code'
             register_and_expect_failure(l, user_demographics)
@@ -94,6 +108,7 @@ class RegistrationTasks(TaskSet):
 
         @task
         def usertype_error(l):
+            """Fail registration due to an invalid user type."""
             user_demographics = generate_user()
             user_demographics['usertype'] = 'invalid_user_type'
             register_and_expect_failure(l, user_demographics)
@@ -101,6 +116,7 @@ class RegistrationTasks(TaskSet):
 
         @task
         def demo_error(l):
+            """Fail registration due to invalid demographics."""
             user_demographics = generate_user()
             user_demographics['demo']['age'] = 'invalid_age'
             register_and_expect_failure(l, user_demographics)
@@ -108,6 +124,7 @@ class RegistrationTasks(TaskSet):
 
         @task
         def require_parent_email_error(l):
+            """Fail registration due to an invalid parent email."""
             user_demographics = generate_user()
             user_demographics['demo']['age'] = '13-17'
             user_demographics['demo']['parentemail'] = 'invalid_email'
@@ -115,6 +132,8 @@ class RegistrationTasks(TaskSet):
             l.interrupt()
 
 class RegistrationLocust(HttpLocust):
+    """Main locust class. Defines the task set and wait interval limits."""
+
     task_set = RegistrationTasks
     min_wait = 1000
     max_wait = 4000

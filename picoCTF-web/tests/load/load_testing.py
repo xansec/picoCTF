@@ -9,7 +9,7 @@ import random
 
 from locust import HttpLocust, task, TaskSet
 
-import registration
+from registration import register_and_expect_failure
 from demographics_generator import (get_affiliation, get_country_code,
                                     get_demographics, get_email, get_password,
                                     get_user_type, get_username)
@@ -39,16 +39,6 @@ def generate_user():
     }
     return user_fields
 
-def register_and_expect_failure(l, user_demographics):
-    with l.client.post(REGISTRATION_ENDPOINT,
-            json=user_demographics, catch_response=True) as res:
-        if res.status_code == 400:
-            res.success()
-        else:
-            res.failure(
-                'Registration not caught as invalid: parameters={}, status={}'
-                .format(str(user_demographics), str(res.status_code)))
-
 def acquire_user(properties={}):
     """Retrieve an available test user with the specified properties."""
     properties['in_use'] = {'$in': [False, None]}
@@ -68,6 +58,7 @@ def release_user(username):
         raise Exception("Could not release user " + username)
 
 def login(l, username=None, password=None):
+    """Attempt to log in as a provided or randomly selected user."""
     if not username:
         user = acquire_user()
     else:
@@ -85,11 +76,15 @@ def login(l, username=None, password=None):
     return user['username']
 
 def logout(l):
+    """Attempt to log out the current user."""
     l.client.get(LOGOUT_ENDPOINT)
 
 def get_valid_scoreboard_base_endpoint(l):
-    """Returns a valid base scoreboard URL (scoreboard or group) for a user."""
+    """
+    Return a valid scoreboard base URL (scoreboard or group) for a user.
 
+    This URL should be followed with e.g. /scoreboard, /score_progressions, etc
+    """
     scoreboards = l.client.get(SCOREBOARDS_ENDPOINT).json()
     groups = l.client.get(GROUPS_ENDPOINT).json()
 
@@ -112,17 +107,19 @@ def get_problem_flags(pid):
     return get_db().problems.find_one({'pid': pid}).get('flags', [])
 
 def simulate_loading_any_page(l):
-    """Simulates the JS calls made upon loading any frontend page."""
+    """Simulate the calls made upon loading any frontend page."""
     l.client.get(USER_ENDPOINT)
     l.client.get(STATUS_ENDPOINT)
 
 def simulate_loading_login_page(l):
+    """Simulate the calls made upon loading the login page."""
     simulate_loading_any_page(l)
     l.client.get("")
     l.client.get(SETTINGS_ENDPOINT)
     l.client.get(REGISTRATION_STATS_ENDPOINT)
 
 def simulate_loading_problems_page(l):
+    """Simulate the calls made upon loading the problems page."""
     simulate_loading_any_page(l)
     l.client.get(PROBLEMS_PAGE_URL)
     l.client.get(TEAM_ENDPOINT)
@@ -132,16 +129,19 @@ def simulate_loading_problems_page(l):
     l.client.get(PROBLEMS_ENDPOINT)
 
 def simulate_loading_shell_page(l):
+    """Simulate the calls made upon loading the shell page."""
     simulate_loading_any_page(l)
     l.client.get(SHELL_PAGE_URL)
     l.client.get(SHELL_SERVERS_ENDPOINT)
 
 def simulate_loading_game_page(l):
+    """Simulate the calls made upon loading the game page."""
     simulate_loading_any_page(l)
     l.client.get(GAME_PAGE_URL)
     l.client.get(STATUS_ENDPOINT)
 
 def simulate_loading_scoreboard_page(l):
+    """Simulate the calls made upon loading the scoreboard page."""
     simulate_loading_any_page(l)
     l.client.get(SCOREBOARD_PAGE_URL)
     l.client.get(SCOREBOARDS_ENDPOINT)
@@ -149,6 +149,7 @@ def simulate_loading_scoreboard_page(l):
     l.client.get(GROUPS_ENDPOINT)
 
 def simulate_loading_profile_page(l):
+    """Simulate the calls made upon loading the profile page."""
     simulate_loading_any_page(l)
     l.client.get(PROFILE_PAGE_URL)
     l.client.get(TEAM_ENDPOINT)
@@ -156,10 +157,12 @@ def simulate_loading_profile_page(l):
     l.client.get(GROUPS_ENDPOINT)
 
 def simulate_loading_news_page(l):
+    """Simulate the calls made upon loading the news page."""
     simulate_loading_any_page(l)
     l.client.get(NEWS_PAGE_URL)
 
 class LoadTestingTasks(TaskSet):
+    """Root set of all load testing tasks."""
 
     @task
     def load_login_page(l):
@@ -206,7 +209,7 @@ class LoadTestingTasks(TaskSet):
         """Simulate actions on the problems page."""
 
         def setup(l):
-            # Retrieve problem flags using the admin endpoint
+            """Retrieve all problem flags as an admin user (runs once)."""
             get_db().problems.delete_many({})
             login(l, username=ADMIN_USERNAME, password=ADMIN_PASSWORD)
             all_problems = l.client.get(
@@ -412,6 +415,7 @@ class LoadTestingTasks(TaskSet):
 
         @task(weight=10)
         def successfully_register(l):
+            """Register a valid test user and store credentials in DB."""
             simulate_loading_login_page(l)
             user_demographics = generate_user()
             with l.client.post(REGISTRATION_ENDPOINT, json=user_demographics,
@@ -429,6 +433,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def missing_field_error(l):
+                """Fail registration due to a missing required field."""
                 simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 to_delete = random.choice([
@@ -441,6 +446,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def username_error(l):
+                """Fail registration due to an invalid username."""
                 simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['username'] = ''
@@ -449,6 +455,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def password_error(l):
+                """Fail registration due to an invalid password."""
                 simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['password'] = 'oo'
@@ -457,6 +464,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def email_error(l):
+                """Fail registration due to an invalid email address."""
                 simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['email'] = 'invalid_email_address'
@@ -465,6 +473,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def affiliation_error(l):
+                """Fail registration due to an invalid affiliation."""
                 simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['affiliation'] = ''
@@ -473,6 +482,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def country_error(l):
+                """Fail registration due to an invalid country."""
                 simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['country'] = 'invalid_country_code'
@@ -481,6 +491,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def usertype_error(l):
+                """Fail registration due to an invalid user type."""
                 simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['usertype'] = 'invalid_user_type'
@@ -489,6 +500,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def demo_error(l):
+                """Fail registration due to invalid demographics."""
                 simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['demo']['age'] = 'invalid_age'
@@ -497,6 +509,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def require_parent_email_error(l):
+                """Fail registration due to an invalid parent email."""
                 simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['demo']['age'] = '13-17'
@@ -505,6 +518,8 @@ class LoadTestingTasks(TaskSet):
                 l.interrupt()
 
 class LoadTestingLocust(HttpLocust):
+    """Main locust class. Defines the task set and wait interval limits."""
+
     task_set = LoadTestingTasks
     min_wait = 1000
     max_wait = 4000
