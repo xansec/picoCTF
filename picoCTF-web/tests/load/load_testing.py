@@ -15,11 +15,15 @@ from demographics_generator import (get_affiliation, get_country_code,
                                     get_user_type, get_username)
 from util import (ADMIN_PASSWORD, ADMIN_USERNAME, FEEDBACK_ENDPOINT,
                   GAME_PAGE_URL, get_db, GROUPS_ENDPOINT, LOGIN_ENDPOINT,
-                  LOGOUT_ENDPOINT, PROBLEMS_ENDPOINT, PROBLEMS_PAGE_URL,
-                  PROFILE_PAGE_URL, REGISTRATION_ENDPOINT, SCOREBOARD_PAGE_URL,
-                  SCOREBOARDS_ENDPOINT, SHELL_PAGE_URL, SUBMISSIONS_ENDPOINT,
+                  LOGOUT_ENDPOINT, NEWS_PAGE_URL, PROBLEMS_ENDPOINT,
+                  PROBLEMS_PAGE_URL, PROFILE_PAGE_URL, REGISTRATION_ENDPOINT,
+                  REGISTRATION_STATS_ENDPOINT, SCOREBOARD_PAGE_URL,
+                  SCOREBOARDS_ENDPOINT, SETTINGS_ENDPOINT, SHELL_PAGE_URL,
+                  SHELL_SERVERS_ENDPOINT, STATUS_ENDPOINT, SUBMISSIONS_ENDPOINT,
+                  TEAM_ENDPOINT, TEAM_SCORE_ENDPOINT,
+                  TEAM_SCORE_PROGRESSION_ENDPOINT, USER_DELETE_ACCOUNT_ENDPOINT,
                   USER_ENDPOINT, USER_EXPORT_ENDPOINT,
-                  USER_PASSWORD_CHANGE_ENDPOINT, NEWS_PAGE_URL, USER_DELETE_ACCOUNT_ENDPOINT)
+                  USER_PASSWORD_CHANGE_ENDPOINT)
 
 
 def generate_user():
@@ -40,6 +44,10 @@ def register_and_expect_failure(l, user_demographics):
             json=user_demographics, catch_response=True) as res:
         if res.status_code == 400:
             res.success()
+        else:
+            res.failure(
+                'Registration not caught as invalid: parameters={}, status={}'
+                .format(str(user_demographics), str(res.status_code)))
 
 def acquire_user(properties={}):
     """Retrieve an available test user with the specified properties."""
@@ -66,18 +74,22 @@ def login(l, username=None, password=None):
         user = dict()
         user['username'] = username
         user['password'] = password
-    res = l.client.post(LOGIN_ENDPOINT, json={
+    with l.client.post(LOGIN_ENDPOINT, json={
         'username': user['username'],
         'password': user['password']
-    }, catch_response = True)
-    if res.status_code == 401:
-        raise Exception('Could not log in as {}'.format(user['username']))
+    }, catch_response = True) as res:
+        if res.status_code == 200:
+            res.success()
+        else:
+            res.failure('Could not log in as {}'.format(user['username']))
     return user['username']
 
 def logout(l):
     l.client.get(LOGOUT_ENDPOINT)
 
-def get_valid_scoreboard_endpoint(l):
+def get_valid_scoreboard_base_endpoint(l):
+    """Returns a valid base scoreboard URL (scoreboard or group) for a user."""
+
     scoreboards = l.client.get(SCOREBOARDS_ENDPOINT).json()
     groups = l.client.get(GROUPS_ENDPOINT).json()
 
@@ -90,29 +102,76 @@ def get_valid_scoreboard_endpoint(l):
 
     board = random.choice(possible_boards)
     if board['scoreboard']:
-        endpoint = SCOREBOARDS_ENDPOINT + '/' + board['scoreboard'] + \
-            '/scoreboard'
+        endpoint = SCOREBOARDS_ENDPOINT + '/' + board['scoreboard']
     else:
-        endpoint = GROUPS_ENDPOINT + '/' + board['group'] + '/scoreboard'
+        endpoint = GROUPS_ENDPOINT + '/' + board['group']
     return endpoint
 
 def get_problem_flags(pid):
     """Retrieve a list of all instance flags for a problem from the DB."""
     return get_db().problems.find_one({'pid': pid}).get('flags', [])
 
+def simulate_loading_any_page(l):
+    """Simulates the JS calls made upon loading any frontend page."""
+    l.client.get(USER_ENDPOINT)
+    l.client.get(STATUS_ENDPOINT)
+
+def simulate_loading_login_page(l):
+    simulate_loading_any_page(l)
+    l.client.get("")
+    l.client.get(SETTINGS_ENDPOINT)
+    l.client.get(REGISTRATION_STATS_ENDPOINT)
+
+def simulate_loading_problems_page(l):
+    simulate_loading_any_page(l)
+    l.client.get(PROBLEMS_PAGE_URL)
+    l.client.get(TEAM_ENDPOINT)
+    l.client.get(FEEDBACK_ENDPOINT)
+    l.client.get(TEAM_SCORE_PROGRESSION_ENDPOINT)
+    l.client.get(TEAM_SCORE_ENDPOINT)
+    l.client.get(PROBLEMS_ENDPOINT)
+
+def simulate_loading_shell_page(l):
+    simulate_loading_any_page(l)
+    l.client.get(SHELL_PAGE_URL)
+    l.client.get(SHELL_SERVERS_ENDPOINT)
+
+def simulate_loading_game_page(l):
+    simulate_loading_any_page(l)
+    l.client.get(GAME_PAGE_URL)
+    l.client.get(STATUS_ENDPOINT)
+
+def simulate_loading_scoreboard_page(l):
+    simulate_loading_any_page(l)
+    l.client.get(SCOREBOARD_PAGE_URL)
+    l.client.get(SCOREBOARDS_ENDPOINT)
+    l.client.get(TEAM_ENDPOINT)
+    l.client.get(GROUPS_ENDPOINT)
+
+def simulate_loading_profile_page(l):
+    simulate_loading_any_page(l)
+    l.client.get(PROFILE_PAGE_URL)
+    l.client.get(TEAM_ENDPOINT)
+    l.client.get(SCOREBOARDS_ENDPOINT)
+    l.client.get(GROUPS_ENDPOINT)
+
+def simulate_loading_news_page(l):
+    simulate_loading_any_page(l)
+    l.client.get(NEWS_PAGE_URL)
+
 class LoadTestingTasks(TaskSet):
 
     @task
     def load_login_page(l):
         """Simulate loading the login page."""
-        l.client.get("")
+        simulate_loading_login_page(l)
 
     @task
     def load_shell_page(l):
         """Simulate loading the shell page."""
         username = login(l)
         try:
-            l.client.get(SHELL_PAGE_URL)
+            simulate_loading_shell_page(l)
             logout(l)
         finally:
             release_user(username)
@@ -122,7 +181,7 @@ class LoadTestingTasks(TaskSet):
         """Simulate loading the Unity game page."""
         username = login(l)
         try:
-            l.client.get(GAME_PAGE_URL)
+            simulate_loading_game_page(l)
             logout(l)
         finally:
             release_user(username)
@@ -130,7 +189,7 @@ class LoadTestingTasks(TaskSet):
     @task
     def load_news_page(l):
         """Simulate loading the news page."""
-        l.client.get(NEWS_PAGE_URL)
+        simulate_loading_news_page(l)
 
     @task
     def call_user_endpoint(l):
@@ -166,7 +225,7 @@ class LoadTestingTasks(TaskSet):
             """Load the problems page without solving anything."""
             username = login(l)
             try:
-                l.client.get(PROBLEMS_PAGE_URL)
+                simulate_loading_problems_page(l)
                 logout(l)
             finally:
                 release_user(username)
@@ -177,7 +236,8 @@ class LoadTestingTasks(TaskSet):
             """Submit a solution to a problem."""
             username = login(l)
             try:
-                l.client.get(PROBLEMS_PAGE_URL)
+                simulate_loading_problems_page(l)
+
                 unlocked_problems = l.client.get(PROBLEMS_ENDPOINT).json()
                 problem = random.choice(unlocked_problems)
                 # Select a flag from the pool of possible instance flags:
@@ -199,7 +259,8 @@ class LoadTestingTasks(TaskSet):
             """Submit feedback for an unlocked problem."""
             username = login(l)
             try:
-                l.client.get(PROBLEMS_PAGE_URL)
+                simulate_loading_problems_page(l)
+
                 unlocked_problems = l.client.get(PROBLEMS_ENDPOINT).json()
                 problem = random.choice(unlocked_problems)
                 l.client.post(FEEDBACK_ENDPOINT, json={
@@ -223,13 +284,16 @@ class LoadTestingTasks(TaskSet):
             """Load several pages of a random scoreboard."""
             username = login(l)
             try:
-                l.client.get(SCOREBOARD_PAGE_URL)
+                simulate_loading_scoreboard_page(l)
 
-                endpoint = get_valid_scoreboard_endpoint(l)
-                initial_page_res = l.client.get(endpoint).json()
+                endpoint = get_valid_scoreboard_base_endpoint(l)
+                l.client.get(endpoint + '/score_progressions')
+                initial_page_res = l.client.get(
+                    endpoint + '/scoreboard').json()
                 for i in range(0, random.randrange(1, 10)):
-                    p = random.randrange(1, initial_page_res['total_pages'] + 1)
-                    l.client.get(endpoint + '?page=' + p)
+                    p = random.randrange(
+                        1, initial_page_res['total_pages'] + 1)
+                    l.client.get(endpoint + '/scoreboard?page=' + p)
                 logout(l)
             finally:
                 release_user(username)
@@ -240,14 +304,17 @@ class LoadTestingTasks(TaskSet):
             """Load several pages of a filtered random scoreboard."""
             username = login(l)
             try:
-                l.client.get(SCOREBOARD_PAGE_URL)
+                simulate_loading_scoreboard_page(l)
 
-                endpoint = get_valid_scoreboard_endpoint(l)
-                initial_page_res = l.client.get(endpoint).json()
-                endpoint += '&search=' + get_affiliation()
+                endpoint = get_valid_scoreboard_base_endpoint(l)
+                l.client.get(endpoint + '/score_progressions')
+                initial_page_res = l.client.get(
+                    endpoint + '/scoreboard').json()
+                search_endpoint += '/scoreboard?search=' + get_affiliation()
                 for i in range(0, random.randrange(1, 10)):
-                    p = random.randrange(1, initial_page_res['total_pages'] + 1)
-                    l.client.get(endpoint + '&page=' + p)
+                    p = random.randrange(
+                        1, initial_page_res['total_pages'] + 1)
+                    l.client.get(search_endpoint + '&page=' + p)
                 logout(l)
             finally:
                 release_user(username)
@@ -262,7 +329,7 @@ class LoadTestingTasks(TaskSet):
             """Just load the profile page."""
             username = login(l)
             try:
-                l.client.get(PROFILE_PAGE_URL)
+                simulate_loading_profile_page(l)
                 logout(l)
             finally:
                 release_user(username)
@@ -274,7 +341,8 @@ class LoadTestingTasks(TaskSet):
             user = acquire_user()
             try:
                 login(l, username=user['username'], password=user['password'])
-                l.client.get(PROFILE_PAGE_URL)
+                simulate_loading_profile_page(l)
+
                 new_password = get_password()
                 with l.client.post(
                         USER_PASSWORD_CHANGE_ENDPOINT,
@@ -291,6 +359,9 @@ class LoadTestingTasks(TaskSet):
                             {'$set': {
                                 'password': new_password
                             }})
+                        res.success()
+                    else:
+                        res.failure('Failed to change password')
                 logout(l)
                 login(l, username=user['username'], password=new_password)
                 logout()
@@ -303,7 +374,8 @@ class LoadTestingTasks(TaskSet):
             """Export a user's account data."""
             username = login(l)
             try:
-                l.client.get(PROFILE_PAGE_URL)
+                simulate_loading_profile_page(l)
+
                 l.client.get(USER_EXPORT_ENDPOINT)
                 logout(l)
             finally:
@@ -316,7 +388,8 @@ class LoadTestingTasks(TaskSet):
             user = acquire_user()
             try:
                 login(l, username=user['username'], password=user['password'])
-                l.client.get(PROFILE_PAGE_URL)
+                simulate_loading_profile_page(l)
+
                 with l.client.post(USER_DELETE_ACCOUNT_ENDPOINT, json={
                             'password': user['password']
                         }, headers={
@@ -326,6 +399,9 @@ class LoadTestingTasks(TaskSet):
                         get_db().users.find_one_and_update({
                             'username': user['username']
                         }, {'$set': {'deleted': True}})
+                        res.success()
+                    else:
+                        res.failure('Failed to delete account')
             finally:
                 release_user(user['username'])
                 l.interrupt()
@@ -336,11 +412,15 @@ class LoadTestingTasks(TaskSet):
 
         @task(weight=10)
         def successfully_register(l):
+            simulate_loading_login_page(l)
             user_demographics = generate_user()
             with l.client.post(REGISTRATION_ENDPOINT, json=user_demographics,
                     catch_response=True) as res:
                 if res.status_code == 201:
                     get_db().users.insert_one(user_demographics.copy())
+                    res.success()
+                else:
+                    res.failure('Failed to register user')
             l.interrupt()
 
         @task(weight=1)
@@ -349,9 +429,11 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def missing_field_error(l):
+                simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 to_delete = random.choice([
-                    'username', 'password', 'email', 'affiliation', 'country', 'usertype', 'demo'
+                    'username', 'password', 'email', 'affiliation', 'country',
+                    'usertype', 'demo'
                 ])
                 del user_demographics[to_delete]
                 register_and_expect_failure(l, user_demographics)
@@ -359,6 +441,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def username_error(l):
+                simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['username'] = ''
                 register_and_expect_failure(l, user_demographics)
@@ -366,13 +449,15 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def password_error(l):
+                simulate_loading_login_page(l)
                 user_demographics = generate_user()
-                user_demographics['password'] = 'ooo'
+                user_demographics['password'] = 'oo'
                 register_and_expect_failure(l, user_demographics)
                 l.interrupt()
 
             @task
             def email_error(l):
+                simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['email'] = 'invalid_email_address'
                 register_and_expect_failure(l, user_demographics)
@@ -380,6 +465,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def affiliation_error(l):
+                simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['affiliation'] = ''
                 register_and_expect_failure(l, user_demographics)
@@ -387,13 +473,15 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def country_error(l):
+                simulate_loading_login_page(l)
                 user_demographics = generate_user()
-                user_demographics['country'] = 'xx'
+                user_demographics['country'] = 'invalid_country_code'
                 register_and_expect_failure(l, user_demographics)
                 l.interrupt()
 
             @task
             def usertype_error(l):
+                simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['usertype'] = 'invalid_user_type'
                 register_and_expect_failure(l, user_demographics)
@@ -401,6 +489,7 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def demo_error(l):
+                simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['demo']['age'] = 'invalid_age'
                 register_and_expect_failure(l, user_demographics)
@@ -408,9 +497,10 @@ class LoadTestingTasks(TaskSet):
 
             @task
             def require_parent_email_error(l):
+                simulate_loading_login_page(l)
                 user_demographics = generate_user()
                 user_demographics['demo']['age'] = '13-17'
-                user_demographics['demo']['parentemail'] = ''
+                user_demographics['demo']['parentemail'] = 'invalid_email'
                 register_and_expect_failure(l, user_demographics)
                 l.interrupt()
 

@@ -67,7 +67,7 @@ class RegistrationTasks(TaskSet):
         @task
         def password_error(l):
             user_demographics = generate_user()
-            user_demographics['password'] = 'ooo'
+            user_demographics['password'] = 'oo'
             register_and_expect_failure(l, user_demographics)
             l.interrupt()
 
@@ -88,7 +88,7 @@ class RegistrationTasks(TaskSet):
         @task
         def country_error(l):
             user_demographics = generate_user()
-            user_demographics['country'] = 'xx'
+            user_demographics['country'] = 'invalid_country_code'
             register_and_expect_failure(l, user_demographics)
             l.interrupt()
 
@@ -110,7 +110,7 @@ class RegistrationTasks(TaskSet):
         def require_parent_email_error(l):
             user_demographics = generate_user()
             user_demographics['demo']['age'] = '13-17'
-            user_demographics['demo']['parentemail'] = ''
+            user_demographics['demo']['parentemail'] = 'invalid_email'
             register_and_expect_failure(l, user_demographics)
             l.interrupt()
 
