@@ -29,7 +29,7 @@ default_settings = {
     "email_filter": [],
 
     # TEAMS
-    "max_team_size": 1,
+    "max_team_size": 5,
 
     # BATCH REGISTRATION
     "max_batch_registrations": 250,  # Maximum batch registrations / teacher
@@ -107,7 +107,7 @@ default_settings = {
     "email": {
         "enable_email": False,
         "email_verification": False,
-        "parent_verification_email": False,
+        "parent_verification_email": True,
         "smtp_url": "",
         "smtp_port": 587,
         "email_username": "",
