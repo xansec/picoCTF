@@ -99,6 +99,16 @@ const GeneralTab = React.createClass({
     );
   },
 
+  updateGroupLimit(e) {
+    this.setState(
+      update(this.state, {
+        $set: {
+          group_limit: parseInt(e.target.value)
+        }
+      })
+    )
+  },
+
   toggleRateLimiting() {
     this.setState(
       update(this.state, {
@@ -120,6 +130,7 @@ const GeneralTab = React.createClass({
       username_blacklist: this.state.username_blacklist,
       max_batch_registrations: this.state.max_batch_registrations,
       enable_rate_limiting: this.state.enable_rate_limiting,
+      group_limit: this.state.group_limit,
     };
     apiCall("PATCH", "/api/v1/settings", data)
       .done(data => {
@@ -134,23 +145,21 @@ const GeneralTab = React.createClass({
   render() {
     const feedbackDescription = `Users will be able to review problems when this feature is enabled. The ratings will be available to you \
 on the Problem tab.`;
-
     const competitionNameDescription = "The name of the competition.";
     const competitionURLDescription = `The base URL for the competition website. This must be set in order for users to reset \
 their passwords.`;
-
     const startTimeDescription =
       "Before the competition has started, users will be able to register without viewing the problems.";
     const endTimeDescription =
       "After the competition has ended, users will no longer be able to submit keys to the challenges.";
-
     const maxTeamSizeDescription =
       "Maximum number of users that can join a single team.";
     const usernameBlacklistDescription =
       "Usernames that are unavailable for registration.";
     const maxBatchRegistrationsDescription =
       "Maximum number of student accounts a teacher can create via batch registration.";
-
+    const groupLimitDescription =
+      "Maximum number of classrooms that a teacher account can create.";
     const rateLimitingDescription =
       "Whether to enable rate limiting for certain endpoints.";
 
@@ -208,6 +217,13 @@ their passwords.`;
           type="number"
           onChange={this.updateMaxBatchRegistrations}
           description={maxBatchRegistrationsDescription}
+        />
+        <TextEntry
+          name="Classroom Limit per Teacher"
+          value={this.state.group_limit}
+          type="number"
+          onChange={this.updateGroupLimit}
+          description={groupLimitDescription}
         />
         <BooleanEntry
           name="Enable Rate Limiting"
@@ -860,7 +876,8 @@ const SettingsTab = React.createClass({
           reCAPTCHA_private_key: ""
         },
         max_batch_registrations: 250,
-        enable_rate_limiting: true
+        enable_rate_limiting: true,
+        group_limit: 20
       },
 
       tabKey: "general"
@@ -903,7 +920,8 @@ const SettingsTab = React.createClass({
       max_team_size: this.state.settings.max_team_size,
       username_blacklist: this.state.settings.username_blacklist,
       max_batch_registrations: this.state.settings.max_batch_registrations,
-      enable_rate_limiting: this.state.settings.enable_rate_limiting
+      enable_rate_limiting: this.state.settings.enable_rate_limiting,
+      group_limit: this.state.settings.group_limit
     };
     return (
       <Well>

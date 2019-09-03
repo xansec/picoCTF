@@ -209,11 +209,16 @@ settings_patch_req.add_argument(
 )
 settings_patch_req.add_argument(
     'max_batch_registrations', required=False, type=inputs.natural,
-    location='json', error='max_batch_registrations must be a positive integer'
+    location='json', error='max_batch_registrations must be ' +
+                           'a nonnegative integer'
 )
 settings_patch_req.add_argument(
     'enable_rate_limiting', required=False, type=inputs.boolean,
     location='json'
+)
+settings_patch_req.add_argument(
+    'group_limit', required=False, type=inputs.natural,
+    location='json', error='group_limit must be a nonnegative integer'
 )
 
 # Bundle PATCH request schema

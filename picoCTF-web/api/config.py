@@ -218,6 +218,9 @@ The {competition_name} Team""" # noqa (79char)
 
     # RATE LIMITING
     "enable_rate_limiting": True,
+
+    # GROUP LIMIT
+    "group_limit": 20,
 }
 
 
