@@ -18,7 +18,7 @@ def test_settings(mongo_proc, redis_proc, client): # noqa
         'enable_captcha': False,
         'reCAPTCHA_public_key': '',
         'email_verification': False,
-        'max_team_size': 1,
+        'max_team_size': 5,
         'email_filter': []
     }
     res = client.get('/api/v1/settings')

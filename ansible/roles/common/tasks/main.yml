@@ -1,11 +1,6 @@
 ---
 # Playbook that runs tasks common across all servers
 
-- include: ppas.yml
-  tags:
-   - dependency
-   - network
-
 - include: upgrade.yml
   tags:
     - dependency

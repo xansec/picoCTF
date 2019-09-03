@@ -30,7 +30,6 @@ def test_get_my_team(mongo_proc, redis_proc, client): # noqa (fixture)
     expected_fields = {
         'achievements': [],
         'affiliation': STUDENT_DEMOGRAPHICS['affiliation'],
-        'max_team_size': 1,
         'progression': [],
         'score': 0,
         'size': 1,
@@ -182,15 +181,19 @@ def test_join_team(mongo_proc, redis_proc, client): # noqa (fixture)
     assert res.status_code == 404
     assert res.json['message'] == 'Team not found'
 
-    # Attempt to join when max_team_size is 1 (default)
+    # Attempt to join when max_team_size is 1
+    api.config.get_settings()
+    db = get_conn()
+    db.settings.find_one_and_update({}, {'$set': {'max_team_size': 1}})
     res = client.post('/api/v1/team/join', json={
         'team_name': 'newteam',
         'team_password': 'newteam'
     }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 403
     assert res.json['message'] == 'That team is already at maximum capacity.'
+    db.settings.find_one_and_update({}, {'$set': {'max_team_size': 5}})
 
-    # Update max_team_size and attempt to join with incorrect password
+    # Attempt to join with incorrect password
     api.config.get_settings()
     db = get_conn()
     db.settings.find_one_and_update({}, {'$set': {'max_team_size': 2}})

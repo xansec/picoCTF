@@ -1,13 +1,5 @@
 ---
-# Playbook that installs and configures a service to run the CTF daemons
-
-- name: Template ctf-daemon.service
-  template:
-    src: ctf-daemon.service.j2
-    dest: "/etc/systemd/system/ctf-daemon.service"
-    owner: root
-    group: root
-  when: false
+# Playbook that installs and configures CTF daemons
 
 - name: Template ctf-stats.service
   template:
@@ -26,20 +18,9 @@
 - name: Get systemd to pickup new configs
   command: systemctl daemon-reload
 
-- name: Ensure ctf-daemon is enabled
-  service:
-    name: ctf-daemon
-    enabled: yes
-  when: false
-
 - name: Ensure ctf-stats timer is enabled
   systemd:
     name: ctf-stats.timer
     state: started
     enabled: yes
 
-- name: Ensure ctf-daemon is restarted
-  service:
-    name: ctf-daemon
-    state: restarted
-  when: false

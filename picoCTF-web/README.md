@@ -26,7 +26,7 @@ Additionally, the picoCTF-web component provides a number of features that are u
 
 1. [api](./api): The picoCTF-web Flask API.
 2. [tests](./tests): Automated tests for picoCTF-web components.
-3. [daemons](./daemons): Cron job-style scripts that are run by `daemon_manager.py` on the web server.
+3. [daemons](./daemons): systemd services that run on the web server.
 4. [web](./web). A frontend for interacting with the Flask API.
 
 ## Local Development <!-- markdownlint-disable MD014 -->
