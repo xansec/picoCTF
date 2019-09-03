@@ -169,6 +169,7 @@ class Group(Resource):
             )
 
         api.group.delete_group(group_id)
+        api.cache.invalidate(api.team.get_groups, curr_user['tid'])
         return jsonify({
             'success': True
         })
