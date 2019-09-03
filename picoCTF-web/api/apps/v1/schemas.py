@@ -336,9 +336,9 @@ user_req.add_argument(
     error='Username is not valid (must be 3-20 characters)'
 )
 user_req.add_argument(
-    'password', required=True, type=length_restricted(3, 20, str),
+    'password', required=True, type=length_restricted(3, 1024, str),
     location='json', help='Password',
-    error='Password is not valid (must be 3-20 characters)'
+    error='Password is not valid (must be at least 3 characters)'
 )
 user_req.add_argument(
     'affiliation', required=True, type=length_restricted(3, 50, str),
