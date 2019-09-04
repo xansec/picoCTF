@@ -33,7 +33,7 @@ class GroupList(Resource):
 
     @check_csrf
     @require_teacher
-    @rate_limit(limit=1, duration=10)
+    @rate_limit(limit=20, duration=10)
     @ns.response(201, 'Classroom added')
     @ns.response(400, 'Error parsing request')
     @ns.response(401, 'Not logged in')
@@ -45,22 +45,35 @@ class GroupList(Resource):
     def post(self):
         """Create a new group."""
         req = group_req.parse_args(strict=True)
-        curr_tid = api.user.get_user()['tid']
+        curr_user = api.user.get_user()
 
         # Don't create group if teacher already has one with same name
         if api.group.get_group(
-                name=req['name'], owner_tid=curr_tid) is not None:
+                name=req['name'], owner_tid=curr_user['tid']) is not None:
             raise PicoException(
                 'You already have a classroom with that name', 409)
         if not all([
                 c in string.digits + string.ascii_lowercase + " ()-,#'&"
                 for c in req['name'].lower()]):
             raise PicoException(
-                "Classroom names cannot contain special characters other than "+
-                "()-,#'&", status_code=400
+                "Classroom names cannot contain special characters other " +
+                "than ()-,#'&", status_code=400
             )
 
-        gid = api.group.create_group(curr_tid, req['name'])
+        # Make sure this teacher hasn't already created the max no. of groups
+        db = api.db.get_conn()
+        created_group_count = db.groups.count_documents(
+            {'owner': curr_user['tid']})
+        settings = api.config.get_settings()
+        if (created_group_count >= settings['group_limit']
+                and not curr_user.get('admin', False)):
+            raise PicoException(
+                'You have created the maximum number of classrooms. ' +
+                'Please contact an administrator for assistance.',
+                status_code=403
+            )
+
+        gid = api.group.create_group(curr_user['tid'], req['name'])
         res = jsonify({
             'success': True,
             'gid': gid
@@ -156,6 +169,7 @@ class Group(Resource):
             )
 
         api.group.delete_group(group_id)
+        api.cache.invalidate(api.team.get_groups, curr_user['tid'])
         return jsonify({
             'success': True
         })
@@ -187,7 +201,7 @@ class RemoveTeamResponse(Resource):
 
         if curr_tid not in eligible_for_removal:
             raise PicoException(
-                'Specified team is not eligible for removal from this classroom',
+                'Team is not eligible for removal from this classroom',
                 status_code=422
             )
         api.group.leave_group(group_id, curr_tid)
@@ -222,7 +236,7 @@ class RemoveTeamResponse(Resource):
         # Ensure the specified tid is a member of the group
         if req['team_id'] not in eligible_for_removal:
             raise PicoException(
-                'Specified team is not eligible for removal from this classroom',
+                'Team is not eligible for removal from this classroom',
                 status_code=422
             )
 
@@ -281,8 +295,8 @@ class InviteResponse(Resource):
         if (curr_user['tid'] not in (group['teachers'] + [group['owner']])
                 and not curr_user['admin']):
             raise PicoException(
-                'You do not have permission to invite members to this classroom.',
-                status_code=403
+                'You do not have permission to invite members to ' +
+                'this classroom.', status_code=403
             )
 
         api.email.send_email_invite(group_id, req['email'],
@@ -454,6 +468,7 @@ class ScoreboardPage(Resource):
     If a page is not specified, will attempt to return the page containing the
     current team, falling back to the first page if neccessary.
     """
+
     @block_before_competition
     @ns.response(200, 'Success')
     @ns.response(403, 'Permission denied')
@@ -510,8 +525,8 @@ class ScoreProgressionsResult(Resource):
         if (not api.user.is_logged_in() or (
                 api.user.get_user()['tid'] not in group_members
                 and not api.user.get_user()['admin'])):
-            raise PicoException("You do not have permission to " +
-                                "view this classroom's score progressions.", 403)
+            raise PicoException("You do not have permission to view this " +
+                                "classroom's score progressions.", 403)
         if req['limit'] and (
                 not api.user.is_logged_in()
                 or not api.user.get_user()['admin']):

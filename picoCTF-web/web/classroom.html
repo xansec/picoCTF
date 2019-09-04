@@ -273,15 +273,11 @@ startup_functions:
                    data-group-name="<%- group.name %>"
                    role="tab" data-toggle="tab">
                   <%- group.name %>
-                  <% if(window.isAdmin) { %>
-                    <span data-group-name="<%- group.name %>" data-gid="<%- group.gid %>" class="glyphicon glyphicon-remove delete-group-span"></span>
-                  <% } %>
+                  <span data-group-name="<%- group.name %>" data-gid="<%- group.gid %>" class="glyphicon glyphicon-remove delete-group-span"></span>
                 </a>
             </li>
         <% }); %>
-        <% if(window.isAdmin) { %>
           <li><a href="#" id="new-class-tab">New Class</a></li>
-        <% } %>
         </ul>
         <div class="tab-content">
           <% _.each(data, function(group, index) { %>
