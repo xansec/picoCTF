@@ -15,7 +15,7 @@ MONGO_TLS_SETTINGS = "tls=true&tlsCAFile=/etc/ssl/certs/mongodb_tls.pem"
 
 REDIS_DB_NUMBER = "{{ redis_db_number | default(0) }}"
 REDIS_ADDR = "{{ redis_private_ip | default(db_private_ip) }}"
-REDIS_PORT =" {{ redis_conf_port | default(6379) }}"
+REDIS_PORT = "{{ redis_conf_port | default(6379) }}"
 {% if  redis_conf_auth | bool %}
 REDIS_PW = "{{ redis_db_password | default(picoWeb_db_password) }}"
 {% endif %}
