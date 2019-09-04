@@ -11,11 +11,12 @@ from locust import HttpLocust, task, TaskSet
 
 from demographics_generator import (get_affiliation, get_country_code,
                                     get_demographics, get_email, get_password,
-                                    get_user_type, get_username)
+                                    get_team_name, get_user_type, get_username)
 from registration import register_and_expect_failure
-from util import (ADMIN_PASSWORD, ADMIN_USERNAME, FEEDBACK_ENDPOINT,
-                  GAME_PAGE_URL, get_db, GROUPS_ENDPOINT, LOGIN_ENDPOINT,
-                  LOGOUT_ENDPOINT, NEWS_PAGE_URL, PROBLEMS_ENDPOINT,
+from util import (ADMIN_PASSWORD, ADMIN_USERNAME, CREATE_TEAM_ENDPOINT,
+                  FEEDBACK_ENDPOINT, GAME_PAGE_URL, get_db, GROUPS_ENDPOINT,
+                  JOIN_TEAM_ENDPOINT, LOGIN_ENDPOINT, LOGOUT_ENDPOINT,
+                  MAX_TEAM_SIZE, NEWS_PAGE_URL, PROBLEMS_ENDPOINT,
                   PROBLEMS_PAGE_URL, PROFILE_PAGE_URL, REGISTRATION_ENDPOINT,
                   REGISTRATION_STATS_ENDPOINT, SCOREBOARD_PAGE_URL,
                   SCOREBOARDS_ENDPOINT, SETTINGS_ENDPOINT, SHELL_PAGE_URL,
@@ -414,6 +415,95 @@ class LoadTestingTasks(TaskSet):
                         res.success()
                     else:
                         res.failure('Failed to delete account')
+            finally:
+                release_user(user['username'])
+                l.interrupt()
+    @task
+    class TeamTasks(TaskSet):
+        """Simulate usage of team functionality."""
+
+        @task(weight=1)
+        def create_team(l):
+            """Create a custom team for a user."""
+            user = acquire_user({
+                'usertype': {'$in': ['student', 'college', 'other']},
+                'on_team': {'$in': [False, None]}
+                })
+            if not user:
+                l.interrupt()
+            try:
+                login(l, username=user['username'], password=user['password'])
+                simulate_loading_profile_page(l)
+
+                team_name = get_team_name()
+                team_password = get_password()
+                with l.client.post(CREATE_TEAM_ENDPOINT, json={
+                    'team_name': team_name,
+                    'team_password': team_password
+                }, catch_response=True) as res:
+                    if res.status_code == 201:
+                        get_db().users.find_one_and_update({
+                            'username': user['username']
+                        }, {'$set': {
+                            'on_team': True,
+                            'team_name': team_name
+                        }})
+                        get_db().teams.insert_one({
+                            'team_name': team_name,
+                            'team_password': team_password,
+                            'number_of_members': 1
+                        })
+                        res.success()
+                    else:
+                        res.failure('Failed to create custom team: ' +
+                            str(res.json()))
+                logout(l)
+            finally:
+                release_user(user['username'])
+                l.interrupt()
+
+        @task(weight=6)
+        def join_team(l):
+            """Join an existing team with an open space."""
+            user = acquire_user({
+                'usertype': {'$in': ['student', 'college', 'other']},
+                'on_team': {'$in': [False, None]}
+                })
+            if not user:
+                l.interrupt()
+            try:
+                login(l, username=user['username'], password=user['password'])
+                simulate_loading_profile_page(l)
+
+                # Sometimes fails due to race condition - another thread can
+                # push a team over the max size while trying to join it
+                team = get_db().teams.find_one({
+                    'number_of_members': {'$lt': MAX_TEAM_SIZE}
+                    })
+                if not team:
+                    l.interrupt()
+
+                with l.client.post(JOIN_TEAM_ENDPOINT, json={
+                        'team_name': team['team_name'],
+                        'team_password': team['team_password']
+                    }, catch_response=True) as res:
+                        if res.status_code == 200:
+                            get_db().users.find_one_and_update({
+                                'username': user['username']
+                            }, {'$set': {
+                                'on_team': True,
+                                'team_name': team['team_name']
+                            }})
+                            get_db().teams.find_one_and_update({
+                                'team_name': team['team_name']
+                            }, {'$inc': {
+                                'number_of_members': 1
+                            }})
+                            res.success()
+                        else:
+                            res.failure('Failed to join team: ' +
+                                str(res.json()))
+                logout(l)
             finally:
                 release_user(user['username'])
                 l.interrupt()

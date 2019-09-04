@@ -33,6 +33,10 @@ def get_username():
     """Return a valid username."""
     return 'user' + str(uuid.uuid4().hex)[:16]
 
+def get_team_name():
+    """Return a valid team name."""
+    return 'team' + str(uuid.uuid4().hex)
+
 def get_password():
     """Return a valid password."""
     return str(uuid.uuid4().hex)[:20]

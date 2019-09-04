@@ -12,8 +12,10 @@ db_conf = {
 }
 
 API_BASE_URL = 'api/v1'
+CREATE_TEAM_ENDPOINT = API_BASE_URL + '/teams'
 FEEDBACK_ENDPOINT = API_BASE_URL + '/feedback'
 GROUPS_ENDPOINT = API_BASE_URL + '/groups'
+JOIN_TEAM_ENDPOINT = API_BASE_URL + '/team/join'
 LOGIN_ENDPOINT = API_BASE_URL + '/user/login'
 LOGOUT_ENDPOINT = API_BASE_URL + '/user/logout'
 PROBLEMS_ENDPOINT = API_BASE_URL + '/problems'
@@ -38,6 +40,8 @@ PROBLEMS_PAGE_URL = 'problems'
 PROFILE_PAGE_URL = 'profile'
 SCOREBOARD_PAGE_URL = 'scoreboard'
 SHELL_PAGE_URL = 'shell'
+
+MAX_TEAM_SIZE = 5
 
 # Need credentials of a platform admin to retrieve problem flags
 ADMIN_USERNAME = 'adminuser'
