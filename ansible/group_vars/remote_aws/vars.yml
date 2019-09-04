@@ -64,7 +64,7 @@ mongodb_tls_enabled: False
 picoAdmin_db_password: "{{ vault_picoAdmin_db_password }}"
 picoWeb_db_password: "{{ vault_picoWeb_db_password }}"
 
-redis_private_ip: "{{ hostvars['pico_db']['redis_private_ip'] | default(db_private_ip) }}"
+redis_private_ip: "{{ hostvars['pico_db']['redis_private_ip'] }}"
 aws_elasticache: False
 redis_db_number: 0
 redis_conf_auth: False
