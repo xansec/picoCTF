@@ -14,6 +14,7 @@ deploy_private_key_file: "deploy.picoCTF.private-repo.id_rsa"
 ##
 web_fqdn: "{{ hostvars['remote_testing_web']['ansible_host'] }}"
 web_address_internal: "{{ 'http://' + web_fqdn }}"
+web_address_internal_https: "{{ 'https://' + web_fqdn }}"
 nginx_server_name: "{{ web_fqdn }}"
 web_address: "{{ web_fqdn }}"
 htpasswd_accounts: "{{ vault_htpasswd_accounts }}"
@@ -71,6 +72,11 @@ env_db_users:
     database: "{{ db_name }}"
     }
 mongodb_web_user: "picoWeb"
+
+# SSL requires cert and vault-encrypted key
+enable_web_ssl: False
+enable_shell_ssl: False
+enable_shell_proxy: False
 
 ##
 # Problem Settings
