@@ -355,7 +355,7 @@ const ProblemHintTable = React.createClass({
       <ListGroup>
         <div className="panel-body">
           {this.props.hints.map((hint, i) => (
-            <ListGroupItem key={i} >{hint}</ListGroupItem>
+            <ListGroupItem key={i} dangerouslySetInnerHTML={ {__html: hint} }/>
           ))}
         </div>
       </ListGroup>
