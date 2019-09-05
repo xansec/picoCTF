@@ -10,18 +10,20 @@ import random
 from locust import HttpLocust, task, TaskSet
 
 from demographics_generator import (get_affiliation, get_country_code,
-                                    get_demographics, get_email, get_password,
-                                    get_team_name, get_user_type, get_username)
+                                    get_demographics, get_email, get_group_name,
+                                    get_password, get_team_name, get_user_type,
+                                    get_username)
 from registration import register_and_expect_failure
-from util import (ADMIN_PASSWORD, ADMIN_USERNAME, CREATE_TEAM_ENDPOINT,
-                  FEEDBACK_ENDPOINT, GAME_PAGE_URL, get_db, GROUPS_ENDPOINT,
-                  JOIN_TEAM_ENDPOINT, LOGIN_ENDPOINT, LOGOUT_ENDPOINT,
-                  MAX_TEAM_SIZE, NEWS_PAGE_URL, PROBLEMS_ENDPOINT,
-                  PROBLEMS_PAGE_URL, PROFILE_PAGE_URL, REGISTRATION_ENDPOINT,
-                  REGISTRATION_STATS_ENDPOINT, SCOREBOARD_PAGE_URL,
-                  SCOREBOARDS_ENDPOINT, SETTINGS_ENDPOINT, SHELL_PAGE_URL,
-                  SHELL_SERVERS_ENDPOINT, STATUS_ENDPOINT, SUBMISSIONS_ENDPOINT,
-                  TEAM_ENDPOINT, TEAM_SCORE_ENDPOINT,
+from util import (ADMIN_PASSWORD, ADMIN_USERNAME, CLASSROOM_PAGE_URL,
+                  CREATE_GROUP_ENDPOINT, CREATE_TEAM_ENDPOINT,
+                  FEEDBACK_ENDPOINT, GAME_PAGE_URL, get_db, GROUP_LIMIT,
+                  GROUPS_ENDPOINT, JOIN_TEAM_ENDPOINT, LOGIN_ENDPOINT,
+                  LOGOUT_ENDPOINT, MAX_TEAM_SIZE, NEWS_PAGE_URL,
+                  PROBLEMS_ENDPOINT, PROBLEMS_PAGE_URL, PROFILE_PAGE_URL,
+                  REGISTRATION_ENDPOINT, REGISTRATION_STATS_ENDPOINT,
+                  SCOREBOARD_PAGE_URL, SCOREBOARDS_ENDPOINT, SETTINGS_ENDPOINT,
+                  SHELL_PAGE_URL, SHELL_SERVERS_ENDPOINT, STATUS_ENDPOINT,
+                  SUBMISSIONS_ENDPOINT, TEAM_ENDPOINT, TEAM_SCORE_ENDPOINT,
                   TEAM_SCORE_PROGRESSION_ENDPOINT, USER_DELETE_ACCOUNT_ENDPOINT,
                   USER_ENDPOINT, USER_EXPORT_ENDPOINT,
                   USER_PASSWORD_CHANGE_ENDPOINT)
@@ -150,6 +152,15 @@ def simulate_loading_scoreboard_page(l):
     l.client.get(SCOREBOARDS_ENDPOINT)
     l.client.get(TEAM_ENDPOINT)
     l.client.get(GROUPS_ENDPOINT)
+
+def simulate_loading_classroom_page(l):
+    """Simulate the calls made upon loading the classroom page."""
+    simulate_loading_any_page(l)
+    l.client.get(CLASSROOM_PAGE_URL)
+    res = l.client.get(GROUPS_ENDPOINT)
+    for group in res.json():
+        l.client.get(GROUPS_ENDPOINT + '/' + group['gid'],
+                     name=GROUPS_ENDPOINT + '/[gid]')
 
 def simulate_loading_profile_page(l):
     """Simulate the calls made upon loading the profile page."""
@@ -507,6 +518,96 @@ class LoadTestingTasks(TaskSet):
             finally:
                 release_user(user['username'])
                 l.interrupt()
+
+    @task
+    class GroupTests(TaskSet):
+        """Simulate usage of group (classroom) functionality."""
+
+        @task
+        def create_group(l):
+            """Create a new group."""
+            user = acquire_user({
+                'usertype': 'teacher',
+                '$or': [
+                    {'groups_created': None},
+                    {'groups_created': {'$lt': GROUP_LIMIT}}
+                 ]
+            })
+            if not user:
+                l.interrupt()
+            try:
+                login(l, username=user['username'], password=user['password'])
+                simulate_loading_classroom_page(l)
+
+                group_name = get_group_name()
+                with l.client.post(CREATE_GROUP_ENDPOINT, json={
+                    'name': group_name
+                }, headers={
+                    'X-CSRF-Token': l.client.cookies['token']
+                }, catch_response=True) as res:
+                    if res.status_code == 201:
+                        get_db().users.find_one_and_update({
+                            'username': user['username']
+                        }, {'$inc': {
+                            'groups_created': 1
+                        }})
+                        get_db().groups.insert_one({
+                            'group_name': group_name,
+                            'group_owner': user['username']
+                        })
+                        res.success()
+                    else:
+                        res.failure('Failed to create group: ' +
+                            str(res.json()))
+
+                logout(l)
+            finally:
+                release_user(user['username'])
+                l.interrupt()
+
+
+        # @task
+        # def join_group(l):
+        #     """Join an existing group."""
+        #     pass
+
+        # @task
+        # def batch_register_users(l):
+        #     """Batch-register students into a group."""
+        #     pass
+
+        @task
+        def view_group_stats(l):
+            """Simulate a teacher viewing the group overview page."""
+            user = acquire_user({
+                'usertype': 'teacher'
+            })
+            if not user:
+                l.interrupt()
+            try:
+                login(l, username=user['username'], password=user['password'])
+                simulate_loading_classroom_page(l)
+                res = l.client.get(GROUPS_ENDPOINT)
+                groups = res.json()
+                for i in range(0, random.randrange(0, len(groups))):
+                    l.client.get(GROUPS_ENDPOINT + '/' + \
+                        random.choice(groups)['gid'],
+                        name=GROUPS_ENDPOINT + '/[gid]')
+                logout(l)
+
+            finally:
+                release_user(user['username'])
+                l.interrupt()
+
+        # @task
+        # def export_group(l):
+        #     """Export a group's data."""
+        #     pass
+
+        # @task
+        # def delete_group(l):
+        #     """Delete an existing group."""
+        #     pass
 
     @task
     class OngoingRegistrationTasks(TaskSet):

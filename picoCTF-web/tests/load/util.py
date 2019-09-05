@@ -12,6 +12,7 @@ db_conf = {
 }
 
 API_BASE_URL = 'api/v1'
+CREATE_GROUP_ENDPOINT = API_BASE_URL + '/groups'
 CREATE_TEAM_ENDPOINT = API_BASE_URL + '/teams'
 FEEDBACK_ENDPOINT = API_BASE_URL + '/feedback'
 GROUPS_ENDPOINT = API_BASE_URL + '/groups'
@@ -34,6 +35,7 @@ USER_ENDPOINT = API_BASE_URL + '/user'
 USER_EXPORT_ENDPOINT = API_BASE_URL + '/user/export'
 USER_PASSWORD_CHANGE_ENDPOINT = API_BASE_URL + '/user/update_password'
 
+CLASSROOM_PAGE_URL = 'classroom'
 GAME_PAGE_URL = 'game'
 NEWS_PAGE_URL = 'news'
 PROBLEMS_PAGE_URL = 'problems'
@@ -42,6 +44,7 @@ SCOREBOARD_PAGE_URL = 'scoreboard'
 SHELL_PAGE_URL = 'shell'
 
 MAX_TEAM_SIZE = 5
+GROUP_LIMIT = 20
 
 # Need credentials of a platform admin to retrieve problem flags
 ADMIN_USERNAME = 'adminuser'

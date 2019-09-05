@@ -37,6 +37,10 @@ def get_team_name():
     """Return a valid team name."""
     return 'team' + str(uuid.uuid4().hex)
 
+def get_group_name():
+    """Return a valid group name."""
+    return get_team_name()
+
 def get_password():
     """Return a valid password."""
     return str(uuid.uuid4().hex)[:20]
