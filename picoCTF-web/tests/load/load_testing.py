@@ -187,7 +187,7 @@ def simulate_loading_news_page(l):
 class LoadTestingTasks(TaskSet):
     """Root set of all load testing tasks."""
 
-    @task
+    @task(weight=2)
     class PageBrowsingTasks(TaskSet):
         """Simulate a user just browsing pages."""
 
@@ -236,7 +236,7 @@ class LoadTestingTasks(TaskSet):
             release_user(username)
             l.interrupt()
 
-    @task
+    @task(weight=10)
     class ProblemTasks(TaskSet):
         """Simulate actions on the problems page."""
 
@@ -256,7 +256,7 @@ class LoadTestingTasks(TaskSet):
             get_db().problems.insert_many(flag_maps)
             logout(l)
 
-        @task
+        @task(weight=1)
         def load_problems_page(l):
             """Load the problems page without solving anything."""
             username = login(l)
@@ -267,7 +267,7 @@ class LoadTestingTasks(TaskSet):
             release_user(username)
             l.interrupt()
 
-        @task
+        @task(weight=5)
         def submit_problem_solution(l):
             """Submit a solution to a problem."""
             username = login(l)
@@ -290,7 +290,7 @@ class LoadTestingTasks(TaskSet):
             release_user(username)
             l.interrupt()
 
-        @task
+        @task(weight=1)
         def send_feedback(l):
             """Submit feedback for an unlocked problem."""
             username = login(l)
@@ -311,11 +311,11 @@ class LoadTestingTasks(TaskSet):
             release_user(username)
             l.interrupt()
 
-    @task
+    @task(weight=3)
     class ScoreboardTasks(TaskSet):
         """Simulate actions on the scoreboards page."""
 
-        @task
+        @task(weight=10)
         def load_scoreboard_pages(l):
             """Load several pages of a random scoreboard."""
             username = login(l)
@@ -338,7 +338,7 @@ class LoadTestingTasks(TaskSet):
             release_user(username)
             l.interrupt()
 
-        @task
+        @task(weight=1)
         def load_filtered_scoreboard_pages(l):
             """Load several pages of a filtered random scoreboard."""
             username = login(l)
@@ -363,11 +363,11 @@ class LoadTestingTasks(TaskSet):
             release_user(username)
             l.interrupt()
 
-    @task
+    @task(weight=1)
     class ProfileTasks(TaskSet):
         """Simulate profile page actions."""
 
-        @task
+        @task(weight=10)
         def load_profile_page(l):
             """Just load the profile page."""
             username = login(l)
@@ -378,7 +378,7 @@ class LoadTestingTasks(TaskSet):
             release_user(username)
             l.interrupt()
 
-        @task
+        @task(weight=4)
         def change_password(l):
             """Change a user's password."""
             user = acquire_user()
@@ -413,7 +413,7 @@ class LoadTestingTasks(TaskSet):
             release_user(user['username'])
             l.interrupt()
 
-        @task
+        @task(weight=2)
         def export_account_data(l):
             """Export a user's account data."""
             username = login(l)
@@ -426,7 +426,7 @@ class LoadTestingTasks(TaskSet):
             release_user(username)
             l.interrupt()
 
-        @task
+        @task(weight=1)
         def delete_account(l):
             """Delete a user's account."""
             user = acquire_user()
@@ -449,7 +449,7 @@ class LoadTestingTasks(TaskSet):
                     res.failure('Failed to delete account: ' + str(res.json()))
             release_user(user['username'])
             l.interrupt()
-    @task
+    @task(weight=2)
     class TeamTasks(TaskSet):
         """Simulate usage of team functionality."""
 
@@ -537,11 +537,11 @@ class LoadTestingTasks(TaskSet):
             release_user(user['username'])
             l.interrupt()
 
-    @task
+    @task(weight=2)
     class GroupTests(TaskSet):
         """Simulate usage of group (classroom) functionality."""
 
-        @task
+        @task(weight=1)
         def create_group(l):
             """Create a new group."""
             user = acquire_user({
@@ -583,7 +583,7 @@ class LoadTestingTasks(TaskSet):
             l.interrupt()
 
 
-        @task
+        @task(weight=10)
         def join_group(l):
             """Join an existing group."""
             user = acquire_user({
@@ -616,7 +616,7 @@ class LoadTestingTasks(TaskSet):
             l.interrupt()
 
 
-        @task
+        @task(weight=4)
         def batch_register_users(l):
             """Batch-register students into a group."""
             user = acquire_user({
@@ -663,7 +663,7 @@ class LoadTestingTasks(TaskSet):
             release_user(user['username'])
             l.interrupt()
 
-        @task
+        @task(weight=5)
         def view_group_stats(l):
             """Simulate a teacher viewing the group overview page."""
             user = acquire_user({
@@ -684,7 +684,7 @@ class LoadTestingTasks(TaskSet):
             release_user(user['username'])
             l.interrupt()
 
-        @task
+        @task(weight=1)
         def delete_group(l):
             """Delete an existing group."""
             user = acquire_user({
@@ -716,7 +716,7 @@ class LoadTestingTasks(TaskSet):
             release_user(user['username'])
             l.interrupt()
 
-    @task
+    @task(weight=2)
     class OngoingRegistrationTasks(TaskSet):
         """Simulate registration activity."""
 
