@@ -9,12 +9,12 @@ import random
 
 from locust import HttpLocust, task, TaskSet
 
-from demographics_generator import (get_affiliation, get_country_code,
+from demographics_generators import (get_affiliation, get_country_code,
                                     get_demographics, get_email, get_group_name,
                                     get_password, get_team_name, get_user_type,
                                     get_username)
 from registration import register_and_expect_failure
-from util import (ADMIN_PASSWORD, ADMIN_USERNAME,
+from config import (ADMIN_PASSWORD, ADMIN_USERNAME,
                   BATCH_REGISTRATION_CSV_FILENAME, CLASSROOM_PAGE_URL,
                   CREATE_GROUP_ENDPOINT, CREATE_TEAM_ENDPOINT,
                   FEEDBACK_ENDPOINT, GAME_PAGE_URL, get_db, GROUP_LIMIT,

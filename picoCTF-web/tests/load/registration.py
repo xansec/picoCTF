@@ -5,10 +5,10 @@ import random
 from locust import HttpLocust, task, TaskSet
 from locust.exception import StopLocust
 
-from demographics_generator import (get_affiliation, get_country_code,
+from demographics_generators import (get_affiliation, get_country_code,
                                     get_demographics, get_email, get_password,
                                     get_user_type, get_username)
-from util import get_db, REGISTRATION_ENDPOINT
+from config import get_db, REGISTRATION_ENDPOINT
 
 
 def generate_user():
