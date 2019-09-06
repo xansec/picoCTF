@@ -2,13 +2,14 @@
 
 import random
 
+import pymongo
 from locust import HttpLocust, task, TaskSet
 from locust.exception import StopLocust
 
-from demographics_generators import (get_affiliation, get_country_code,
-                                    get_demographics, get_email, get_password,
-                                    get_user_type, get_username)
 from config import get_db, REGISTRATION_ENDPOINT
+from demographics_generators import (get_affiliation, get_country_code,
+                                     get_demographics, get_email, get_password,
+                                     get_user_type, get_username)
 
 
 def generate_user():
@@ -45,7 +46,9 @@ class RegistrationTasks(TaskSet):
         with l.client.post(REGISTRATION_ENDPOINT, json=user_demographics,
                 catch_response=True) as res:
             if res.status_code == 201:
-                get_db().users.insert_one(user_demographics.copy())
+                user_document = user_demographics.copy()
+                user_document['rand_id'] = [random.random(), 0]
+                get_db().users.insert_one(user_document)
                 res.success()
             else:
                 res.failure('Failed to register user')
@@ -137,3 +140,7 @@ class RegistrationLocust(HttpLocust):
     task_set = RegistrationTasks
     min_wait = 1000
     max_wait = 4000
+
+    def setup(l):
+        """Make sure random index exists in MongoDB."""
+        get_db().users.create_index([('rand_id', pymongo.GEO2D)])
