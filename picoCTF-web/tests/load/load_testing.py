@@ -59,12 +59,15 @@ def release_user(username):
     res = get_db().users.find_one_and_update(
         {'username': username}, {'$set': {'in_use': False}})
     if not res:
-        raise Exception("Could not release user " + username)
+        raise Exception("Could not release user " + str(username))
 
 def login(l, username=None, password=None):
     """Attempt to log in as a provided or randomly selected user."""
+    user = None
     if not username:
         user = acquire_user()
+        if not user:
+            return None
     else:
         user = dict()
         user['username'] = username
@@ -180,44 +183,53 @@ class LoadTestingTasks(TaskSet):
     """Root set of all load testing tasks."""
 
     @task
-    def load_login_page(l):
-        """Simulate loading the login page."""
-        simulate_loading_login_page(l)
+    class PageBrowsingTasks(TaskSet):
+        """Simulate a user just browsing pages."""
 
-    @task
-    def load_shell_page(l):
-        """Simulate loading the shell page."""
-        username = login(l)
-        try:
+        @task
+        def load_login_page(l):
+            """Simulate loading the login page."""
+            simulate_loading_login_page(l)
+            l.interrupt()
+
+        @task
+        def load_shell_page(l):
+            """Simulate loading the shell page."""
+            username = login(l)
+            if not username:
+                l.interrupt()
             simulate_loading_shell_page(l)
             logout(l)
-        finally:
             release_user(username)
+            l.interrupt()
 
-    @task
-    def load_game_page(l):
-        """Simulate loading the Unity game page."""
-        username = login(l)
-        try:
+        @task
+        def load_game_page(l):
+            """Simulate loading the Unity game page."""
+            username = login(l)
+            if not username:
+                l.interrupt()
             simulate_loading_game_page(l)
             logout(l)
-        finally:
             release_user(username)
+            l.interrupt()
 
-    @task
-    def load_news_page(l):
-        """Simulate loading the news page."""
-        simulate_loading_news_page(l)
+        @task
+        def load_news_page(l):
+            """Simulate loading the news page."""
+            simulate_loading_news_page(l)
+            l.interrupt()
 
-    @task
-    def call_user_endpoint(l):
-        """Just calls the user endpoint, as if updating the score display."""
-        username = login(l)
-        try:
+        @task
+        def call_user_endpoint(l):
+            """Just calls the user endpoint, as if updating the score display."""
+            username = login(l)
+            if not username:
+                l.interrupt()
             l.client.get(USER_ENDPOINT)
             logout(l)
-        finally:
             release_user(username)
+            l.interrupt()
 
     @task
     class ProblemTasks(TaskSet):
@@ -242,56 +254,56 @@ class LoadTestingTasks(TaskSet):
         def load_problems_page(l):
             """Load the problems page without solving anything."""
             username = login(l)
-            try:
-                simulate_loading_problems_page(l)
-                logout(l)
-            finally:
-                release_user(username)
+            if not username:
                 l.interrupt()
+            simulate_loading_problems_page(l)
+            logout(l)
+            release_user(username)
+            l.interrupt()
 
         @task
         def submit_problem_solution(l):
             """Submit a solution to a problem."""
             username = login(l)
-            try:
-                simulate_loading_problems_page(l)
-
-                unlocked_problems = l.client.get(PROBLEMS_ENDPOINT).json()
-                problem = random.choice(unlocked_problems)
-                # Select a flag from the pool of possible instance flags:
-                # probability of a correct submission is 1/(num instances)
-                flag = random.choice(get_problem_flags(problem['pid']))
-                l.client.post(SUBMISSIONS_ENDPOINT, json={
-                    'pid': problem['pid'],
-                    'key': flag,
-                    'method': 'testing'
-                }, headers={
-                    'X-CSRF-Token': l.client.cookies['token']
-                })
-            finally:
-                release_user(username)
+            if not username:
                 l.interrupt()
+            simulate_loading_problems_page(l)
+
+            unlocked_problems = l.client.get(PROBLEMS_ENDPOINT).json()
+            problem = random.choice(unlocked_problems)
+            # Select a flag from the pool of possible instance flags:
+            # probability of a correct submission is 1/(num instances)
+            flag = random.choice(get_problem_flags(problem['pid']))
+            l.client.post(SUBMISSIONS_ENDPOINT, json={
+                'pid': problem['pid'],
+                'key': flag,
+                'method': 'testing'
+            }, headers={
+                'X-CSRF-Token': l.client.cookies['token']
+            })
+            release_user(username)
+            l.interrupt()
 
         @task
         def send_feedback(l):
             """Submit feedback for an unlocked problem."""
             username = login(l)
-            try:
-                simulate_loading_problems_page(l)
-
-                unlocked_problems = l.client.get(PROBLEMS_ENDPOINT).json()
-                problem = random.choice(unlocked_problems)
-                l.client.post(FEEDBACK_ENDPOINT, json={
-                    'pid': problem['pid'],
-                    'feedback': {
-                        'liked': random.choice([True, False])
-                    }
-                }, headers={
-                    'X-CSRF-Token': l.client.cookies['token']
-                })
-            finally:
-                release_user(username)
+            if not username:
                 l.interrupt()
+            simulate_loading_problems_page(l)
+
+            unlocked_problems = l.client.get(PROBLEMS_ENDPOINT).json()
+            problem = random.choice(unlocked_problems)
+            l.client.post(FEEDBACK_ENDPOINT, json={
+                'pid': problem['pid'],
+                'feedback': {
+                    'liked': random.choice([True, False])
+                }
+            }, headers={
+                'X-CSRF-Token': l.client.cookies['token']
+            })
+            release_user(username)
+            l.interrupt()
 
     @task
     class ScoreboardTasks(TaskSet):
@@ -301,49 +313,49 @@ class LoadTestingTasks(TaskSet):
         def load_scoreboard_pages(l):
             """Load several pages of a random scoreboard."""
             username = login(l)
-            try:
-                simulate_loading_scoreboard_page(l)
-
-                endpoint, call_label = get_valid_scoreboard_base_endpoint(l)
-                l.client.get(endpoint + '/score_progressions',
-                    name=(call_label + '/score_progressions'))
-                initial_page_res = l.client.get(
-                    endpoint + '/scoreboard',
-                    name=(call_label + '/scoreboard')).json()
-                for i in range(0, random.randrange(1, 10)):
-                    p = random.randrange(
-                        1, initial_page_res['total_pages'] + 1)
-                    l.client.get(endpoint + '/scoreboard?page=' + str(p),
-                        name=(call_label + '/scoreboard?page=[p]'))
-                logout(l)
-            finally:
-                release_user(username)
+            if not username:
                 l.interrupt()
+            simulate_loading_scoreboard_page(l)
+
+            endpoint, call_label = get_valid_scoreboard_base_endpoint(l)
+            l.client.get(endpoint + '/score_progressions',
+                name=(call_label + '/score_progressions'))
+            initial_page_res = l.client.get(
+                endpoint + '/scoreboard',
+                name=(call_label + '/scoreboard')).json()
+            for i in range(0, random.randrange(1, 10)):
+                p = random.randrange(
+                    1, initial_page_res['total_pages'] + 1)
+                l.client.get(endpoint + '/scoreboard?page=' + str(p),
+                    name=(call_label + '/scoreboard?page=[p]'))
+            logout(l)
+            release_user(username)
+            l.interrupt()
 
         @task
         def load_filtered_scoreboard_pages(l):
             """Load several pages of a filtered random scoreboard."""
             username = login(l)
-            try:
-                simulate_loading_scoreboard_page(l)
-
-                endpoint, call_label = get_valid_scoreboard_base_endpoint(l)
-                l.client.get(endpoint + '/score_progressions',
-                    name=(call_label + '/score_progressions'))
-                initial_page_res = l.client.get(
-                    endpoint + '/scoreboard',
-                    name=(call_label + '/scoreboard')).json()
-                search_endpoint = (
-                    endpoint + '/scoreboard?search=' + get_affiliation())
-                for i in range(0, random.randrange(1, 10)):
-                    p = random.randrange(
-                        1, initial_page_res['total_pages'] + 1)
-                    l.client.get(search_endpoint + '&page=' + str(p),
-                        name=(call_label + '/scoreboard?search=[q]&page=[p]'))
-                logout(l)
-            finally:
-                release_user(username)
+            if not username:
                 l.interrupt()
+            simulate_loading_scoreboard_page(l)
+
+            endpoint, call_label = get_valid_scoreboard_base_endpoint(l)
+            l.client.get(endpoint + '/score_progressions',
+                name=(call_label + '/score_progressions'))
+            initial_page_res = l.client.get(
+                endpoint + '/scoreboard',
+                name=(call_label + '/scoreboard')).json()
+            search_endpoint = (
+                endpoint + '/scoreboard?search=' + get_affiliation())
+            for i in range(0, random.randrange(1, 10)):
+                p = random.randrange(
+                    1, initial_page_res['total_pages'] + 1)
+                l.client.get(search_endpoint + '&page=' + str(p),
+                    name=(call_label + '/scoreboard?search=[q]&page=[p]'))
+            logout(l)
+            release_user(username)
+            l.interrupt()
 
     @task
     class ProfileTasks(TaskSet):
@@ -353,83 +365,83 @@ class LoadTestingTasks(TaskSet):
         def load_profile_page(l):
             """Just load the profile page."""
             username = login(l)
-            try:
-                simulate_loading_profile_page(l)
-                logout(l)
-            finally:
-                release_user(username)
+            if not username:
                 l.interrupt()
+            simulate_loading_profile_page(l)
+            logout(l)
+            release_user(username)
+            l.interrupt()
 
         @task
         def change_password(l):
             """Change a user's password."""
             user = acquire_user()
-            try:
-                login(l, username=user['username'], password=user['password'])
-                simulate_loading_profile_page(l)
-
-                new_password = get_password()
-                with l.client.post(
-                        USER_PASSWORD_CHANGE_ENDPOINT,
-                        json={
-                            'current_password': user['password'],
-                            'new_password': new_password,
-                            'new_password_confirmation': new_password,
-                        }, headers={
-                            'X-CSRF-Token': l.client.cookies['token']
-                        }, catch_response=True) as res:
-                    if res.status_code == 200:
-                        get_db().users.find_one_and_update(
-                            {'username': user['username']},
-                            {'$set': {
-                                'password': new_password
-                            }})
-                        res.success()
-                    else:
-                        res.failure('Failed to change password')
-                logout(l)
-                login(l, username=user['username'], password=new_password)
-                logout()
-            finally:
-                release_user(user['username'])
+            if not user:
                 l.interrupt()
+            login(l, username=user['username'], password=user['password'])
+            simulate_loading_profile_page(l)
+
+            new_password = get_password()
+            with l.client.post(
+                    USER_PASSWORD_CHANGE_ENDPOINT,
+                    json={
+                        'current_password': user['password'],
+                        'new_password': new_password,
+                        'new_password_confirmation': new_password,
+                    }, headers={
+                        'X-CSRF-Token': l.client.cookies['token']
+                    }, catch_response=True) as res:
+                if res.status_code == 200:
+                    get_db().users.find_one_and_update(
+                        {'username': user['username']},
+                        {'$set': {
+                            'password': new_password
+                        }})
+                    res.success()
+                else:
+                    res.failure('Failed to change password')
+            logout(l)
+            login(l, username=user['username'], password=new_password)
+            logout(l)
+            release_user(user['username'])
+            l.interrupt()
 
         @task
         def export_account_data(l):
             """Export a user's account data."""
             username = login(l)
-            try:
-                simulate_loading_profile_page(l)
-
-                l.client.get(USER_EXPORT_ENDPOINT)
-                logout(l)
-            finally:
-                release_user(username)
+            if not username:
                 l.interrupt()
+            simulate_loading_profile_page(l)
+
+            l.client.get(USER_EXPORT_ENDPOINT)
+            logout(l)
+            release_user(username)
+            l.interrupt()
 
         @task
         def delete_account(l):
             """Delete a user's account."""
             user = acquire_user()
-            try:
-                login(l, username=user['username'], password=user['password'])
-                simulate_loading_profile_page(l)
-
-                with l.client.post(USER_DELETE_ACCOUNT_ENDPOINT, json={
-                            'password': user['password']
-                        }, headers={
-                            'X-CSRF-Token': l.client.cookies['token']
-                        }, catch_response=True) as res:
-                    if res.status_code == 200:
-                        get_db().users.find_one_and_update({
-                            'username': user['username']
-                        }, {'$set': {'deleted': True}})
-                        res.success()
-                    else:
-                        res.failure('Failed to delete account')
-            finally:
-                release_user(user['username'])
+            if not user:
                 l.interrupt()
+            login(l, username=user['username'], password=user['password'])
+            simulate_loading_profile_page(l)
+
+            with l.client.post(USER_DELETE_ACCOUNT_ENDPOINT, json={
+                        'password': user['password']
+                    }, headers={
+                        'X-CSRF-Token': l.client.cookies['token']
+                    }, catch_response=True) as res:
+                if res.status_code == 200:
+                    get_db().users.find_one_and_update({
+                        'username': user['username']
+                    }, {'$set': {'deleted': True}})
+                    res.success()
+                else:
+                    res.failure('Failed to delete account')
+            release_user(user['username'])
+            l.interrupt()
     @task
     class TeamTasks(TaskSet):
         """Simulate usage of team functionality."""
@@ -443,36 +455,34 @@ class LoadTestingTasks(TaskSet):
                 })
             if not user:
                 l.interrupt()
-            try:
-                login(l, username=user['username'], password=user['password'])
-                simulate_loading_profile_page(l)
+            login(l, username=user['username'], password=user['password'])
+            simulate_loading_profile_page(l)
 
-                team_name = get_team_name()
-                team_password = get_password()
-                with l.client.post(CREATE_TEAM_ENDPOINT, json={
-                    'team_name': team_name,
-                    'team_password': team_password
-                }, catch_response=True) as res:
-                    if res.status_code == 201:
-                        get_db().users.find_one_and_update({
-                            'username': user['username']
-                        }, {'$set': {
-                            'on_team': True,
-                            'team_name': team_name
-                        }})
-                        get_db().teams.insert_one({
-                            'team_name': team_name,
-                            'team_password': team_password,
-                            'number_of_members': 1
-                        })
-                        res.success()
-                    else:
-                        res.failure('Failed to create custom team: ' +
-                            str(res.json()))
-                logout(l)
-            finally:
-                release_user(user['username'])
-                l.interrupt()
+            team_name = get_team_name()
+            team_password = get_password()
+            with l.client.post(CREATE_TEAM_ENDPOINT, json={
+                'team_name': team_name,
+                'team_password': team_password
+            }, catch_response=True) as res:
+                if res.status_code == 201:
+                    get_db().users.find_one_and_update({
+                        'username': user['username']
+                    }, {'$set': {
+                        'on_team': True,
+                        'team_name': team_name
+                    }})
+                    get_db().teams.insert_one({
+                        'team_name': team_name,
+                        'team_password': team_password,
+                        'number_of_members': 1
+                    })
+                    res.success()
+                else:
+                    res.failure('Failed to create custom team: ' +
+                        str(res.json()))
+            logout(l)
+            release_user(user['username'])
+            l.interrupt()
 
         @task(weight=6)
         def join_team(l):
@@ -483,42 +493,40 @@ class LoadTestingTasks(TaskSet):
                 })
             if not user:
                 l.interrupt()
-            try:
-                login(l, username=user['username'], password=user['password'])
-                simulate_loading_profile_page(l)
+            login(l, username=user['username'], password=user['password'])
+            simulate_loading_profile_page(l)
 
-                # Sometimes fails due to race condition - another thread can
-                # push a team over the max size while trying to join it
-                team = get_db().teams.find_one({
-                    'number_of_members': {'$lt': MAX_TEAM_SIZE}
-                    })
-                if not team:
-                    l.interrupt()
-
-                with l.client.post(JOIN_TEAM_ENDPOINT, json={
-                        'team_name': team['team_name'],
-                        'team_password': team['team_password']
-                    }, catch_response=True) as res:
-                        if res.status_code == 200:
-                            get_db().users.find_one_and_update({
-                                'username': user['username']
-                            }, {'$set': {
-                                'on_team': True,
-                                'team_name': team['team_name']
-                            }})
-                            get_db().teams.find_one_and_update({
-                                'team_name': team['team_name']
-                            }, {'$inc': {
-                                'number_of_members': 1
-                            }})
-                            res.success()
-                        else:
-                            res.failure('Failed to join team: ' +
-                                str(res.json()))
-                logout(l)
-            finally:
-                release_user(user['username'])
+            # Sometimes fails due to race condition - another thread can
+            # push a team over the max size while trying to join it
+            team = get_db().teams.find_one({
+                'number_of_members': {'$lt': MAX_TEAM_SIZE}
+                })
+            if not team:
                 l.interrupt()
+
+            with l.client.post(JOIN_TEAM_ENDPOINT, json={
+                    'team_name': team['team_name'],
+                    'team_password': team['team_password']
+                }, catch_response=True) as res:
+                    if res.status_code == 200:
+                        get_db().users.find_one_and_update({
+                            'username': user['username']
+                        }, {'$set': {
+                            'on_team': True,
+                            'team_name': team['team_name']
+                        }})
+                        get_db().teams.find_one_and_update({
+                            'team_name': team['team_name']
+                        }, {'$inc': {
+                            'number_of_members': 1
+                        }})
+                        res.success()
+                    else:
+                        res.failure('Failed to join team: ' +
+                            str(res.json()))
+            logout(l)
+            release_user(user['username'])
+            l.interrupt()
 
     @task
     class GroupTests(TaskSet):
@@ -536,35 +544,33 @@ class LoadTestingTasks(TaskSet):
             })
             if not user:
                 l.interrupt()
-            try:
-                login(l, username=user['username'], password=user['password'])
-                simulate_loading_classroom_page(l)
+            login(l, username=user['username'], password=user['password'])
+            simulate_loading_classroom_page(l)
 
-                group_name = get_group_name()
-                with l.client.post(CREATE_GROUP_ENDPOINT, json={
-                    'name': group_name
-                }, headers={
-                    'X-CSRF-Token': l.client.cookies['token']
-                }, catch_response=True) as res:
-                    if res.status_code == 201:
-                        get_db().users.find_one_and_update({
-                            'username': user['username']
-                        }, {'$inc': {
-                            'groups_created': 1
-                        }})
-                        get_db().groups.insert_one({
-                            'group_name': group_name,
-                            'group_owner': user['username']
-                        })
-                        res.success()
-                    else:
-                        res.failure('Failed to create group: ' +
-                            str(res.json()))
+            group_name = get_group_name()
+            with l.client.post(CREATE_GROUP_ENDPOINT, json={
+                'name': group_name
+            }, headers={
+                'X-CSRF-Token': l.client.cookies['token']
+            }, catch_response=True) as res:
+                if res.status_code == 201:
+                    get_db().users.find_one_and_update({
+                        'username': user['username']
+                    }, {'$inc': {
+                        'groups_created': 1
+                    }})
+                    get_db().groups.insert_one({
+                        'group_name': group_name,
+                        'group_owner': user['username']
+                    })
+                    res.success()
+                else:
+                    res.failure('Failed to create group: ' +
+                        str(res.json()))
 
-                logout(l)
-            finally:
-                release_user(user['username'])
-                l.interrupt()
+            logout(l)
+            release_user(user['username'])
+            l.interrupt()
 
 
         @task
@@ -575,29 +581,27 @@ class LoadTestingTasks(TaskSet):
             })
             if not user:
                 l.interrupt()
-            try:
-                login(l, username=user['username'], password=user['password'])
-                simulate_loading_profile_page(l)
+            login(l, username=user['username'], password=user['password'])
+            simulate_loading_profile_page(l)
 
-                group = get_db().groups.find_one()
-                if not group:
-                    l.interrupt()
-
-                with l.client.post(JOIN_GROUP_ENDPOINT, json={
-                    'group_name': group['group_name'],
-                    'group_owner': group['group_owner']
-                }, headers={
-                    'X-CSRF-Token': l.client.cookies['token']
-                }, catch_response=True) as res:
-                    # Not the best way to deal with joining duplicate groups
-                    if res.status_code in [200, 409]:
-                        res.success()
-                    else:
-                        res.failure()
-                logout(l)
-            finally:
-                release_user(user['username'])
+            group = get_db().groups.find_one()
+            if not group:
                 l.interrupt()
+
+            with l.client.post(JOIN_GROUP_ENDPOINT, json={
+                'group_name': group['group_name'],
+                'group_owner': group['group_owner']
+            }, headers={
+                'X-CSRF-Token': l.client.cookies['token']
+            }, catch_response=True) as res:
+                # Not the best way to deal with joining duplicate groups
+                if res.status_code in [200, 409]:
+                    res.success()
+                else:
+                    res.failure()
+            logout(l)
+            release_user(user['username'])
+            l.interrupt()
 
 
         @task
@@ -609,45 +613,43 @@ class LoadTestingTasks(TaskSet):
             })
             if not user:
                 l.interrupt()
-            try:
-                login(l, username=user['username'], password=user['password'])
-                simulate_loading_classroom_page(l)
-                res = l.client.get(GROUPS_ENDPOINT)
-                groups = res.json()
-                if len(groups) < 1:
-                    l.interrupt()
-                group = random.choice(groups)
-                with l.client.post(
-                    GROUPS_ENDPOINT + '/' + group['gid'] + \
-                    '/batch_registration', files={
-                        'csv': (
-                            'batch_registration_template.csv',
-                            open(BATCH_REGISTRATION_CSV_FILENAME, 'rb'),
-                            'text/csv')
-                    }, headers={
-                        'X-CSRF-Token': l.client.cookies['token'],
-                    }, name=GROUPS_ENDPOINT + '/[gid]/batch_registration',
-                    catch_response=True) as res:
-                        if res.status_code == 200:
-                            res.success()
-                        elif (res.status_code == 403 and
-                                "You have exceeded the maximum" in
-                                res.json()['message']):
-                            res.success()
-                            db.users.find_one_and_update({
-                                'username': user['username']
-                            }, {
-                                '$set': {
-                                    'hit_batch_reg_limit': True
-                                }
-                            })
-                        else:
-                            res.failure('Failed to batch register users: ' + \
-                                str(res.json()))
-                logout(l)
-            finally:
-                release_user(user['username'])
+            login(l, username=user['username'], password=user['password'])
+            simulate_loading_classroom_page(l)
+            res = l.client.get(GROUPS_ENDPOINT)
+            groups = res.json()
+            if len(groups) < 1:
                 l.interrupt()
+            group = random.choice(groups)
+            with l.client.post(
+                GROUPS_ENDPOINT + '/' + group['gid'] + \
+                '/batch_registration', files={
+                    'csv': (
+                        'batch_registration_template.csv',
+                        open(BATCH_REGISTRATION_CSV_FILENAME, 'rb'),
+                        'text/csv')
+                }, headers={
+                    'X-CSRF-Token': l.client.cookies['token'],
+                }, name=GROUPS_ENDPOINT + '/[gid]/batch_registration',
+                catch_response=True) as res:
+                    if res.status_code == 200:
+                        res.success()
+                    elif (res.status_code == 403 and
+                            "You have exceeded the maximum" in
+                            res.json()['message']):
+                        res.success()
+                        db.users.find_one_and_update({
+                            'username': user['username']
+                        }, {
+                            '$set': {
+                                'hit_batch_reg_limit': True
+                            }
+                        })
+                    else:
+                        res.failure('Failed to batch register users: ' + \
+                            str(res.json()))
+            logout(l)
+            release_user(user['username'])
+            l.interrupt()
 
         @task
         def view_group_stats(l):
@@ -657,20 +659,18 @@ class LoadTestingTasks(TaskSet):
             })
             if not user:
                 l.interrupt()
-            try:
-                login(l, username=user['username'], password=user['password'])
-                simulate_loading_classroom_page(l)
-                res = l.client.get(GROUPS_ENDPOINT)
-                groups = res.json()
+            login(l, username=user['username'], password=user['password'])
+            simulate_loading_classroom_page(l)
+            res = l.client.get(GROUPS_ENDPOINT)
+            groups = res.json()
+            if len(groups) > 0:
                 for i in range(0, random.randrange(0, len(groups))):
                     l.client.get(GROUPS_ENDPOINT + '/' + \
                         random.choice(groups)['gid'],
                         name=GROUPS_ENDPOINT + '/[gid]')
-                logout(l)
-
-            finally:
-                release_user(user['username'])
-                l.interrupt()
+            logout(l)
+            release_user(user['username'])
+            l.interrupt()
 
         @task
         def delete_group(l):
@@ -680,32 +680,29 @@ class LoadTestingTasks(TaskSet):
             })
             if not user:
                 l.interrupt()
-            try:
-                login(l, username=user['username'], password=user['password'])
-                simulate_loading_classroom_page(l)
+            login(l, username=user['username'], password=user['password'])
+            simulate_loading_classroom_page(l)
 
-                res = l.client.get(GROUPS_ENDPOINT)
-                groups = res.json()
-                if len(groups) < 1:
-                    l.interrupt()
-                group = random.choice(groups)
-                with l.client.delete(
-                        GROUPS_ENDPOINT + '/' + group['gid'],
-                        name=GROUPS_ENDPOINT + '/[gid]', headers={
-                            'X-CSRF-Token': l.client.cookies['token']
-                        }, catch_response=True) as res:
-                    if res.status_code == 200:
-                        res.success()
-                        get_db().groups.delete_one({
-                            'group_name': group['name']
-                        })
-                    else:
-                        res.failure()
-                logout(l)
-
-            finally:
-                release_user(user['username'])
+            res = l.client.get(GROUPS_ENDPOINT)
+            groups = res.json()
+            if len(groups) < 1:
                 l.interrupt()
+            group = random.choice(groups)
+            with l.client.delete(
+                    GROUPS_ENDPOINT + '/' + group['gid'],
+                    name=GROUPS_ENDPOINT + '/[gid]', headers={
+                        'X-CSRF-Token': l.client.cookies['token']
+                    }, catch_response=True) as res:
+                if res.status_code == 200:
+                    res.success()
+                    get_db().groups.delete_one({
+                        'group_name': group['name']
+                    })
+                else:
+                    res.failure()
+            logout(l)
+            release_user(user['username'])
+            l.interrupt()
 
     @task
     class OngoingRegistrationTasks(TaskSet):
