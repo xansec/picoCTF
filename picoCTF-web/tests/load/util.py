@@ -16,6 +16,7 @@ CREATE_GROUP_ENDPOINT = API_BASE_URL + '/groups'
 CREATE_TEAM_ENDPOINT = API_BASE_URL + '/teams'
 FEEDBACK_ENDPOINT = API_BASE_URL + '/feedback'
 GROUPS_ENDPOINT = API_BASE_URL + '/groups'
+JOIN_GROUP_ENDPOINT = API_BASE_URL + '/team/join_group'
 JOIN_TEAM_ENDPOINT = API_BASE_URL + '/team/join'
 LOGIN_ENDPOINT = API_BASE_URL + '/user/login'
 LOGOUT_ENDPOINT = API_BASE_URL + '/user/logout'
@@ -45,6 +46,8 @@ SHELL_PAGE_URL = 'shell'
 
 MAX_TEAM_SIZE = 5
 GROUP_LIMIT = 20
+
+BATCH_REGISTRATION_CSV_FILENAME = 'batch_reg_testing.csv'
 
 # Need credentials of a platform admin to retrieve problem flags
 ADMIN_USERNAME = 'adminuser'

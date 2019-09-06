@@ -14,11 +14,12 @@ from demographics_generator import (get_affiliation, get_country_code,
                                     get_password, get_team_name, get_user_type,
                                     get_username)
 from registration import register_and_expect_failure
-from util import (ADMIN_PASSWORD, ADMIN_USERNAME, CLASSROOM_PAGE_URL,
+from util import (ADMIN_PASSWORD, ADMIN_USERNAME,
+                  BATCH_REGISTRATION_CSV_FILENAME, CLASSROOM_PAGE_URL,
                   CREATE_GROUP_ENDPOINT, CREATE_TEAM_ENDPOINT,
                   FEEDBACK_ENDPOINT, GAME_PAGE_URL, get_db, GROUP_LIMIT,
-                  GROUPS_ENDPOINT, JOIN_TEAM_ENDPOINT, LOGIN_ENDPOINT,
-                  LOGOUT_ENDPOINT, MAX_TEAM_SIZE, NEWS_PAGE_URL,
+                  GROUPS_ENDPOINT, JOIN_GROUP_ENDPOINT, JOIN_TEAM_ENDPOINT,
+                  LOGIN_ENDPOINT, LOGOUT_ENDPOINT, MAX_TEAM_SIZE, NEWS_PAGE_URL,
                   PROBLEMS_ENDPOINT, PROBLEMS_PAGE_URL, PROFILE_PAGE_URL,
                   REGISTRATION_ENDPOINT, REGISTRATION_STATS_ENDPOINT,
                   SCOREBOARD_PAGE_URL, SCOREBOARDS_ENDPOINT, SETTINGS_ENDPOINT,
@@ -566,15 +567,87 @@ class LoadTestingTasks(TaskSet):
                 l.interrupt()
 
 
-        # @task
-        # def join_group(l):
-        #     """Join an existing group."""
-        #     pass
+        @task
+        def join_group(l):
+            """Join an existing group."""
+            user = acquire_user({
+                'usertype': 'student'
+            })
+            if not user:
+                l.interrupt()
+            try:
+                login(l, username=user['username'], password=user['password'])
+                simulate_loading_profile_page(l)
 
-        # @task
-        # def batch_register_users(l):
-        #     """Batch-register students into a group."""
-        #     pass
+                group = get_db().groups.find_one()
+                if not group:
+                    l.interrupt()
+
+                with l.client.post(JOIN_GROUP_ENDPOINT, json={
+                    'group_name': group['group_name'],
+                    'group_owner': group['group_owner']
+                }, headers={
+                    'X-CSRF-Token': l.client.cookies['token']
+                }, catch_response=True) as res:
+                    # Not the best way to deal with joining duplicate groups
+                    if res.status_code in [200, 409]:
+                        res.success()
+                    else:
+                        res.failure()
+                logout(l)
+            finally:
+                release_user(user['username'])
+                l.interrupt()
+
+
+        @task
+        def batch_register_users(l):
+            """Batch-register students into a group."""
+            user = acquire_user({
+                'usertype': 'teacher',
+                'hit_batch_reg_limit': {'$in': [False, None]}
+            })
+            if not user:
+                l.interrupt()
+            try:
+                login(l, username=user['username'], password=user['password'])
+                simulate_loading_classroom_page(l)
+                res = l.client.get(GROUPS_ENDPOINT)
+                groups = res.json()
+                if len(groups) < 1:
+                    l.interrupt()
+                group = random.choice(groups)
+                with l.client.post(
+                    GROUPS_ENDPOINT + '/' + group['gid'] + \
+                    '/batch_registration', files={
+                        'csv': (
+                            'batch_registration_template.csv',
+                            open(BATCH_REGISTRATION_CSV_FILENAME, 'rb'),
+                            'text/csv')
+                    }, headers={
+                        'X-CSRF-Token': l.client.cookies['token'],
+                    }, name=GROUPS_ENDPOINT + '/[gid]/batch_registration',
+                    catch_response=True) as res:
+                        if res.status_code == 200:
+                            res.success()
+                        elif (res.status_code == 403 and
+                                "You have exceeded the maximum" in
+                                res.json()['message']):
+                            res.success()
+                            db.users.find_one_and_update({
+                                'username': user['username']
+                            }, {
+                                '$set': {
+                                    'hit_batch_reg_limit': True
+                                }
+                            })
+                        else:
+                            res.failure('Failed to batch register users: ' + \
+                                str(res.json()))
+                logout(l)
+            finally:
+                release_user(user['username'])
+                l.interrupt()
 
         @task
         def view_group_stats(l):
@@ -599,15 +672,40 @@ class LoadTestingTasks(TaskSet):
                 release_user(user['username'])
                 l.interrupt()
 
-        # @task
-        # def export_group(l):
-        #     """Export a group's data."""
-        #     pass
+        @task
+        def delete_group(l):
+            """Delete an existing group."""
+            user = acquire_user({
+                'usertype': 'teacher'
+            })
+            if not user:
+                l.interrupt()
+            try:
+                login(l, username=user['username'], password=user['password'])
+                simulate_loading_classroom_page(l)
 
-        # @task
-        # def delete_group(l):
-        #     """Delete an existing group."""
-        #     pass
+                res = l.client.get(GROUPS_ENDPOINT)
+                groups = res.json()
+                if len(groups) < 1:
+                    l.interrupt()
+                group = random.choice(groups)
+                with l.client.delete(
+                        GROUPS_ENDPOINT + '/' + group['gid'],
+                        name=GROUPS_ENDPOINT + '/[gid]', headers={
+                            'X-CSRF-Token': l.client.cookies['token']
+                        }, catch_response=True) as res:
+                    if res.status_code == 200:
+                        res.success()
+                        get_db().groups.delete_one({
+                            'group_name': group['name']
+                        })
+                    else:
+                        res.failure()
+                logout(l)
+
+            finally:
+                release_user(user['username'])
+                l.interrupt()
 
     @task
     class OngoingRegistrationTasks(TaskSet):
