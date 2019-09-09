@@ -100,7 +100,7 @@ def create_group(tid, group_name):
     db.groups.insert({
         "name": group_name,
         "owner": tid,
-        "teachers": [tid],
+        "teachers": [],
         "members": [],
         "settings": {
             "email_filter": [],
