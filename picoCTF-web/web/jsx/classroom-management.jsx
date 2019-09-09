@@ -30,12 +30,29 @@ const MemberManagementItem = React.createClass({
       });
   },
 
+  elevateTeam() {
+    const data = {
+      team_id: this.props.tid
+    };
+    apiCall("POST", `/api/v1/groups/${this.props.gid}/elevate_team`, data)
+      .done(data => {
+        apiNotify({
+          status: 1,
+          message: "Team has been elevated to teacher role."
+        });
+        this.props.refresh();
+      })
+      .fail(jqXHR => {
+        apiNotify({ status: 0, message: jqXHR.responseJSON.message });
+      });
+  },
+
   render() {
     return (
       <ListGroupItem>
         <Row className="row">
           <Col xs={2}>
-            <Button bsStyle="primary" className="btn-sq">
+            <Button bsStyle={this.props.isTeacher ? 'success' : 'primary'} className="btn-sq">
               <Glyphicon glyph="user" bsSize="large" />
             </Button>
           </Col>
@@ -47,7 +64,10 @@ const MemberManagementItem = React.createClass({
           </Col>
           <Col xs={4}>
             <ButtonGroup vertical={true}>
-              <Button onClick={this.removeTeam}>Remove Team</Button>
+              <Button onClick={this.removeTeam}>Remove {this.props.isTeacher ? 'Teacher' : 'Team'}</Button>
+              {this.props.isTeacher === false &&
+                <Button onClick={this.elevateTeam}>Promote to Teacher</Button>
+              }
             </ButtonGroup>
           </Col>
         </Row>
@@ -234,20 +254,27 @@ const BatchRegistrationPanel = React.createClass({
 
 const MemberManagement = React.createClass({
   render() {
-    let allMembers = update(this.props.teacherInformation, {
-      $push: this.props.memberInformation
-    });
-    allMembers = _.filter(allMembers, member => {
-      return this.props.currentUser["tid"] !== member["tid"];
-    });
-
-    const memberInformation = (
+    const studentInformation = (
       <ListGroup>
-        {allMembers.map((member, i) => {
+        {this.props.memberInformation.map((member, i) => {
           return (
             <MemberManagementItem
               {...Object.assign(
-                { key: i, gid: this.props.gid, refresh: this.props.refresh },
+                { key: i, gid: this.props.gid, refresh: this.props.refresh, isTeacher: false },
+                member
+              )}
+            />
+          );
+        })}
+      </ListGroup>
+    );
+    const teacherInformation = (
+      <ListGroup>
+        {this.props.teacherInformation.map((member, i) => {
+          return (
+            <MemberManagementItem
+              {...Object.assign(
+                { key: i, gid: this.props.gid, refresh: this.props.refresh, isTeacher: true },
                 member
               )}
             />
@@ -265,7 +292,14 @@ const MemberManagement = React.createClass({
           gid={this.props.gid}
           refresh={this.props.refresh}
         />
-        {memberInformation}
+        {this.props.memberInformation.length > 0 &&
+          <h4>Student Teams</h4>
+        }
+        {studentInformation}
+        {this.props.teacherInformation.length > 0 &&
+          <h4>Teachers</h4>
+        }
+        {teacherInformation}
       </Panel>
     );
   }

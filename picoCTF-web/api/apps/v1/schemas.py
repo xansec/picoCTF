@@ -563,11 +563,11 @@ group_patch_req.add_argument(
     help='Updated settings object.'
 )
 
-# Group team removal request
-group_remove_team_req = reqparse.RequestParser()
-group_remove_team_req.add_argument(
+# Group team modification request
+group_modify_team_req = reqparse.RequestParser()
+group_modify_team_req.add_argument(
     'team_id', required=True, location='json', type=str,
-    help='ID of the team to remove.',
+    help='ID of the team to modify.',
     error='Team ID is required'
 )
 

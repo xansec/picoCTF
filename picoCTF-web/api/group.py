@@ -189,6 +189,21 @@ def leave_group(gid, tid):
 
 
 @log_action
+def elevate_team(gid, tid):
+    """
+    Elevate a team within a group.
+
+    Args:
+        tid: the team id
+        gid: the group id to elevate to teacher status
+    """
+    db = api.db.get_conn()
+    db.groups.update({'gid': gid}, {'$pull': {"members": tid}})
+    db.groups.update({'gid': gid}, {'$push': {"teachers": tid}})
+    cache.invalidate(api.team.get_groups, tid)
+
+
+@log_action
 def delete_group(gid):
     """
     Delete a group.

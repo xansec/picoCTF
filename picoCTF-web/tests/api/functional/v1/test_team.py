@@ -377,5 +377,5 @@ def test_join_group(mongo_proc, client): # noqa (fixture)
     admin_team = db.users.find_one({
         'username': ADMIN_DEMOGRAPHICS['username']})['tid']
     group = db.groups.find_one({'name': 'newgroup'})
-    assert admin_team not in group['members']
-    assert admin_team in group['teachers']
+    assert admin_team in group['members']
+    assert admin_team not in group['teachers']
