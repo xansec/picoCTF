@@ -67,7 +67,7 @@ const MemberManagementItem = React.createClass({
               {this.props.tid !== this.props.owner &&
                 <Button onClick={this.removeTeam}>Remove {this.props.isTeacher ? 'Teacher' : 'Team'}</Button>
               }
-              {this.props.isTeacher === false &&
+              {this.props.isTeacher === false && this.props.members[0].usertype === 'teacher' &&
                 <Button onClick={this.elevateTeam}>Promote to Teacher</Button>
               }
             </ButtonGroup>
@@ -256,9 +256,11 @@ const BatchRegistrationPanel = React.createClass({
 
 const MemberManagement = React.createClass({
   render() {
+    let memberList = (this.props.memberInformation === undefined) ? [] : this.props.memberInformation;
+    let teacherList = (this.props.teacherInformation === undefined) ? [] : this.props.teacherInformation;
     const studentInformation = (
       <ListGroup>
-        {this.props.memberInformation.map((member, i) => {
+        {memberList.map((member, i) => {
           return (
             <MemberManagementItem
               {...Object.assign(
@@ -272,7 +274,7 @@ const MemberManagement = React.createClass({
     );
     const teacherInformation = (
       <ListGroup>
-        {this.props.teacherInformation.map((member, i) => {
+        {teacherList.map((member, i) => {
           return (
             <MemberManagementItem
               {...Object.assign(
@@ -294,14 +296,14 @@ const MemberManagement = React.createClass({
           gid={this.props.gid}
           refresh={this.props.refresh}
         />
-        {this.props.memberInformation.length > 0 &&
-          <h4>Student Teams</h4>
-        }
-        {studentInformation}
-        {this.props.teacherInformation.length > 0 &&
+        {teacherList.length > 0 &&
           <h4>Teachers</h4>
         }
         {teacherInformation}
+        {memberList.length > 0 &&
+          <h4>Student Teams</h4>
+        }
+        {studentInformation}
       </Panel>
     );
   }
@@ -316,29 +318,25 @@ const GroupManagement = React.createClass({
         email_filter: [],
         hidden: false
       },
-      member_information: [],
-      teacher_information: [],
+      member_information: undefined,
+      teacher_information: undefined,
       current_user: {}
     };
   },
 
-  componentWillMount() {
+  componentDidMount() {
     this.refreshSettings();
   },
 
   refreshSettings() {
     apiCall("GET", `/api/v1/groups/${this.props.gid}`).done(data => {
-      this.setState(update(this.state, { settings: { $set: data.settings } }));
-      this.setState(update(this.state, { owner: { $set: data.owner } }));
-      if (data.members != undefined) {
-        this.setState(
-          update(this.state, { member_information: { $set: data.members } })
-        );
+      this.setState({ settings: data.settings });
+      this.setState({ owner: data.owner });
+      if (data.teachers) {
+        this.setState({ teacher_information: data.teachers });
       }
-      if (data.teachers != undefined) {
-        this.setState(
-          update(this.state, { teacher_information: { $set: data.teachers } })
-        );
+      if (data.members) {
+        this.setState({ member_information: data.members });
       }
     });
   },
@@ -367,7 +365,7 @@ const GroupManagement = React.createClass({
 
   render() {
     let contents;
-    if (this.state.member_information.length === 0 && this.state.teacher_information.length === 0) {
+    if (this.state.member_information === undefined && this.state.teacher_information === undefined ) {
       contents = (
         <div className="row" style={{ marginTop: "10px" }}>
           <Col sm={12}>
