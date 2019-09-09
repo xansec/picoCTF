@@ -618,11 +618,10 @@ const LoginForm = React.createClass({
                   valueLink={this.props.gender}
                 >
                   <option value="">-Select-</option>
-                  <option value="woman">Woman</option>
-                  <option value="man">Man</option>
-                  <option value="transgenderwoman">Transgender Woman</option>
-                  <option value="transgenderman">Transgender Man</option>
-                  <option value="gfnc">Gender Fluid/Non-Conforming</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="nb/gf">Non-Binary/Gender-Fluid</option>
+                  <option value="nl/no">Not Listed/Prefer not to answer</option>
                 </Input>
               </Col>
             </Row>

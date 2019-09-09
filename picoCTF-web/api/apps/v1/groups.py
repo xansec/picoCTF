@@ -445,10 +445,9 @@ class BatchRegistrationResponse(Resource):
             gender = fields.Str(
                 data_key="Gender", required=False, allow_none=True,
                 validate=validate.OneOf(
-                    ['man', 'woman', 'transgenderman', 'transgenderwoman',
-                     'gfnc'],
-                    ['Man', 'Woman', 'Transgender Man', 'Transgender Woman',
-                     'Gender Fluid/Non-Conforming'],
+                    ['male', 'female', 'nb/gf', 'nl/no'],
+                    ['Male', 'Female', 'Non-Binary/Gender-Fluid',
+                     'Not listed/Prefer not to answer'],
                     error="If specified, must be one of {labels}. Please use "
                           "the corresponding code from: {choices}."
                 )
