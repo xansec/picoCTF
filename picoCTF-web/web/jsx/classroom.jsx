@@ -203,7 +203,13 @@ const deleteGroup = gid =>
       ).done(function(data) {
         apiNotify({ status: 1, message: "Successfully deleted classroom" });
         loadGroupInfo(true);
-      }),
+      })
+      .fail(jqXHR =>
+        apiNotify({
+          status: 0,
+          message: jqXHR.responseJSON.message
+        })
+      ),
     () => ga("send", "event", "Group", "DeleteGroup", "RejectPrompt")
   );
 

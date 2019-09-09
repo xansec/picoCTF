@@ -64,7 +64,9 @@ const MemberManagementItem = React.createClass({
           </Col>
           <Col xs={4}>
             <ButtonGroup vertical={true}>
-              <Button onClick={this.removeTeam}>Remove {this.props.isTeacher ? 'Teacher' : 'Team'}</Button>
+              {this.props.tid !== this.props.owner &&
+                <Button onClick={this.removeTeam}>Remove {this.props.isTeacher ? 'Teacher' : 'Team'}</Button>
+              }
               {this.props.isTeacher === false &&
                 <Button onClick={this.elevateTeam}>Promote to Teacher</Button>
               }
@@ -260,7 +262,7 @@ const MemberManagement = React.createClass({
           return (
             <MemberManagementItem
               {...Object.assign(
-                { key: i, gid: this.props.gid, refresh: this.props.refresh, isTeacher: false },
+                { key: i, gid: this.props.gid, refresh: this.props.refresh, isTeacher: false, owner: this.props.owner },
                 member
               )}
             />
@@ -274,7 +276,7 @@ const MemberManagement = React.createClass({
           return (
             <MemberManagementItem
               {...Object.assign(
-                { key: i, gid: this.props.gid, refresh: this.props.refresh, isTeacher: true },
+                { key: i, gid: this.props.gid, refresh: this.props.refresh, isTeacher: true, owner: this.props.owner },
                 member
               )}
             />
@@ -309,6 +311,7 @@ const GroupManagement = React.createClass({
   getInitialState() {
     return {
       name: "",
+      owner: "",
       settings: {
         email_filter: [],
         hidden: false
@@ -326,24 +329,18 @@ const GroupManagement = React.createClass({
   refreshSettings() {
     apiCall("GET", `/api/v1/groups/${this.props.gid}`).done(data => {
       this.setState(update(this.state, { settings: { $set: data.settings } }));
-      this.setState(
-        update(this.state, { member_information: { $set: data.members } })
-      );
-      this.setState(
-        update(this.state, { teacher_information: { $set: data.teachers } })
-      );
-    });
-
-    /*
-    apiCall("GET", "/api/v1/user").done(data => {
-      this.setState(update(this.state, { current_user: { $set: data } }));
-      if (!data["teacher"]) {
-        apiNotify(
-          { status: 1, message: "You are no longer a teacher." },
-          "/profile"
+      this.setState(update(this.state, { owner: { $set: data.owner } }));
+      if (data.members != undefined) {
+        this.setState(
+          update(this.state, { member_information: { $set: data.members } })
         );
       }
-    }); */
+      if (data.teachers != undefined) {
+        this.setState(
+          update(this.state, { teacher_information: { $set: data.teachers } })
+        );
+      }
+    });
   },
 
   pushUpdates(modifier) {
@@ -369,31 +366,44 @@ const GroupManagement = React.createClass({
   },
 
   render() {
-    return (
-      <div className="row" style={{ marginTop: "10px" }}>
-        <Col sm={6}>
-          <MemberManagement
-            teacherInformation={this.state.teacher_information}
-            currentUser={this.state.current_user}
-            memberInformation={this.state.member_information}
-            gid={this.props.gid}
-            refresh={this.refreshSettings}
-          />
-        </Col>
-        <Col sm={6}>
-          <GroupOptions
-            pushUpdates={this.pushUpdates}
-            settings={this.state.settings}
-            gid={this.props.gid}
-          />
-          <GroupEmailWhitelist
-            emails={this.state.settings.email_filter}
-            pushUpdates={this.pushUpdates}
-            gid={this.props.gid}
-          />
-        </Col>
-      </div>
-    );
+    let contents;
+    if (this.state.member_information.length === 0 && this.state.teacher_information.length === 0) {
+      contents = (
+        <div className="row" style={{ marginTop: "10px" }}>
+          <Col sm={12}>
+            <p>An existing teacher must promote your account before you can modify this classroom.</p>
+          </Col>
+        </div>
+      );
+    } else {
+      contents = (
+        <div className="row" style={{ marginTop: "10px" }}>
+          <Col sm={6}>
+            <MemberManagement
+              teacherInformation={this.state.teacher_information}
+              currentUser={this.state.current_user}
+              memberInformation={this.state.member_information}
+              gid={this.props.gid}
+              refresh={this.refreshSettings}
+              owner={this.state.owner}
+            />
+          </Col>
+          <Col sm={6}>
+            <GroupOptions
+              pushUpdates={this.pushUpdates}
+              settings={this.state.settings}
+              gid={this.props.gid}
+            />
+            <GroupEmailWhitelist
+              emails={this.state.settings.email_filter}
+              pushUpdates={this.pushUpdates}
+              gid={this.props.gid}
+            />
+          </Col>
+        </div>
+      );
+  }
+  return contents;
   }
 });
 
