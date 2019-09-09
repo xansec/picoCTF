@@ -212,6 +212,7 @@ def add_user(params, batch_registration=False):
     # Additionally, invited users are automatically validated.
     user_is_teacher = params["usertype"] == "teacher"
     user_was_invited = False
+    join_group_as_teacher = False
     if params.get("rid", None):
         key = api.token.find_key_by_token("registration_token", params["rid"])
         if params.get("gid") != key["gid"]:
@@ -220,7 +221,7 @@ def add_user(params, batch_registration=False):
         if params["email"] != key["email"]:
             raise PicoException(
                 "Registration token email does not match the supplied one.")
-        user_is_teacher = key["teacher"]
+        join_group_as_teacher = key["teacher"]
         user_was_invited = True
         api.token.delete_token(key, "registration_token")
 
@@ -298,7 +299,7 @@ def add_user(params, batch_registration=False):
     # If gid was specified, add the newly created team to the group
     if params.get("gid", None):
         api.group.join_group(
-            params["gid"], tid, teacher=user_is_teacher)
+            params["gid"], tid, teacher=join_group_as_teacher)
 
     # If email verification is enabled and user wasn't invited, send
     # validation email

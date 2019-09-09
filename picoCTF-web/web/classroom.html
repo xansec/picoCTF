@@ -46,6 +46,13 @@ startup_functions:
 </div>
 
 <script type="text/template" id="team-selection-template">
+    <% if (teams === undefined) { %>
+      <div class="row" style="margin-top: 10px">
+        <div class="col-sm-12">
+          <p>An existing teacher must promote your account before you can view this classroom.</p>
+        </div>
+      </div>
+    <% } else { %>
       <div class="row" style="margin-top: 10px">
           <div class="col-md-12">
             <div class="col-md-6">
@@ -260,6 +267,7 @@ startup_functions:
           <% }) %>
         </div>
       </div>
+    <% } %>
 </script>
 
 <script type="text/template" id="group-info-template">

@@ -82,6 +82,8 @@ const render_scoreboard = function(board_key, search) {
         scoreboard_sponsor: scoreboard_metadata[0].sponsor,
         scoreboard_logo: scoreboard_metadata[0].logo
       });
+    } else {
+       scoreboard_properties.scoreboard_name = $("ul#scoreboard-tabs li.active")[0].innerText;
     }
     let scoreboardContent = renderScoreboard(scoreboard_properties);
     $("#scoreboard-container").html(scoreboardContent).promise().then(
@@ -148,7 +150,11 @@ const attachSearchListeners = () => {
     clearTimeout(window.searchTimeout);
     window.searchTimeout = setTimeout(function () {
       let active_tab = $("#scoreboard-tabs li.active").data();
-      board_key = {'scoreboard_id': active_tab.sid};
+      if (active_tab.sid !== undefined) {
+        board_key = {'scoreboard_id': active_tab.sid};
+      } else if (active_tab.gid !== undefined) {
+        board_key = {'group_id': active_tab.gid};
+      }
       let searchValue = $("#search").val();
       render_scoreboard(board_key, searchValue);
     }, 250);

@@ -13,7 +13,7 @@ from marshmallow import (fields, post_load, pre_load, RAISE, Schema, validate,
                          validates_schema, ValidationError)
 
 from .schemas import (batch_registration_req, group_invite_req, group_patch_req,
-                      group_remove_team_req, group_req, score_progressions_req,
+                      group_modify_team_req, group_req, score_progressions_req,
                       scoreboard_page_req)
 
 ns = Namespace('groups', description='Group management')
@@ -128,7 +128,6 @@ class Group(Resource):
 
         return jsonify(group)
 
-    @require_teacher
     @ns.response(400, 'Error parsing request')
     @ns.response(403, 'CSRF token incorrect')
     @ns.response(422, 'Cannot make a previously hidden classroom public')
@@ -154,7 +153,6 @@ class Group(Resource):
         })
 
     @check_csrf
-    @require_teacher
     def delete(self, group_id):
         """Delete a group. Must be the owner of the group."""
         group = api.group.get_group(gid=group_id)
@@ -170,6 +168,52 @@ class Group(Resource):
 
         api.group.delete_group(group_id)
         api.cache.invalidate(api.team.get_groups, curr_user['tid'])
+        return jsonify({
+            'success': True
+        })
+
+
+@ns.response(200, 'Success')
+@ns.response(401, 'Not logged in')
+@ns.response(403, 'Permission denied or CSRF token invalid')
+@ns.response(404, 'Classroom not found')
+@ns.response(422, 'Specified team is not a member of the classroom')
+@ns.route('/<string:group_id>/elevate_team')
+class ElevateTeamResponse(Resource):
+    """Elevate a team the teacher role within a group."""
+
+    @check_csrf
+    @require_login
+    @ns.expect(group_modify_team_req)
+    def post(self, group_id):
+        """
+        Elevate a specified team within a group to the teacher role.
+
+        Requires teacher role within the group.
+        """
+        req = group_modify_team_req.parse_args(strict=True)
+        group = api.group.get_group(group_id)
+        if not group:
+            raise PicoException('Classroom not found', 404)
+        group_teachers = [group['owner']] + group['teachers']
+        eligible_for_elevation = group['members']
+        curr_tid = api.user.get_user()['tid']
+
+        # Ensure the current user has a teacher role within the group
+        if curr_tid not in group_teachers:
+            raise PicoException(
+                'You must be a teacher in this classroom to remove a team.',
+                status_code=403
+            )
+
+        # Ensure the specified tid is eligible for elevation
+        if req['team_id'] not in eligible_for_elevation:
+            raise PicoException(
+                'Team is not eligible for elevation to teacher role',
+                status_code=422
+            )
+
+        api.group.elevate_team(group_id, req['team_id'])
         return jsonify({
             'success': True
         })
@@ -211,14 +255,14 @@ class RemoveTeamResponse(Resource):
 
     @check_csrf
     @require_login
-    @ns.expect(group_remove_team_req)
+    @ns.expect(group_modify_team_req)
     def post(self, group_id):
         """
         Remove a specified team from a group.
 
         Requires teacher role within the group.
         """
-        req = group_remove_team_req.parse_args(strict=True)
+        req = group_modify_team_req.parse_args(strict=True)
         group = api.group.get_group(group_id)
         if not group:
             raise PicoException('Classroom not found', 404)
@@ -254,7 +298,6 @@ class RemoveTeamResponse(Resource):
 class FlagSharingInfo(Resource):
     """Get flag sharing statistics for a specific group."""
 
-    @require_teacher
     def get(self, group_id):
         """Get flag sharing statistics for a specific group."""
         group = api.group.get_group(gid=group_id)
@@ -280,7 +323,6 @@ class FlagSharingInfo(Resource):
 class InviteResponse(Resource):
     """Send an email invite to join this team."""
 
-    @require_teacher
     @rate_limit(limit=1, duration=30)
     @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(group_invite_req)
@@ -314,7 +356,6 @@ class BatchRegistrationResponse(Resource):
     Demographics for the registered accounts are provided via CSV upload.
     """
 
-    @require_teacher
     @rate_limit(limit=1, duration=30)
     @ns.response(200, 'Success')
     @ns.response(400, 'Error parsing CSV')
@@ -325,6 +366,18 @@ class BatchRegistrationResponse(Resource):
     @ns.expect(batch_registration_req)
     def post(self, group_id):
         """Automatically registers several student accounts based on a CSV."""
+        group = api.group.get_group(gid=group_id)
+        if not group:
+            raise PicoException('Classroom not found', 404)
+
+        curr_user = api.user.get_user()
+        if (curr_user['tid'] not in (group['teachers'] + [group['owner']])
+                and not curr_user['admin']):
+            raise PicoException(
+                'You do not have permission to batch-register students into ' +
+                'this classroom.', status_code=403
+            )
+
         # Load in student demographics from CSV
         req = batch_registration_req.parse_args(strict=True)
         students = []

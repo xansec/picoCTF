@@ -116,7 +116,7 @@ def get_group_scores(gid=None, name=None):
     Returns:
         A dictionary containing name, tid, and score
     """
-    key_args = {'gid': gid}
+    key_args = {'group_id': gid}
     scoreboard_cache = get_scoreboard_cache(**key_args)
     scoreboard_cache.clear()
 

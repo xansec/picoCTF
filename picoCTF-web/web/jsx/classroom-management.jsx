@@ -30,12 +30,29 @@ const MemberManagementItem = React.createClass({
       });
   },
 
+  elevateTeam() {
+    const data = {
+      team_id: this.props.tid
+    };
+    apiCall("POST", `/api/v1/groups/${this.props.gid}/elevate_team`, data)
+      .done(data => {
+        apiNotify({
+          status: 1,
+          message: "Team has been elevated to teacher role."
+        });
+        this.props.refresh();
+      })
+      .fail(jqXHR => {
+        apiNotify({ status: 0, message: jqXHR.responseJSON.message });
+      });
+  },
+
   render() {
     return (
       <ListGroupItem>
         <Row className="row">
           <Col xs={2}>
-            <Button bsStyle="primary" className="btn-sq">
+            <Button bsStyle={this.props.isTeacher ? 'success' : 'primary'} className="btn-sq">
               <Glyphicon glyph="user" bsSize="large" />
             </Button>
           </Col>
@@ -47,7 +64,12 @@ const MemberManagementItem = React.createClass({
           </Col>
           <Col xs={4}>
             <ButtonGroup vertical={true}>
-              <Button onClick={this.removeTeam}>Remove Team</Button>
+              {this.props.tid !== this.props.owner &&
+                <Button onClick={this.removeTeam}>Remove {this.props.isTeacher ? 'Teacher' : 'Team'}</Button>
+              }
+              {this.props.isTeacher === false && this.props.members[0].usertype === 'teacher' &&
+                <Button onClick={this.elevateTeam}>Promote to Teacher</Button>
+              }
             </ButtonGroup>
           </Col>
         </Row>
@@ -234,20 +256,29 @@ const BatchRegistrationPanel = React.createClass({
 
 const MemberManagement = React.createClass({
   render() {
-    let allMembers = update(this.props.teacherInformation, {
-      $push: this.props.memberInformation
-    });
-    allMembers = _.filter(allMembers, member => {
-      return this.props.currentUser["tid"] !== member["tid"];
-    });
-
-    const memberInformation = (
+    let memberList = (this.props.memberInformation === undefined) ? [] : this.props.memberInformation;
+    let teacherList = (this.props.teacherInformation === undefined) ? [] : this.props.teacherInformation;
+    const studentInformation = (
       <ListGroup>
-        {allMembers.map((member, i) => {
+        {memberList.map((member, i) => {
           return (
             <MemberManagementItem
               {...Object.assign(
-                { key: i, gid: this.props.gid, refresh: this.props.refresh },
+                { key: i, gid: this.props.gid, refresh: this.props.refresh, isTeacher: false, owner: this.props.owner },
+                member
+              )}
+            />
+          );
+        })}
+      </ListGroup>
+    );
+    const teacherInformation = (
+      <ListGroup>
+        {teacherList.map((member, i) => {
+          return (
+            <MemberManagementItem
+              {...Object.assign(
+                { key: i, gid: this.props.gid, refresh: this.props.refresh, isTeacher: true, owner: this.props.owner },
                 member
               )}
             />
@@ -265,7 +296,14 @@ const MemberManagement = React.createClass({
           gid={this.props.gid}
           refresh={this.props.refresh}
         />
-        {memberInformation}
+        {teacherList.length > 0 &&
+          <h4>Teachers</h4>
+        }
+        {teacherInformation}
+        {memberList.length > 0 &&
+          <h4>Student Teams</h4>
+        }
+        {studentInformation}
       </Panel>
     );
   }
@@ -275,41 +313,32 @@ const GroupManagement = React.createClass({
   getInitialState() {
     return {
       name: "",
+      owner: "",
       settings: {
         email_filter: [],
         hidden: false
       },
-      member_information: [],
-      teacher_information: [],
+      member_information: undefined,
+      teacher_information: undefined,
       current_user: {}
     };
   },
 
-  componentWillMount() {
+  componentDidMount() {
     this.refreshSettings();
   },
 
   refreshSettings() {
     apiCall("GET", `/api/v1/groups/${this.props.gid}`).done(data => {
-      this.setState(update(this.state, { settings: { $set: data.settings } }));
-      this.setState(
-        update(this.state, { member_information: { $set: data.members } })
-      );
-      this.setState(
-        update(this.state, { teacher_information: { $set: data.teachers } })
-      );
-    });
-
-    /*
-    apiCall("GET", "/api/v1/user").done(data => {
-      this.setState(update(this.state, { current_user: { $set: data } }));
-      if (!data["teacher"]) {
-        apiNotify(
-          { status: 1, message: "You are no longer a teacher." },
-          "/profile"
-        );
+      this.setState({ settings: data.settings });
+      this.setState({ owner: data.owner });
+      if (data.teachers) {
+        this.setState({ teacher_information: data.teachers });
       }
-    }); */
+      if (data.members) {
+        this.setState({ member_information: data.members });
+      }
+    });
   },
 
   pushUpdates(modifier) {
@@ -335,31 +364,44 @@ const GroupManagement = React.createClass({
   },
 
   render() {
-    return (
-      <div className="row" style={{ marginTop: "10px" }}>
-        <Col sm={6}>
-          <MemberManagement
-            teacherInformation={this.state.teacher_information}
-            currentUser={this.state.current_user}
-            memberInformation={this.state.member_information}
-            gid={this.props.gid}
-            refresh={this.refreshSettings}
-          />
-        </Col>
-        <Col sm={6}>
-          <GroupOptions
-            pushUpdates={this.pushUpdates}
-            settings={this.state.settings}
-            gid={this.props.gid}
-          />
-          <GroupEmailWhitelist
-            emails={this.state.settings.email_filter}
-            pushUpdates={this.pushUpdates}
-            gid={this.props.gid}
-          />
-        </Col>
-      </div>
-    );
+    let contents;
+    if (this.state.member_information === undefined && this.state.teacher_information === undefined ) {
+      contents = (
+        <div className="row" style={{ marginTop: "10px" }}>
+          <Col sm={12}>
+            <p>An existing teacher must promote your account before you can modify this classroom.</p>
+          </Col>
+        </div>
+      );
+    } else {
+      contents = (
+        <div className="row" style={{ marginTop: "10px" }}>
+          <Col sm={6}>
+            <MemberManagement
+              teacherInformation={this.state.teacher_information}
+              currentUser={this.state.current_user}
+              memberInformation={this.state.member_information}
+              gid={this.props.gid}
+              refresh={this.refreshSettings}
+              owner={this.state.owner}
+            />
+          </Col>
+          <Col sm={6}>
+            <GroupOptions
+              pushUpdates={this.pushUpdates}
+              settings={this.state.settings}
+              gid={this.props.gid}
+            />
+            <GroupEmailWhitelist
+              emails={this.state.settings.email_filter}
+              pushUpdates={this.pushUpdates}
+              gid={this.props.gid}
+            />
+          </Col>
+        </div>
+      );
+  }
+  return contents;
   }
 });
 
