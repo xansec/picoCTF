@@ -54,7 +54,3 @@ You can easily bring up an instance of the picoCTF-web API in Flask's developmen
     ```
 
     Note that enabling development mode (setting `FLASK_ENV` to `development`) will enable live reloading and disable global exception handling, but will break the pytest tests, which expect exceptions to be handled. Consider running the tests in a different shell.
-
-## Testing
-
-To execute tests for the web API, simply run `pytest` from within the `picoCTF-web` root directory. This will also generate an HTML code coverage report at `./coverage_report/`.
