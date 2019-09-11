@@ -60,10 +60,10 @@ const LoginForm = React.createClass({
 
       const showEmailFilter = () => {
         return (
-          <Alert bsStyle="warning">
+          <p className="alert alert-primary">
             You can register provided you have an email for one of these domains:
             <strong>{this.props.emailFilter.join(", ")}</strong>
-          </Alert>
+          </p>
         );
       };
 
@@ -462,7 +462,7 @@ const LoginForm = React.createClass({
                   maxLength="50"
                   required={true}
                 />
-                <p className="help-block">Your school or organization name may be visible to other users.</p>
+                <p className="alert alert-warning">Your school or organization name may be visible to other users.</p>
               </Col>
               <Col md={6} className={showOrHide("class", "url")}>
                 <Input
@@ -693,7 +693,7 @@ registration, parent/legal guardian is hereby consenting to their child’s regi
               required={true}
             />
             <p
-              className={this.props.status === "Login" ? "hide" : "help-block"}
+              className={this.props.status === "Login" ? "hide" : "alert alert-warning"}
             >{`Your username may be visible to other users.
 Do not include your real name or any other personal information.`}</p>
             <Input
@@ -792,7 +792,7 @@ const TeamManagementForm = React.createClass({
 
     return (
       <Panel>
-        <p>Your team name may be visible to other users. Do not include your real name or any other personal information.
+        <p className="alert alert-warning">Your team name may be visible to other users. Do not include your real name or any other personal information.
           Also, to avoid confusion on the scoreboard, you may not create a team that shares the same name as an existing user.</p>
         <form onSubmit={this.onTeamJoin}>
           <Input type="text" valueLink={this.linkState("team_name")} addonBefore={towerGlyph} label="Team Name" required/>
