@@ -99,7 +99,6 @@ const loadGroupOverview = function(groups, showFirstTab, callback) {
 
     apiCall("GET", `/api/v1/groups/${$(this).data("gid")}`).done(
       data => {
-        ga("send", "event", "Group", "LoadTeacherGroupInformation", "Success");
         for (let group of groups) {
           if (group.name == groupName) {
             // less strict number type comparison

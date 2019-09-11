@@ -17,7 +17,8 @@ const MemberManagementItem = React.createClass({
     const data = {
       team_id: this.props.tid
     };
-    apiCall("POST", `/api/v1/groups/${this.props.gid}/remove_team`, data)
+    apiCall("POST", `/api/v1/groups/${this.props.gid}/remove_team`, data,
+      "Group", "RemoveMember")
       .done(data => {
         apiNotify({
           status: 1,
@@ -34,7 +35,8 @@ const MemberManagementItem = React.createClass({
     const data = {
       team_id: this.props.tid
     };
-    apiCall("POST", `/api/v1/groups/${this.props.gid}/elevate_team`, data)
+    apiCall("POST", `/api/v1/groups/${this.props.gid}/elevate_team`, data,
+      "Group", "ElevateTeacher")
       .done(data => {
         apiNotify({
           status: 1,
@@ -95,7 +97,8 @@ const MemberInvitePanel = React.createClass({
       email: this.state.email,
       as_teacher: this.state.role === "teacher"
     };
-    apiCall("POST", `/api/v1/groups/${this.props.gid}/invite`, data)
+    apiCall("POST", `/api/v1/groups/${this.props.gid}/invite`, data,
+      "Group", "EmailInvite")
       .done(data => {
         apiNotify({ status: 1, message: "Email invitation has been sent." });
         this.setState(update(this.state, { $set: { email: "" } }));
@@ -158,6 +161,7 @@ const BatchRegistrationPanel = React.createClass({
     };
     $.ajax(params)
       .done(data => {
+        ga("send", "event", "Group", "BatchRegistration", "Success");
         let csv_content = "data:text/csv;charset=utf-8," + atob(data.as_csv);
         let encoded_uri = encodeURI(csv_content);
 
@@ -176,6 +180,7 @@ const BatchRegistrationPanel = React.createClass({
         this.props.refresh();
       })
       .fail(jqXHR => {
+        ga("send", "event", "Group", "BatchRegistration", "Failure");
         if (jqXHR.responseJSON !== undefined) {
           // If the error response comes from Flask
           if (typeof jqXHR.responseJSON.message === "object") {
@@ -350,7 +355,7 @@ const GroupManagement = React.createClass({
 
     apiCall("PATCH", `/api/v1/groups/${this.props.gid}`, {
       settings: data.settings
-    })
+    }, "Group", "ChangeSettings")
       .done(data => {
         apiNotify({
           status: 1,
