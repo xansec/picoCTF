@@ -52,14 +52,6 @@ def get_connection(sid):
         raise PicoException(
             "Cannot connect to {}@{}:{} with the specified password".format(
                 server["username"], server["host"], server["port"]))
-
-    result = shell.run(["sudo", "/picoCTF-env/bin/shell_manager", "status"],
-                       allow_error=True)
-    if (result.return_code != 0):
-        raise PicoException("Cannot retrieve status from shell_manager.",
-                            data={
-                                'stderr': result.stderr_output.decode('utf-8')
-                            })
     return shell
 
 
@@ -221,7 +213,7 @@ def get_problem_status_from_server(sid):
     with shell:
         output = shell.run(
             ["sudo", "/picoCTF-env/bin/shell_manager", "status",
-             "--json"]).output.decode("utf-8")
+             "--json"], encoding="utf-8").output
     data = json.loads(output)
 
     all_online = True
@@ -253,9 +245,18 @@ def get_publish_output(sid):
     shell = get_connection(sid)
 
     with shell:
+        status = shell.run(["sudo", "/picoCTF-env/bin/shell_manager", "status"],
+                           allow_error=True, encoding="utf-8")
+        if status.return_code != 0:
+            raise PicoException(
+                "Not all instances online, check shell_manager.",
+                 data={'stderr': status.stderr_output}
+            )
         result = shell.run(
-            ["sudo", "/picoCTF-env/bin/shell_manager", "publish"])
-    return json.loads(result.output.decode("utf-8"))
+            ["sudo", "/picoCTF-env/bin/shell_manager", "publish"],
+            encoding="utf-8"
+        )
+    return json.loads(result.output)
 
 
 def get_assigned_server_number(new_team=True, tid=None):
