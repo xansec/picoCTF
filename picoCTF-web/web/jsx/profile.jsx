@@ -27,34 +27,6 @@ const updatePassword = function(e) {
     );
 };
 
-const resetPassword = function(e) {
-  e.preventDefault();
-  const data = {
-    reset_token: window.location.hash.substring(1),
-    new_password: $("#password-reset-form input[name=new-password]").val(),
-    new_password_confirmation: $(
-      "#password-reset-form input[name=new-password-confirmation]"
-    ).val()
-  };
-  apiCall(
-    "POST",
-    "/api/v1/user/reset_password",
-    data,
-    "Authentication",
-    "ResetPassword"
-  )
-    .done(function(data) {
-      ga("send", "event", "Authentication", "ResetPassword", "Success");
-      apiNotify(
-        { status: 1, message: "Your password has been reset" },
-        "/"
-      );
-    })
-    .fail(jqXHR =>
-      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
-    );
-};
-
 const disableAccount = function(e) {
   e.preventDefault();
   confirmDialog(
@@ -139,7 +111,7 @@ const TeamManagementForm = React.createClass({
         team_name: this.state.team_name,
         team_password: this.state.team_password
       };
-      apiCall("POST", "/api/v1/teams", data)
+      apiCall("POST", "/api/v1/teams", data, "Team", "CreateTeam")
         .done(data => (document.location.href = "/profile"))
         .fail(jqXHR =>
           apiNotify({ status: 0, message: jqXHR.responseJSON.message })
@@ -153,7 +125,7 @@ const TeamManagementForm = React.createClass({
       team_name: this.state.team_name,
       team_password: this.state.team_password
     };
-    apiCall("POST", "/api/v1/team/join", data)
+    apiCall("POST", "/api/v1/team/join", data, "Team", "JoinTeam")
       .done(data => (document.location.href = "/profile"))
       .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
@@ -178,6 +150,8 @@ const TeamManagementForm = React.createClass({
       ()=> {
         apiCall("PATCH", "/api/v1/team", data)
           .done(response => {
+            let toggleState = data.allow_ineligible_members ? 'Allow' : 'Disallow' ;
+            ga('send', 'event', 'Team', 'EligibilityLock', toggleState);
             this.setState(update(this.state, {team: {$merge: data}}));
             apiNotify(
               {
@@ -210,7 +184,7 @@ const TeamManagementForm = React.createClass({
             new_password: newpass,
             new_password_confirmation: newpass_confirm
           };
-          apiCall("POST", "/api/v1/team/update_password", data)
+          apiCall("POST", "/api/v1/team/update_password", data, "Team", "UpdatePassword")
             .done(data =>
               apiNotify(
                 {

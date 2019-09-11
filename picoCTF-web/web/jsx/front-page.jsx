@@ -765,7 +765,7 @@ const TeamManagementForm = React.createClass({
         team_name: this.state.team_name,
         team_password: this.state.team_password
       };
-      apiCall("POST", "/api/v1/teams", data)
+      apiCall("POST", "/api/v1/teams", data, "Team", "CreateTeamOnReg")
         .done(data => (document.location.href = "/profile"))
         .fail(jqXHR =>
           apiNotify({ status: 0, message: jqXHR.responseJSON.message })
@@ -779,7 +779,7 @@ const TeamManagementForm = React.createClass({
       team_name: this.state.team_name,
       team_password: this.state.team_password
     };
-    apiCall("POST", "/api/v1/team/join", data)
+    apiCall("POST", "/api/v1/team/join", data, "Team", "JoinTeamOnReg")
       .done(data => (document.location.href = "/profile"))
       .fail(jqXHR =>
         apiNotify({ status: 0, message: jqXHR.responseJSON.message })
@@ -830,6 +830,7 @@ const AuthPanel = React.createClass({
 
   componentWillMount() {
     if (this.state.status === "verified") {
+      ga('send', 'event', 'Registration', 'Verification', 'Success');
       apiNotify({
         status: 1,
         message: "Your account has been successfully verified. Please login."
@@ -896,7 +897,7 @@ const AuthPanel = React.createClass({
 
     form["g-recaptcha-response"] = this.state.captcha;
 
-    apiCall("POST", "/api/v1/users", form)
+    apiCall("POST", "/api/v1/users", form, "Registration", "Form")
       .done(data => {
         const verificationAlert = {
           status: 1,
@@ -919,7 +920,7 @@ const AuthPanel = React.createClass({
           apiCall("POST", "/api/v1/user/login", {
             username: this.state.username,
             password: this.state.password
-          })
+          }, "User", "LoginOnReg")
             .done(loginData => {
               apiCall("GET", "/api/v1/user")
                 .done(userData => {
@@ -950,7 +951,7 @@ const AuthPanel = React.createClass({
     e.preventDefault();
     apiCall("POST", "/api/v1/user/reset_password/request", {
       username: this.state.username
-    })
+    }, "Authentication", "ResetPasswordRequest")
       .done(resp => {
         apiNotify({
           status: 1,
@@ -969,7 +970,7 @@ const AuthPanel = React.createClass({
     apiCall("POST", "/api/v1/user/login", {
       username: this.state.username,
       password: this.state.password
-    })
+    }, "Authentication", "Login")
       .done(() =>
         // Get teacher status
         apiCall("GET", "/api/v1/user").done(data => {
