@@ -161,7 +161,10 @@ const BatchRegistrationPanel = React.createClass({
     };
     $.ajax(params)
       .done(data => {
-        ga("send", "event", "Group", "BatchRegistration", "Success");
+        gtag('event', 'BatchRegistration', {
+          'event_category': 'Group',
+          'event_label': 'Success'
+        });
         let csv_content = "data:text/csv;charset=utf-8," + atob(data.as_csv);
         let encoded_uri = encodeURI(csv_content);
 
@@ -180,7 +183,10 @@ const BatchRegistrationPanel = React.createClass({
         this.props.refresh();
       })
       .fail(jqXHR => {
-        ga("send", "event", "Group", "BatchRegistration", "Failure");
+        gtag('event', 'BatchRegistration', {
+          'event_category': 'Group',
+          'event_label': 'Failure'
+        });
         if (jqXHR.responseJSON !== undefined) {
           // If the error response comes from Flask
           if (typeof jqXHR.responseJSON.message === "object") {

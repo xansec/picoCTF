@@ -10,20 +10,20 @@ window.apiCall = function(method, url, data, ga_event_class, ga_event) {
     error(jqXHR, textStatus, errorThrown) {
       // Notify for errors with no HTTP response code. Otherwise handle when calling @apiCall
       if (errorThrown === "" && !jqXHR.responseJSON) {
-        ga("send", "event", "Error", "APIOffline", url);
+        gtag('event', 'APIOffline', {
+          'event_category': 'Error',
+          'event_label': url
+        });
         $.notify(
           "The server is currently down. We will work to fix this error right away.",
           "error"
         );
       } else {
         if (ga_event_class && ga_event) {
-          ga(
-            "send",
-            "event",
-            ga_event_class,
-            ga_event,
-            `Failure::${jqXHR.responseJSON.message}`
-          );
+          gtag('event', ga_event, {
+            'event_category': ga_event_class,
+            'event_label': `Failure::${jqXHR.responseJSON.message}`
+          });
         }
       }
     },
@@ -32,7 +32,10 @@ window.apiCall = function(method, url, data, ga_event_class, ga_event) {
         window.localStorage.setItem(url, JSON.stringify(data));
       }
       if (ga_event_class && ga_event) {
-        ga("send", "event", ga_event_class, ga_event, "Success");
+        gtag('event', ga_event, {
+          'event_category': ga_event_class,
+          'event_label': 'Success'
+        });
       }
     }
   };
@@ -55,9 +58,15 @@ window.addAjaxListener = (id, url, onSuccess, onFail, ga_event_class, ga_event) 
       if (settings.url === url) {
         if (xhr.statusText === "success" && onSuccess) {
           onSuccess(xhr.responseJSON);
-          ga("send", "event", ga_event_class, ga_event, "Success");
+          gtag('event', ga_event, {
+            'event_category': ga_event_class,
+            'event_label': 'Success'
+          });
         } else if (xhr.statusText === "error") {
-          ga("send", "event", ga_event_class, ga_event, `Failure::${jqXHR.responseJSON.message}`);
+          gtag('event', ga_event, {
+            'event_category': ga_event_class,
+            'event_label': `Failure::${xhr.responseJSON.message}`
+          });
           if (onFail) { onFail(xhr); }
         }
       }
