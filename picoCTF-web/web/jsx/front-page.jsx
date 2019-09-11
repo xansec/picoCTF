@@ -60,7 +60,7 @@ const LoginForm = React.createClass({
 
       const showEmailFilter = () => {
         return (
-          <p className="alert alert-primary">
+          <p className="alert alert-info">
             You can register provided you have an email for one of these domains:
             <strong>{this.props.emailFilter.join(", ")}</strong>
           </p>
