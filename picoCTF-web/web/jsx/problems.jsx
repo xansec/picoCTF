@@ -88,7 +88,10 @@ const addProblemReview = function(e) {
       const selector = `#${pid}-thumbs${feedback.liked ? "down" : "up"}`;
       $(selector).removeClass("active");
       target.addClass("active");
-      ga("send", "event", "Problem", "Review", "Basic");
+      gtag('event', 'Review', {
+        'event_category': 'Problem',
+        'event_label': 'Basic'
+      });
     })
     .fail(jqXHR =>
       apiNotify({ status: 0, message: jqXHR.responseJSON.message })
@@ -382,13 +385,19 @@ const ProblemSubmit = React.createClass({
    })
      .done(data => {
        if (data.correct) {
-         ga("send", "event", "Problem", "Solve", "Basic");
+         gtag('event', 'Solve', {
+           'event_category': 'Problem',
+           'event_label': 'Basic'
+         });
          apiNotify({ status: 1, message: data.message });
          this.setState({value: ""});
          this.props.toggleExpand();
          this.props.updateProblemsList();
        } else {
-         ga("send", "event", "Problem", "Wrong", "Basic");
+         gtag('event', 'Wrong', {
+           'event_category': 'Problem',
+           'event_label': 'Basic'
+         });
          apiNotify({ status: 0, message: data.message });
        }
      })

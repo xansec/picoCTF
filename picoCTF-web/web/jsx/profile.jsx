@@ -151,7 +151,10 @@ const TeamManagementForm = React.createClass({
         apiCall("PATCH", "/api/v1/team", data)
           .done(response => {
             let toggleState = data.allow_ineligible_members ? 'Allow' : 'Disallow' ;
-            ga('send', 'event', 'Team', 'EligibilityLock', toggleState);
+            gtag('event', 'EligibilityLock', {
+              'event_category': 'Team',
+              'event_label': toggleState
+            });
             this.setState(update(this.state, {team: {$merge: data}}));
             apiNotify(
               {
@@ -336,7 +339,7 @@ const load_group_info = () =>
 
 const join_group = function(group_name, group_owner) {
   const data = { group_name: group_name, group_owner: group_owner };
-  apiCall("POST", "/api/v1/team/join_group", data, "Team", "JoinGroup")
+  apiCall("POST", "/api/v1/team/join_group", data, "Group", "JoinGroup")
     .done(function(data) {
       apiNotify({ status: 1, message: "Successfully joined classroom" });
       load_group_info();
@@ -372,7 +375,7 @@ const group_request = function(e) {
     "Join",
     "Cancel",
     e => form.trigger("submit"),
-    e => ga("send", "event", "Team", "JoinGroup", "RejectPrompt")
+    e => gtag('event', 'JoinGroup', { 'event_category': 'Group', 'event_label': 'RejectPrompt' })
   );
 };
 

@@ -209,7 +209,7 @@ const deleteGroup = gid =>
           message: jqXHR.responseJSON.message
         })
       ),
-    () => ga("send", "event", "Group", "DeleteGroup", "RejectPrompt")
+    () => gtag('event', 'DeleteGroup', { 'event_category': 'Group',  'event_label': 'RejectPrompt' })
   );
 
 //Could be simplified without this function

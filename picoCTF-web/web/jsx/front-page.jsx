@@ -830,7 +830,10 @@ const AuthPanel = React.createClass({
 
   componentWillMount() {
     if (this.state.status === "verified") {
-      ga('send', 'event', 'Registration', 'Verification', 'Success');
+      gtag('event', 'Verification', {
+        'event_category': 'Registration',
+        'event_label': 'Success'
+      });
       apiNotify({
         status: 1,
         message: "Your account has been successfully verified. Please login."
