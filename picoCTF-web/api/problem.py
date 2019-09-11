@@ -31,7 +31,7 @@ problem_schema = Schema({
     Required("unique_name"):
     check(("The problems's unique name must be a string.", [str])),
     "static_flag":
-    check(("The static_flag setting must be a bool.", [bool])),
+    check(("The static_flag must be a bool.", [lambda f: type(f) == bool])),
     "walkthrough":
     check(("The problem walkthrough must be a string.", [str])),
     "description":
