@@ -6,7 +6,7 @@ window.apiCall = function(method, url, data, ga_event_class, ga_event) {
     beforeSend(request) {
       request.setRequestHeader("X-CSRF-Token", $.cookie("token"));
     },
-    timeout: 10000,
+    timeout: 60000,
     error(jqXHR, textStatus, errorThrown) {
       // Notify for errors with no HTTP response code. Otherwise handle when calling @apiCall
       if (errorThrown === "" && !jqXHR.responseJSON) {
