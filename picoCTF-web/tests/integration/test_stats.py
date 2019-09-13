@@ -36,7 +36,8 @@ def test_registration_stats(mongo_proc, redis_proc, client):
         'groups': 0,
         'teamed_users': 0,
         'teams': 0,
-        'users': 5
+        'users': 5,
+        'teachers': 1,
     }
     assert res.json == expected_response
 
