@@ -148,6 +148,11 @@ The {competition_name} Team""", # noqa (79char)
         "verification_parent_body": """
 Welcome to {competition_name}!
 
+Your child or your child's teacher registered to participate in picoCTF, an 
+online cyber security capture-the-flag competition created for educational 
+purposes. Please see picoCTF.com for details about the competition.  picoCTF 
+is developed by Carnegie Mellon University faculty, staff and students.
+
 A user account has just been created on our platform and your email address was
 submitted by the user as the email address of the user's parent.
 
