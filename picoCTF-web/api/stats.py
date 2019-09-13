@@ -397,7 +397,8 @@ def get_registration_count():
     stats = {
         "users": users,
         "teams": db.teams.count() - users,
-        "groups": db.groups.count()
+        "groups": db.groups.count(),
+        "teachers": db.users.count({"usertype": "teacher"})
     }
     usernames = set(db.users.find({}).distinct("username"))
     team_names = set(db.teams.find({}).distinct("team_name"))

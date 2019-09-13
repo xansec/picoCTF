@@ -1043,7 +1043,7 @@ const AuthPanel = React.createClass({
               of which have formed<strong> {this.state.regStats.teams} </strong>teams.
               <br />
               <strong>{this.state.regStats.groups} </strong>
-              classrooms have been created by teachers.
+              classrooms have been created by <strong>{this.state.regStats.teachers}</strong> teachers.
             </p>
           </Panel>
         );
