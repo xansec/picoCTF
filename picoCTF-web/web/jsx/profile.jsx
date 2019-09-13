@@ -27,6 +27,33 @@ const updatePassword = function(e) {
     );
 };
 
+const resetPassword = function(e) {
+  e.preventDefault();
+  const data = {
+    reset_token: window.location.hash.substring(1),
+    new_password: $("#password-reset-form input[name=new-password]").val(),
+    new_password_confirmation: $(
+      "#password-reset-form input[name=new-password-confirmation]"
+    ).val()
+  };
+  apiCall(
+    "POST",
+    "/api/v1/user/reset_password",
+    data,
+    "Authentication",
+    "ResetPassword"
+  )
+    .done(function(data) {
+      apiNotify(
+        { status: 1, message: "Your password has been reset" },
+        "/"
+      );
+    })
+    .fail(jqXHR =>
+      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+    );
+};
+
 const disableAccount = function(e) {
   e.preventDefault();
   confirmDialog(
