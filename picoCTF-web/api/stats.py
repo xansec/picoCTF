@@ -168,7 +168,6 @@ def get_all_team_scores(scoreboard_id=None):
     key_args = {'scoreboard_id': scoreboard_id}
     teams = api.team.get_all_teams(**key_args)
     scoreboard_cache = get_scoreboard_cache(**key_args)
-    scoreboard_cache.clear()
 
     result = {}
     all_groups = api.group.get_all_groups()
@@ -187,6 +186,7 @@ def get_all_team_scores(scoreboard_id=None):
             if score > 0:
                 key = get_scoreboard_key(team=team)
                 result[key] = score
+    scoreboard_cache.clear()
     if result:
         scoreboard_cache.add(result)
     return scoreboard_cache
