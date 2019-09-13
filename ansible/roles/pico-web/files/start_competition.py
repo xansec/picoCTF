@@ -15,7 +15,7 @@ import api
 def main():
     with api.create_app().app_context():
         api.scoreboards.add_scoreboard("Global", eligibility_conditions={},
-                                       priority=0)
+                                       priority=99)
         api.scoreboards.add_scoreboard("US Students", eligibility_conditions={
             "country": "US",
             "usertype": "student",

@@ -80,19 +80,19 @@ startup_functions:
         <% }); %>
       </tbody>
     </table>
-    <div class="scoreboard-bottom text-center">
-    <% if (scoreboard_logo !== null) { %>
-      <img src="<%= scoreboard_logo %> " class="scoreboard-logo"/>
-    <% } %>
-    <% if (scoreboard_sponsor !== null) { %>
-      <h5>Sponsored by <%= scoreboard_sponsor %></h5>
-    <% } %>
-    </div>
   <% } else { %>
     <pre class="text-center">
       No matching scoreboard entries.
     </pre>
   <% } %>
+  <div class="scoreboard-bottom text-center">
+  <% if (scoreboard_logo !== null) { %>
+    <img src="<%= scoreboard_logo %> " class="scoreboard-logo"/>
+  <% } %>
+  <% if (scoreboard_sponsor !== null) { %>
+    <h5>Sponsored by <%= scoreboard_sponsor %></h5>
+  <% } %>
+  </div>
 </script>
 
 <script type="text/template" id="scoreboard-page-template">

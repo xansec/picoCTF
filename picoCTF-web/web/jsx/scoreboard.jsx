@@ -167,7 +167,7 @@ const render_scoreboard_navigation = () =>
       apiCall("GET", "/api/v1/scoreboards")
         .done((scoreboard_data) => {
           let eligibleScoreboards = _.filter(scoreboard_data, scoreboard =>
-            scoreboard['priority'] === 0
+            scoreboard['priority'] === 99
           );
           let teamGroups = [];
           const scoreboardTabTemplate = _.template(
