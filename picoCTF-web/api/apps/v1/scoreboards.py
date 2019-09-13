@@ -66,7 +66,6 @@ class ScoreboardPage(Resource):
     current team, falling back to the first page if neccessary.
     """
 
-    @block_before_competition
     @ns.response(200, 'Success')
     @ns.response(404, 'Scoreboard not found')
     @ns.response(422, 'Competition has not started')
@@ -96,7 +95,6 @@ class ScoreboardPage(Resource):
 class ScoreProgressionsResult(Resource):
     """Get a list of score progressions for the top n teams on a scoreboard."""
 
-    @block_before_competition
     @ns.response(200, 'Success')
     @ns.response(403, 'Must be admin to specify limit')
     @ns.response(404, 'Scoreboard not found')
