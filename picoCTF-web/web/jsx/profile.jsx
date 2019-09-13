@@ -395,6 +395,7 @@ const renderGroupInformation = _.template(
 
 $(function() {
   $("#password-update-form").on("submit", updatePassword);
+  $("#password-reset-form").on("submit", resetPassword);
   $("#disable-account-form").on("submit", disableAccount);
   $("#download-data-form").on("submit", downloadData);
 
