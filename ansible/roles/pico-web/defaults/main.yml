@@ -22,7 +22,7 @@ gunicorn_user: "{{ ansible_user }}"
 gunicorn_group: "{{ ansible_user }}"
 gunicorn_working_dir: "{{ pico_web_api_dir }}"
 gunicorn_listen_on: "127.0.0.1:8000"
-num_workers: 2
+num_workers: "{{ ansible_processor_vcpus * 2 + 1 | default(2) }}"
 
 ###
 # Nginx configuration
