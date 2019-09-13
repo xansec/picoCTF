@@ -20,7 +20,6 @@ def run():
         cache(get_registration_count)
 
         print("Caching the scoreboards...")
-        get_all_team_scores()
         for scoreboard in api.scoreboards.get_all_scoreboards():
             get_all_team_scores(scoreboard_id=scoreboard['sid'])
 
