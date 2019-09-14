@@ -193,12 +193,14 @@ def add_user(params, batch_registration=False):
     # Make sure the username is unique
     db = api.db.get_conn()
     if db.users.find_one({
-        'username': re.compile(params['username'], re.IGNORECASE)
+            'username':
+            re.compile('^' + re.escape(params['username']) + '$', re.IGNORECASE)
     }):
         raise PicoException(
             'There is already a user with this username.', 409)
     if db.teams.find_one({
-        'team_name': re.compile(params['username'], re.IGNORECASE)
+            'team_name':
+            re.compile('^' + re.escape(params['username']) + '$', re.IGNORECASE)
     }):
         raise PicoException(
             'There is already a team with this username.', 409)

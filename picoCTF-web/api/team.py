@@ -134,12 +134,12 @@ def create_and_join_new_team(team_name, team_password, user):
     # Ensure name does not conflict with existing user or team
     db = api.db.get_conn()
     if db.users.find_one({
-        'username': re.compile(team_name, re.IGNORECASE)
+        'username': re.compile('^' + re.escape(team_name) + '$', re.IGNORECASE)
     }):
         raise PicoException(
             'There is already a user with this name.', 409)
     if db.teams.find_one({
-        'team_name': re.compile(team_name, re.IGNORECASE)
+        'team_name': re.compile('^' + re.escape(team_name) + '$', re.IGNORECASE)
     }):
         raise PicoException(
             'There is already a team with this name.', 409)
