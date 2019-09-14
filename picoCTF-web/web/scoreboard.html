@@ -26,11 +26,9 @@ startup_functions:
   </ul>
   <div class="tab-content">
     <h4 class="text-center">Top Teams Progression</h4>
-    <% _.each(eligibleScoreboards, function(scoreboard, index) { %>
       <div class="row">
-        <div id="<%= scoreboard.sid %>-progression" class="progression-graph"></div>
+        <div class="progression-graph"></div>
       </div>
-     <% }); %>
   </div>
   <form class="navbar-form text-center" role="search">
     <div class="input-group scoreboard-search-group pull-right">

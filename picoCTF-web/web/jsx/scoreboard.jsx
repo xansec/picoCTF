@@ -20,13 +20,13 @@ window.reloadGraph = function() {
     const active_tab = $("ul#scoreboard-tabs li.active").data();
     if (active_tab.sid !== undefined) {
       window.drawTopTeamsProgressionGraph(
-        `#${active_tab.sid}-progression`,
+        ".progression-graph",
         {'scoreboard_id': active_tab.sid}
       );
     }
     else if (active_tab.gid !== undefined) {
       window.drawTopTeamsProgressionGraph(
-        `#${active_tab.gid}-progression`,
+        ".progression-graph",
         {'group_id': active_tab.gid}
       );
     }
