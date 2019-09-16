@@ -256,7 +256,7 @@ const TeamManagementForm = React.createClass({
   renderIneligibleMemberToggle() {
     return (
       <Col className="form-group">
-        <p>Currently, new users are <b>{this.state.team.allow_ineligible_members ? 'allowed to join' : 'prevented from joining'}</b> your team if doing so would cause your team to become ineligible for any of its current scoreboards.</p>
+        <p>Currently, users are <b>{this.state.team.allow_ineligible_members ? 'allowed to join' : 'prevented from joining'}</b> your team if doing so would cause your team to become ineligible for any of its current scoreboards.</p>
         <Button onClick={this.toggleAllowIneligibleMembers}>
         {this.state.team.allow_ineligible_members ? 'Prevent Ineligible Users From Joining Team' : 'Allow Ineligible Users To Join Team'}
         </Button>
