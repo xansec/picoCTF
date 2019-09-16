@@ -3,7 +3,9 @@
 import logging
 
 from flask import current_app
+
 import pymongo
+from pymongo.collation import Collation, CollationStrength
 from pymongo.errors import PyMongoError
 
 from api import PicoException
@@ -53,6 +55,12 @@ def index_mongo():
     log.debug("Ensuring mongo is indexed.")
 
     db.exceptions.create_index([('time', pymongo.DESCENDING)])
+    db.users.create_index("uid", unique=True, name="unique uid")
+    db.users.create_index("username", unique=True, name="unique usernames")
+    db.users.create_index("username", unique=True, collation=Collation(
+            locale="en", strength=CollationStrength.PRIMARY
+        ), name="unique normalized usernames")
+    db.users.create_index("tid")
 
     db.groups.create_index("gid", unique=True, name="unique gid")
     db.groups.create_index("owner", name="owner")
@@ -65,7 +73,8 @@ def index_mongo():
     db.problems.create_index([('score', pymongo.ASCENDING),
                               ('name', pymongo.ASCENDING)])
 
-    db.scoreboards.create_index("sid", unique=True, name="unique scoreboard sid")
+    db.scoreboards.create_index(
+        "sid", unique=True, name="unique scoreboard sid")
 
     db.shell_servers.create_index("sid", unique=True, name="unique shell sid")
 
@@ -78,6 +87,10 @@ def index_mongo():
     db.submissions.create_index("tid")
 
     db.teams.create_index("team_name", unique=True, name="unique team_names")
+    db.teams.create_index(
+        "team_name", unique=True, collation=Collation(
+            locale="en", strength=CollationStrength.PRIMARY
+        ), name="unique normalized team names")
     db.teams.create_index("tid", unique=True, name="unique tid")
     db.teams.create_index(
         "eligibilities",
@@ -87,13 +100,15 @@ def index_mongo():
                 "$gt": 0
             }
         })
-    db.teams.create_index("size",
+    db.teams.create_index(
+        "size",
         name="non-empty size",
         partialFilterExpression={
             "size": {
                 "$gt": 0
             }
         })
+    db.teams.create_index("country")
 
     db.tokens.create_index("uid")
     db.tokens.create_index("gid")

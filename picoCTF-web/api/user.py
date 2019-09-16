@@ -9,6 +9,7 @@ from functools import wraps
 import bcrypt
 import flask
 from flask import current_app, request, session
+from pymongo.collation import Collation, CollationStrength
 
 import api
 from api import cache, log_action, PicoException
@@ -193,15 +194,13 @@ def add_user(params, batch_registration=False):
     # Make sure the username is unique
     db = api.db.get_conn()
     if db.users.find_one({
-            'username':
-            re.compile('^' + re.escape(params['username']) + '$', re.IGNORECASE)
-    }):
+        'username': params['username']
+    }, collation=Collation(locale="en", strength=CollationStrength.PRIMARY)):
         raise PicoException(
             'There is already a user with this username.', 409)
     if db.teams.find_one({
-            'team_name':
-            re.compile('^' + re.escape(params['username']) + '$', re.IGNORECASE)
-    }):
+        'team_name': params['username']
+    }, collation=Collation(locale="en", strength=CollationStrength.PRIMARY)):
         raise PicoException(
             'There is already a team with this username.', 409)
 
