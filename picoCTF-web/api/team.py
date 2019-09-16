@@ -94,6 +94,7 @@ def get_groups(tid):
             'name': 1,
             'gid': 1,
             'owner': 1,
+            'teachers': 1,
             'members': 1,
             '_id': 0
         }))
