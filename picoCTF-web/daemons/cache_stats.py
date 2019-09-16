@@ -16,6 +16,9 @@ def run():
             result = f(reset_cache=True, *args, **kwargs)
             return result
 
+        print("Ensuring MongoDB indexes...")
+        api.db.index_mongo()
+
         print("Caching registration stats...")
         cache(get_registration_count)
 
