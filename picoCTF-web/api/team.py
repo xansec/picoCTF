@@ -157,7 +157,6 @@ def create_and_join_new_team(team_name, team_password, user):
         "password": api.common.hash_password(team_password),
         "affiliation": current_team["affiliation"],
         "creator": user["uid"],
-        "country": user["country"],
         "allow_ineligible_members": False
     })
     join_team(team_name, team_password, user)
@@ -176,7 +175,6 @@ def create_team(params):
             team_name: Name of the team
             password: team's hashed password
             affiliation: team's affiliation
-            country: primary country of team
     Returns:
         The newly created team id.
     """
@@ -273,7 +271,6 @@ def get_team_information(tid):
         "email": member["email"],
         "uid": member["uid"],
         "affiliation": member.get("affiliation", "None"),
-        "country": member["country"],
         "usertype": member["usertype"],
     } for member in get_team_members(tid=tid, show_disabled=False)]
     team_info["progression"] = api.stats.get_score_progression(tid=tid)
@@ -411,11 +408,6 @@ def join_team(team_name, password, user):
         {"$inc": {
             "size": -1
         }})
-
-    # If country is no longer consistent amongst members, set as mixed
-    if user["country"] != desired_team["country"]:
-        db.teams.update(
-            {"tid": desired_team["tid"]}, {"$set": {"country": "??"}})
 
     # Remove old team from any groups and attempt to add new team
     previous_groups = get_groups(current_team['tid'])

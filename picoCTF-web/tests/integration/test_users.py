@@ -151,7 +151,6 @@ def test_add_user(mongo_proc, redis_proc, client): # noqa (fixture)
     admin_team = db.teams.find_one({'tid': admin_user['tid']})
     assert admin_team['team_name'] == 'adminuser'
     assert admin_team['affiliation'] == 'Testing'
-    assert admin_team['country'] == 'US'
     assert admin_team['size'] == 1
     for other_field in ['tid', 'password', 'instances']:
         assert other_field in admin_team

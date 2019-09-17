@@ -248,7 +248,6 @@ def add_user(params, batch_registration=False):
         "team_name": params["username"],
         "password": api.common.token(),
         "affiliation": params["affiliation"],
-        "country": params["country"]
     })
     db.teams.update_one(
         {'tid': tid},
@@ -404,13 +403,15 @@ def disable_account(uid, disable_reason=None):
 
     Args:
         uid: ID of the user to disable
+        disable_reason (optional): Reason to inform user about in email
     """
     if disable_reason is None:
         disable_reason = "Not specified"
 
     db = api.db.get_conn()
-    user = db.users.find_one({"uid": uid})
-    api.email.send_deletion_notification(user['username'], user['email'], disable_reason)
+    user = api.user.get_user(uid=uid)
+    api.email.send_deletion_notification(user['username'], user['email'],
+                                         disable_reason)
 
     db.users.find_one_and_update({
         "uid": uid,
@@ -438,16 +439,40 @@ def disable_account(uid, disable_reason=None):
             "size": -1
         }})
 
-    # Recalculate team country
-    former_team_members = api.team.get_team_members(
-        tid=former_tid, show_disabled=False)
-    member_countries = set()
-    for member in former_team_members:
-        member_countries.add(member.get("country", "??"))
-    if len(member_countries) == 1:
-        db.teams.find_one_and_update(
-            {"tid": former_tid},
-            {"$set": {"country": member_countries.pop()}})
+    # Drop empty team from groups
+    former_team = db.teams.find_one({
+        "tid": former_tid,
+    })
+    if former_team["size"] == 0:
+        groups = api.team.get_groups(tid=former_tid)
+        for group in groups:
+            api.group.leave_group(gid=group["gid"], tid=former_tid)
+
+    # Clean up cache
+    cache.invalidate(api.team.get_groups, former_tid)
+    cache.invalidate(api.stats.get_score, former_tid)
+    cache.invalidate(api.stats.get_score, uid)
+    cache.invalidate(api.problem.get_unlocked_pids, former_tid)
+    cache.invalidate(
+        api.problem.get_solved_problems,
+        tid=former_tid,
+        uid=uid,
+        category=None)
+    cache.invalidate(
+        api.problem.get_solved_problems,
+        tid=former_tid,
+        uid=None,
+        category=None
+    )
+    cache.invalidate(
+        api.problem.get_solved_problems,
+        tid=former_tid,
+        uid=uid)
+    cache.invalidate(api.problem.get_solved_problems, tid=former_tid)
+    cache.invalidate(api.problem.get_solved_problems, uid=uid)
+    cache.invalidate(
+        api.stats.get_score_progression, tid=former_tid, category=None)
+    cache.invalidate(api.stats.get_score_progression, tid=former_tid)
 
 
 def update_extdata(params):

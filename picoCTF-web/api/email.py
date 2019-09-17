@@ -200,9 +200,9 @@ def send_deletion_notification(username, email, delete_reason):
     settings = api.config.get_settings()
 
     body = settings["email"]["deletion_notification_body"].format(
-        competition_name = settings["competition_name"],
-        username = username,
-        delete_reason = delete_reason)
+        competition_name=settings["competition_name"],
+        username=username,
+        delete_reason=delete_reason)
 
     subject = "{} Account Deletion".format(settings["competition_name"])
 
