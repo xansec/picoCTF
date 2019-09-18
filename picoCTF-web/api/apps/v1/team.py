@@ -138,6 +138,9 @@ class TeamJoinResponse(Resource):
             raise PicoException('Teachers may not join teams!', 403)
         req = team_change_req.parse_args(strict=True)
 
+        if req['team_name'] == current_user['username']:
+            raise PicoException("Invalid team name", status_code=400)
+
         # Ensure that the team exists
         team = api.team.get_team(name=req['team_name'])
         if team is None:
