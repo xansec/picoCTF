@@ -400,20 +400,16 @@ def get_registration_count():
         "groups": db.groups.count(),
         "teachers": db.users.count({"usertype": "teacher"})
     }
-    usernames = {u['username'] for u in list(
-        db.users.find({}, {'_id': 0, 'username': 1})
-    )}
-    team_names = {t['team_name'] for t in list(
-        db.teams.find({}, {'_id': 0, 'team_name': 1})
-    )}
+    usernames = set(db.users.find({}).distinct("username"))
+    team_names = set(db.teams.find({}).distinct("team_name"))
 
     real_team_names = team_names - usernames
-    real_team_ids = [t['tid'] for t in list(
+    real_team_ids = list(
         db.teams.find({
             "team_name": {
                 "$in": list(real_team_names)
             }
-        }, {'_id': 0, 'tid': 1}))]
+        }).distinct("tid"))
 
     teamed_users = db.users.count({"tid": {"$in": real_team_ids}})
     stats["teamed_users"] = teamed_users
