@@ -18,7 +18,8 @@ SYSTEM_USERS = ["vagrant", "ubuntu"]
 
 
 def competition_active():
-    r = requests.get(SERVER + "/api/v1/status")
+    r = requests.get(SERVER + "/api/v1/status",
+                     headers={"user-agent": 'picoCTF Shell Server'})
     return json.loads(r.text)["competition_active"]
 
 
