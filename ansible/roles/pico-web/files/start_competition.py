@@ -21,7 +21,7 @@ def main():
             "usertype": "student",
         })
 
-        settings = api.config.get_settings()
+        settings = dict()
         settings["start_time"] = datetime.now()
         settings["end_time"] = settings["start_time"] + timedelta(weeks=52)
         api.config.change_settings(settings)

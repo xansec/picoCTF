@@ -45,79 +45,86 @@ def get_conn():
             raise PicoException(
                 'Internal server error. Please contact a system adminstrator.',
                 data={'original_error': error})
+
+        log.debug("Ensuring mongo is indexed.")
+
+        __connection.exceptions.create_index([('time', pymongo.DESCENDING)])
+        __connection.users.create_index("uid", unique=True, name="unique uid")
+        __connection.users.create_index(
+            "username", unique=True, name="unique usernames")
+        __connection.users.create_index(
+            "username", unique=True, collation=Collation(
+                locale="en", strength=CollationStrength.PRIMARY
+            ), name="unique normalized usernames")
+        __connection.users.create_index("tid")
+
+        __connection.groups.create_index("gid", unique=True, name="unique gid")
+        __connection.groups.create_index("owner", name="owner")
+        __connection.groups.create_index("teachers", name="teachers")
+        __connection.groups.create_index("members", name="members")
+        __connection.groups.create_index(
+            [('owner', 1), ('time', 1)], name="name and owner")
+
+        __connection.problems.create_index(
+            "pid", unique=True, name="unique pid")
+        __connection.problems.create_index("disabled")
+        __connection.problems.create_index(
+            [('score', pymongo.ASCENDING), ('name', pymongo.ASCENDING)])
+
+        __connection.scoreboards.create_index(
+            "sid", unique=True, name="unique scoreboard sid")
+
+        __connection.settings.create_index("settings_id", unique=True)
+
+        __connection.shell_servers.create_index(
+            "sid", unique=True, name="unique shell sid")
+
+        __connection.submissions.create_index(
+            [("pid", 1), ("uid", 1), ("correct", 1)])
+        __connection.submissions.create_index(
+            [("pid", 1), ("tid", 1), ("correct", 1)])
+        __connection.submissions.create_index([("uid", 1), ("correct", 1)])
+        __connection.submissions.create_index([("tid", 1), ("correct", 1)])
+        __connection.submissions.create_index([("pid", 1), ("correct", 1)])
+        __connection.submissions.create_index("uid")
+        __connection.submissions.create_index("tid")
+
+        __connection.teams.create_index(
+            "team_name", unique=True, name="unique team_names")
+        __connection.teams.create_index(
+            "team_name", unique=True, collation=Collation(
+                locale="en", strength=CollationStrength.PRIMARY
+            ), name="unique normalized team names")
+        __connection.teams.create_index("tid", unique=True, name="unique tid")
+        __connection.teams.create_index(
+            "eligibilities",
+            name="non-empty eligiblity",
+            partialFilterExpression={
+                "size": {
+                    "$gt": 0
+                }
+            })
+        __connection.teams.create_index(
+            "size",
+            name="non-empty size",
+            partialFilterExpression={
+                "size": {
+                    "$gt": 0
+                }
+            })
+        __connection.teams.create_index("country")
+
+        __connection.tokens.create_index("uid")
+        __connection.tokens.create_index("gid")
+        __connection.tokens.create_index("tokens.registration_token")
+        __connection.tokens.create_index("tokens.email_verification")
+        __connection.tokens.create_index("tokens.password_reset")
+
+        __connection.users.create_index("uid", unique=True, name="unique uid")
+        __connection.users.create_index(
+            "username", unique=True, name="unique username")
+        __connection.users.create_index("tid")
+        __connection.users.create_index("email")
+        __connection.users.create_index("demo.parentemail")
+
     return __connection
-
-
-def index_mongo():
-    """Ensure the mongo collections are indexed."""
-    db = get_conn()
-
-    log.debug("Ensuring mongo is indexed.")
-
-    db.exceptions.create_index([('time', pymongo.DESCENDING)])
-    db.users.create_index("uid", unique=True, name="unique uid")
-    db.users.create_index("username", unique=True, name="unique usernames")
-    db.users.create_index("username", unique=True, collation=Collation(
-            locale="en", strength=CollationStrength.PRIMARY
-        ), name="unique normalized usernames")
-    db.users.create_index("tid")
-
-    db.groups.create_index("gid", unique=True, name="unique gid")
-    db.groups.create_index("owner", name="owner")
-    db.groups.create_index("teachers", name="teachers")
-    db.groups.create_index("members", name="members")
-    db.groups.create_index([('owner', 1), ('time', 1)], name="name and owner")
-
-    db.problems.create_index("pid", unique=True, name="unique pid")
-    db.problems.create_index("disabled")
-    db.problems.create_index([('score', pymongo.ASCENDING),
-                              ('name', pymongo.ASCENDING)])
-
-    db.scoreboards.create_index(
-        "sid", unique=True, name="unique scoreboard sid")
-
-    db.shell_servers.create_index("sid", unique=True, name="unique shell sid")
-
-    db.submissions.create_index([("pid", 1), ("uid", 1), ("correct", 1)])
-    db.submissions.create_index([("pid", 1), ("tid", 1), ("correct", 1)])
-    db.submissions.create_index([("uid", 1), ("correct", 1)])
-    db.submissions.create_index([("tid", 1), ("correct", 1)])
-    db.submissions.create_index([("pid", 1), ("correct", 1)])
-    db.submissions.create_index("uid")
-    db.submissions.create_index("tid")
-
-    db.teams.create_index("team_name", unique=True, name="unique team_names")
-    db.teams.create_index(
-        "team_name", unique=True, collation=Collation(
-            locale="en", strength=CollationStrength.PRIMARY
-        ), name="unique normalized team names")
-    db.teams.create_index("tid", unique=True, name="unique tid")
-    db.teams.create_index(
-        "eligibilities",
-        name="non-empty eligiblity",
-        partialFilterExpression={
-            "size": {
-                "$gt": 0
-            }
-        })
-    db.teams.create_index(
-        "size",
-        name="non-empty size",
-        partialFilterExpression={
-            "size": {
-                "$gt": 0
-            }
-        })
-    db.teams.create_index("country")
-
-    db.tokens.create_index("uid")
-    db.tokens.create_index("gid")
-    db.tokens.create_index("tokens.registration_token")
-    db.tokens.create_index("tokens.email_verification")
-    db.tokens.create_index("tokens.password_reset")
-
-    db.users.create_index("uid", unique=True, name="unique uid")
-    db.users.create_index("username", unique=True, name="unique username")
-    db.users.create_index("tid")
-    db.users.create_index("email")
-    db.users.create_index("demo.parentemail")
