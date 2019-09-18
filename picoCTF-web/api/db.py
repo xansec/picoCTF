@@ -49,6 +49,7 @@ def get_conn():
         log.debug("Ensuring mongo is indexed.")
 
         __connection.exceptions.create_index([('time', pymongo.DESCENDING)])
+
         __connection.users.create_index("uid", unique=True, name="unique uid")
         __connection.users.create_index(
             "username", unique=True, name="unique usernames")
@@ -57,6 +58,8 @@ def get_conn():
                 locale="en", strength=CollationStrength.PRIMARY
             ), name="unique normalized usernames")
         __connection.users.create_index("tid")
+        __connection.users.create_index("email")
+        __connection.users.create_index("demo.parentemail")
 
         __connection.groups.create_index("gid", unique=True, name="unique gid")
         __connection.groups.create_index("owner", name="owner")
@@ -112,19 +115,11 @@ def get_conn():
                     "$gt": 0
                 }
             })
-        __connection.teams.create_index("country")
 
         __connection.tokens.create_index("uid")
         __connection.tokens.create_index("gid")
         __connection.tokens.create_index("tokens.registration_token")
         __connection.tokens.create_index("tokens.email_verification")
         __connection.tokens.create_index("tokens.password_reset")
-
-        __connection.users.create_index("uid", unique=True, name="unique uid")
-        __connection.users.create_index(
-            "username", unique=True, name="unique username")
-        __connection.users.create_index("tid")
-        __connection.users.create_index("email")
-        __connection.users.create_index("demo.parentemail")
 
     return __connection
