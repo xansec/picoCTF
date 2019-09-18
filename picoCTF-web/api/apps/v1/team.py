@@ -139,7 +139,7 @@ class TeamJoinResponse(Resource):
         req = team_change_req.parse_args(strict=True)
 
         if req['team_name'] == current_user['username']:
-            raise PicoException("Invalid team name", status_code=400)
+            raise PicoException("Invalid team name", status_code=409)
 
         # Ensure that the team exists
         team = api.team.get_team(name=req['team_name'])
