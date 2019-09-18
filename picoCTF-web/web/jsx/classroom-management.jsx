@@ -67,7 +67,7 @@ const MemberManagementItem = React.createClass({
           <Col xs={4}>
             <ButtonGroup vertical={true}>
               {this.props.tid !== this.props.owner &&
-                <Button onClick={this.removeTeam}>Remove {this.props.isTeacher ? 'Teacher' : 'Team'}</Button>
+                <Button onClick={this.removeTeam}>Remove {this.props.isTeacher ? 'Teacher' : 'User/Team'}</Button>
               }
               {this.props.isTeacher === false && this.props.members[0].usertype === 'teacher' &&
                 <Button onClick={this.elevateTeam}>Promote to Teacher</Button>
