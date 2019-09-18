@@ -246,7 +246,7 @@ def add_user(params, batch_registration=False):
     # Create a team for the new user and set its count to 1
     tid = api.team.create_team({
         "team_name": params["username"],
-        "password": api.common.token(),
+        "password": api.common.hash_password("-"),
         "affiliation": params["affiliation"],
     })
     db.teams.update_one(

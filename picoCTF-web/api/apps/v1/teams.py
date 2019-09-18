@@ -40,6 +40,9 @@ class TeamList(Resource):
                 "()+-,#'&!?", status_code=400
             )
 
+        if req['team_name'] == curr_user['username']:
+            raise PicoException("Invalid team name", status_code=409)
+
         new_tid = api.team.create_and_join_new_team(
             req['team_name'],
             req['team_password'],

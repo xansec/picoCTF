@@ -147,6 +147,14 @@ def test_join_team(mongo_proc, redis_proc, client): # noqa (fixture)
         'password': STUDENT_DEMOGRAPHICS['password']
     }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
 
+    #  Attempt to create self-team
+    res = client.post('/api/v1/teams', json={
+        'team_name': STUDENT_DEMOGRAPHICS['username'],
+        'team_password': STUDENT_DEMOGRAPHICS['password']
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
+    assert res.status_code == 409
+    assert res.json['message'] == 'Invalid team name'
+
     # Create the new team that we will try to join
     res = client.post('/api/v1/teams', json={
         'team_name': 'newteam',
@@ -220,14 +228,22 @@ def test_join_team(mongo_proc, redis_proc, client): # noqa (fixture)
     assert db.teams.find_one({'tid': previous_tid})['size'] == 0
     assert db.teams.find_one({'tid': new_tid})['size'] == 2
 
-    # Attempt to switch back to old team
+    # Attempt to switch to another team a second time
     res = client.post('/api/v1/team/join', json={
-        'team_name': STUDENT_2_DEMOGRAPHICS['username'],
-        'team_password': STUDENT_2_DEMOGRAPHICS['password']
+        'team_name': 'newteam',
+        'team_password': 'newteam'
     }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 403
     assert res.json['message'] == 'You can not switch teams once you ' + \
                                   'have joined one.'
+
+    # Attempt to switch back to self-team
+    res = client.post('/api/v1/team/join', json={
+        'team_name': STUDENT_2_DEMOGRAPHICS['username'],
+        'team_password': STUDENT_2_DEMOGRAPHICS['password']
+    }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
+    assert res.status_code == 409
+    assert res.json['message'] == 'Invalid team name'
 
 # @TODO needs to be rewritten to incorporate the concept of 'scoreboards'
 # def test_join_team_ineligible_user(mongo_proc, client):
