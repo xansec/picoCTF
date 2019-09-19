@@ -600,22 +600,26 @@ const TeacherManagement = React.createClass({
   },
 
   render() {
-    return (
-      <Tabs activeKey={this.state.tabKey} onSelect={this.onTabSelect}>
-        {this.state.groups.map((group, i) => {
-          return (
-            <Tab
-              eventKey={i}
-              key={i}
-              title={group.name}
-              className="tab-pane-outline"
-            >
-              <GroupManagement key={group.name} gid={group.gid} />
-            </Tab>
-          );
-        })}
-      </Tabs>
-    );
+    if (this.state.groups.length === 0) {
+      return (<p className="alert alert-warning">Please create a classroom first.</p>);
+    } else {
+      return (
+        <Tabs activeKey={this.state.tabKey} onSelect={this.onTabSelect}>
+          {this.state.groups.map((group, i) => {
+            return (
+              <Tab
+                eventKey={i}
+                key={i}
+                title={group.name}
+                className="tab-pane-outline"
+              >
+                <GroupManagement key={group.name} gid={group.gid}/>
+              </Tab>
+            );
+          })}
+        </Tabs>
+      );
+    }
   }
 });
 $(function() {
