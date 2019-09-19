@@ -72,6 +72,8 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
+        'bs4==0.0.1',
+        'cchardet==2.1.4',
         'Flask==1.1.1',
         'Flask-Bcrypt==0.7.1',
         'Flask-Mail==0.9.1',

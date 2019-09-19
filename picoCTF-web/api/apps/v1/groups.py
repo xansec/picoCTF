@@ -7,14 +7,15 @@ import string
 import api
 from api import (block_before_competition, check_csrf, PicoException,
                  rate_limit, require_login, require_teacher)
+from bs4 import UnicodeDammit
 from flask import jsonify
 from flask_restplus import Namespace, Resource
 from marshmallow import (fields, post_load, pre_load, RAISE, Schema, validate,
                          validates_schema, ValidationError)
 
-from .schemas import (batch_registration_req, group_invite_req, group_patch_req,
-                      group_modify_team_req, group_req, score_progressions_req,
-                      scoreboard_page_req)
+from .schemas import (batch_registration_req, group_invite_req,
+                      group_modify_team_req, group_patch_req, group_req,
+                      score_progressions_req, scoreboard_page_req)
 
 ns = Namespace('groups', description='Group management')
 
@@ -381,8 +382,9 @@ class BatchRegistrationResponse(Resource):
         # Load in student demographics from CSV
         req = batch_registration_req.parse_args(strict=True)
         students = []
+        unicoded_csv = UnicodeDammit(req['csv'].read())
         csv_reader = csv.DictReader(
-            req['csv'].read().decode('utf-8').split('\n'))
+            unicoded_csv.unicode_markup.split('\n'))
         try:
             for row in csv_reader:
                 students.append(row)
