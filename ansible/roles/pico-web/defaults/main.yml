@@ -57,5 +57,5 @@ htpasswd_accounts: []
 enable_web_ssl: False
 
 # mongodb connect settings
-mongodb_documentdb_cluster: false
+mongodb_replica_enabled: false
 mongodb_tls_enabled: false

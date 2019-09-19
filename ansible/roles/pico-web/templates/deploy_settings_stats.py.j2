@@ -7,7 +7,7 @@ MONGO_USER = "{{ mongodb_web_user | default("picoWeb") }}"
 MONGO_PW = "{{ picoWeb_db_password }}"
 {% endif %}
 {% if mongodb_replica_enabled %}
-MONGO_REPLICA_SETTINGS = "replicaSet=rs0"
+MONGO_REPLICA_SETTINGS = "replicaSet=rs0&readPreference=secondary"
 {% endif %}
 {% if mongodb_tls_enabled %}
 MONGO_TLS_SETTINGS = "tls=true&tlsCAFile=/etc/ssl/certs/mongodb_tls.pem"
