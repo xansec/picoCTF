@@ -21,9 +21,9 @@ variable "availability_zone" {
 # Configured to get access_key and secret_key from  environment variables
 # For additional methods: https://www.terraform.io/docs/providers/aws/
 provider "aws" {
-    region = "${var.region}"
-    #access_key = "${var.access_key}"
-    #secret_key = "${var.secret_key}"
+    region = var.region
+    #access_key = var.access_key
+    #secret_key = var.secret_key
 }
 
 ###
@@ -42,12 +42,12 @@ module "two_tier_aws" {
 ###
 
 output "Web Elastic IP address" {
-    value = "${module.two_tier_aws.web_eip}"
+    value = module.two_tier_aws.web_eip
 }
 output "Shell Elastic IP address" {
-    value = "${module.two_tier_aws.shell_eip}"
+    value = module.two_tier_aws.shell_eip
 }
 output "DB Elastic IP address" {
-    value = "${module.two_tier_aws.db_eip}"
+    value = module.two_tier_aws.db_eip
 }
 

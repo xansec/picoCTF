@@ -5,13 +5,13 @@ variable "vpc_id" {}
 
 # Outputs:
 output "sg_web_id" {
-    value = "${aws_security_group.web.id}"
+    value = aws_security_group.web.id
 }
 output "sg_shell_id" {
-    value = "${aws_security_group.shell.id}"
+    value = aws_security_group.shell.id
 }
 output "sg_db_access_id" {
-    value = "${aws_security_group.db_access.id}"
+    value = aws_security_group.db_access.id
 }
 
 ###
@@ -26,7 +26,7 @@ output "sg_db_access_id" {
 resource "aws_security_group" "web" {
     name        = "web"
     description = "Allows SSH, HTTP, and HTTPS to web servers"
-    vpc_id      = "${var.vpc_id}"
+    vpc_id      = var.vpc_id
 
     # SSH access from anywhere
     ingress {
@@ -66,7 +66,7 @@ resource "aws_security_group" "web" {
 resource "aws_security_group" "shell" {
     name        = "shell"
     description = "Allows full access from internet to shell servers"
-    vpc_id      = "${var.vpc_id}"
+    vpc_id      = var.vpc_id
 
     # Allow inbound access to all ports from anywhere 
     ingress {
@@ -90,5 +90,5 @@ resource "aws_security_group" "shell" {
 resource "aws_security_group" "db_access" {
     name        = "db_access"
     description = "Identifies servers allowed access to the database"
-    vpc_id      = "${var.vpc_id}"
+    vpc_id      = var.vpc_id
 }
