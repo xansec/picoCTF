@@ -78,6 +78,8 @@ setup(
         'Flask-Bcrypt==0.7.1',
         'Flask-Mail==0.9.1',
         'flask-restplus==0.13.0',
+        'gevent==1.4.0',
+        'greenlet==0.4.15',
         'gunicorn==19.9.0',
         # 'line_profiler==2.1.2',
         'marshmallow==3.0.1',
