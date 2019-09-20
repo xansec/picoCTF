@@ -28,6 +28,7 @@ def run():
         _cache = api.cache.get_cache()
         active_stat_host = _cache.get("active_stat_host")
         if active_stat_host is not None and host != active_stat_host:
+            print("Another ctf-stats is primary, exiting...")
             raise SystemExit
         else:
             _cache.set("active_stat_host", host, COOLDOWN_TIME)
