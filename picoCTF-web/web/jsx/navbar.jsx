@@ -26,7 +26,10 @@ const userLoggedInNoCompetition = {
   News: "/news"
 };
 
-const userNotLoggedIn = { News: "/news" };
+const userNotLoggedIn = {
+  Login: "/",
+  News: "/news"
+};
 
 const adminLoggedIn = { Management: "/management" };
 
