@@ -28,7 +28,8 @@ window.apiCall = function(method, url, data, ga_event_class, ga_event) {
       }
     },
     success(data, textStatus, jqXHR) {
-      if (method === "GET") {  // Cache anything all gets
+      let cached_routes = ['/api/v1/user', '/api/v1/status', '/api/v1/groups'];
+      if (method === "GET" && cached_routes.indexOf(url) > -1) {  // restrict to needed
         window.localStorage.setItem(url, JSON.stringify(data));
       }
       if (ga_event_class && ga_event) {
