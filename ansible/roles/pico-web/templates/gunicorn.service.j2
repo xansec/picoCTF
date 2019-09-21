@@ -13,6 +13,7 @@ ExecStart={{ virtualenv_dir }}/bin/gunicorn --max-requests 2000 --pid /run/gunic
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
 PrivateTmp=true
+LimitNOFILE=65535
 
 [Install]
 WantedBy=multi-user.target

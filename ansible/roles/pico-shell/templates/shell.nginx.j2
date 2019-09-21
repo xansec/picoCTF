@@ -14,7 +14,7 @@ server {
     listen       80;
 {% endif %}
 
-    more_clear_headers Server;
+    server_tokens off;
     more_clear_headers Strict-Transport-Security;
 
     location /shell {

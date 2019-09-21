@@ -2,6 +2,32 @@
 # Playbook that configures nginx for picoCTF-web
 # This is the base picoCTF web nginx configuration
 
+- name: Configure nginx
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify :
+    - nginx restart
+
+- name: Add nginx.service override directory
+  file:
+    path: /etc/systemd/system/nginx.service.d/
+    state: directory
+    mode: 0755
+
+- name: Copy NOLIMIT override file
+  copy:
+    src: override.conf
+    dest: /etc/systemd/system/nginx.service.d/override.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify :
+    - nginx restart
+
 - name: Add picoCTF site configuration to nginx
   template: 
     src: ctf.nginx.j2
