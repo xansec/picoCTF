@@ -417,6 +417,7 @@ const LoginForm = React.createClass({
                   label="Country/Region of Residence *"
                   placeholder="Country of Residence"
                   required={true}
+                  autoComplete="off"
                 >
                   <option value="" disabled={true}>
                     -Select-
@@ -557,6 +558,7 @@ const LoginForm = React.createClass({
                   valueLink={this.props.schoolcountry}
                   label="School Country *"
                   required={true}
+                  autoComplete="off"
                 >
                   <option value="" disabled={true}>
                     -Select-
