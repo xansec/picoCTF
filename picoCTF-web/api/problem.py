@@ -290,7 +290,7 @@ def get_all_problems(category=None, show_disabled=False):
                                                    pymongo.ASCENDING)]))
 
 
-@memoize
+@memoize(timeout=3*24*60*60)
 def get_solved_problems(tid=None, uid=None, category=None,
                         show_disabled=False):
     """
@@ -379,7 +379,7 @@ def is_problem_unlocked(problem, solved):
     return unlocked
 
 
-@memoize
+@memoize(timeout=3*24*60*60)
 def get_unlocked_pids(tid):
     """
     Get the unlocked pids for a given team.
