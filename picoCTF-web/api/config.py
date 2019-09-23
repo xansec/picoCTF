@@ -14,6 +14,10 @@ These are the default settings that will be loaded
 into the database if no settings are already loaded.
 """
 default_settings = {
+
+    # Used for Mongo indexing purposes only
+    "settings_id" : 1,
+
     "enable_feedback": True,
 
     # TIME WINDOW
@@ -148,9 +152,9 @@ The {competition_name} Team""", # noqa (79char)
         "verification_parent_body": """
 Welcome to {competition_name}!
 
-Your child or your child's teacher registered to participate in picoCTF, an 
-online cyber security capture-the-flag competition created for educational 
-purposes. Please see picoCTF.com for details about the competition.  picoCTF 
+Your child or your child's teacher registered to participate in picoCTF, an
+online cyber security capture-the-flag competition created for educational
+purposes. Please see picoCTF.com for details about the competition.  picoCTF
 is developed by Carnegie Mellon University faculty, staff and students.
 
 A user account has just been created on our platform and your email address was
@@ -232,12 +236,10 @@ The {competition_name} Team""" # noqa (79char)
 def get_settings():
     """Retrieve settings from the database."""
     db = api.db.get_conn()
-    settings = db.settings.find_one({}, {"_id": 0})
-
+    settings = db.settings.find_one(
+        {"settings_id": 1}, {"_id": 0, "settings_id": 0})
     if settings is None:
         db.settings.insert(default_settings)
-        # Initialize indexes, runonce
-        api.db.index_mongo()
         return default_settings
     return settings
 
@@ -256,7 +258,7 @@ def merge_new_settings():
     db_settings = get_settings()
     merged = merge(default_settings, db_settings)
     db = api.db.get_conn()
-    db.settings.find_one_and_update({}, {'$set': merged})
+    db.settings.find_one_and_update({"settings_id": 1}, {'$set': merged})
 
 
 def change_settings(changes):
@@ -268,8 +270,7 @@ def change_settings(changes):
                        or the updated value is of a different type
 
     """
-    db = api.db.get_conn()
-    settings = db.settings.find_one({})
+    settings = get_settings()
 
     # @TODO validate incoming settings at the request level
     def check_keys(real, changed):
@@ -293,7 +294,8 @@ def change_settings(changes):
                 changed.pop(key)
 
     check_keys(settings, changes)
-    db.settings.update({"_id": settings["_id"]}, {"$set": changes})
+    db = api.db.get_conn()
+    db.settings.find_one_and_update({"settings_id": 1}, {"$set": changes})
 
 
 def check_competition_active():

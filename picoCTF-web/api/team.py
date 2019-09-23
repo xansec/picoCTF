@@ -1,11 +1,11 @@
 """Team management module."""
 
+from pymongo.collation import Collation, CollationStrength
 from voluptuous import Length, Required, Schema
 
 import api
 from api import cache, check, log_action, PicoException
 from api.cache import memoize
-import re
 
 PROBLEMSOLVED_FILTER = ['category', 'name', 'score', 'solve_time']
 
@@ -135,13 +135,13 @@ def create_and_join_new_team(team_name, team_password, user):
     # Ensure name does not conflict with existing user or team
     db = api.db.get_conn()
     if db.users.find_one({
-        'username': re.compile('^' + re.escape(team_name) + '$', re.IGNORECASE)
-    }):
+        'username': team_name
+    }, collation=Collation(locale="en", strength=CollationStrength.PRIMARY)):
         raise PicoException(
             'There is already a user with this name.', 409)
     if db.teams.find_one({
-        'team_name': re.compile('^' + re.escape(team_name) + '$', re.IGNORECASE)
-    }):
+        'team_name': team_name
+    }, collation=Collation(locale="en", strength=CollationStrength.PRIMARY)):
         raise PicoException(
             'There is already a team with this name.', 409)
 
