@@ -166,9 +166,13 @@ class Group(Resource):
             raise PicoException(
                 'You do not have permission to delete this classroom.', 403
             )
-
+        tids_in_group = set()
+        tids_in_group.update(group['members'])
+        tids_in_group.update(group['teachers'])
+        tids_in_group.add(group['owner'])
+        for tid in tids_in_group:
+            api.cache.invalidate(api.team.get_groups, tid)
         api.group.delete_group(group_id)
-        api.cache.invalidate(api.team.get_groups, curr_user['tid'])
         return jsonify({
             'success': True
         })
