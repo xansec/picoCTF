@@ -73,7 +73,7 @@ def update_team(tid, updates):
     return tid
 
 
-@memoize
+@memoize(timeout=5*24*60*60)
 def get_groups(tid):
     """
     Get the group membership for a team.

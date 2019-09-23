@@ -268,7 +268,7 @@ def get_problem_submission_stats(pid=None):
     }
 
 
-@memoize
+@memoize(timeout=3*24*60*60)
 def get_score_progression(tid=None, uid=None, category=None):
     """
     Find the score and time after each correct submission of a team or user.
