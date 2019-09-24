@@ -45,3 +45,9 @@
     path: /var/lib/dpkg/info
     mode: "o-r"
     recurse: yes
+
+- name: Restrict readability of /opt/hacksports
+  file:
+    path: /opt/hacksports
+    mode: "o-r"
+    recurse: yes
