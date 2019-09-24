@@ -243,7 +243,8 @@ class ProblemWalkthrough(Resource):
     def get(self, problem_id):
         """Get the walkthrough for a problem, if unlocked."""
         uid = api.user.get_user()['uid']
-        problem = api.problem.get_problem(problem_id)
+        problem = api.problem.get_problem(problem_id,
+                                          {"pid": 1, "walkthrough": 1})
         if problem is None:
             raise PicoException('Problem not found', 404)
         if problem.get('walkthrough', None) is None:
@@ -270,7 +271,8 @@ class ProblemWalkthroughUnlockResponse(Resource):
     def get(self, problem_id):
         """Spend tokens to unlock the walkthrough for a problem."""
         curr_user = api.user.get_user()
-        problem = api.problem.get_problem(problem_id)
+        problem = api.problem.get_problem(problem_id,
+                                          {"score": 1, "walkthrough": 1})
         if problem is None:
             raise PicoException('Problem not found', 404)
         if problem.get('walkthrough', None) is None:

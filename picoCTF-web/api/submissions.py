@@ -92,7 +92,8 @@ def submit_key(tid, pid, key, method, uid, ip=None):
             'ip': ip,
             'key': key,
             'method': method,
-            'category': api.problem.get_problem(pid)['category'],
+            'category': api.problem.get_problem(pid, {"category": 1})[
+                'category'],
             'correct': correct,
         })
 

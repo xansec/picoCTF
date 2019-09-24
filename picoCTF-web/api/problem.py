@@ -245,19 +245,23 @@ def filter_problem_instances(problem, tid):
     return problem
 
 
-def get_problem(pid):
+def get_problem(pid, projection=None):
     """
     Get a single problem.
 
     Args:
         pid: The problem id
+        projection: optional filter to project
 
     Returns:
         The problem dictionary from the database or None if problem not found
 
     """
     db = api.db.get_conn()
-    return db.problems.find_one({'pid': pid}, {'_id': 0})
+    problem_filter = {'_id': 0}
+    if projection is not None:
+        problem_filter.update(projection)
+    return db.problems.find_one({'pid': pid}, problem_filter)
 
 
 def get_all_problems(category=None, show_disabled=False):
@@ -326,15 +330,22 @@ def get_solved_problems(tid=None, uid=None, category=None,
     for submission in submissions:
         if submission["pid"] not in pids:
             pids.append(submission["pid"])
-            problem = get_problem(submission['pid'])
-            problem.pop('flag', None)
-            problem.pop('tags', None)
-            problem.pop('files', None)
-            problem['solved'] = True
-            problem['unlocked'] = True
-            problem["solve_time"] = submission["timestamp"]
-            if not problem["disabled"] or show_disabled:
-                result.append(problem)
+            problem = get_problem(submission['pid'], {
+                "pid": 1,
+                "unique_name": 1,
+                "score": 1,
+                "name": 1,
+                "disabled": 1,
+                "category": 1
+            })
+            if problem is not None:
+                problem.update({
+                    "solved": True,
+                    "unlocked": True,
+                    "solve_time": submission["timestamp"]
+                })
+                if not problem["disabled"] or show_disabled:
+                    result.append(problem)
 
     return result
 
