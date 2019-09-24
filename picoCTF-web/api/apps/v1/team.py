@@ -112,9 +112,11 @@ class ScoreProgression(Resource):
         if req['category'] == '':
             req['category'] = None
         current_tid = api.user.get_user()['tid']
+        progress_kwargs = {"tid": current_tid}
+        if req['category'] is not None:
+            progress_kwargs['category'] = req['category']
         return jsonify(
-            api.stats.get_score_progression(
-                tid=current_tid, category=req['category'])
+            api.stats.get_score_progression(**progress_kwargs)
         )
 
 
