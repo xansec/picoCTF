@@ -60,7 +60,7 @@ class MinigameSubmissionResponse(Resource):
                     '$ne': req['minigame_id']
                 }
             }, {
-                '$push': {
+                '$addToSet': {
                     'completed_minigames': req['minigame_id']
                 },
                 '$inc': {

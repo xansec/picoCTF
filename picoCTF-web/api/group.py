@@ -169,7 +169,7 @@ def join_group(gid, tid, teacher=False):
         for uid in uids:
             db.users.update({"uid": uid}, {"$set": {"teacher": True}})
 
-    db.groups.update({'gid': gid}, {'$push': {role_group: tid}})
+    db.groups.update({'gid': gid}, {'$addToSet': {role_group: tid}})
     cache.invalidate(api.team.get_groups, tid)
 
 
@@ -199,7 +199,7 @@ def elevate_team(gid, tid):
     """
     db = api.db.get_conn()
     db.groups.update({'gid': gid}, {'$pull': {"members": tid}})
-    db.groups.update({'gid': gid}, {'$push': {"teachers": tid}})
+    db.groups.update({'gid': gid}, {'$addToSet': {"teachers": tid}})
     cache.invalidate(api.team.get_groups, tid)
 
 

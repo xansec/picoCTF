@@ -540,7 +540,7 @@ def unlock_walkthrough(uid, pid, cost):
             '$ne': pid
         }
     }, {
-        '$push': {
+        '$addToSet': {
             'unlocked_walkthroughs': pid
         },
         '$inc': {
