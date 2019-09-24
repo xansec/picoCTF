@@ -105,9 +105,7 @@ class ProblemList(Resource):
             # Additionally, show only fields from the assigned instance.
             problems = [api.problem.filter_problem_instances(
                             p, api.user.get_user()['tid']) for p in problems]
-
-        # Strip out any system properties for non-admin users
-        if not is_admin:
+            # Strip out admin-only fields
             problems = api.problem.sanitize_problem_data(problems)
 
         # Handle the count_only param
