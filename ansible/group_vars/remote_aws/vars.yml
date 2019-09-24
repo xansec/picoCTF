@@ -59,9 +59,10 @@ virtualenv_dir: "/picoCTF-env"
 ##
 on_aws: True
 db_private_ip: "{{ hostvars['pico_db']['ansible_host'] }}"
-mongodb_conf_auth: True
-mongodb_documentdb_cluster: False
-mongodb_tls_enabled: False
+mongodb_primary: "{{ hostvars[inventory_hostname]['mongodb_primary'] }}"
+mongodb_conf_auth: "{{ mongodb_primary | default(True) }}"
+mongodb_replica_enabled: False
+
 picoAdmin_db_password: "{{ vault_picoAdmin_db_password }}"
 picoWeb_db_password: "{{ vault_picoWeb_db_password }}"
 

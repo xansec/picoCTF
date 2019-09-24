@@ -7,3 +7,7 @@ journal = {{ mongodb_conf_journal|to_nice_json }}
 logappend = {{ mongodb_conf_logappend|to_nice_json }}
 logpath = {{ mongodb_conf_logpath }}
 port = {{ mongodb_conf_port }}
+{% if mongodb_replica_enabled | bool %}
+keyFile = /etc/mongodb.key
+replSet = rs0
+{% endif %}

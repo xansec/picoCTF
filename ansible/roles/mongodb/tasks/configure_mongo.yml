@@ -13,3 +13,12 @@
     mode: 0644
   notify :
     - mongodb restart
+
+- name: Copy mongodb keyfile if replication enabled
+  copy:
+    src: mongodb.key
+    dest: /etc/mongodb.key
+    owner: mongodb
+    group: mongodb
+    mode: 0600
+  when: mongodb_replica_enabled | bool

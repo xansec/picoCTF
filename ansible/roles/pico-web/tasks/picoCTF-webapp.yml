@@ -56,6 +56,16 @@
     group: "{{ ansible_user }}"
   no_log: True
 
+- name: Template deployment settings for replica-reading ctf-stats
+  template:
+    src: deploy_settings_stats.py.j2
+    dest: "{{ web_config_dir }}/deploy_settings_stats.py"
+    backup: yes
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  no_log: True
+  when: mongodb_replica_enabled | bool
+
 - name: Copy mongodb public cert if TLS enabled
   copy:
     src: mongodb_tls.pem

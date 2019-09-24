@@ -33,6 +33,8 @@ mongodb_conf_logappend: true                                          # Append i
 mongodb_conf_logpath: /var/log/mongodb/{{ mongodb_daemon_name }}.log  # Log to file (not stdout)
 mongodb_conf_dbpath: "{{ db_data_path }}"                             # Directory for datafiles (Static)
 
+mongodb_replica_enabled: False
+
 ###
 # Redis Configuration variables
 ###

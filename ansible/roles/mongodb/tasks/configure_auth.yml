@@ -29,7 +29,7 @@
     database: admin
     name: "{{ initial_admin_name }}"
     password: "{{ initial_admin_password }}"
-    roles: "userAdminAnyDatabase"
+    roles: "root"
     login_port: "{{ mongodb_conf_port }}"
   ignore_errors: True
   no_log: True
