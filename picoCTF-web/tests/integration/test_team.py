@@ -37,6 +37,7 @@ def test_get_my_team(mongo_proc, redis_proc, client): # noqa (fixture)
         'team_name': STUDENT_DEMOGRAPHICS['username']
         }
     expected_member_fields = {
+        'country': STUDENT_DEMOGRAPHICS['country'],
         'username': STUDENT_DEMOGRAPHICS['username'],
         'usertype': 'student'
     }

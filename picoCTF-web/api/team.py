@@ -271,6 +271,7 @@ def get_team_information(tid):
         "email": member["email"],
         "uid": member["uid"],
         "affiliation": member.get("affiliation", "None"),
+        "country": member["country"],
         "usertype": member["usertype"],
     } for member in get_team_members(tid=tid, show_disabled=False)]
     team_info["progression"] = api.stats.get_score_progression(tid=tid)
