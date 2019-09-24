@@ -19,7 +19,6 @@ def _get_problem_names(problems):
     return [problem['name'] for problem in problems]
 
 
-# @memoize
 def get_score(tid=None, uid=None, time_weighted=True):
     """
     Get the score for a user or team. Uses memoization from zset keyed on

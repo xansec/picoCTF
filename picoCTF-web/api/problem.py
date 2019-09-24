@@ -298,7 +298,9 @@ def get_solved_problems(tid=None, uid=None, category=None,
 
     Args:
         tid: The team id
+        uid: The user id
         category: Optional parameter to restrict which problems are returned
+        show_disabled: whether to include disabled problems
     Returns:
         List of solved problem dictionaries
     """
