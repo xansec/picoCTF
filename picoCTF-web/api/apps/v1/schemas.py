@@ -3,6 +3,8 @@ import werkzeug.datastructures
 from flask_restplus import inputs
 import api.reqparse as reqparse
 
+MAX_PASSWORD_LENGTH = 1024
+
 
 def object_type(value):
     """To make the openAPI object type show up in the docs."""
@@ -341,7 +343,8 @@ user_req.add_argument(
     error='Username is not valid (must be 3-20 characters)'
 )
 user_req.add_argument(
-    'password', required=True, type=length_restricted(3, 1024, str),
+    'password', required=True, type=length_restricted(
+        3, MAX_PASSWORD_LENGTH, str),
     location='json', help='Password',
     error='Password is not valid (must be at least 3 characters)'
 )
@@ -417,13 +420,14 @@ update_password_req.add_argument(
     error='Current password is required'
 )
 update_password_req.add_argument(
-    'new_password', required=True, type=length_restricted(3, 20, str),
+    'new_password', required=True, type=length_restricted(
+        3, MAX_PASSWORD_LENGTH, str),
     location='json', help='New password',
-    error='New password is required'
+    error='New password is required (3 character minimum)'
 )
 update_password_req.add_argument(
     'new_password_confirmation', required=True,
-    type=length_restricted(3, 20, str), location='json',
+    type=length_restricted(3, MAX_PASSWORD_LENGTH, str), location='json',
     help='Must match new_password',
     error='New password entries must match'
 )
@@ -436,13 +440,15 @@ reset_password_confirmation_req.add_argument(
     error='Password reset token is required'
 )
 reset_password_confirmation_req.add_argument(
-    'new_password', required=True, type=length_restricted(3, 20, str),
+    'new_password', required=True, type=length_restricted(
+        3, MAX_PASSWORD_LENGTH, str),
     location='json', help='New password',
-    error='New password is required'
+    error='New password is required (3 character minimum)'
 )
 reset_password_confirmation_req.add_argument(
     'new_password_confirmation', required=True,
-    type=length_restricted(3, 20, str), location='json',
+    type=length_restricted(
+        3, MAX_PASSWORD_LENGTH, str), location='json',
     help='Must match new_password',
     error='New password entries must match'
 )
@@ -471,13 +477,15 @@ email_verification_req.add_argument(
 # Team password update request
 update_team_password_req = reqparse.RequestParser()
 update_team_password_req.add_argument(
-    'new_password', required=True, type=length_restricted(3, 20, str),
+    'new_password', required=True, type=length_restricted(
+        3, MAX_PASSWORD_LENGTH, str),
     location='json', help='New password',
-    error='New password is required'
+    error='New password is required (3 character minimum)'
 )
 update_team_password_req.add_argument(
     'new_password_confirmation', required=True,
-    type=length_restricted(3, 20, str), location='json',
+    type=length_restricted(
+        3, MAX_PASSWORD_LENGTH, str), location='json',
     help='Must match new_password',
     error='New password fields must match'
 )
@@ -511,9 +519,10 @@ team_req.add_argument(
     error='A name for the new team is required'
 )
 team_req.add_argument(
-    'team_password', required=True, type=length_restricted(3, 20, str),
+    'team_password', required=True, type=length_restricted(
+        3, MAX_PASSWORD_LENGTH, str),
     location='json', help='Password for the new team',
-    error='A password for the new team is required'
+    error='A password for the new team is required (3 character minimum)'
 )
 
 # Team patch request
