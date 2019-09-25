@@ -412,7 +412,8 @@ def get_unlocked_pids(tid):
 
     unlocked = []
     db = api.db.get_conn()
-    for problem in list(db.problems.find({}, {'_id': 0})):
+    all_problems = list(db.problems.find({}, {'unique_name': 1, 'pid': 1}))
+    for problem in all_problems:
         if is_problem_unlocked(problem, solved):
             unlocked.append(problem["pid"])
 
