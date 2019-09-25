@@ -362,37 +362,6 @@ def get_top_teams_score_progressions(
     return [output_item(team_item) for team_item in team_items]
 
 
-@memoize
-def check_invalid_instance_submissions(gid=None):
-    """Get submissions of keys for the wrong problem instance."""
-    db = api.db.get_conn()
-    shared_key_submissions = []
-
-    group = None
-    if gid is not None:
-        group = api.group.get_group(gid=gid)
-
-    for problem in api.problem.get_all_problems(show_disabled=True):
-        valid_keys = [instance['flag'] for instance in problem['instances']]
-        incorrect_submissions = db.submissions.find({
-            'pid': problem['pid'],
-            'correct': False
-        }, {"_id": 0})
-        for submission in incorrect_submissions:
-            if submission['key'] in valid_keys:
-                # make sure that the key is still invalid
-                if not api.submissions.grade_problem(
-                        submission['pid'], submission['key'],
-                        tid=submission['tid']):
-                    if group is None or submission['tid'] in group['members']:
-                        submission['username'] = api.user.get_user(
-                            uid=submission['uid'])['username']
-                        submission["problem_name"] = problem["name"]
-                        shared_key_submissions.append(submission)
-
-    return shared_key_submissions
-
-
 # Stored by the cache_stats daemon.
 @memoize
 def get_registration_count():
