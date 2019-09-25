@@ -21,7 +21,7 @@ feedback_schema = Schema({
 })
 
 
-def get_problem_feedback(pid=None, tid=None, uid=None):
+def get_problem_feedback(pid=None, tid=None, uid=None, count_only=False):
     """
     Retrieve feedback for a given problem, team, or user.
 
@@ -29,6 +29,7 @@ def get_problem_feedback(pid=None, tid=None, uid=None):
         pid: the problem id
         tid: the team id
         uid: the user id
+        count_only: only sums likes dislikes instead of full feedback entries
     Returns:
         A list of problem feedback entries.
     """
@@ -41,8 +42,17 @@ def get_problem_feedback(pid=None, tid=None, uid=None):
         match.update({"tid": tid})
     if uid is not None:
         match.update({"uid": uid})
-
-    return list(db.problem_feedback.find(match, {"_id": 0}))
+    if count_only:
+        likes = {'feedback.liked': True}
+        likes.update(match)
+        dislikes = {'feedback.liked': False}
+        dislikes.update(match)
+        return {
+            "likes": db.problem_feedback.count_documents(likes),
+            "dislikes": db.problem_feedback.count_documents(dislikes),
+        }
+    else:
+        return list(db.problem_feedback.find(match, {"_id": 0}))
 
 
 @log_action

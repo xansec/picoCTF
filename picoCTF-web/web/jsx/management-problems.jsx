@@ -353,16 +353,6 @@ const ProblemHintTable = React.createClass({
 
 const ProblemReview = React.createClass({
   render() {
-    let upvotes = 0;
-    let downvotes = 0;
-    for (let review of this.props.reviews) {
-      if (review.feedback.liked) {
-        upvotes++;
-      } else {
-        downvotes++;
-      }
-    }
-
     const style = {
       fontSize: "2.0em"
     };
@@ -372,7 +362,7 @@ const ProblemReview = React.createClass({
         <Col sm={6} md={6} lg={6}>
           <div className="pull-right">
             <Glyphicon glyph="thumbs-up" className="active pad" style={style} />
-            <Badge>{upvotes}</Badge>
+            <Badge>{this.props.reviews.likes}</Badge>
           </div>
         </Col>
         <Col sm={6} md={6} lg={6}>
@@ -382,7 +372,7 @@ const ProblemReview = React.createClass({
               className="active pad"
               style={style}
             />
-            <Badge>{downvotes}</Badge>
+            <Badge>{this.props.reviews.dislikes}</Badge>
           </div>
         </Col>
       </Row>
