@@ -69,6 +69,20 @@ def clear():
         __redis["walrus"].flushdb()
 
 
+def __insert_cache(f, *args, **kwargs):
+    """
+    Directly upserting without first invalidating, thus keeping a memoized
+    value available without lapse
+    """
+    if f == api.stats.get_score:
+        raise PicoException("Error: Do not manually reset_cache get_score")
+    else:
+        key = '%s:%s' % (f.__name__, _hash_key(args, kwargs))
+        value = f(*args, **kwargs)
+        get_cache().set(key, value)
+        return value
+
+
 def memoize(_f=None, **cached_kwargs):
     """walrus.Cache.cached wrapper that reuses shared cache."""
     def decorator(f):
@@ -76,8 +90,9 @@ def memoize(_f=None, **cached_kwargs):
         def wrapper(*args, **kwargs):
             if kwargs.get("reset_cache", False):
                 kwargs.pop("reset_cache", None)
-                invalidate(f, *args, **kwargs)
-            return get_cache().cached(**cached_kwargs)(f)(*args, **kwargs)
+                return __insert_cache(f, *args, **kwargs)
+            else:
+                return get_cache().cached(**cached_kwargs)(f)(*args, **kwargs)
         return wrapper
     if _f is None:
         return decorator
