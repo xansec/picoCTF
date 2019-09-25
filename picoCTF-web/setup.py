@@ -74,12 +74,12 @@ setup(
     install_requires=[
         'bs4==0.0.1',
         'cchardet==2.1.4',
+        'eventlet==0.25.1',
         'Flask==1.1.1',
         'Flask-Bcrypt==0.7.1',
         'Flask-Mail==0.9.1',
         'flask-restplus==0.13.0',
         'gunicorn==19.9.0',
-        # 'line_profiler==2.1.2',
         'marshmallow==3.0.1',
         'py==1.8.0',
         'pymongo==3.9.0',
