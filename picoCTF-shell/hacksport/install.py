@@ -28,7 +28,7 @@ from hacksport.deploy import generate_staging_directory
 logger = logging.getLogger(__name__)
 
 
-def install_problem(problem_path):
+def install_problem(problem_path, allow_reinstall=False):
     """
     Install a problem from a source directory.
 
@@ -36,8 +36,9 @@ def install_problem(problem_path):
         problem_path: path to the problem source directory
     """
     problem_obj = get_problem(problem_path)
-    if os.path.isdir(get_problem_root_hashed(problem_obj, absolute=True)):
-        logger.error(f"Problem {problem_obj['unique_name']} is already installed")
+    if (os.path.isdir(get_problem_root_hashed(problem_obj, absolute=True)) and
+            not allow_reinstall):
+        logger.error(f"Problem {problem_obj['unique_name']} is already installed. You may specify --reinstall to reinstall an updated version from the specified directory.")
         return
     logger.info(f"Installing problem {problem_obj['unique_name']}...")
 
@@ -98,7 +99,7 @@ def install_problems(args):
         problem_paths.extend(find_problem_sources(base_path))
 
     for problem_path in problem_paths:
-        install_problem(problem_path)
+        install_problem(problem_path, (args.reinstall is not None))
 
 
 def uninstall_problem(problem_name):

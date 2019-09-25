@@ -40,6 +40,11 @@ def main():
     install_parser.add_argument(
         "problem_paths", nargs="*", type=str,
         help="paths to problem source directories")
+    install_parser.add_argument(
+        "--reinstall",
+        action="store_true",
+        default=None,
+        help="reinstall over an existing version of this problem")
     install_parser.set_defaults(func=install_problems)
 
     uninstall_parser = subparsers.add_parser(
