@@ -34,4 +34,4 @@ bundles:
 
 # SSL requires cert and vault-encrypted key
 enable_shell_ssl: False
-enable_shell_proxy: False
+enable_shell_proxy: True

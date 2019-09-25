@@ -76,7 +76,6 @@ mongodb_web_user: "picoWeb"
 # SSL requires cert and vault-encrypted key
 enable_web_ssl: False
 enable_shell_ssl: False
-enable_shell_proxy: False
 
 ##
 # Problem Settings
