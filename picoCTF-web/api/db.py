@@ -91,6 +91,7 @@ def get_conn():
         __connection.submissions.create_index([("pid", 1), ("correct", 1)])
         __connection.submissions.create_index("uid")
         __connection.submissions.create_index("tid")
+        __connection.submissions.create_index("suspicious")
 
         __connection.teams.create_index(
             "team_name", unique=True, name="unique team_names")
