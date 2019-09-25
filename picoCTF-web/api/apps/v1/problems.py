@@ -75,7 +75,7 @@ class ProblemList(Resource):
                 problem['pid'] in api.problem.get_solved_pids(tid=curr_user['tid'])
             if curr_user.get('admin', False):
                 problem['reviews'] = api.problem_feedback.get_problem_feedback(
-                    pid=problem['pid'])
+                   uid=curr_user['uid'], pid=problem['pid'])
 
         # Handle the solved_only param
         if req['solved_only']:
@@ -188,7 +188,7 @@ class Problem(Resource):
             problem['pid'] in api.problem.get_solved_pids(tid=curr_user['tid'])
         if curr_user.get('admin', False):
             problem['reviews'] = api.problem_feedback.get_problem_feedback(
-                pid=problem['pid'])
+               uid=curr_user['uid'], pid=problem['pid'])
 
         # Ensure that the user has unlocked it
         if not problem['unlocked']:
