@@ -2,10 +2,10 @@
 
 from datetime import datetime
 
-from voluptuous import Length, Required, Schema
-
 import api
 from api import cache, check, log_action, PicoException, validate
+from api.cache import memoize
+from voluptuous import Length, Required, Schema
 
 submission_schema = Schema({
     Required("tid"):
@@ -29,19 +29,28 @@ def grade_problem(pid, key, tid=None):
         key: user's submission
 
     Returns:
-        bool: whether the key is correct
+        (bool, bool): whether the submission is correct and suspicious
+                      (suspicious: valid for another problem instance)
 
     """
     if tid is None:
         tid = api.user.get_user()["tid"]
 
-    instance = api.problem.get_instance_data(pid, tid)
+    problem = api.problem.get_problem(pid)
+    assigned_instance = api.problem.get_instance_data(pid, tid)
 
-    correct = instance['flag'] in key
+    suspicious = False
+    correct = assigned_instance['flag'] in key
     if not correct and DEBUG_KEY is not None:
         correct = DEBUG_KEY in key
+    if not correct:
+        other_instance_flags = [
+            instance['flag']
+            for instance in problem['instances']
+            if instance['iid'] != assigned_instance['iid']]
+        suspicious = any([flag in key for flag in other_instance_flags])
 
-    return correct
+    return (correct, suspicious)
 
 
 @log_action
@@ -81,7 +90,7 @@ def submit_key(tid, pid, key, method, uid, ip=None):
             'correct': True
         }) is not None
 
-    correct = grade_problem(pid, key, tid)
+    correct, suspicious = grade_problem(pid, key, tid)
 
     if not previously_solved_by_user:
         db.submissions.insert({
@@ -95,6 +104,7 @@ def submit_key(tid, pid, key, method, uid, ip=None):
             'category': api.problem.get_problem(pid, {"category": 1})[
                 'category'],
             'correct': correct,
+            'suspicious': suspicious
         })
 
     if correct and not previously_solved_by_team:
@@ -113,13 +123,8 @@ def submit_key(tid, pid, key, method, uid, ip=None):
             api.stats.get_score_progression, tid=tid, category=None)
         cache.invalidate(api.stats.get_score_progression, tid=tid)
 
-
-        # @TODO achievement processing needs to be fixed/reviewed
-        # api.achievement.process_achievements("submit", {
-        #     "uid": uid,
-        #     "tid": tid,
-        #     "pid": pid
-        # })
+    if suspicious:
+        cache.invalidate(api.submissions.get_suspicious_submissions, tid)
 
     return (correct, previously_solved_by_user, previously_solved_by_team)
 
@@ -129,6 +134,7 @@ def get_submissions(pid=None,
                     tid=None,
                     category=None,
                     correctness=None,
+                    suspicious=None,
                     ):
     """
     Get the submissions from a team or user.
@@ -142,6 +148,7 @@ def get_submissions(pid=None,
         category: category filter.
         pid: problem filter.
         correctness: correct filter
+        suspicious: suspicious filter
     Returns:
         A list of submissions from the given entity.
     """
@@ -163,7 +170,20 @@ def get_submissions(pid=None,
     if correctness is not None:
         match.update({"correct": correctness})
 
+    if suspicious is not None:
+        match.update({"suspicious": suspicious})
+
     return list(db.submissions.find(match, {"_id": 0}))
+
+
+@memoize
+def get_suspicious_submissions(tid):
+    """Get the suspicious submissions for a given team."""
+    submissions = get_submissions(tid=tid, suspicious=True)
+    for submission in submissions:
+        submission['problem_name'] = api.problem.get_problem(
+            submission['pid'])['name']
+    return submissions
 
 
 def clear_all_submissions():

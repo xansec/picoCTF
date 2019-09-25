@@ -299,31 +299,6 @@ class RemoveTeamResponse(Resource):
 @ns.response(401, 'Not logged in')
 @ns.response(403, 'Permission denied')
 @ns.response(404, 'Classroom not found')
-@ns.route('/<string:group_id>/flag_sharing')
-class FlagSharingInfo(Resource):
-    """Get flag sharing statistics for a specific group."""
-
-    def get(self, group_id):
-        """Get flag sharing statistics for a specific group."""
-        group = api.group.get_group(gid=group_id)
-        if not group:
-            raise PicoException('Classroom not found', 404)
-
-        curr_user = api.user.get_user()
-        if (curr_user['tid'] not in (group['teachers'] + [group['owner']])
-                and not curr_user['admin']):
-            raise PicoException(
-                'You do not have permission to view these statistics.', 403
-            )
-
-        return jsonify(
-            api.stats.check_invalid_instance_submissions(group['gid']))
-
-
-@ns.response(200, 'Success')
-@ns.response(401, 'Not logged in')
-@ns.response(403, 'Permission denied')
-@ns.response(404, 'Classroom not found')
 @ns.route('/<string:group_id>/invite')
 class InviteResponse(Resource):
     """Send an email invite to join this team."""
