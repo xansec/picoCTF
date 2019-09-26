@@ -65,8 +65,8 @@ def get_conn():
         __connection.groups.create_index("owner", name="owner")
         __connection.groups.create_index("teachers", name="teachers")
         __connection.groups.create_index("members", name="members")
-        __connection.groups.create_index(
-            [('owner', 1), ('time', 1)], name="name and owner")
+        __connection.groups.create_index([('owner', 1), ('name', 1)],
+                                         unique=True, name="name and owner")
 
         __connection.problems.create_index(
             "pid", unique=True, name="unique pid")
