@@ -107,7 +107,7 @@
       'zip',
       # build tools
       'build-essential',
-      'gdb',
+      'gdb=8.1-0ubuntu3',
       'nasm',
       'perl',
       'python',
@@ -146,6 +146,11 @@
       'expect',
       'pandoc', # for `pip install pwntools`
       ]
+
+- name: Hold gdb (https://bugs.launchpad.net/ubuntu/+source/gdb/+bug/1845494)
+  dpkg_selections:
+    name: gdb
+    selection: hold
 
 - name: Ensure nano is the default editor
   alternatives:
