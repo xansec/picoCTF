@@ -49,7 +49,6 @@ def get_score(tid=None, uid=None, time_weighted=True):
 
     # Not cached
     if score is None:
-        db = api.db.get_conn()
         solved_problems = api.problem.get_solved_problems(**solved_args)
         score = sum([
             problem['score']
@@ -57,22 +56,9 @@ def get_score(tid=None, uid=None, time_weighted=True):
         ])
         time_weight = 0
         if score > 0:
-            solved_args.update({'correct': True})
-            last_submitted = datetime.datetime.now()
-            # Search by individual team members, which may include
-            # submissions made before joining current team
-            if tid is not None:
-                members = api.team.get_team_members(tid=tid,
-                                                    show_disabled=False)
-                solved_args = {
-                    "uid": {
-                        "$in": list(map(lambda x: x["uid"], members))
-                    }
-                }
-            query = db.submissions.find(solved_args).limit(1).sort(
-                [('_id', pymongo.DESCENDING)])
-            if query.count() > 0:
-                last_submitted = query[0]['timestamp']
+            sorted_solves = sorted(solved_problems,
+                                   key=lambda p: p['solve_time'], reverse=True)
+            last_submitted = sorted_solves[0]['solve_time']
             # Weight returns a float based on last submission time.
             # Math is safe for next 2 centuries
             time_weight = 1 - (int(last_submitted.strftime("%s")) * 1e-10)

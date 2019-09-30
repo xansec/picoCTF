@@ -322,15 +322,15 @@ def get_solved_problems(tid=None, uid=None, category=None,
         submissions += api.submissions.get_submissions(
             uid=uid, category=category, correctness=True)
 
-    pids = []
+    pid_times = {}
     result = []
 
     # Team submissions will take precedence because they appear first
     # in the submissions list.
     for submission in submissions:
-        if submission["pid"] not in pids:
-            pids.append(submission["pid"])
-            problem = get_problem(submission['pid'], {
+        pid = submission["pid"]
+        if pid not in pid_times:
+            problem = get_problem(pid, {
                 "pid": 1,
                 "unique_name": 1,
                 "score": 1,
@@ -341,12 +341,15 @@ def get_solved_problems(tid=None, uid=None, category=None,
             if problem is not None:
                 problem.update({
                     "solved": True,
-                    "unlocked": True,
-                    "solve_time": submission["timestamp"]
+                    "unlocked": True
                 })
                 if not problem["disabled"] or show_disabled:
                     result.append(problem)
-
+                pid_times[pid] = submission['timestamp']
+        else:
+            pid_times[pid] = min(submission["timestamp"], pid_times.get(pid))
+    for p in result:
+        p['solve_time'] = pid_times[p['pid']]
     return result
 
 
