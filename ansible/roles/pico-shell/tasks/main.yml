@@ -58,3 +58,9 @@
   file:
     path: /var/log/wtmp
     state: absent
+
+- name: Restrict /var/run/utmp
+  file:
+    path: /var/run/utmp
+    mode: go-r
+
