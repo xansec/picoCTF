@@ -48,7 +48,7 @@ window.exportProblemCSV = (groupName, teams) =>
       const problems = data; // non-admin API only returns non-disabled problems as top level data array
       const outputData = [
         ["Teamname", "Member Name(s)"].concat(
-          _.map(problems, problem => problem.name),
+          _.map(problems, problem => `"${problem.name}"`),
           ["Total"]
         )
       ];
