@@ -305,6 +305,9 @@ const CollapsibleInformation = React.createClass({
 
 const ProblemFlagTable = React.createClass({
   render() {
+    let sortedInstances = this.props.instances.sort((a, b) =>
+      a.instance_number - b.instance_number
+    );
     return (
       <Table responsive={true}>
         <thead>
@@ -315,9 +318,9 @@ const ProblemFlagTable = React.createClass({
           </tr>
         </thead>
         <tbody>
-          {this.props.instances.map((instance, i) => (
+          {sortedInstances.map((instance, i) => (
             <tr key={i}>
-              <td>{i + 1}</td>
+              <td>{instance.instance_number}</td>
               <td>{instance.iid}</td>
               <td>{instance.flag}</td>
             </tr>
