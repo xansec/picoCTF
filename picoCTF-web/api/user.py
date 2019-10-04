@@ -540,8 +540,11 @@ def login(username, password):
     if user['disabled']:
         raise PicoException('This account has been deleted.', 403)
 
-    if not user['verified']:
-        raise PicoException('This account has not been verified yet.', 403)
+    if not user["verified"]:
+        api.email.send_user_verification_email(username)
+        raise PicoException(
+            "This account has not been verified yet. An additional email has been sent to {}.".format(
+                user["email"]), 403)
 
     if confirm_password(password, user['password_hash']):
         session['uid'] = user['uid']

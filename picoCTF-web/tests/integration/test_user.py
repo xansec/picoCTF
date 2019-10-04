@@ -66,7 +66,8 @@ def test_login(mongo_proc, redis_proc, client): # noqa (fixture)
         'password': STUDENT_DEMOGRAPHICS['password']
     }, headers=[('Limit-Bypass', RATE_LIMIT_BYPASS_KEY)])
     assert res.status_code == 403
-    assert res.json['message'] == 'This account has not been verified yet.'
+    assert res.json[
+               'message'] == 'This account has not been verified yet. An additional email has been sent to student@example.com.'
     db.users.update({'username': STUDENT_DEMOGRAPHICS['username']},
                     {'$set': {'verified': True}})
 
