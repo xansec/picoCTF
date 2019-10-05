@@ -71,7 +71,7 @@ def request_password_reset(username):
 
     body = settings["email"]["reset_password_body"].format(  # noqa:E501
         competition_name = settings["competition_name"],
-        competition_url = settings["competition_url"], 
+        competition_url = settings["competition_url"],
         username = username,
         token_value = token_value)
 
@@ -114,9 +114,8 @@ def send_user_verification_email(username):
         }, "email_verification")
     else:
         previous_count = previous_key['email_verification_count']
-        if (previous_count < settings["email"]["max_verification_emails"]):
+        if previous_count < settings["email"]["max_verification_emails"]:
             token_value = previous_key["tokens"]["email_verification"]
-            api.token.delete_token(key_query, 'email_verification')
             api.token.set_token({
                 'uid': user['uid'],
                 'email_verification_count': previous_count + 1
