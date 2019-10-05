@@ -90,6 +90,7 @@ def send_user_verification_email(username):
     """
     refresh_email_settings()
     settings = api.config.get_settings()
+    db = api.db.get_conn()
 
     user = api.user.get_user(name=username)
 
@@ -116,10 +117,10 @@ def send_user_verification_email(username):
         previous_count = previous_key['email_verification_count']
         if previous_count < settings["email"]["max_verification_emails"]:
             token_value = previous_key["tokens"]["email_verification"]
-            api.token.set_token({
-                'uid': user['uid'],
-                'email_verification_count': previous_count + 1
-            }, 'email_verification')
+            db.tokens.find_and_modify(key_query,
+                                      {"$inc": {
+                                          "email_verification_count": 1
+                                      }})
         else:
             raise PicoException(
                 "User has been sent the maximum number of verification " +
