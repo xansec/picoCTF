@@ -361,11 +361,12 @@ class BatchRegistrationResponse(Resource):
         # Load in student demographics from CSV
         req = batch_registration_req.parse_args(strict=True)
         students = []
-        unicoded_csv = UnicodeDammit(req['csv'].read())
+        unicoded_csv = UnicodeDammit(req['csv'].read())  # Forcibly unicodify
         csv_reader = csv.DictReader(
             unicoded_csv.unicode_markup.split('\n'))
         try:
             for row in csv_reader:
+                row = {k: v.strip() for k, v in row.items()}  # Trim whitespace
                 students.append(row)
         except csv.Error as e:
             raise PicoException(
@@ -401,8 +402,9 @@ class BatchRegistrationResponse(Resource):
                     f'Grade must be between 1 and 12 (provided {s})')
 
         class BatchRegistrationUserSchema(Schema):
-            # Convert empty strings to Nones when doing validation,
-            # but back before storing in database.
+            # Convert empty strings to Nones when doing validation
+            # to allow optional parent_email value for age 18+,
+            # but back to '' before storing in database.
             @pre_load
             def empty_to_none(self, in_data, **kwargs):
                 for k, v in in_data.items():
