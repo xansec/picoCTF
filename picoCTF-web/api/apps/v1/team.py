@@ -173,6 +173,8 @@ class GroupJoinResponse(Resource):
     def post(self):
         """Add your current team to a group."""
         req = join_group_req.parse_args(strict=True)
+        req['group_name'] = req['group_name'].strip()
+
         curr_user = api.user.get_user()
 
         # Make sure the specified group and owner exist

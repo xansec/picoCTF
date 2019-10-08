@@ -46,6 +46,8 @@ class GroupList(Resource):
     def post(self):
         """Create a new group."""
         req = group_req.parse_args(strict=True)
+        req['name'] = req['name'].strip()
+
         curr_user = api.user.get_user()
 
         # Don't create group if teacher already has one with same name
@@ -301,13 +303,13 @@ class RemoveTeamResponse(Resource):
 @ns.response(404, 'Classroom not found')
 @ns.route('/<string:group_id>/invite')
 class InviteResponse(Resource):
-    """Send an email invite to join this team."""
+    """Send an email invite to join this group."""
 
     @rate_limit(limit=1, duration=30)
     @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(group_invite_req)
     def post(self, group_id):
-        """Send an email invite to join this team."""
+        """Send an email invite to join this group."""
         req = group_invite_req.parse_args(strict=True)
         group = api.group.get_group(gid=group_id)
         if not group:
