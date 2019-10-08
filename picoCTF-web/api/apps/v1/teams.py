@@ -32,6 +32,7 @@ class TeamList(Resource):
             raise PicoException(
                 'Teachers may not create teams', 403
             )
+        req['team_name'] = req['team_name'].strip()
         if not all([
                 c in string.digits + string.ascii_lowercase + " ()+-,#'&!?"
                 for c in req['team_name'].lower()]):
