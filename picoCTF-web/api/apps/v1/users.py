@@ -63,6 +63,9 @@ class UserList(Resource):
                 'Usernames must be alphanumeric.', status_code=400
             )
 
+        # Clean up input data
+        req['affiliation'] = req['affiliation'].strip()
+
         # Attempt to create the user
         uid = api.user.add_user(req)
 
@@ -119,7 +122,7 @@ class UserDataExport(Resource):
 
     @require_admin
     def get(self, user_id):
-        """Export all data of a given user."""        
+        """Export all data of a given user."""
         user_data = api.user.get_user(uid=user_id)
         if not user_data:
             raise PicoException('User not found', status_code=404)
@@ -142,7 +145,7 @@ class UserSearch(Resource):
     @require_admin
     @ns.expect(user_search_req)
     def post(self):
-        """Search for a given user."""        
+        """Search for a given user."""
         req = user_search_req.parse_args(strict=True)
 
         if req["field"] == "Email":
