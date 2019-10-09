@@ -210,7 +210,7 @@ startup_functions:
                                   <table class="table">
                                       <thead>
                                           <tr>
-                                              <th>Problem</th>
+                                              <th>Problem Name</th>
                                               <th>Flag</th>
                                               <th>Date</th>
                                           </tr>
@@ -231,7 +231,7 @@ startup_functions:
                         </div>
                         <div class="col-md-4">
                           <div class="team-information">
-                              <h4>Solved Problems:</h4>
+                              <h4>Solved Challenge Problems:</h4>
                               <%
                               sortedProblems = _.sortBy(team.solved_problems, function(problem) { return -1*problem.solve_time;})
                               if(team.solved_problems.length > 0) {
@@ -255,7 +255,7 @@ startup_functions:
                                   </tbody>
                                 </table>
                               <% } else { %>
-                                <p>No problems have been solved.</p>
+                                <p>No challenge problems have been solved.</p>
                               <% } %>
                           </div>
                         </div>

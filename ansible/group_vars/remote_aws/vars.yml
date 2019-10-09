@@ -85,6 +85,8 @@ enable_web_ssl: False
 enable_shell_ssl: False
 enable_shell_proxy: True
 
+enable_disk_quota: True
+
 ##
 # Problem Settings
 # use role defaults (example problems and challenge-sampler bundle)

@@ -195,3 +195,13 @@
     global: no
     production: yes
     path: /opt/wetty
+
+- name: Install quota
+  apt:
+    state: present
+    name: [
+      'linux-modules-extra-aws',
+      'quota'
+    ]
+  when: enable_disk_quota | default(false) | bool
+  register: quota_install

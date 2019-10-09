@@ -19,6 +19,7 @@
 - name: Install bundles
   command: "{{ virtualenv_dir }}/bin/shell_manager install-bundle {{ item }}"
   with_items: "{{ bundles }}"
+  ignore_errors: True
 
 - name: Install any missing dependencies
   apt:
