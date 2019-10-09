@@ -315,6 +315,11 @@ const ProblemFlagTable = React.createClass({
             <th>#</th>
             <th>Instance</th>
             <th>Flag</th>
+            {(() => {
+              if (sortedInstances[0].port) {
+                return (<th>Port</th>);
+              }
+            })()}
           </tr>
         </thead>
         <tbody>
@@ -323,6 +328,11 @@ const ProblemFlagTable = React.createClass({
               <td>{instance.instance_number}</td>
               <td>{instance.iid}</td>
               <td>{instance.flag}</td>
+            {(() => {
+              if (instance.port) {
+                return (<td>{instance.port}</td>);
+              }
+            })()}
             </tr>
           ))}
         </tbody>
