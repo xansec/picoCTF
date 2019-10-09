@@ -9,6 +9,8 @@ The picoCTF platform is the infrastructure which is used to run
 The platform is designed to be easily adapted to other CTF or programming
 competitions.
 
+If using the platform to host a custom competition, we recommend using the most recent tagged [release](https://github.com/picoCTF/picoCTF/releases). The `master` branch represents active development and may not be stable. Additionally, we cannot guarantee the stability or security of any outdated releases.
+
 Additional documentation can be found at [docs.picoctf.com](https://docs.picoctf.com) or within the [`/docs` directory](./docs/README.md).
 
 Please visit our Discord server for other platform deployment questions not
