@@ -107,7 +107,6 @@
       'zip',
       # build tools
       'build-essential',
-      'gdb=8.1-0ubuntu3',
       'nasm',
       'perl',
       'python',
@@ -147,7 +146,14 @@
       'pandoc', # for `pip install pwntools`
       ]
 
-- name: Hold gdb (https://bugs.launchpad.net/ubuntu/+source/gdb/+bug/1845494)
+#  Per https://bugs.launchpad.net/ubuntu/+source/gdb/+bug/1845494
+- name: Install specific version of gdb
+  apt:
+    state: present
+    force: yes
+    name: 'gdb=8.1-0ubuntu3'
+
+- name: Hold gdb
   dpkg_selections:
     name: gdb
     selection: hold
