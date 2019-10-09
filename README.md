@@ -7,8 +7,9 @@ The picoCTF platform is the infrastructure which is used to run
 [picoCTF](https://picoctf.com/).
 
 The platform is designed to be easily adapted to other CTF or programming
-competitions. Additional documentation can be found on the
-[wiki](https://github.com/picoCTF/picoCTF/wiki).
+competitions.
+
+Additional documentation can be found at [docs.picoctf.com](https://docs.picoctf.com) or within the [`/docs` directory](./docs/README.md).
 
 Please visit our Discord server for other platform deployment questions not
 covered in our documentation: https://discord.gg/WQGdYaB
@@ -184,11 +185,6 @@ The picoCTF platform is always under development.
 
 If you are interested in research in CTFs (e.g., improving skill acquisition,
 decreasing time to mastery, etc.), please feel free to email David Brumley.
-
-NOTE: We have not maintained backward compatibilties with
-[picoCTF-Platform-2](https://github.com/picoCTF/picoCTF-platform-2). Please read
-the documentation on the wiki for [forks of
-picoCTF-Platform-2](https://github.com/picoCTF/picoCTF/wiki/Repository-linage#forks-of-picoctf-platform-2).
 
 ## Credits
 
