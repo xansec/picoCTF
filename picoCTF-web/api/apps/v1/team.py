@@ -140,6 +140,8 @@ class TeamJoinResponse(Resource):
             raise PicoException('Teachers may not join teams!', 403)
         req = team_change_req.parse_args(strict=True)
 
+        req['team_name'] = req['team_name'].strip()
+
         if req['team_name'] == current_user['username']:
             raise PicoException("Invalid team name", status_code=409)
 
@@ -171,6 +173,8 @@ class GroupJoinResponse(Resource):
     def post(self):
         """Add your current team to a group."""
         req = join_group_req.parse_args(strict=True)
+        req['group_name'] = req['group_name'].strip()
+
         curr_user = api.user.get_user()
 
         # Make sure the specified group and owner exist

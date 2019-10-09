@@ -46,6 +46,8 @@ class GroupList(Resource):
     def post(self):
         """Create a new group."""
         req = group_req.parse_args(strict=True)
+        req['name'] = req['name'].strip()
+
         curr_user = api.user.get_user()
 
         # Don't create group if teacher already has one with same name
@@ -301,13 +303,13 @@ class RemoveTeamResponse(Resource):
 @ns.response(404, 'Classroom not found')
 @ns.route('/<string:group_id>/invite')
 class InviteResponse(Resource):
-    """Send an email invite to join this team."""
+    """Send an email invite to join this group."""
 
     @rate_limit(limit=1, duration=30)
     @ns.response(429, 'Too many requests, slow down!')
     @ns.expect(group_invite_req)
     def post(self, group_id):
-        """Send an email invite to join this team."""
+        """Send an email invite to join this group."""
         req = group_invite_req.parse_args(strict=True)
         group = api.group.get_group(gid=group_id)
         if not group:
@@ -361,11 +363,12 @@ class BatchRegistrationResponse(Resource):
         # Load in student demographics from CSV
         req = batch_registration_req.parse_args(strict=True)
         students = []
-        unicoded_csv = UnicodeDammit(req['csv'].read())
+        unicoded_csv = UnicodeDammit(req['csv'].read())  # Forcibly unicodify
         csv_reader = csv.DictReader(
             unicoded_csv.unicode_markup.split('\n'))
         try:
             for row in csv_reader:
+                row = {k: v.strip() for k, v in row.items()}  # Trim whitespace
                 students.append(row)
         except csv.Error as e:
             raise PicoException(
@@ -401,8 +404,9 @@ class BatchRegistrationResponse(Resource):
                     f'Grade must be between 1 and 12 (provided {s})')
 
         class BatchRegistrationUserSchema(Schema):
-            # Convert empty strings to Nones when doing validation,
-            # but back before storing in database.
+            # Convert empty strings to Nones when doing validation
+            # to allow optional parent_email value for age 18+,
+            # but back to '' before storing in database.
             @pre_load
             def empty_to_none(self, in_data, **kwargs):
                 for k, v in in_data.items():
