@@ -273,6 +273,7 @@ def get_team_information(tid):
         "affiliation": member.get("affiliation", "None"),
         "country": member["country"],
         "usertype": member["usertype"],
+        "can_leave": api.user.can_leave_team(member['uid'])
     } for member in get_team_members(tid=tid, show_disabled=False)]
     team_info["progression"] = api.stats.get_score_progression(tid=tid)
     team_info["flagged_submissions"] = \
@@ -499,7 +500,7 @@ def remove_member(tid, uid):
         raise PicoException(
             "Specified user is not a member of this team.",
             status_code=404)
-    if (len(api.submissions.get_submissions(uid=uid, correctness=True)) > 0):
+    if (not api.user.can_leave_team(uid)):
         raise PicoException(
             "This team member has submitted at least one valid answer and " +
             "cannot be removed.", status_code=403

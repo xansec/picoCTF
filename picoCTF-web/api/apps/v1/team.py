@@ -14,7 +14,8 @@ TEAMDATA_FILTER = ['achievements', 'affiliation', 'allow_ineligible_members',
                    'eligibilities', 'max_team_size', 'members', 'progression',
                    'score', 'size', 'solved_problems', 'team_name', 'tid']
 
-TEAMMEMBER_FILTER = ['affiliation', 'country', 'username', 'usertype']
+TEAMMEMBER_FILTER = ['affiliation', 'can_leave', 'country', 'uid', 'username',
+                     'usertype']
 
 
 @ns.route('')

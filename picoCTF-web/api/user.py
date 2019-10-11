@@ -679,3 +679,10 @@ def rate_limit(limit=5, duration=60, by_ip=False, allow_bypass=False):
                 raise PicoException(limit_msg, 429)
         return wrapper
     return decorator
+
+
+def can_leave_team(uid):
+    """Determine whether a user is eligible to leave their current team."""
+    if (len(api.submissions.get_submissions(uid=uid, correctness=True)) > 0):
+        return False
+    return True
