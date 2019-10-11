@@ -103,9 +103,6 @@ def get_groups(tid):
         # Replace the owner tid with the team's name
         group['owner'] = api.team.get_team(tid=group['owner'])['team_name']
 
-        # Add the group's average score - WHY???
-        # group['score'] = api.stats.get_group_average_score(gid=group['gid'])
-
     return associated_groups
 
 
@@ -490,10 +487,22 @@ def is_teacher_team(tid):
         return False
 
 
+def delete_team(tid):
+    """Scrub all traces of a team."""
+    db = api.db.get_conn()
+    db.submissions.delete_many({"tid": tid})
+    db.problem_feedback.delete_many({"tid": tid})
+    db.teams.find_one_and_delete({"tid": tid})
+    for group in get_groups(tid):
+        api.group.leave_group(group['gid'], tid)
+    api.cache.invalidate(api.team.get_groups, tid)
+
+
 def remove_member(tid, uid):
     """
     Move the specified member back to their self-team.
 
+    Eliminates custom team if no members remain.
     The member specified cannot have submitted any valid solutions.
     """
     if (uid not in get_team_uids(tid)):
@@ -532,6 +541,11 @@ def remove_member(tid, uid):
         {"$inc": {
             "size": -1
         }})
+
+    # Delete the custom team if no members remain
+    remaining_team_size = db.teams.find_one({"tid": tid}, {"size": 1})['size']
+    if (remaining_team_size < 1):
+        delete_team(tid)
 
     # Copy any acquired group memberships back to the self-team
     for group in get_groups(tid):
