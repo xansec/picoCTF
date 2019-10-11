@@ -1,10 +1,9 @@
 """Endpoints related to the current user's team."""
+import api
+from api import (block_before_competition, check_csrf, PicoException,
+                 rate_limit, require_login)
 from flask import jsonify
 from flask_restplus import Namespace, Resource
-
-import api
-from api import (PicoException, block_before_competition, check_csrf,
-                 rate_limit, require_login)
 
 from .schemas import (join_group_req, score_progression_req, team_change_req,
                       team_patch_req, update_team_password_req)
@@ -207,3 +206,23 @@ class GroupJoinResponse(Resource):
         return jsonify({
             'success': True
         })
+
+
+@ns.route('/members/<string:user_id>')
+class MemberRemovalResponse(Resource):
+    """Remove a member from the user's current team."""
+
+    @require_login
+    @ns.response(200, 'Success')
+    @ns.response(400, 'Error parsing request')
+    @ns.response(401, 'Not logged in')
+    @ns.response(403, 'Team member cannot be removed')
+    @ns.response(404, 'Team member does not exist')
+    def delete(self, user_id):
+        """
+        Remove a member from the team.
+
+        Only works if the user has not yet submitted any flags.
+        """
+        api.team.remove_member(api.user.get_user()['tid'], user_id)
+        return jsonify({'success': True})

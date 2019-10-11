@@ -487,3 +487,51 @@ def is_teacher_team(tid):
         return True
     else:
         return False
+
+
+def remove_member(tid, uid):
+    """
+    Move the specified member back to their self-team.
+
+    The member specified cannot have submitted any valid solutions.
+    """
+    if (uid not in get_team_uids(tid)):
+        raise PicoException(
+            "Specified user is not a member of this team.",
+            status_code=404)
+    if (len(api.submissions.get_submissions(uid=uid, correctness=True)) > 0):
+        raise PicoException(
+            "This team member has submitted at least one valid answer and " +
+            "cannot be removed.", status_code=403
+        )
+    if (api.user.get_user(uid)['username'] ==
+            api.team.get_team(tid)['team_name']):
+        raise PicoException(
+            "Cannot remove self from default team", status_code=403
+        )
+
+    self_team_tid = api.team.get_team(
+        name=api.user.get_user(uid=uid)['username'])['tid']
+
+    db = api.db.get_conn()
+    db.users.find_one_and_update({"uid": uid}, {
+        "$set": {
+            "tid": self_team_tid
+            }
+        })
+
+    db.teams.find_one_and_update(
+        {"tid": self_team_tid},
+        {"$inc": {
+            "size": 1
+        }})
+
+    db.teams.find_one_and_update(
+        {"tid": tid},
+        {"$inc": {
+            "size": -1
+        }})
+
+    # Copy any acquired group memberships back to the self-team
+    for group in get_groups(tid):
+        api.group.join_group(gid=group["gid"], tid=self_team_tid)
