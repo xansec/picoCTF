@@ -232,14 +232,31 @@ const TeamManagementForm = React.createClass({
     }
   },
 
+  removeMember(e) {
+    e.preventDefault();
+    apiCall("DELETE", "/api/v1/team/members/" + e.target.dataset.uid)
+    .done(function() {
+      document.location.href = "/profile";
+    })
+    .fail(jqXHR =>
+      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+    );
+  },
+
   listMembers() {
     return this.state.team["members"].map((member, i) => (
-      <li key={i}>
+      <li key={i} style={{marginBottom: '10px'}}>
         {member.username} (
         <span className="capitalize">
-          {member.usertype} - {member.country}
+          {member.usertype} - {member.country}) {
+            member.can_leave && (
+              <Button
+                style={{marginLeft: '5px'}}
+                data-uid={member.uid}
+                onClick={this.removeMember}
+              >{member.uid === this.state.user.uid ? "Leave Team" : "Kick Member"}</Button>
+            )}
         </span>
-        )
       </li>
     ));
   },
@@ -282,6 +299,7 @@ const TeamManagementForm = React.createClass({
               <strong>Members</strong> ({this.state.team.members.length}/
               {this.state.team.max_team_size}):
             </p>
+            <p><i>Members who have contributed to the team's score cannot be removed.</i></p>
             <ul>{this.listMembers()}</ul>
             <hr />
             <form onSubmit={this.onTeamPasswordChange}>
