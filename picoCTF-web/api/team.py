@@ -514,7 +514,7 @@ def remove_member(tid, uid):
             "This team member has submitted at least one valid answer and " +
             "cannot be removed.", status_code=403
         )
-    if (api.user.get_user(uid)['username'] ==
+    if (api.user.get_user(uid=uid)['username'] ==
             api.team.get_team(tid)['team_name']):
         raise PicoException(
             "Cannot remove self from default team", status_code=403
