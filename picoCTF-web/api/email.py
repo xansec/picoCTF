@@ -150,8 +150,9 @@ def send_user_verification_email(username):
             competition_url = settings["competition_url"],
             admin_email = settings["admin_email"])
 
-        subject = "{} Parent Account Verification".format(
-            settings["competition_name"])
+        subject = "{} Parent Account Verification for {}".format(
+            settings["competition_name"],
+            user['email'])
         recipients = [user['demo']['parentemail']]
         parent_email = Message(
             body=body, recipients=recipients, subject=subject)
