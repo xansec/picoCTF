@@ -246,6 +246,9 @@ const TeamManagementForm = React.createClass({
   listMembers() {
     return this.state.team["members"].map((member, i) => (
       <li key={i} style={{marginBottom: '10px'}}>
+        {member.uid == this.state.team.creator && (
+          <span className="label label-default" style={{marginRight: '5px'}}>Captain</span>
+          )}
         {member.username} (
         <span className="capitalize">
           {member.usertype} - {member.country}) {
