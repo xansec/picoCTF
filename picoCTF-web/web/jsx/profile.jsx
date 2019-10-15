@@ -249,12 +249,12 @@ const TeamManagementForm = React.createClass({
         {member.username} (
         <span className="capitalize">
           {member.usertype} - {member.country}) {
-            member.can_leave && (
+            (this.state.user.uid === this.state.team['creator'] || member.uid == this.state.user.uid) && member.can_leave && (
               <Button
                 style={{marginLeft: '5px'}}
                 data-uid={member.uid}
                 onClick={this.removeMember}
-              >{member.uid === this.state.user.uid ? "Leave Team" : "Kick Member"}</Button>
+              >{member.uid === this.state.user.uid ? (this.state.user.uid === this.state.team['creator'] ? "Delete Team" : "Leave Team") : "Kick Member"}</Button>
             )}
         </span>
       </li>
@@ -299,7 +299,11 @@ const TeamManagementForm = React.createClass({
               <strong>Members</strong> ({this.state.team.members.length}/
               {this.state.team.max_team_size}):
             </p>
-            <p><i>Members who have contributed to the team's score cannot be removed.</i></p>
+            {this.state.user.uid === this.state.team.creator &&
+              (<div>
+                <p><i>Members who have submitted flags cannot be removed.</i></p>
+                <p><i>All other members must be removed in order to delete the team.</i></p>
+              </div>)}
             <ul>{this.listMembers()}</ul>
             <hr />
             <form onSubmit={this.onTeamPasswordChange}>

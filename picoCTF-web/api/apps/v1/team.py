@@ -11,8 +11,9 @@ from .schemas import (join_group_req, score_progression_req, team_change_req,
 ns = Namespace('team', description="Information about the current user's team")
 
 TEAMDATA_FILTER = ['achievements', 'affiliation', 'allow_ineligible_members',
-                   'eligibilities', 'max_team_size', 'members', 'progression',
-                   'score', 'size', 'solved_problems', 'team_name', 'tid']
+                   'creator', 'eligibilities', 'max_team_size', 'members',
+                   'progression', 'score', 'size', 'solved_problems',
+                   'team_name', 'tid']
 
 TEAMMEMBER_FILTER = ['affiliation', 'can_leave', 'country', 'uid', 'username',
                      'usertype']

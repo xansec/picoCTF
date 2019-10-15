@@ -505,20 +505,35 @@ def remove_member(tid, uid):
     Eliminates custom team if no members remain.
     The member specified cannot have submitted any valid solutions.
     """
+    team = get_team(tid)
+    curr_user_uid = api.user.get_user()['uid']
+    curr_user_is_creator = (curr_user_uid == team['creator'])
+
+    if (not curr_user_is_creator and uid != curr_user_uid):
+        raise PicoException(
+            "Only the team creator can kick other members.", status_code=403
+        )
+
     if (uid not in get_team_uids(tid)):
         raise PicoException(
-            "Specified user is not a member of this team.",
-            status_code=404)
-    if (not api.user.can_leave_team(uid)):
-        raise PicoException(
-            "This team member has submitted at least one valid answer and " +
-            "cannot be removed.", status_code=403
-        )
-    if (api.user.get_user(uid=uid)['username'] ==
-            api.team.get_team(tid)['team_name']):
+            "Specified user is not a member of this team.", status_code=404)
+
+    if (api.user.get_user(uid=uid)['username'] == team['team_name']):
         raise PicoException(
             "Cannot remove self from default team", status_code=403
         )
+
+    if (not api.user.can_leave_team(uid)):
+        if (curr_user_is_creator and curr_user_uid == uid):
+            raise PicoException(
+                "Team creator must be the only remaining member in order " +
+                "to leave.", status_code=403
+            )
+        else:
+            raise PicoException(
+                "This team member has submitted a flag and can no longer " +
+                "be removed.", status_code=403
+            )
 
     self_team_tid = api.team.get_team(
         name=api.user.get_user(uid=uid)['username'])['tid']

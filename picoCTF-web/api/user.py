@@ -683,8 +683,10 @@ def rate_limit(limit=5, duration=60, by_ip=False, allow_bypass=False):
 
 def can_leave_team(uid):
     """Determine whether a user is eligible to leave their current team."""
-    current_tid = get_user(uid=uid)['tid']
-    current_team = api.team.get_team(current_tid)
+    current_user = get_user(uid=uid)
+    current_team = api.team.get_team(current_user['tid'])
+    if (current_team['team_name'] == current_user['username']):
+        return False
     if (current_team['creator'] == uid and current_team['size'] != 1):
         return False
     if (len(api.submissions.get_submissions(uid=uid)) > 0):
