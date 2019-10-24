@@ -487,6 +487,7 @@ def is_teacher_team(tid):
         return False
 
 
+@log_action
 def delete_team(tid):
     """Scrub all traces of a team."""
     db = api.db.get_conn()
@@ -498,6 +499,7 @@ def delete_team(tid):
     api.cache.invalidate(api.team.get_groups, tid)
 
 
+@log_action
 def remove_member(tid, uid):
     """
     Move the specified member back to their self-team.
