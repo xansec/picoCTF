@@ -513,7 +513,7 @@ def remove_member(tid, uid):
 
     if not curr_user_is_creator and uid != curr_user_uid:
         raise PicoException(
-            "Only the team creator can kick other members.", status_code=403
+            "Only the team captain can kick other members.", status_code=403
         )
 
     if uid not in get_team_uids(tid):
@@ -528,7 +528,7 @@ def remove_member(tid, uid):
     if not api.user.can_leave_team(uid):
         if curr_user_is_creator and curr_user_uid == uid:
             raise PicoException(
-                "Team creator must be the only remaining member in order " +
+                "Team captain must be the only remaining member in order " +
                 "to leave.", status_code=403
             )
         else:
