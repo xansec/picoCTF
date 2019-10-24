@@ -507,24 +507,24 @@ def remove_member(tid, uid):
     """
     team = get_team(tid)
     curr_user_uid = api.user.get_user()['uid']
-    curr_user_is_creator = (curr_user_uid == team['creator'])
+    curr_user_is_creator = (curr_user_uid == team.get('creator'))
 
-    if (not curr_user_is_creator and uid != curr_user_uid):
+    if not curr_user_is_creator and uid != curr_user_uid:
         raise PicoException(
             "Only the team creator can kick other members.", status_code=403
         )
 
-    if (uid not in get_team_uids(tid)):
+    if uid not in get_team_uids(tid):
         raise PicoException(
             "Specified user is not a member of this team.", status_code=404)
 
-    if (api.user.get_user(uid=uid)['username'] == team['team_name']):
+    if api.user.get_user(uid=uid)['username'] == team['team_name']:
         raise PicoException(
             "Cannot remove self from default team", status_code=403
         )
 
-    if (not api.user.can_leave_team(uid)):
-        if (curr_user_is_creator and curr_user_uid == uid):
+    if not api.user.can_leave_team(uid):
+        if curr_user_is_creator and curr_user_uid == uid:
             raise PicoException(
                 "Team creator must be the only remaining member in order " +
                 "to leave.", status_code=403
@@ -559,7 +559,7 @@ def remove_member(tid, uid):
 
     # Delete the custom team if no members remain
     remaining_team_size = db.teams.find_one({"tid": tid}, {"size": 1})['size']
-    if (remaining_team_size < 1):
+    if remaining_team_size < 1:
         delete_team(tid)
 
     # Copy any acquired group memberships back to the self-team
