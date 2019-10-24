@@ -232,14 +232,34 @@ const TeamManagementForm = React.createClass({
     }
   },
 
+  removeMember(e) {
+    e.preventDefault();
+    apiCall("DELETE", "/api/v1/team/members/" + e.target.dataset.uid)
+    .done(function() {
+      document.location.href = "/profile";
+    })
+    .fail(jqXHR =>
+      apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+    );
+  },
+
   listMembers() {
     return this.state.team["members"].map((member, i) => (
-      <li key={i}>
+      <li key={i} style={{marginBottom: '10px'}}>
+        {member.uid == this.state.team.creator && (
+          <span className="label label-default" style={{marginRight: '5px'}}>Captain</span>
+          )}
         {member.username} (
         <span className="capitalize">
-          {member.usertype} - {member.country}
+          {member.usertype} - {member.country}) {
+            (this.state.user.uid === this.state.team['creator'] || member.uid == this.state.user.uid) && member.can_leave && (
+              <Button
+                style={{marginLeft: '5px'}}
+                data-uid={member.uid}
+                onClick={this.removeMember}
+              >{member.uid === this.state.user.uid ? (this.state.user.uid === this.state.team['creator'] ? "Delete Team" : "Leave Team") : "Kick Member"}</Button>
+            )}
         </span>
-        )
       </li>
     ));
   },
@@ -282,6 +302,11 @@ const TeamManagementForm = React.createClass({
               <strong>Members</strong> ({this.state.team.members.length}/
               {this.state.team.max_team_size}):
             </p>
+            {this.state.user.uid === this.state.team.creator &&
+              (<div>
+                <p><i>Members who have submitted flags cannot be removed.</i></p>
+                <p><i>All other members must be removed in order to delete the team.</i></p>
+              </div>)}
             <ul>{this.listMembers()}</ul>
             <hr />
             <form onSubmit={this.onTeamPasswordChange}>

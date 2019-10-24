@@ -103,9 +103,6 @@ def get_groups(tid):
         # Replace the owner tid with the team's name
         group['owner'] = api.team.get_team(tid=group['owner'])['team_name']
 
-        # Add the group's average score - WHY???
-        # group['score'] = api.stats.get_group_average_score(gid=group['gid'])
-
     return associated_groups
 
 
@@ -273,6 +270,7 @@ def get_team_information(tid):
         "affiliation": member.get("affiliation", "None"),
         "country": member["country"],
         "usertype": member["usertype"],
+        "can_leave": api.user.can_leave_team(member['uid'])
     } for member in get_team_members(tid=tid, show_disabled=False)]
     team_info["progression"] = api.stats.get_score_progression(tid=tid)
     team_info["flagged_submissions"] = \
@@ -487,3 +485,85 @@ def is_teacher_team(tid):
         return True
     else:
         return False
+
+
+@log_action
+def delete_team(tid):
+    """Scrub all traces of a team."""
+    db = api.db.get_conn()
+    db.submissions.delete_many({"tid": tid})
+    db.problem_feedback.delete_many({"tid": tid})
+    db.teams.find_one_and_delete({"tid": tid})
+    for group in get_groups(tid):
+        api.group.leave_group(group['gid'], tid)
+    api.cache.invalidate(api.team.get_groups, tid)
+
+
+@log_action
+def remove_member(tid, uid):
+    """
+    Move the specified member back to their self-team.
+
+    Eliminates custom team if no members remain.
+    The member specified cannot have submitted any valid solutions.
+    """
+    team = get_team(tid)
+    curr_user_uid = api.user.get_user()['uid']
+    curr_user_is_creator = (curr_user_uid == team.get('creator'))
+
+    if not curr_user_is_creator and uid != curr_user_uid:
+        raise PicoException(
+            "Only the team captain can kick other members.", status_code=403
+        )
+
+    if uid not in get_team_uids(tid):
+        raise PicoException(
+            "Specified user is not a member of this team.", status_code=404)
+
+    if api.user.get_user(uid=uid)['username'] == team['team_name']:
+        raise PicoException(
+            "Cannot remove self from default team", status_code=403
+        )
+
+    if not api.user.can_leave_team(uid):
+        if curr_user_is_creator and curr_user_uid == uid:
+            raise PicoException(
+                "Team captain must be the only remaining member in order " +
+                "to leave.", status_code=403
+            )
+        else:
+            raise PicoException(
+                "This team member has submitted a flag and can no longer " +
+                "be removed.", status_code=403
+            )
+
+    self_team_tid = api.team.get_team(
+        name=api.user.get_user(uid=uid)['username'])['tid']
+
+    db = api.db.get_conn()
+    db.users.find_one_and_update({"uid": uid}, {
+        "$set": {
+            "tid": self_team_tid
+            }
+        })
+
+    db.teams.find_one_and_update(
+        {"tid": self_team_tid},
+        {"$inc": {
+            "size": 1
+        }})
+
+    db.teams.find_one_and_update(
+        {"tid": tid},
+        {"$inc": {
+            "size": -1
+        }})
+
+    # Delete the custom team if no members remain
+    remaining_team_size = db.teams.find_one({"tid": tid}, {"size": 1})['size']
+    if remaining_team_size < 1:
+        delete_team(tid)
+
+    # Copy any acquired group memberships back to the self-team
+    for group in get_groups(tid):
+        api.group.join_group(gid=group["gid"], tid=self_team_tid)
