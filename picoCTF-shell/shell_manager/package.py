@@ -155,7 +155,7 @@ def postinst_dependencies(problem, problem_path, debian_path, install_path):
             logger.debug("post install:\n%s", contents)
 
 
-def package_problem(problem_path, staging_path=None, out_path=None, ignore_files=[]):
+def package_problem(problem_path, staging_path=None, out_path=None, ignore_files=None):
     """
     Does the work of packaging a single problem.
 
@@ -170,6 +170,8 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
     Returns:
         str: the absolute path to the packaged problem
     """
+    if ignore_files is None:
+        ignore_files = []
     problem = get_problem(problem_path)
     logger.debug("Starting to package: '%s'.", problem["name"])
 

@@ -57,13 +57,15 @@ def get_origin_logger(exception):
         return logging.getLogger("origin_fallback")
 
 
-def create_app(config={}):
+def create_app(config=None):
     """
     Configure and create the Flask app via factory function.
 
     Args:
         config (optional): dict of app.config settings to override
     """
+    if config is None:
+        config = {}
     app = Flask(__name__, static_url_path="/")
     app.wsgi_app = ProxyFix(app.wsgi_app)
 

@@ -76,8 +76,10 @@ def generate_user():
     return user_fields
 
 
-def acquire_user(properties={}):
+def acquire_user(properties=None):
     """Retrieve an available test user with the specified properties."""
+    if properties is None:
+        properties = {}
     properties["in_use"] = {"$in": [False, None]}
     properties["deleted"] = {"$in": [False, None]}
     properties["rand_id"] = {"$near": [random.random(), 0]}
