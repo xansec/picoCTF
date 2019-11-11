@@ -80,14 +80,15 @@ setup(
     ],
     extras_require={
         "dev": [
+            "black",
+            "flake8",
+            "locustio",
+            "pydocstyle",
             "pytest",
             "pytest-cov",
             "pytest-mongo",
             "pytest-redis",
-            "flake8",
-            "pydocstyle",
-            "locustio",
         ]
     },
-    entry_points={"console_scripts": ["daemon_manager=daemon_manager:main",],},
+    entry_points={"console_scripts": ["daemon_manager=daemon_manager:main"]},
 )
