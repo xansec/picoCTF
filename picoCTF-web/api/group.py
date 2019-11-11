@@ -295,7 +295,5 @@ def batch_register(students, teacher, gid):
             )
         except PicoException:
             return created_users
-        created_users.append(
-            {"uid": uid, "username": username, "password": password,}
-        )
+        created_users.append({"uid": uid, "username": username, "password": password})
     return created_users

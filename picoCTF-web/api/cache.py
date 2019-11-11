@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 __redis = {
     "walrus": None,
     "cache": None,
-    "zsets": {"scores": None,},
+    "zsets": {"scores": None},
 }
 
 

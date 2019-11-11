@@ -116,7 +116,7 @@ class ShellServer(Resource):
         sid = api.shell_servers.remove_server(server_id)
         if sid is None:
             raise PicoException("Shell server not found", status_code=404)
-        return jsonify({"success": True,})
+        return jsonify({"success": True})
 
 
 @ns.response(200, "Success")

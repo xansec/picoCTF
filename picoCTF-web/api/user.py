@@ -420,7 +420,7 @@ def disable_account(uid, disable_reason=None):
     )
 
     # Drop empty team from groups
-    former_team = db.teams.find_one({"tid": former_tid,})
+    former_team = db.teams.find_one({"tid": former_tid})
     if former_team["size"] == 0:
         groups = api.team.get_groups(tid=former_tid)
         for group in groups:

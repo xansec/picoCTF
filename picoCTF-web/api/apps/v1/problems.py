@@ -164,7 +164,7 @@ class ProblemList(Resource):
                 }
             )
 
-        return jsonify({"success": True,})
+        return jsonify({"success": True})
 
 
 @require_login

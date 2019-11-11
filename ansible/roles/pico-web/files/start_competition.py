@@ -17,7 +17,7 @@ def main():
         api.scoreboards.add_scoreboard("Global", eligibility_conditions={}, priority=99)
         api.scoreboards.add_scoreboard(
             "US Students",
-            eligibility_conditions={"country": "US", "usertype": "student",},
+            eligibility_conditions={"country": "US", "usertype": "student"},
         )
 
         settings = dict()
