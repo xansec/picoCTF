@@ -5,19 +5,22 @@ from voluptuous import Required, Schema
 import api
 from api import check, validate
 
-bundle_schema = Schema({
-    Required("author"):
-    check(("The bundle author must be a string.", [str])),
-    Required("name"):
-    check(("The bundle name must be a string.", [str])),
-    Required("description"):
-    check(("The bundle description must be a string.", [str])),
-    "dependencies":
-    check(("The bundle dependencies must be a dict.", [dict])),
-    "dependencies_enabled":
-    check(("The dependencies enabled state must be a bool.",
-           [lambda x: type(x) == bool])),
-})
+bundle_schema = Schema(
+    {
+        Required("author"): check(("The bundle author must be a string.", [str])),
+        Required("name"): check(("The bundle name must be a string.", [str])),
+        Required("description"): check(
+            ("The bundle description must be a string.", [str])
+        ),
+        "dependencies": check(("The bundle dependencies must be a dict.", [dict])),
+        "dependencies_enabled": check(
+            (
+                "The dependencies enabled state must be a bool.",
+                [lambda x: type(x) == bool],
+            )
+        ),
+    }
+)
 
 
 def get_bundle(bid):
@@ -32,7 +35,7 @@ def get_bundle(bid):
 
     """
     db = api.db.get_conn()
-    return db.bundles.find_one({"bid": bid}, {'_id': 0})
+    return db.bundles.find_one({"bid": bid}, {"_id": 0})
 
 
 def get_all_bundles():
@@ -59,12 +62,9 @@ def upsert_bundle(bundle):
     bid = api.common.hash("{}-{}".format(bundle["name"], bundle["author"]))
 
     # If the bundle already exists, update it instead
-    existing = db.bundles.find_one({'bid': bid}, {'_id': 0})
+    existing = db.bundles.find_one({"bid": bid}, {"_id": 0})
     if existing is not None:
-        db.bundles.find_one_and_update(
-            {'bid': bid},
-            {'$set': bundle}
-        )
+        db.bundles.find_one_and_update({"bid": bid}, {"$set": bundle})
         return bid
 
     bundle["bid"] = bid
@@ -89,9 +89,8 @@ def set_bundle_dependencies_enabled(bid, enabled):
     """
     db = api.db.get_conn()
     success = db.bundles.find_one_and_update(
-        {'bid': bid}, {'$set': {
-            'dependencies_enabled': enabled
-        }})
+        {"bid": bid}, {"$set": {"dependencies_enabled": enabled}}
+    )
     if not success:
         return None
     else:

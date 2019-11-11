@@ -3,7 +3,7 @@ def process(api, data):
     pid_map = api.stats.get_pid_categories()
     category = pid_map[pid]
     category_pids = api.stats.get_pids_by_category()[category]
-    solved_pids = api.problem.get_solved_pids(tid=data['tid'])
+    solved_pids = api.problem.get_solved_pids(tid=data["tid"])
 
     solve_count = 0
     for pid in category_pids:

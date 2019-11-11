@@ -1,5 +1,4 @@
-from hacksport.problem import (Compiled, ExecutableFile, File, ProtectedFile,
-                               Remote)
+from hacksport.problem import Compiled, ExecutableFile, File, ProtectedFile, Remote
 
 
 class Problem(Remote):

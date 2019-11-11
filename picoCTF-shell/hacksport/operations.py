@@ -16,6 +16,7 @@ class TimeoutError(Exception):
     """
     Exception dealing with executed commands that timeout.
     """
+
     pass
 
 

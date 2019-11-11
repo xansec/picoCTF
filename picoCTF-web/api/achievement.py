@@ -18,7 +18,7 @@ def get_achievement(aid):
         the achievement dict, or None if not found
     """
     db = api.db.get_conn()
-    return db.achievements.find_one({'aid': aid}, {"_id": 0})
+    return db.achievements.find_one({"aid": aid}, {"_id": 0})
 
 
 def get_all_achievements():
@@ -30,8 +30,7 @@ def get_all_achievements():
 
     """
     db = api.db.get_conn()
-    return list(
-        db.achievements.find({}, {"_id": 0}))
+    return list(db.achievements.find({}, {"_id": 0}))
 
 
 def get_earned_achievement_instances(tid=None, uid=None):
@@ -106,8 +105,7 @@ def get_processor(aid):
     """
     try:
         path = get_achievement(aid)["processor"]
-        base_path = api.config.get_settings(
-        )["achievements"]["processor_base_path"]
+        base_path = api.config.get_settings()["achievements"]["processor_base_path"]
         return SourceFileLoader(path[:-3], join(base_path, path)).load_module()
     except FileNotFoundError:
         raise PicoException("Achievement processor is offline.")
@@ -128,8 +126,8 @@ def process_achievement(aid, data):
     # the achievement processor
     if api.user.is_logged_in():
         curr_user = api.user.get_user()
-        data['uid'] = curr_user['uid']
-        data['tid'] = curr_user['tid']
+        data["uid"] = curr_user["uid"]
+        data["tid"] = curr_user["tid"]
 
     return get_processor(aid).process(api, data)
 
@@ -148,16 +146,18 @@ def insert_earned_achievement(aid, data):
     tid, uid = data.pop("tid"), data.pop("uid")
     name, description = data.pop("name"), data.pop("description")
 
-    db.earned_achievements.insert({
-        "aid": aid,
-        "tid": tid,
-        "uid": uid,
-        "data": data,
-        "name": name,
-        "description": description,
-        "timestamp": datetime.utcnow().timestamp(),
-        "seen": False
-    })
+    db.earned_achievements.insert(
+        {
+            "aid": aid,
+            "tid": tid,
+            "uid": uid,
+            "data": data,
+            "name": name,
+            "description": description,
+            "timestamp": datetime.utcnow().timestamp(),
+            "seen": False,
+        }
+    )
 
 
 def process_achievements(event, data):
@@ -175,10 +175,10 @@ def process_achievements(event, data):
         data["tid"] = api.user.get_user(uid=data["uid"])["tid"]
 
     eligible_achievements = [
-        achievement for achievement in get_all_achievements()
-        if achievement["aid"] not in [
-            earned_a['aid'] for earned_a in get_earned_achievements(
-                data['tid'])]
+        achievement
+        for achievement in get_all_achievements()
+        if achievement["aid"]
+        not in [earned_a["aid"] for earned_a in get_earned_achievements(data["tid"])]
         or achievement.get("multiple", False)
     ]
 
@@ -189,7 +189,7 @@ def process_achievements(event, data):
 
         info = {
             "name": achievement.get("name"),
-            "description": achievement.get("description")
+            "description": achievement.get("description"),
         }
 
         info.update(instance_info)
@@ -199,17 +199,17 @@ def process_achievements(event, data):
 
 
 def insert_achievement(
-        *ignore,
-        name,
-        score,
-        description,
-        processor,
-        hidden,
-        image,
-        smallimage,
-        disabled,
-        multiple,
-        ):
+    *ignore,
+    name,
+    score,
+    description,
+    processor,
+    hidden,
+    image,
+    smallimage,
+    disabled,
+    multiple,
+):
     """
     Insert an achievement object into the database.
 
@@ -228,17 +228,19 @@ def insert_achievement(
     """
     db = api.db.get_conn()
     aid = api.common.token()
-    db.achievements.insert_one({
-        'aid': aid,
-        'name': name,
-        'description': description,
-        'processor': processor,
-        'hidden': hidden,
-        'image': image,
-        'smallimage': smallimage,
-        'disabled': disabled,
-        'multiple': multiple
-    })
+    db.achievements.insert_one(
+        {
+            "aid": aid,
+            "name": name,
+            "description": description,
+            "processor": processor,
+            "hidden": hidden,
+            "image": image,
+            "smallimage": smallimage,
+            "disabled": disabled,
+            "multiple": multiple,
+        }
+    )
     return aid
 
 
@@ -256,8 +258,7 @@ def update_achievement(aid, updates):
 
     """
     db = api.db.get_conn()
-    success = db.achievements.find_one_and_update(
-        {'aid': aid}, {'$set': updates})
+    success = db.achievements.find_one_and_update({"aid": aid}, {"$set": updates})
     if not success:
         return None
     else:

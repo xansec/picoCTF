@@ -40,9 +40,8 @@ def set_token(key, token_name, token_value=None):
         token_value = api.common.hash(str(key) + api.common.token())
 
     db.tokens.update(
-        key, {'$set': {
-            get_token_path(token_name): token_value
-        }}, upsert=True)
+        key, {"$set": {get_token_path(token_name): token_value}}, upsert=True
+    )
 
     return token_value
 
@@ -57,7 +56,7 @@ def delete_token(key, token_name):
     """
     db = api.db.get_conn()
 
-    db.tokens.update(key, {'$unset': {get_token_path(token_name): ''}})
+    db.tokens.update(key, {"$unset": {get_token_path(token_name): ""}})
 
 
 def find_key(query, multi=False):
@@ -89,7 +88,6 @@ def find_key_by_token(token_name, token_value):
     """
     db = api.db.get_conn()
 
-    return db.tokens.find_one({get_token_path(token_name): token_value}, {
-                                  "_id": 0,
-                                  "tokens": 0
-                              })
+    return db.tokens.find_one(
+        {get_token_path(token_name): token_value}, {"_id": 0, "tokens": 0}
+    )

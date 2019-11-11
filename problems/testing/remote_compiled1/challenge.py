@@ -4,4 +4,5 @@ Problem = CompiledBinary(
     sources=["mybinary.c"],
     share_source=True,
     static_flag="this_is_the_flag",
-    remote=True)
+    remote=True,
+)

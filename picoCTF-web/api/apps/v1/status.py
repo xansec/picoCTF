@@ -6,10 +6,10 @@ from flask_restplus import Namespace, Resource
 
 import api
 
-ns = Namespace('status', description='Information about the platform status')
+ns = Namespace("status", description="Information about the platform status")
 
 
-@ns.route('')
+@ns.route("")
 class Status(Resource):
     """Get information about the platform status."""
 
@@ -25,9 +25,9 @@ class Status(Resource):
         from their respective endpoints.
         """
         settings = api.config.get_settings()
-        return jsonify({
-            "competition_active":
-                api.config.check_competition_active(),
-            "time":
-                int(datetime.datetime.utcnow().timestamp())
-        })
+        return jsonify(
+            {
+                "competition_active": api.config.check_competition_active(),
+                "time": int(datetime.datetime.utcnow().timestamp()),
+            }
+        )

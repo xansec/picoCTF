@@ -10,31 +10,32 @@ import pytest
 import api
 
 RATE_LIMIT_BYPASS_KEY = "test_bypass"
-TESTING_DB_NAME = 'ctf_test'
+TESTING_DB_NAME = "ctf_test"
 db = None
 
 
 def decode_response(res):
     """Parse a WebSuccess or WebError response."""
-    decoded_dict = json.loads(res.data.decode('utf-8'))
-    return (decoded_dict['status'], decoded_dict['message'],
-            decoded_dict['data'])
+    decoded_dict = json.loads(res.data.decode("utf-8"))
+    return (decoded_dict["status"], decoded_dict["message"], decoded_dict["data"])
 
 
 def get_csrf_token(res):
     """Extract the CSRF token from a response."""
     for header in res.headers:
-        m = re.search('token=(.+?);', header[1])
+        m = re.search("token=(.+?);", header[1])
         if m:
             return m.group(1)
-    raise RuntimeError('Could not find CSRF token in response headers: ' + str(res.headers))
+    raise RuntimeError(
+        "Could not find CSRF token in response headers: " + str(res.headers)
+    )
 
 
 def get_conn():
     """Get a connection to the testing database."""
     global db
     if db is None:
-        client = pymongo.MongoClient(host='127.0.0.1', port=27018)
+        client = pymongo.MongoClient(host="127.0.0.1", port=27018)
         db = client[TESTING_DB_NAME]
     return db
 
@@ -42,28 +43,28 @@ def get_conn():
 def clear_db():
     """Clear out the testing database."""
     db = get_conn()
-    db.command('dropDatabase')
+    db.command("dropDatabase")
 
 
 @pytest.fixture
 def client():
     """Create a test client of the Flask app."""
-    app = api.create_app({
-        'TESTING': True,
-        'MONGO_DB_NAME': TESTING_DB_NAME,
-        'MONGO_PORT': 27018,
-        'RATE_LIMIT_BYPASS_KEY': RATE_LIMIT_BYPASS_KEY
-    })
+    app = api.create_app(
+        {
+            "TESTING": True,
+            "MONGO_DB_NAME": TESTING_DB_NAME,
+            "MONGO_PORT": 27018,
+            "RATE_LIMIT_BYPASS_KEY": RATE_LIMIT_BYPASS_KEY,
+        }
+    )
     return app.test_client()
 
 
 def app():
     """Create an instance of the Flask app for testing."""
-    app = api.create_app({
-        'TESTING': True,
-        'MONGO_DB_NAME': TESTING_DB_NAME,
-        'MONGO_PORT': 27018
-    })
+    app = api.create_app(
+        {"TESTING": True, "MONGO_DB_NAME": TESTING_DB_NAME, "MONGO_PORT": 27018}
+    )
     return app
 
 
@@ -75,94 +76,80 @@ def cache(f, *args, **kwargs):
 def update_all_scoreboards():
     api.stats.get_all_team_scores()
     for scoreboard in api.scoreboards.get_all_scoreboards():
-        api.stats.get_all_team_scores(scoreboard_id=scoreboard['sid'])
+        api.stats.get_all_team_scores(scoreboard_id=scoreboard["sid"])
     for group in api.group.get_all_groups():
-        api.stats.get_group_scores(gid=group['gid'])
+        api.stats.get_group_scores(gid=group["gid"])
 
 
 ADMIN_DEMOGRAPHICS = {
-                        'username': 'adminuser',
-                        'password': 'adminpw',
-                        'firstname': 'Admin',
-                        'lastname': 'User',
-                        'email': 'admin@example.com',
-                        'country': 'US',
-                        'affiliation': 'Admin School',
-                        'usertype': 'other',
-                        'demo': {
-                            'parentemail': 'admin@example.com',
-                            'age': '18+'
-                        },
-                        'gid': None,
-                        'rid': None
-                      }
+    "username": "adminuser",
+    "password": "adminpw",
+    "firstname": "Admin",
+    "lastname": "User",
+    "email": "admin@example.com",
+    "country": "US",
+    "affiliation": "Admin School",
+    "usertype": "other",
+    "demo": {"parentemail": "admin@example.com", "age": "18+"},
+    "gid": None,
+    "rid": None,
+}
 
 TEACHER_DEMOGRAPHICS = {
-                        'username': 'teacheruser',
-                        'password': 'teacherpw',
-                        'firstname': 'Teacher',
-                        'lastname': 'User',
-                        'email': 'teacher@example.com',
-                        'country': 'US',
-                        'affiliation': 'Sample School',
-                        'usertype': 'teacher',
-                        'demo': {
-                            'parentemail': 'teacher@example.com',
-                            'age': '18+'
-                        },
-                        'gid': None,
-                        'rid': None
-                      }
+    "username": "teacheruser",
+    "password": "teacherpw",
+    "firstname": "Teacher",
+    "lastname": "User",
+    "email": "teacher@example.com",
+    "country": "US",
+    "affiliation": "Sample School",
+    "usertype": "teacher",
+    "demo": {"parentemail": "teacher@example.com", "age": "18+"},
+    "gid": None,
+    "rid": None,
+}
 
 STUDENT_DEMOGRAPHICS = {
-                        'username': 'studentuser',
-                        'password': 'studentpw',
-                        'firstname': 'Student',
-                        'lastname': 'User',
-                        'email': 'student@example.com',
-                        'country': 'US',
-                        'affiliation': 'Sample School',
-                        'usertype': 'student',
-                        'demo': {
-                            'parentemail': 'student@example.com',
-                            'age': '13-17'
-                        },
-                        'gid': None,
-                        'rid': None
-                      }
+    "username": "studentuser",
+    "password": "studentpw",
+    "firstname": "Student",
+    "lastname": "User",
+    "email": "student@example.com",
+    "country": "US",
+    "affiliation": "Sample School",
+    "usertype": "student",
+    "demo": {"parentemail": "student@example.com", "age": "13-17"},
+    "gid": None,
+    "rid": None,
+}
 
 STUDENT_2_DEMOGRAPHICS = {
-                        'username': 'studentuser2',
-                        'password': 'studentpw2',
-                        'firstname': 'Student',
-                        'lastname': 'Usertwo',
-                        'email': 'student2@example.com',
-                        'country': 'US',
-                        'affiliation': 'Sample School',
-                        'usertype': 'student',
-                        'demo': {
-                            'parentemail': 'student2@example.com',
-                            'age': '18+'
-                        },
-                        'gid': None,
-                        'rid': None
-                      }
+    "username": "studentuser2",
+    "password": "studentpw2",
+    "firstname": "Student",
+    "lastname": "Usertwo",
+    "email": "student2@example.com",
+    "country": "US",
+    "affiliation": "Sample School",
+    "usertype": "student",
+    "demo": {"parentemail": "student2@example.com", "age": "18+"},
+    "gid": None,
+    "rid": None,
+}
 
 OTHER_USER_DEMOGRAPHICS = {
-                        'username': 'otheruser',
-                        'password': 'otherpw',
-                        'firstname': 'Other',
-                        'lastname': 'User',
-                        'email': 'other@example.com',
-                        'country': 'US',
-                        'affiliation': 'Sample Organization',
-                        'usertype': 'other',
-                        'demo': {
-                            'age': '18+'
-                        },
-                        'gid': None,
-                        'rid': None
-                      }
+    "username": "otheruser",
+    "password": "otherpw",
+    "firstname": "Other",
+    "lastname": "User",
+    "email": "other@example.com",
+    "country": "US",
+    "affiliation": "Sample Organization",
+    "usertype": "other",
+    "demo": {"age": "18+"},
+    "gid": None,
+    "rid": None,
+}
 
 
 def register_test_accounts():
@@ -180,7 +167,7 @@ def register_test_accounts():
         api.user.add_user(OTHER_USER_DEMOGRAPHICS)
 
 
-sample_shellserver_publish_output = r'''
+sample_shellserver_publish_output = r"""
 {
   "problems": [
     {
@@ -627,75 +614,143 @@ sample_shellserver_publish_output = r'''
   ],
   "sid": "728f36885f7c4686805593b9e4988c30"
 }
-'''
+"""
 
-problems_endpoint_response = [{'name': 'SQL Injection 1', 'category': 'Web Exploitation', 'description': 'There is a website running at http://192.168.2.3:17648. Try to see if you can login!', 'score': 40, 'hints': [], 'author': 'Tim Becker', 'organization': 'ForAllSecure', 'sanitized_name': 'sql-injection-1', 'disabled': False, 'pid': '4508167aa0b219fd9d131551d10aa58e', 'solves': 0, 'socket': None, 'server': '192.168.2.3', 'port': 17648, 'server_number': 1, 'solved': False, 'unlocked': True}, {'name': 'Buffer Overflow 1', 'category': 'Binary Exploitation', 'description': "Exploit the <a href='//192.168.2.3/static/bd08ee41f495f8bff378c13157d0f511/vuln'>Buffer Overflow</a> found here: /problems/buffer-overflow-1_0_bab40cd8ebd7845e1c4c2951c6f82e1f.", 'score': 50, 'hints': ['This is a classic buffer overflow with no modern protections.'], 'author': 'Tim Becker', 'organization': 'ForAllSecure', 'sanitized_name': 'buffer-overflow-1', 'disabled': False, 'pid': '1bef644c399e10a3f35fecdbf590bd0c', 'solves': 0, 'socket': None, 'server': '192.168.2.3', 'server_number': 1, 'solved': False, 'unlocked': True}, {'name': 'ECB 1', 'category': 'Cryptography', 'description': "There is a crypto service running at 192.168.2.3:21953. We were able to recover the source code, which you can download at <a href='//192.168.2.3/static/beb9874a05a1810fa8c9d79152ace1b3/ecb.py'>ecb.py</a>.", 'hints': [], 'score': 70, 'author': 'Tim Becker', 'organization': 'ForAllSecure', 'sanitized_name': 'ecb-1', 'disabled': False, 'pid': '7afda419da96e8471b49df9c2009e2ef', 'solves': 0, 'socket': None, 'server': '192.168.2.3', 'port': 21953, 'server_number': 1, 'solved': False, 'unlocked': True}]
+problems_endpoint_response = [
+    {
+        "name": "SQL Injection 1",
+        "category": "Web Exploitation",
+        "description": "There is a website running at http://192.168.2.3:17648. Try to see if you can login!",
+        "score": 40,
+        "hints": [],
+        "author": "Tim Becker",
+        "organization": "ForAllSecure",
+        "sanitized_name": "sql-injection-1",
+        "disabled": False,
+        "pid": "4508167aa0b219fd9d131551d10aa58e",
+        "solves": 0,
+        "socket": None,
+        "server": "192.168.2.3",
+        "port": 17648,
+        "server_number": 1,
+        "solved": False,
+        "unlocked": True,
+    },
+    {
+        "name": "Buffer Overflow 1",
+        "category": "Binary Exploitation",
+        "description": "Exploit the <a href='//192.168.2.3/static/bd08ee41f495f8bff378c13157d0f511/vuln'>Buffer Overflow</a> found here: /problems/buffer-overflow-1_0_bab40cd8ebd7845e1c4c2951c6f82e1f.",
+        "score": 50,
+        "hints": ["This is a classic buffer overflow with no modern protections."],
+        "author": "Tim Becker",
+        "organization": "ForAllSecure",
+        "sanitized_name": "buffer-overflow-1",
+        "disabled": False,
+        "pid": "1bef644c399e10a3f35fecdbf590bd0c",
+        "solves": 0,
+        "socket": None,
+        "server": "192.168.2.3",
+        "server_number": 1,
+        "solved": False,
+        "unlocked": True,
+    },
+    {
+        "name": "ECB 1",
+        "category": "Cryptography",
+        "description": "There is a crypto service running at 192.168.2.3:21953. We were able to recover the source code, which you can download at <a href='//192.168.2.3/static/beb9874a05a1810fa8c9d79152ace1b3/ecb.py'>ecb.py</a>.",
+        "hints": [],
+        "score": 70,
+        "author": "Tim Becker",
+        "organization": "ForAllSecure",
+        "sanitized_name": "ecb-1",
+        "disabled": False,
+        "pid": "7afda419da96e8471b49df9c2009e2ef",
+        "solves": 0,
+        "socket": None,
+        "server": "192.168.2.3",
+        "port": 21953,
+        "server_number": 1,
+        "solved": False,
+        "unlocked": True,
+    },
+]
 
 
 def load_sample_problems():
     """Load the sample problems and bundle into the DB."""
     with app().app_context():
         db = get_conn()
-        db.shell_servers.insert_one({
-            'sid': '728f36885f7c4686805593b9e4988c30',
-            'name': 'Test shell server',
-            'host': 'testing.picoctf.com',
-            'port': '22',
-            'username': 'username',
-            'password': 'password',
-            'protocol': 'HTTPS',
-            'server_number': 1
-        })
-        api.problem.load_published(
-            json.loads(sample_shellserver_publish_output)
+        db.shell_servers.insert_one(
+            {
+                "sid": "728f36885f7c4686805593b9e4988c30",
+                "name": "Test shell server",
+                "host": "testing.picoctf.com",
+                "port": "22",
+                "username": "username",
+                "password": "password",
+                "protocol": "HTTPS",
+                "server_number": 1,
+            }
         )
+        api.problem.load_published(json.loads(sample_shellserver_publish_output))
 
 
 def enable_sample_problems():
     """Enable any sample problems in the DB."""
     db = get_conn()
-    db.problems.update_many({}, {'$set': {'disabled': False}})
+    db.problems.update_many({}, {"$set": {"disabled": False}})
 
 
 def ensure_within_competition():
     """Adjust the competition times so that protected methods are callable."""
     db = get_conn()
-    db.settings.update_one({}, {'$set': {
-        'start_time': datetime.datetime.utcnow() - datetime.timedelta(1),
-        'end_time': datetime.datetime.utcnow() + datetime.timedelta(1),
-        }})
+    db.settings.update_one(
+        {},
+        {
+            "$set": {
+                "start_time": datetime.datetime.utcnow() - datetime.timedelta(1),
+                "end_time": datetime.datetime.utcnow() + datetime.timedelta(1),
+            }
+        },
+    )
 
 
 def ensure_before_competition():
     """Adjust the competition times so that @block_before_competition fails."""
     db = get_conn()
-    db.settings.update_one({}, {'$set': {
-        'start_time': datetime.datetime.utcnow() + datetime.timedelta(11),
-        'end_time': datetime.datetime.utcnow() + datetime.timedelta(10),
-        }})
+    db.settings.update_one(
+        {},
+        {
+            "$set": {
+                "start_time": datetime.datetime.utcnow() + datetime.timedelta(11),
+                "end_time": datetime.datetime.utcnow() + datetime.timedelta(10),
+            }
+        },
+    )
 
 
 def ensure_after_competition():
     """Adjust the competition times so that @block_before_competition fails."""
     db = get_conn()
-    db.settings.update_one({}, {'$set': {
-        'start_time': datetime.datetime.utcnow() - datetime.timedelta(11),
-        'end_time': datetime.datetime.utcnow() - datetime.timedelta(10),
-        }})
+    db.settings.update_one(
+        {},
+        {
+            "$set": {
+                "start_time": datetime.datetime.utcnow() - datetime.timedelta(11),
+                "end_time": datetime.datetime.utcnow() - datetime.timedelta(10),
+            }
+        },
+    )
 
 
 def get_problem_key(pid, team_name):
     """Get the flag for a given pid and team name."""
     db = get_conn()
-    assigned_instance_id = db.teams.find_one({
-        'team_name': team_name
-    })['instances'][pid]
-    problem_instances = db.problems.find_one({
-        'pid': pid
-    })['instances']
+    assigned_instance_id = db.teams.find_one({"team_name": team_name})["instances"][pid]
+    problem_instances = db.problems.find_one({"pid": pid})["instances"]
     assigned_instance = None
     for instance in problem_instances:
-        if instance['iid'] == assigned_instance_id:
+        if instance["iid"] == assigned_instance_id:
             assigned_instance = instance
             break
-    return assigned_instance['flag']
+    return assigned_instance["flag"]

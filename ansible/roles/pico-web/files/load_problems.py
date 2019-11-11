@@ -15,9 +15,8 @@ def main(sid):
         shell_server = api.shell_servers.get_server(sid)
         try:
             # Load problems and bundles from the shell server
-            output = api.shell_servers.get_publish_output(
-                shell_server['sid'])
-            output['sid'] = shell_server['sid']
+            output = api.shell_servers.get_publish_output(shell_server["sid"])
+            output["sid"] = shell_server["sid"]
             api.problem.load_published(output)
 
             # Set problems to disabled

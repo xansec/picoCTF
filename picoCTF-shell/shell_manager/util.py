@@ -13,8 +13,15 @@ from os.path import isdir, isfile, join
 from shutil import copy2, copytree
 from hashlib import md5
 
-from voluptuous import (All, ALLOW_EXTRA, Length, MultipleInvalid, Range,
-                        Required, Schema)
+from voluptuous import (
+    All,
+    ALLOW_EXTRA,
+    Length,
+    MultipleInvalid,
+    Range,
+    Required,
+    Schema,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +33,8 @@ logger = logging.getLogger(__name__)
 
 # Deployed problem instances, however, are separate to each server
 # (although the same problem instance will share its flag/port across servers).
-SHARED_ROOT = '/opt/hacksports/shared/'
-LOCAL_ROOT = '/opt/hacksports/local/'
+SHARED_ROOT = "/opt/hacksports/shared/"
+LOCAL_ROOT = "/opt/hacksports/local/"
 
 PROBLEM_ROOT = join(SHARED_ROOT, "sources")
 EXTRA_ROOT = join(SHARED_ROOT, "extra")
@@ -47,77 +54,67 @@ class ConfigDict(dict):
         self[attr] = value
 
 
-default_shared_config = ConfigDict({
-    # secret used for deterministic deployment
-    "deploy_secret":
-    "qwertyuiop",
+default_shared_config = ConfigDict(
+    {
+        # secret used for deterministic deployment
+        "deploy_secret": "qwertyuiop",
+        # the default username for files to be owned by
+        "default_user": "hacksports",
+        # the root of the web server running to serve static files
+        # make sure this is consistent with what config/shell.nginx
+        # specifies.
+        "web_root": "/usr/share/nginx/html/",
+        # the root of the problem directories for the instances
+        "problem_directory_root": "/problems/",
+        # "obfuscate" problem directory names
+        "obfuscate_problem_directories": False,
+        # list of port ranges that should not be assigned to any instances
+        # this bans the first ports 0-1024 and 4242 for wetty
+        "banned_ports": [{"start": 0, "end": 1024}, {"start": 4242, "end": 4242}],
+    }
+)
 
-    # the default username for files to be owned by
-    "default_user":
-    "hacksports",
+default_local_config = ConfigDict(
+    {
+        # the externally accessible address of this server
+        "hostname": "127.0.0.1",
+        # the url of the web server
+        "web_server": "http://127.0.0.1",
+    }
+)
 
-    # the root of the web server running to serve static files
-    # make sure this is consistent with what config/shell.nginx
-    # specifies.
-    "web_root":
-    "/usr/share/nginx/html/",
+problem_schema = Schema(
+    {
+        Required("author"): All(str, Length(min=1, max=32)),
+        Required("score"): All(int, Range(min=0)),
+        Required("name"): All(str, Length(min=1, max=32)),
+        Required("description"): str,
+        Required("category"): All(str, Length(min=1, max=32)),
+        Required("hints"): list,
+        Required("organization"): All(str, Length(min=1, max=32)),
+        Required("event"): All(str, Length(min=1, max=32)),
+        "unique_name": str,
+        "static_flag": bool,
+        "walkthrough": All(str, Length(min=1, max=512)),
+        "version": All(str, Length(min=1, max=8)),
+        "tags": list,
+        "pkg_description": All(str, Length(min=1, max=256)),
+        "pkg_name": All(str, Length(min=1, max=32)),
+        "pkg_dependencies": list,
+        "pip_requirements": list,
+        "pip_python_version": All(str, Length(min=1, max=3)),
+    },
+    extra=ALLOW_EXTRA,
+)
 
-    # the root of the problem directories for the instances
-    "problem_directory_root":
-    "/problems/",
-
-    # "obfuscate" problem directory names
-    "obfuscate_problem_directories":
-    False,
-
-    # list of port ranges that should not be assigned to any instances
-    # this bans the first ports 0-1024 and 4242 for wetty
-    "banned_ports": [{
-        "start": 0,
-        "end": 1024
-    }, {
-        "start": 4242,
-        "end": 4242
-    }]
-})
-
-default_local_config = ConfigDict({
-    # the externally accessible address of this server
-    "hostname":
-    "127.0.0.1",
-
-    # the url of the web server
-    "web_server":
-    "http://127.0.0.1",
-})
-
-problem_schema = Schema({
-    Required("author"): All(str, Length(min=1, max=32)),
-    Required("score"): All(int, Range(min=0)),
-    Required("name"): All(str, Length(min=1, max=32)),
-    Required("description"): str,
-    Required("category"): All(str, Length(min=1, max=32)),
-    Required("hints"): list,
-    Required("organization"): All(str, Length(min=1, max=32)),
-    Required("event"): All(str, Length(min=1, max=32)),
-    "unique_name": str,
-    "static_flag": bool,
-    "walkthrough": All(str, Length(min=1, max=512)),
-    "version": All(str, Length(min=1, max=8)),
-    "tags": list,
-    "pkg_description": All(str, Length(min=1, max=256)),
-    "pkg_name": All(str, Length(min=1, max=32)),
-    "pkg_dependencies": list,
-    "pip_requirements": list,
-    "pip_python_version": All(str, Length(min=1, max=3))
-}, extra=ALLOW_EXTRA)
-
-bundle_schema = Schema({
-    Required("author"): All(str, Length(min=1, max=32)),
-    Required("name"): All(str, Length(min=1, max=32)),
-    Required("description"): str,
-    "dependencies": dict
-})
+bundle_schema = Schema(
+    {
+        Required("author"): All(str, Length(min=1, max=32)),
+        Required("name"): All(str, Length(min=1, max=32)),
+        Required("description"): str,
+        "dependencies": dict,
+    }
+)
 
 shared_config_schema = Schema(
     {
@@ -126,9 +123,10 @@ shared_config_schema = Schema(
         Required("web_root"): str,
         Required("problem_directory_root"): str,
         Required("obfuscate_problem_directories"): bool,
-        Required("banned_ports"): list
+        Required("banned_ports"): list,
     },
-    extra=False)
+    extra=False,
+)
 
 local_config_schema = Schema(
     {
@@ -136,14 +134,15 @@ local_config_schema = Schema(
         Required("web_server"): str,
         Required("rate_limit_bypass_key"): str,
     },
-    extra=False)
+    extra=False,
+)
 
-port_range_schema = Schema({
-    Required("start"):
-    All(int, Range(min=0, max=65535)),
-    Required("end"):
-    All(int, Range(min=0, max=65535))
-})
+port_range_schema = Schema(
+    {
+        Required("start"): All(int, Range(min=0, max=65535)),
+        Required("end"): All(int, Range(min=0, max=65535)),
+    }
+)
 
 
 class FatalException(Exception):
@@ -163,8 +162,7 @@ def get_attributes(obj):
     """
 
     return {
-        key: getattr(obj, key) if not key.startswith("_") else None
-        for key in dir(obj)
+        key: getattr(obj, key) if not key.startswith("_") else None for key in dir(obj)
     }
 
 
@@ -240,7 +238,8 @@ def get_problem_root(problem_name, absolute=False):
     if absolute:
         return problem_root
 
-    return problem_root[len(sep):]
+    return problem_root[len(sep) :]
+
 
 def get_problem_root_hashed(problem, absolute=False):
     """
@@ -254,13 +253,16 @@ def get_problem_root_hashed(problem, absolute=False):
         The tentative installation location.
     """
 
-    problem_root = join(PROBLEM_ROOT, "{}-{}".format(sanitize_name(problem["name"]), get_pid_hash(problem, True)))
+    problem_root = join(
+        PROBLEM_ROOT,
+        "{}-{}".format(sanitize_name(problem["name"]), get_pid_hash(problem, True)),
+    )
 
     assert problem_root.startswith(sep)
     if absolute:
         return problem_root
 
-    return problem_root[len(sep):]
+    return problem_root[len(sep) :]
 
 
 def get_problem(problem_path):
@@ -281,7 +283,9 @@ def get_problem(problem_path):
         logger.critical(f"Error reading JSON file {json_path}")
         logger.critical(e)
         raise FatalException
-    problem['unique_name'] = "{}-{}".format(sanitize_name(problem["name"]), get_pid_hash(problem, True))
+    problem["unique_name"] = "{}-{}".format(
+        sanitize_name(problem["name"]), get_pid_hash(problem, True)
+    )
     try:
         problem_schema(problem)
     except MultipleInvalid as e:
@@ -310,7 +314,7 @@ def get_bundle_root(bundle_name, absolute=False):
     if absolute:
         return bundle_root
 
-    return bundle_root[len(sep):]
+    return bundle_root[len(sep) :]
 
 
 def get_bundle(bundle_path):
@@ -360,13 +364,13 @@ def verify_shared_config(shared_config_object):
             port_range_schema(port_range)
             assert port_range["start"] <= port_range["end"]
         except MultipleInvalid as e:
-            logger.critical(
-                "Error validating port range in shared config file!")
+            logger.critical("Error validating port range in shared config file!")
             logger.critical(e)
             raise FatalException
         except AssertionError:
-            logger.critical("Invalid port range: (%d -> %d)",
-                            port_range["start"], port_range["end"])
+            logger.critical(
+                "Invalid port range: (%d -> %d)", port_range["start"], port_range["end"]
+            )
             raise FatalException
 
 
@@ -401,7 +405,8 @@ def write_configuration_file(path, config_dict):
 
     with open(path, "w") as f:
         json_data = json.dumps(
-            config_dict, sort_keys=True, indent=4, separators=(',', ': '))
+            config_dict, sort_keys=True, indent=4, separators=(",", ": ")
+        )
         f.write(json_data)
 
 
@@ -463,8 +468,7 @@ def set_shared_config(config_dict):
         config_dict: the configuration dictionary
     """
     verify_shared_config(config_dict)
-    write_configuration_file(
-        join(SHARED_ROOT, "shared_config.json"), config_dict)
+    write_configuration_file(join(SHARED_ROOT, "shared_config.json"), config_dict)
 
 
 def set_local_config(config_dict):
@@ -475,8 +479,7 @@ def set_local_config(config_dict):
         config_dict: the configuration dictionary
     """
     verify_local_config(config_dict)
-    write_configuration_file(
-        join(LOCAL_ROOT, "local_config.json"), config_dict)
+    write_configuration_file(join(LOCAL_ROOT, "local_config.json"), config_dict)
 
 
 def get_pid_hash(problem, short=False):
@@ -498,7 +501,9 @@ def get_pid_hash(problem, short=False):
         logger.critical(e)
         raise FatalException
 
-    input = "{}-{}-{}-{}".format(problem["name"], problem["author"], problem["organization"], problem["event"])
+    input = "{}-{}-{}-{}".format(
+        problem["name"], problem["author"], problem["organization"], problem["event"]
+    )
     output = md5(input.encode("utf-8")).hexdigest()
 
     if short:
@@ -513,7 +518,8 @@ def acquire_lock():
     if isfile(lock_file):
         logger.error(
             "Another problem installation or deployment appears in progress. If you believe this to be an error, "
-            "run 'shell_manager clean'")
+            "run 'shell_manager clean'"
+        )
         raise FatalException
 
     with open(lock_file, "w") as f:

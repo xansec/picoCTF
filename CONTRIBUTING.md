@@ -95,10 +95,9 @@ off of a release as a stable, known good point.
 We are in the process of pushing for code quality. Going forward,
 please:
 
-- Follow the [PEP8 Standard](https://www.python.org/dev/peps/pep-0008/)
-  (including editor line length).
 - Strive to leave the code base in better shape than when you got it.
 - Add test cases when you add code.
+- Run [black code formatter](https://github.com/psf/black)
 - Run [Flake8](https://pypi.python.org/pypi/flake8)
 - Use underscores (e.g., `get_unique`), not camelCase (e.g., not `getUnique`).
 - In docstrings, follow

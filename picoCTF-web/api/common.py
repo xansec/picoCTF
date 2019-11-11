@@ -51,7 +51,7 @@ class PicoException(Exception):
     def to_dict(self):
         """Convert a PicoException to a dict for serialization."""
         rv = dict()
-        rv['message'] = self.message
+        rv["message"] = self.message
         return rv
 
 
@@ -66,6 +66,7 @@ def check(*callback_tuples):
         Returns a function callback for the Schema
 
     """
+
     def v(value):
         """
         Try to validate the value with the given callbacks.
@@ -87,6 +88,7 @@ def check(*callback_tuples):
                 except Exception:
                     raise PicoException(msg, 400)
         return value
+
     return v
 
 
@@ -118,4 +120,4 @@ def hash_password(password):
         Secure hash of password.
 
     """
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(8))
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(8))

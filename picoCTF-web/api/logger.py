@@ -35,12 +35,14 @@ class FunctionLoggingHandler(logging.StreamHandler):
 
         if type(result) == dict:
 
-            information.update({
-                "event": result["name"],
-                "args": result["args"],
-                "kwargs": result["kwargs"],
-                "time": datetime.now()
-            })
+            information.update(
+                {
+                    "event": result["name"],
+                    "args": result["args"],
+                    "kwargs": result["kwargs"],
+                    "time": datetime.now(),
+                }
+            )
 
             if "exception" in result:
                 information["success"] = False
@@ -63,13 +65,15 @@ class ExceptionHandler(logging.StreamHandler):
         """Store record into the db."""
         information = get_request_information()
 
-        information.update({
-            "id": api.common.token(),
-            "time": datetime.now(),
-            "message": record.msg,
-            "trace": traceback.format_exc(),
-            "visible": True
-        })
+        information.update(
+            {
+                "id": api.common.token(),
+                "time": datetime.now(),
+                "message": record.msg,
+                "trace": traceback.format_exc(),
+                "visible": True,
+            }
+        )
         api.db.get_conn().exceptions.insert(information)
 
 
@@ -91,19 +95,19 @@ def get_request_information():
             "platform": request.user_agent.platform,
             "browser": request.user_agent.browser,
             "browser_version": request.user_agent.version,
-            "user_agent": request.user_agent.string
+            "user_agent": request.user_agent.string,
         }
 
         if api.user.is_logged_in():
             user = api.user.get_user()
             team = api.user.get_team()
-            groups = api.team.get_groups(user['tid'])
+            groups = api.team.get_groups(user["tid"])
 
             information["user"] = {
                 "username": user["username"],
                 "email": user["email"],
                 "team_name": team["team_name"],
-                "groups": [group["name"] for group in groups]
+                "groups": [group["name"] for group in groups],
             }
     return information
 
@@ -115,15 +119,15 @@ def setup_logs(args):
     Args:
         args: dict containing the configuration options.
     """
-    flask_logging.create_logger = lambda app: logging.getLogger(
-        app.logger_name)
+    flask_logging.create_logger = lambda app: logging.getLogger(app.logger_name)
 
     logger = logging.getLogger("werkzeug")
     if logger:
         logger.setLevel(logging.ERROR)
 
-    level = [logging.WARNING, logging.INFO, logging.DEBUG][min(
-        args.get("verbose", 1), 2)]
+    level = [logging.WARNING, logging.INFO, logging.DEBUG][
+        min(args.get("verbose", 1), 2)
+    ]
 
     # Handle ERROR level with ExceptionHandler
     internal_error_log = ExceptionHandler()
@@ -139,6 +143,7 @@ def setup_logs(args):
 
 def log_action(f):
     """Log a function invocation and its result."""
+
     @wraps(f)
     def wrapper(*args, **kwargs):
         """Provide contextual information to the logger."""
@@ -156,6 +161,7 @@ def log_action(f):
         finally:
             log.info(log_information)
         return log_information["result"]
+
     return wrapper
 
 
@@ -171,8 +177,11 @@ def get_api_exceptions(result_limit=50):
 
     """
     db = api.db.get_conn()
-    results = db.exceptions.find({'visible': True}, {'_id': 0}).sort(
-        [("time", pymongo.DESCENDING)]).limit(result_limit)
+    results = (
+        db.exceptions.find({"visible": True}, {"_id": 0})
+        .sort([("time", pymongo.DESCENDING)])
+        .limit(result_limit)
+    )
     return list(results)
 
 
@@ -188,7 +197,7 @@ def get_api_exception(exception_id):
 
     """
     db = api.db.get_conn()
-    return db.exceptions.find_one({'id': exception_id}, {'_id': 0})
+    return db.exceptions.find_one({"id": exception_id}, {"_id": 0})
 
 
 def dismiss_api_exceptions(exception_id=None):
@@ -206,6 +215,6 @@ def dismiss_api_exceptions(exception_id=None):
     db = api.db.get_conn()
     match = {}
     if exception_id:
-        match['id'] = exception_id
-    res = db.exceptions.update_many(match, {'$set': {'visible': False}})
+        match["id"] = exception_id
+    res = db.exceptions.update_many(match, {"$set": {"visible": False}})
     return res.modified_count
