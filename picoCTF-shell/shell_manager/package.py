@@ -13,9 +13,16 @@ from os.path import isdir, isfile, join
 from shutil import copy, rmtree
 
 import spur
-from shell_manager.util import (FatalException, full_copy, get_problem,
-                                get_problem_root, move, sanitize_name,
-                                get_problem_root_hashed, get_pid_hash)
+from shell_manager.util import (
+    FatalException,
+    full_copy,
+    get_problem,
+    get_problem_root,
+    move,
+    sanitize_name,
+    get_problem_root_hashed,
+    get_pid_hash,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +43,9 @@ def problem_to_control(problem, debian_path):
 
     # a-z, digits 0-9, plus + and minus - signs, and periods
     package_name = problem.get("pkg_name", problem["name"])
-    sanitized_name = "{}-{}".format(sanitize_name(package_name), get_pid_hash(problem, True))
+    sanitized_name = "{}-{}".format(
+        sanitize_name(package_name), get_pid_hash(problem, True)
+    )
     control = deepcopy(DEB_DEFAULTS)
     control.update(
         **{
@@ -44,9 +53,11 @@ def problem_to_control(problem, debian_path):
             "Version": problem.get("version", "1.0-0"),
             "Architecture": problem.get("architecture", "all"),
             "Maintainer": problem["author"],
-            "Description": problem.get("pkg_description", problem[
-                "description"].replace('\n', ''))  # replace the new lines to prevent a crash
-        })
+            "Description": problem.get(
+                "pkg_description", problem["description"].replace("\n", "")
+            ),  # replace the new lines to prevent a crash
+        }
+    )
 
     if "pkg_dependencies" in problem:
         control["Depends"] = ", ".join(problem.get("pkg_dependencies", []))
@@ -80,11 +91,13 @@ def postinst_dependencies(problem, problem_path, debian_path, install_path):
     staging_requirements_path = join(install_path, "requirements.txt")
 
     deployed_requirements_path = join(
-        get_problem_root_hashed(problem, absolute=True), "__files",
-        "requirements.txt")
+        get_problem_root_hashed(problem, absolute=True), "__files", "requirements.txt"
+    )
     deployed_setup_path = join(
-        get_problem_root_hashed(problem, absolute=True), "__files",
-        "install_dependencies")
+        get_problem_root_hashed(problem, absolute=True),
+        "__files",
+        "install_dependencies",
+    )
 
     listed_requirements = problem.get("pip_requirements", [])
 
@@ -98,7 +111,8 @@ def postinst_dependencies(problem, problem_path, debian_path, install_path):
         if isfile(requirements_path):
             logger.error(
                 "Problem '%s' has both a pip_requirements field and requirements.txt.",
-                problem["name"])
+                problem["name"],
+            )
             raise FatalException
 
         with open(staging_requirements_path, "w") as f:
@@ -108,13 +122,17 @@ def postinst_dependencies(problem, problem_path, debian_path, install_path):
         copy(requirements_path, staging_requirements_path)
 
     if logger.getEffectiveLevel() <= logging.DEBUG and isfile(
-            staging_requirements_path):
+        staging_requirements_path
+    ):
         with open(staging_requirements_path, "r") as f:
             logger.debug("python requirements:\n%s", f.read())
 
     if isfile(staging_requirements_path):
-        postinst_template.append("python{ver} -m pip install -r {path}".format(
-            ver=pip_python_version, path=deployed_requirements_path))
+        postinst_template.append(
+            "python{ver} -m pip install -r {path}".format(
+                ver=pip_python_version, path=deployed_requirements_path
+            )
+        )
 
     if isfile(dependencies_path):
         copy(dependencies_path, join(install_path, "install_dependencies"))
@@ -175,8 +193,7 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
     # so we need to package the problems elsewhere
     chmod(paths["data"], 0o750)
     problem_to_control(problem, paths["debian"])
-    postinst_dependencies(problem, problem_path, paths["debian"],
-                          paths["install_data"])
+    postinst_dependencies(problem, problem_path, paths["debian"], paths["install_data"])
 
     # Package the staging directory as a .deb
     def format_deb_file_name(problem):
@@ -190,15 +207,13 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
             An acceptable file name for the problem.
         """
 
-        raw_package_name = "{}.deb".format(
-            sanitize_name(problem["unique_name"]))
+        raw_package_name = "{}.deb".format(sanitize_name(problem["unique_name"]))
         return raw_package_name
 
     deb_directory = out_path if out_path is not None else getcwd()
     deb_path = join(deb_directory, format_deb_file_name(problem))
     shell = spur.LocalShell()
-    result = shell.run(
-        ["fakeroot", "dpkg-deb", "--build", paths["staging"], deb_path])
+    result = shell.run(["fakeroot", "dpkg-deb", "--build", paths["staging"], deb_path])
     if result.return_code != 0:
         logger.error("Error building problem deb for '%s'.", problem["name"])
         logger.error(result.output)
@@ -207,8 +222,9 @@ def package_problem(problem_path, staging_path=None, out_path=None, ignore_files
         logger.debug("Problem '%s' packaged successfully.", problem["unique_name"])
 
     # Remove the staging directory
-    logger.debug("Cleaning up '%s' staging directory '%s'.", problem["name"],
-                 paths["staging"])
+    logger.debug(
+        "Cleaning up '%s' staging directory '%s'.", problem["name"], paths["staging"]
+    )
     rmtree(paths["staging"])
 
     return os.path.abspath(deb_path)

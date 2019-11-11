@@ -1,6 +1,6 @@
 def process(api, data):
     pid_map = api.stats.get_pid_categories()
-    solved_pids = api.problem.get_solved_pids(tid=data['tid'])
+    solved_pids = api.problem.get_solved_pids(tid=data["tid"])
     categories = set()
     for pid in solved_pids:
         categories.add(pid_map[pid])

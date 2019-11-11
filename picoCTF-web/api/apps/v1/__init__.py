@@ -23,12 +23,8 @@ from .teams import ns as teams_ns
 from .user import ns as user_ns
 from .users import ns as users_ns
 
-blueprint = Blueprint('v1_api', __name__)
-api = Api(
-    app=blueprint,
-    title='picoCTF API',
-    version='1.0',
-)
+blueprint = Blueprint("v1_api", __name__)
+api = Api(app=blueprint, title="picoCTF API", version="1.0",)
 
 for ns in [
     achievements_ns,
@@ -48,7 +44,7 @@ for ns in [
     teams_ns,
     user_ns,
     users_ns,
-        ]:
+]:
     api.add_namespace(ns)
 
 

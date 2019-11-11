@@ -46,25 +46,19 @@ def get_connection(sid):
             password=server["password"],
             port=server["port"],
             missing_host_key=spur.ssh.MissingHostKey.accept,
-            connect_timeout=2)
+            connect_timeout=2,
+        )
         shell.run(["echo", "connected"])
     except spur.ssh.ConnectionError:
         raise PicoException(
             "Cannot connect to {}@{}:{} with the specified password".format(
-                server["username"], server["host"], server["port"]))
+                server["username"], server["host"], server["port"]
+            )
+        )
     return shell
 
 
-def add_server(
-        *ignore,
-        name,
-        host,
-        port,
-        username,
-        password,
-        protocol,
-        server_number
-        ):
+def add_server(*ignore, name, host, port, username, password, protocol, server_number):
     """
     Add a shell server to the pool of servers.
 
@@ -89,22 +83,24 @@ def add_server(
     if not server_number:
         server_number = db.shell_servers.count() + 1
 
-    if db.shell_servers.find_one(
-            {'server_number': server_number}) is not None:
-        raise PicoException('Shell server with this server_number ' +
-                            'already exists.', status_code=409)
+    if db.shell_servers.find_one({"server_number": server_number}) is not None:
+        raise PicoException(
+            "Shell server with this server_number " + "already exists.", status_code=409
+        )
 
     sid = api.common.token()
-    db.shell_servers.insert_one({
-        'sid': sid,
-        'name': name,
-        'host': host,
-        'port': port,
-        'username': username,
-        'password': password,
-        'protocol': protocol,
-        'server_number': server_number
-    })
+    db.shell_servers.insert_one(
+        {
+            "sid": sid,
+            "name": name,
+            "host": host,
+            "port": port,
+            "username": username,
+            "password": password,
+            "protocol": protocol,
+            "server_number": server_number,
+        }
+    )
     return sid
 
 
@@ -128,16 +124,15 @@ def update_server(sid, updates):
     db = api.db.get_conn()
 
     # Make sure we are not duplicating a server number
-    if 'server_number' in updates and db.shell_servers.find_one(
-            {
-                'server_number': updates['server_number'],
-                'sid': {'$ne': sid}
-            }):
-        raise PicoException('Another shell server with this server_number ' +
-                            'already exists.', status_code=409)
+    if "server_number" in updates and db.shell_servers.find_one(
+        {"server_number": updates["server_number"], "sid": {"$ne": sid}}
+    ):
+        raise PicoException(
+            "Another shell server with this server_number " + "already exists.",
+            status_code=409,
+        )
 
-    success = db.shell_servers.find_one_and_update(
-        {'sid': sid}, {'$set': updates})
+    success = db.shell_servers.find_one_and_update({"sid": sid}, {"$set": updates})
     if not success:
         return None
     else:
@@ -167,9 +162,7 @@ def remove_server(sid):
 def get_all_servers():
     """Return the full list of shell servers."""
     db = api.db.get_conn()
-    return list(
-        db.shell_servers.find({}, {"_id": 0})
-    )
+    return list(db.shell_servers.find({}, {"_id": 0}))
 
 
 def get_assigned_server():
@@ -185,8 +178,9 @@ def get_assigned_server():
     servers = list(db.shell_servers.find(match, {"_id": 0}))
 
     if len(servers) == 0 and settings["shell_servers"]["enable_sharding"]:
-        raise PicoException("Your assigned shell server is currently down." +
-                            "Please contact an admin.")
+        raise PicoException(
+            "Your assigned shell server is currently down." + "Please contact an admin."
+        )
 
     return servers
 
@@ -212,8 +206,9 @@ def get_problem_status_from_server(sid):
 
     with shell:
         output = shell.run(
-            ["sudo", "/picoCTF-env/bin/shell_manager", "status",
-             "--json"], encoding="utf-8").output
+            ["sudo", "/picoCTF-env/bin/shell_manager", "status", "--json"],
+            encoding="utf-8",
+        ).output
     data = json.loads(output)
 
     all_online = True
@@ -245,16 +240,18 @@ def get_publish_output(sid):
     shell = get_connection(sid)
 
     with shell:
-        status = shell.run(["sudo", "/picoCTF-env/bin/shell_manager", "status"],
-                           allow_error=True, encoding="utf-8")
+        status = shell.run(
+            ["sudo", "/picoCTF-env/bin/shell_manager", "status"],
+            allow_error=True,
+            encoding="utf-8",
+        )
         if status.return_code != 0:
             raise PicoException(
                 "Not all instances online, check shell_manager.",
-                 data={'stderr': status.stderr_output}
+                data={"stderr": status.stderr_output},
             )
         result = shell.run(
-            ["sudo", "/picoCTF-env/bin/shell_manager", "publish"],
-            encoding="utf-8"
+            ["sudo", "/picoCTF-env/bin/shell_manager", "publish"], encoding="utf-8"
         )
     return json.loads(result.output)
 
@@ -291,17 +288,21 @@ def get_assigned_server_number(new_team=True, tid=None):
                     assigned_number = i + 1
                     break
         else:
-            assigned_number = 1 + len(steps) + (
-                team_count - steps[-1]) // settings["default_stepping"]
+            assigned_number = (
+                1
+                + len(steps)
+                + (team_count - steps[-1]) // settings["default_stepping"]
+            )
 
     else:
         assigned_number = team_count // settings["default_stepping"] + 1
 
     if settings["limit_added_range"]:
         max_number = list(
-            db.shell_servers.find({}, {
-                "server_number": 1
-            }).sort("server_number", -1).limit(1))[0]["server_number"]
+            db.shell_servers.find({}, {"server_number": 1})
+            .sort("server_number", -1)
+            .limit(1)
+        )[0]["server_number"]
         return min(max_number, assigned_number)
     else:
         return assigned_number
@@ -315,25 +316,18 @@ def reassign_teams(include_assigned=False):
         teams = api.team.get_all_teams()
     else:
         teams = list(
-            db.teams.find({"server_number": {
-                "$exists": False
-            }}, {
-                "_id": 0,
-                "tid": 1
-            }))
+            db.teams.find({"server_number": {"$exists": False}}, {"_id": 0, "tid": 1})
+        )
 
     for team in teams:
         old_server_number = team.get("server_number")
-        server_number = get_assigned_server_number(
-            new_team=False, tid=team["tid"])
+        server_number = get_assigned_server_number(new_team=False, tid=team["tid"])
         if old_server_number != server_number:
             db.teams.update(
-                {'tid': team["tid"]},
-                {'$set': {
-                    'server_number': server_number,
-                    'instances': {}
-                }})
+                {"tid": team["tid"]},
+                {"$set": {"server_number": server_number, "instances": {}}},
+            )
             # Re-assign instances
-            api.problem.get_unlocked_pids(team['tid'])
+            api.problem.get_unlocked_pids(team["tid"])
 
     return len(teams)

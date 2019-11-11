@@ -14,30 +14,22 @@ These are the default settings that will be loaded
 into the database if no settings are already loaded.
 """
 default_settings = {
-
     # Used for Mongo indexing purposes only
-    "settings_id" : 1,
-
+    "settings_id": 1,
     "enable_feedback": True,
-
     # TIME WINDOW
     "start_time": datetime.datetime.utcnow(),
     "end_time": datetime.datetime.utcnow(),
-
     # COMPETITION INFORMATION
     "competition_name": "CTF Placeholder",
     "competition_url": "http://192.168.2.2",
     "admin_email": "email@example.com",  # Contact given to parents
-
     # EMAIL WHITELIST
     "email_filter": [],
-
     # TEAMS
     "max_team_size": 5,
-
     # BATCH REGISTRATION
     "max_batch_registrations": 250,  # Maximum batch registrations / teacher
-
     # ACHIEVEMENTS
     "achievements": {
         "enable_achievements": True,
@@ -106,7 +98,6 @@ default_settings = {
         "voice",
         "wetty",
     ],
-
     # EMAIL (SMTP)
     "email": {
         "enable_email": False,
@@ -132,8 +123,8 @@ If you did request the password reset please follow the link below to set your n
 {competition_url}/reset#{token_value}
 
 Best of luck!
-The {competition_name} Team""", # noqa (79char)
-############ Readablity spacing ############
+The {competition_name} Team""",  # noqa (79char)
+        ############ Readablity spacing ############
         "verification_body": """
 Welcome to {competition_name}!
 
@@ -147,8 +138,8 @@ for {competition_name} then you can safely ignore this email.
 Verification link: {verification_link}
 
 Good luck and have fun!
-The {competition_name} Team""", # noqa (79char)
-############ Readablity spacing ############
+The {competition_name} Team""",  # noqa (79char)
+        ############ Readablity spacing ############
         "verification_parent_body": """
 Welcome to {competition_name}!
 
@@ -169,8 +160,8 @@ If you received this email in error because you did not authorize your child's
 registration for {competition_name}, you are not the child's parent or legal guardian,
 or your child is under age 13, please email us immediately at {admin_email}.
 
-The {competition_name} Team""", # noqa (79char)
-############ Readablity spacing ############
+The {competition_name} Team""",  # noqa (79char)
+        ############ Readablity spacing ############
         "invite_body": """
 You have been invited by the teacher of classroom {group_name} to compete in {competition_name}.
 You will need to follow the registration link below to finish the account creation process.
@@ -180,8 +171,8 @@ If you believe this to be a mistake you can safely ignore this email.
 Registration link: {registration_link}
 
 Good luck!
-The {competition_name} Team""", # noqa (79char)
-############ Readablity spacing ############
+The {competition_name} Team""",  # noqa (79char)
+        ############ Readablity spacing ############
         "deletion_notification_body": """
 This is a notification that the following {competition_name} account associated with this
 email address has been deleted:
@@ -192,9 +183,8 @@ Due to the following reason:
 
 \t{delete_reason}
 
-The {competition_name} Team""" # noqa (79char)
+The {competition_name} Team""",  # noqa (79char)
     },
-
     # CAPTCHA
     "captcha": {
         "enable_captcha": False,
@@ -202,7 +192,6 @@ The {competition_name} Team""" # noqa (79char)
         "reCAPTCHA_public_key": "",
         "reCAPTCHA_private_key": "",
     },
-
     # SHELL SERVERS
     "shell_servers": {
         "enable_sharding": False,
@@ -210,7 +199,6 @@ The {competition_name} Team""" # noqa (79char)
         "steps": [7500, 12500, 17500],
         "limit_added_range": False,
     },
-
     # MINIGAME TOKEN VALUES
     "minigame": {
         "secret": "foo",
@@ -224,10 +212,8 @@ The {competition_name} Team""" # noqa (79char)
             "c3": 20,
         },
     },
-
     # RATE LIMITING
     "enable_rate_limiting": True,
-
     # GROUP LIMIT
     "group_limit": 20,
 }
@@ -236,8 +222,7 @@ The {competition_name} Team""" # noqa (79char)
 def get_settings():
     """Retrieve settings from the database."""
     db = api.db.get_conn()
-    settings = db.settings.find_one(
-        {"settings_id": 1}, {"_id": 0, "settings_id": 0})
+    settings = db.settings.find_one({"settings_id": 1}, {"_id": 0, "settings_id": 0})
     if settings is None:
         db.settings.insert(default_settings)
         return default_settings
@@ -246,6 +231,7 @@ def get_settings():
 
 def merge_new_settings():
     """Add any new default_settings into the database."""
+
     def merge(a, b):
         """Merge new keys from nested dict a into b."""
         out = deepcopy(b)
@@ -255,10 +241,11 @@ def merge_new_settings():
             elif isinstance(v, dict):
                 out[k] = merge(v, out[k])
         return out
+
     db_settings = get_settings()
     merged = merge(default_settings, db_settings)
     db = api.db.get_conn()
-    db.settings.find_one_and_update({"settings_id": 1}, {'$set': merged})
+    db.settings.find_one_and_update({"settings_id": 1}, {"$set": merged})
 
 
 def change_settings(changes):
@@ -278,14 +265,15 @@ def change_settings(changes):
         for key in keys:
             if key not in real:
                 raise PicoException(
-                    "Cannot update setting for '{}'".format(key) +
-                    " (setting not found)",
-                    status_code=400)
+                    "Cannot update setting for '{}'".format(key)
+                    + " (setting not found)",
+                    status_code=400,
+                )
             elif type(real[key]) != type(changed[key]):  # noqa:E721
                 raise PicoException(
-                    "Cannot update setting for '{}'".format(key) +
-                    " (incorrect type)",
-                    status_code=400)
+                    "Cannot update setting for '{}'".format(key) + " (incorrect type)",
+                    status_code=400,
+                )
             elif isinstance(real[key], dict):
                 check_keys(real[key], changed[key])
                 # change the key so mongo $set works correctly
@@ -302,9 +290,11 @@ def check_competition_active():
     """Check whether the competition is currently running."""
     settings = get_settings()
 
-    return (settings["start_time"].timestamp() <
-            datetime.datetime.utcnow().timestamp() <
-            settings["end_time"].timestamp())
+    return (
+        settings["start_time"].timestamp()
+        < datetime.datetime.utcnow().timestamp()
+        < settings["end_time"].timestamp()
+    )
 
 
 def block_before_competition(f):
@@ -313,15 +303,18 @@ def block_before_competition(f):
 
     Admins can bypass.
     """
+
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if api.user.is_logged_in() and api.user.get_user().get('admin', False):
+        if api.user.is_logged_in() and api.user.get_user().get("admin", False):
             return f(*args, **kwargs)
-        elif (datetime.datetime.utcnow().timestamp()
-                <= get_settings()['start_time'].timestamp()):
-            raise PicoException(
-                'The competition has not begun yet!', 422)
+        elif (
+            datetime.datetime.utcnow().timestamp()
+            <= get_settings()["start_time"].timestamp()
+        ):
+            raise PicoException("The competition has not begun yet!", 422)
         return f(*args, **kwargs)
+
     return wrapper
 
 
@@ -331,13 +324,16 @@ def block_after_competition(f):
 
     Admins can bypass.
     """
+
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if api.user.is_logged_in() and api.user.get_user().get('admin', False):
+        if api.user.is_logged_in() and api.user.get_user().get("admin", False):
             return f(*args, **kwargs)
-        elif (datetime.datetime.utcnow().timestamp()
-                >= get_settings()['end_time'].timestamp()):
-            raise PicoException(
-                'The competition has ended!', 422)
+        elif (
+            datetime.datetime.utcnow().timestamp()
+            >= get_settings()["end_time"].timestamp()
+        ):
+            raise PicoException("The competition has ended!", 422)
         return f(*args, **kwargs)
+
     return wrapper

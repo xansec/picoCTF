@@ -9,67 +9,58 @@ import api
 from api import check, PicoException, validate
 from api.cache import memoize
 
-problem_schema = Schema({
-    Required("name"):
-    check(("The problem's display name must be a string.", [str])),
-    Required("sanitized_name"):
-    check(("The problems's sanitized name must be a string.", [str])),
-    Required("score"):
-    check(("Score must be a positive integer.", [int, Range(min=0)])),
-    Required("author"):
-    check(("Author must be a string.", [str])),
-    Required("category"):
-    check(("Category must be a string.", [str])),
-    Required("instances"):
-    check(("The instances must be a list.", [list])),
-    Required("hints"):
-    check(("Hints must be a list.", [list])),
-    Required("organization"):
-    check(("Organization must be string.", [str])),
-    Required("event"):
-    check(("Event must be string.", [str])),
-    Required("unique_name"):
-    check(("The problems's unique name must be a string.", [str])),
-    "static_flag":
-    check(("The static_flag must be a bool.", [lambda f: type(f) == bool])),
-    "walkthrough":
-    check(("The problem walkthrough must be a string.", [str])),
-    "description":
-    check(("The problem description must be a string.", [str])),
-    "version":
-    check(("A version must be a string.", [str])),
-    "tags":
-    check(("Tags must be described as a list.", [list])),
-    "pkg_architecture":
-    check(("Package architecture must be string.", [str])),
-    "pkg_description":
-    check(("Package description must be string.", [str])),
-    "pkg_name":
-    check(("Package name must be string.", [str])),
-    "pkg_dependencies":
-    check(("Package dependencies must be list.", [list])),
-    "pip_requirements":
-    check(("pip requirements must be list.", [list])),
-    "pip_python_version":
-    check(("Pip python version must be a string.", [str])),
-    "pid":
-    check(("You should not specify a pid for a problem.", [lambda _: False])),
-    "_id":
-    check(("Your problems should not already have _ids.", [lambda id: False]))
-},
-                        extra=ALLOW_EXTRA)
+problem_schema = Schema(
+    {
+        Required("name"): check(
+            ("The problem's display name must be a string.", [str])
+        ),
+        Required("sanitized_name"): check(
+            ("The problems's sanitized name must be a string.", [str])
+        ),
+        Required("score"): check(
+            ("Score must be a positive integer.", [int, Range(min=0)])
+        ),
+        Required("author"): check(("Author must be a string.", [str])),
+        Required("category"): check(("Category must be a string.", [str])),
+        Required("instances"): check(("The instances must be a list.", [list])),
+        Required("hints"): check(("Hints must be a list.", [list])),
+        Required("organization"): check(("Organization must be string.", [str])),
+        Required("event"): check(("Event must be string.", [str])),
+        Required("unique_name"): check(
+            ("The problems's unique name must be a string.", [str])
+        ),
+        "static_flag": check(
+            ("The static_flag must be a bool.", [lambda f: type(f) == bool])
+        ),
+        "walkthrough": check(("The problem walkthrough must be a string.", [str])),
+        "description": check(("The problem description must be a string.", [str])),
+        "version": check(("A version must be a string.", [str])),
+        "tags": check(("Tags must be described as a list.", [list])),
+        "pkg_architecture": check(("Package architecture must be string.", [str])),
+        "pkg_description": check(("Package description must be string.", [str])),
+        "pkg_name": check(("Package name must be string.", [str])),
+        "pkg_dependencies": check(("Package dependencies must be list.", [list])),
+        "pip_requirements": check(("pip requirements must be list.", [list])),
+        "pip_python_version": check(("Pip python version must be a string.", [str])),
+        "pid": check(
+            ("You should not specify a pid for a problem.", [lambda _: False])
+        ),
+        "_id": check(
+            ("Your problems should not already have _ids.", [lambda id: False])
+        ),
+    },
+    extra=ALLOW_EXTRA,
+)
 
-instance_schema = Schema({
-    Required("description"):
-    check(("The description must be a string.", [str])),
-    Required("flag"):
-    check(("The flag must be a string.", [str])),
-    "port":
-    check(("The port must be an int", [int])),
-    "server":
-    check(("The server must be a string.", [str]))
-},
-                         extra=True)
+instance_schema = Schema(
+    {
+        Required("description"): check(("The description must be a string.", [str])),
+        Required("flag"): check(("The flag must be a string.", [str])),
+        "port": check(("The port must be an int", [int])),
+        "server": check(("The server must be a string.", [str])),
+    },
+    extra=True,
+)
 
 
 def get_all_categories():
@@ -111,10 +102,11 @@ def upsert_problem(problem, sid):
     problem["disabled"] = True
 
     # Assign instance IDs and server numbers
-    server_number = api.shell_servers.get_server(sid)['server_number']
+    server_number = api.shell_servers.get_server(sid)["server_number"]
     for instance in problem["instances"]:
         instance["iid"] = api.common.hash(
-            str(instance["instance_number"]) + sid + problem["pid"])
+            str(instance["instance_number"]) + sid + problem["pid"]
+        )
         instance["sid"] = sid
         if server_number is not None:
             instance["server_number"] = server_number
@@ -125,25 +117,21 @@ def upsert_problem(problem, sid):
         problem["has_walkthrough"] = False
 
     # If the problem already exists, update it instead
-    existing = db.problems.find_one({'pid': problem['pid']}, {'_id': 0})
+    existing = db.problems.find_one({"pid": problem["pid"]}, {"_id": 0})
     if existing is not None:
         # Copy over instances on other shell servers from the existing version
-        other_server_instances = [i for i in existing['instances']
-                                  if i['sid'] != sid]
-        problem['instances'].extend(other_server_instances)
+        other_server_instances = [i for i in existing["instances"] if i["sid"] != sid]
+        problem["instances"].extend(other_server_instances)
 
         # Copy over the disabled state from the old problem, or
         # set to true if there are no instances
-        problem["disabled"] = (existing["disabled"] or
-                               len(problem["instances"]) == 0)
+        problem["disabled"] = existing["disabled"] or len(problem["instances"]) == 0
 
-        db.problems.find_one_and_update(
-            {'pid': problem['pid']},
-            {'$set': problem})
-        return problem['pid']
+        db.problems.find_one_and_update({"pid": problem["pid"]}, {"$set": problem})
+        return problem["pid"]
 
     db.problems.insert(problem)
-    return problem['pid']
+    return problem["pid"]
 
 
 def assign_instance_to_team(pid, tid=None, reassign=False):
@@ -168,22 +156,24 @@ def assign_instance_to_team(pid, tid=None, reassign=False):
     if settings["shell_servers"]["enable_sharding"]:
         available_instances = list(
             filter(
-                lambda i: i.get("server_number") == team.get(
-                    "server_number", 1), problem["instances"]))
+                lambda i: i.get("server_number") == team.get("server_number", 1),
+                problem["instances"],
+            )
+        )
 
     if pid in team["instances"] and not reassign:
         raise PicoException(
-            "Team with tid {} already has an instance of pid {}.".format(
-                tid, pid))
+            "Team with tid {} already has an instance of pid {}.".format(tid, pid)
+        )
 
     if len(available_instances) == 0:
         if settings["shell_servers"]["enable_sharding"]:
             raise PicoException(
-                "Your assigned shell server is currently down. " +
-                "Please contact an admin.")
+                "Your assigned shell server is currently down. "
+                + "Please contact an admin."
+            )
         else:
-            raise PicoException(
-                "Problem {} has no instances to assign.".format(pid))
+            raise PicoException("Problem {} has no instances to assign.".format(pid))
 
     instance_number = randint(0, len(available_instances) - 1)
     iid = available_instances[instance_number]["iid"]
@@ -239,7 +229,7 @@ def filter_problem_instances(problem, tid):
         The filtered problem dict
 
     """
-    instance = get_instance_data(problem['pid'], tid)
+    instance = get_instance_data(problem["pid"], tid)
     problem.pop("instances")
     problem.update(instance)
     return problem
@@ -258,10 +248,10 @@ def get_problem(pid, projection=None):
 
     """
     db = api.db.get_conn()
-    problem_filter = {'_id': 0}
+    problem_filter = {"_id": 0}
     if projection is not None:
         problem_filter.update(projection)
-    return db.problems.find_one({'pid': pid}, problem_filter)
+    return db.problems.find_one({"pid": pid}, problem_filter)
 
 
 def get_all_problems(category=None, show_disabled=False):
@@ -280,23 +270,23 @@ def get_all_problems(category=None, show_disabled=False):
 
     match = {}
     if category is not None:
-        match.update({'category': category})
+        match.update({"category": category})
 
     if not show_disabled:
-        match.update({'disabled': False})
+        match.update({"disabled": False})
 
     # Return all except objectID
     projection = {"_id": 0}
 
     return list(
-        db.problems.find(match, projection).sort([('score', pymongo.ASCENDING),
-                                                  ('name',
-                                                   pymongo.ASCENDING)]))
+        db.problems.find(match, projection).sort(
+            [("score", pymongo.ASCENDING), ("name", pymongo.ASCENDING)]
+        )
+    )
 
 
-@memoize(timeout=3*24*60*60)
-def get_solved_problems(tid=None, uid=None, category=None,
-                        show_disabled=False):
+@memoize(timeout=3 * 24 * 60 * 60)
+def get_solved_problems(tid=None, uid=None, category=None, show_disabled=False):
     """
     Get the solved problems for a given team or user.
 
@@ -316,11 +306,13 @@ def get_solved_problems(tid=None, uid=None, category=None,
     members = api.team.get_team_uids(tid=team["tid"])
 
     submissions = api.submissions.get_submissions(
-        tid=tid, uid=uid, category=category, correctness=True)
+        tid=tid, uid=uid, category=category, correctness=True
+    )
 
     for uid in members:
         submissions += api.submissions.get_submissions(
-            uid=uid, category=category, correctness=True)
+            uid=uid, category=category, correctness=True
+        )
 
     pid_times = {}
     result = []
@@ -330,26 +322,26 @@ def get_solved_problems(tid=None, uid=None, category=None,
     for submission in submissions:
         pid = submission["pid"]
         if pid not in pid_times:
-            problem = get_problem(pid, {
-                "pid": 1,
-                "unique_name": 1,
-                "score": 1,
-                "name": 1,
-                "disabled": 1,
-                "category": 1
-            })
+            problem = get_problem(
+                pid,
+                {
+                    "pid": 1,
+                    "unique_name": 1,
+                    "score": 1,
+                    "name": 1,
+                    "disabled": 1,
+                    "category": 1,
+                },
+            )
             if problem is not None:
-                problem.update({
-                    "solved": True,
-                    "unlocked": True
-                })
+                problem.update({"solved": True, "unlocked": True})
                 if not problem["disabled"] or show_disabled:
                     result.append(problem)
-                pid_times[pid] = submission['timestamp']
+                pid_times[pid] = submission["timestamp"]
         else:
             pid_times[pid] = min(submission["timestamp"], pid_times.get(pid))
     for p in result:
-        p['solve_time'] = pid_times[p['pid']]
+        p["solve_time"] = pid_times[p["pid"]]
     return result
 
 
@@ -384,18 +376,17 @@ def is_problem_unlocked(problem, solved):
     for bundle in api.bundles.get_all_bundles():
         if "dependencies" in bundle and bundle["dependencies_enabled"]:
             if problem["unique_name"] in bundle["dependencies"]:
-                dependency = bundle["dependencies"][
-                    problem["unique_name"]]
+                dependency = bundle["dependencies"][problem["unique_name"]]
                 weightsum = sum(
-                    dependency['weightmap'].get(p['unique_name'], 0)
-                    for p in solved)
-                if weightsum < dependency['threshold']:
+                    dependency["weightmap"].get(p["unique_name"], 0) for p in solved
+                )
+                if weightsum < dependency["threshold"]:
                     unlocked = False
 
     return unlocked
 
 
-@memoize(timeout=3*24*60*60)
+@memoize(timeout=3 * 24 * 60 * 60)
 def get_unlocked_pids(tid):
     """
     Get the unlocked pids for a given team.
@@ -415,7 +406,7 @@ def get_unlocked_pids(tid):
 
     unlocked = []
     db = api.db.get_conn()
-    all_problems = list(db.problems.find({}, {'unique_name': 1, 'pid': 1}))
+    all_problems = list(db.problems.find({}, {"unique_name": 1, "pid": 1}))
     for problem in all_problems:
         if is_problem_unlocked(problem, solved):
             unlocked.append(problem["pid"])
@@ -481,8 +472,10 @@ def sanitize_problem_data(data):
     def pop_keys(problem_dict):
         for key in SANITATION_KEYS:
             if key == "walkthrough":
-                if (problem_dict.get("has_walkthrough", False) and
-                        problem_dict["pid"] not in unlocked_walkthroughs):
+                if (
+                    problem_dict.get("has_walkthrough", False)
+                    and problem_dict["pid"] not in unlocked_walkthroughs
+                ):
                     problem_dict["walkthrough"] = ""
             else:
                 problem_dict.pop(key, None)
@@ -510,7 +503,8 @@ def set_problem_availability(pid, disabled):
     """
     db = api.db.get_conn()
     success = db.problems.find_one_and_update(
-        {'pid': pid}, {'$set': {'disabled': disabled}})
+        {"pid": pid}, {"$set": {"disabled": disabled}}
+    )
     if not success:
         return None
     else:
@@ -528,8 +522,9 @@ def get_unlocked_walkthroughs(uid):
     Args:
         uid: user id to look up
     """
-    return get_solved_pids(uid=uid) + \
-        api.user.get_user(uid=uid).get("unlocked_walkthroughs", [])
+    return get_solved_pids(uid=uid) + api.user.get_user(uid=uid).get(
+        "unlocked_walkthroughs", []
+    )
 
 
 def unlock_walkthrough(uid, pid, cost):
@@ -546,19 +541,7 @@ def unlock_walkthrough(uid, pid, cost):
         cost: token cost of unlock
     """
     db = api.db.get_conn()
-    db.users.update_one({
-        'uid': uid,
-        'tokens': {
-            '$gte': cost
-        },
-        'unlocked_walkthroughs': {
-            '$ne': pid
-        }
-    }, {
-        '$addToSet': {
-            'unlocked_walkthroughs': pid
-        },
-        '$inc': {
-            'tokens': (cost * -1)
-        }
-    })
+    db.users.update_one(
+        {"uid": uid, "tokens": {"$gte": cost}, "unlocked_walkthroughs": {"$ne": pid}},
+        {"$addToSet": {"unlocked_walkthroughs": pid}, "$inc": {"tokens": (cost * -1)}},
+    )

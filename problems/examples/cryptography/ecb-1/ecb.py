@@ -19,7 +19,7 @@ def encrypt():
 
 
 # flush output immediately
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w')
+sys.stdout = os.fdopen(sys.stdout.fileno(), "w")
 print(welcome)
 print("KEY: " + key)
 print("MESSAGE: " + encrypt().decode())
