@@ -7,23 +7,33 @@ import api
 from api import cache, check, log_action, PicoException
 from api.cache import memoize
 
-PROBLEMSOLVED_FILTER = ['category', 'name', 'score', 'solve_time']
+PROBLEMSOLVED_FILTER = ["category", "name", "score", "solve_time"]
 
-new_team_schema = Schema({
-    Required("team_name"):
-    check(
-        ("The team name must be between 3 and 40 characters.",
-         [str, Length(min=3, max=40)]),
-        ("This team name conflicts with an existing user name.",
-         [lambda name: api.user.get_user(name=name) is None]),
-        ("A team with that name already exists.",
-         [lambda name: api.team.get_team(name=name) is None]),
-    ),
-    Required("team_password"):
-    check(("Passwords must be between 3 and 20 characters.",
-           [str, Length(min=3, max=20)]))
-},
-                         extra=True)
+new_team_schema = Schema(
+    {
+        Required("team_name"): check(
+            (
+                "The team name must be between 3 and 40 characters.",
+                [str, Length(min=3, max=40)],
+            ),
+            (
+                "This team name conflicts with an existing user name.",
+                [lambda name: api.user.get_user(name=name) is None],
+            ),
+            (
+                "A team with that name already exists.",
+                [lambda name: api.team.get_team(name=name) is None],
+            ),
+        ),
+        Required("team_password"): check(
+            (
+                "Passwords must be between 3 and 20 characters.",
+                [str, Length(min=3, max=20)],
+            )
+        ),
+    },
+    extra=True,
+)
 
 
 def get_team(tid=None, name=None):
@@ -40,9 +50,9 @@ def get_team(tid=None, name=None):
 
     match = {}
     if tid is not None:
-        match.update({'tid': tid})
+        match.update({"tid": tid})
     elif name is not None:
-        match.update({'team_name': name})
+        match.update({"team_name": name})
     elif api.user.is_logged_in():
         match.update({"tid": api.user.get_user()["tid"]})
     else:
@@ -66,14 +76,13 @@ def update_team(tid, updates):
     """
     db = api.db.get_conn()
     if len(updates) > 0:
-        success = db.teams.find_one_and_update(
-            {'tid': tid}, {'$set': updates})
+        success = db.teams.find_one_and_update({"tid": tid}, {"$set": updates})
         if not success:
             return None
     return tid
 
 
-@memoize(timeout=5*24*60*60)
+@memoize(timeout=5 * 24 * 60 * 60)
 def get_groups(tid):
     """
     Get the group membership for a team.
@@ -85,23 +94,16 @@ def get_groups(tid):
     """
     # Get all groups associated with the given team
     db = api.db.get_conn()
-    associated_groups = list(db.groups.find(
-        {"$or": [
-            {'owner': tid},
-            {"teachers": tid},
-            {"members": tid}]},
-        {
-            'name': 1,
-            'gid': 1,
-            'owner': 1,
-            'teachers': 1,
-            'members': 1,
-            '_id': 0
-        }))
+    associated_groups = list(
+        db.groups.find(
+            {"$or": [{"owner": tid}, {"teachers": tid}, {"members": tid}]},
+            {"name": 1, "gid": 1, "owner": 1, "teachers": 1, "members": 1, "_id": 0},
+        )
+    )
 
     for group in associated_groups:
         # Replace the owner tid with the team's name
-        group['owner'] = api.team.get_team(tid=group['owner'])['team_name']
+        group["owner"] = api.team.get_team(tid=group["owner"])["team_name"]
 
     return associated_groups
 
@@ -131,31 +133,32 @@ def create_and_join_new_team(team_name, team_password, user):
     """
     # Ensure name does not conflict with existing user or team
     db = api.db.get_conn()
-    if db.users.find_one({
-        'username': team_name
-    }, collation=Collation(locale="en", strength=CollationStrength.PRIMARY)):
-        raise PicoException(
-            'There is already a user with this name.', 409)
-    if db.teams.find_one({
-        'team_name': team_name
-    }, collation=Collation(locale="en", strength=CollationStrength.PRIMARY)):
-        raise PicoException(
-            'There is already a team with this name.', 409)
+    if db.users.find_one(
+        {"username": team_name},
+        collation=Collation(locale="en", strength=CollationStrength.PRIMARY),
+    ):
+        raise PicoException("There is already a user with this name.", 409)
+    if db.teams.find_one(
+        {"team_name": team_name},
+        collation=Collation(locale="en", strength=CollationStrength.PRIMARY),
+    ):
+        raise PicoException("There is already a team with this name.", 409)
 
     # Make sure the creating user has not already created a team
-    current_team = api.team.get_team(tid=user['tid'])
-    if current_team['team_name'] != user['username']:
-        raise PicoException(
-            "You can only create one new team per user account!", 422)
+    current_team = api.team.get_team(tid=user["tid"])
+    if current_team["team_name"] != user["username"]:
+        raise PicoException("You can only create one new team per user account!", 422)
 
     # Create the team and join it
-    new_tid = create_team({
-        "team_name": team_name,
-        "password": api.common.hash_password(team_password),
-        "affiliation": current_team["affiliation"],
-        "creator": user["uid"],
-        "allow_ineligible_members": False
-    })
+    new_tid = create_team(
+        {
+            "team_name": team_name,
+            "password": api.common.hash_password(team_password),
+            "affiliation": current_team["affiliation"],
+            "creator": user["uid"],
+            "allow_ineligible_members": False,
+        }
+    )
     join_team(team_name, team_password, user)
 
     return new_tid
@@ -177,18 +180,19 @@ def create_team(params):
     """
     db = api.db.get_conn()
 
-    params['tid'] = api.common.token()
-    params['size'] = 0
-    params['instances'] = {}
+    params["tid"] = api.common.token()
+    params["size"] = 0
+    params["instances"] = {}
 
     settings = api.config.get_settings()
     if settings["shell_servers"]["enable_sharding"]:
-        params['server_number'] = api.shell_servers.get_assigned_server_number(
-            new_team=True)
+        params["server_number"] = api.shell_servers.get_assigned_server_number(
+            new_team=True
+        )
 
     db.teams.insert(params)
 
-    return params['tid']
+    return params["tid"]
 
 
 def get_team_members(tid=None, name=None, show_disabled=True):
@@ -206,22 +210,23 @@ def get_team_members(tid=None, name=None, show_disabled=True):
     tid = get_team(name=name, tid=tid)["tid"]
 
     users = list(
-        db.users.find({"tid": tid}, {
-            "_id": 0,
-            "uid": 1,
-            "username": 1,
-            "firstname": 1,
-            "lastname": 1,
-            "disabled": 1,
-            "email": 1,
-            "teacher": 1,
-            "country": 1,
-            "usertype": 1,
-        }))
-    return [
-        user for user in users
-        if show_disabled or not user.get("disabled", False)
-    ]
+        db.users.find(
+            {"tid": tid},
+            {
+                "_id": 0,
+                "uid": 1,
+                "username": 1,
+                "firstname": 1,
+                "lastname": 1,
+                "disabled": 1,
+                "email": 1,
+                "teacher": 1,
+                "country": 1,
+                "usertype": 1,
+            },
+        )
+    )
+    return [user for user in users if show_disabled or not user.get("disabled", False)]
 
 
 def get_team_uids(tid=None, name=None, show_disabled=True):
@@ -235,8 +240,8 @@ def get_team_uids(tid=None, name=None, show_disabled=True):
         A list of uids
     """
     return [
-        user['uid'] for user in get_team_members(
-            tid=tid, name=name, show_disabled=show_disabled)
+        user["uid"]
+        for user in get_team_members(tid=tid, name=name, show_disabled=show_disabled)
     ]
 
 
@@ -261,30 +266,32 @@ def get_team_information(tid):
     #       ideally combine/replace this w/ get_team()
     # Add additional information
     team_info["score"] = api.stats.get_score(tid=tid, time_weighted=False)
-    team_info["members"] = [{
-        "username": member["username"],
-        "firstname": member["firstname"],
-        "lastname": member["lastname"],
-        "email": member["email"],
-        "uid": member["uid"],
-        "affiliation": member.get("affiliation", "None"),
-        "country": member["country"],
-        "usertype": member["usertype"],
-        "can_leave": api.user.can_leave_team(member['uid'])
-    } for member in get_team_members(tid=tid, show_disabled=False)]
+    team_info["members"] = [
+        {
+            "username": member["username"],
+            "firstname": member["firstname"],
+            "lastname": member["lastname"],
+            "email": member["email"],
+            "uid": member["uid"],
+            "affiliation": member.get("affiliation", "None"),
+            "country": member["country"],
+            "usertype": member["usertype"],
+            "can_leave": api.user.can_leave_team(member["uid"]),
+        }
+        for member in get_team_members(tid=tid, show_disabled=False)
+    ]
     team_info["progression"] = api.stats.get_score_progression(tid=tid)
-    team_info["flagged_submissions"] = \
-        api.submissions.get_suspicious_submissions(tid)
+    team_info["flagged_submissions"] = api.submissions.get_suspicious_submissions(tid)
     team_info["max_team_size"] = api.config.get_settings()["max_team_size"]
 
     if api.config.get_settings()["achievements"]["enable_achievements"]:
-        team_info["achievements"] = api.achievement.get_earned_achievements(
-            tid)
+        team_info["achievements"] = api.achievement.get_earned_achievements(tid)
 
     team_info["solved_problems"] = []
     for solved_problem in api.problem.get_solved_problems(tid=tid):
-        filtered_problem = {k: v for k, v in solved_problem.items() if
-                            k in PROBLEMSOLVED_FILTER}
+        filtered_problem = {
+            k: v for k, v in solved_problem.items() if k in PROBLEMSOLVED_FILTER
+        }
         team_info["solved_problems"].append(filtered_problem)
 
     return team_info
@@ -307,7 +314,7 @@ def get_all_teams(scoreboard_id=None):
 
     # If specified, restrict to teams eligible for a certain scoreboard
     if scoreboard_id:
-        match['eligibilities'] = scoreboard_id
+        match["eligibilities"] = scoreboard_id
 
     return list(db.teams.find(match, {"_id": 0}))
 
@@ -327,60 +334,58 @@ def join_team(team_name, password, user):
     """
     current_team = api.user.get_team(uid=user["uid"])
     desired_team = api.team.get_team(name=team_name)
-    desired_team_info = api.team.get_team_information(desired_team['tid'])
+    desired_team_info = api.team.get_team_information(desired_team["tid"])
 
     if current_team["team_name"] != user["username"]:
-        raise PicoException(
-            "You can not switch teams once you have joined one.", 403)
+        raise PicoException("You can not switch teams once you have joined one.", 403)
 
     # Make sure the password is correct and there is room on the team
     max_team_size = api.config.get_settings()["max_team_size"]
-    if desired_team['size'] >= max_team_size:
-        raise PicoException(
-            'That team is already at maximum capacity.', 403)
+    if desired_team["size"] >= max_team_size:
+        raise PicoException("That team is already at maximum capacity.", 403)
     if not api.user.confirm_password(password, desired_team["password"]):
-        raise PicoException(
-            'That is not the correct password to join that team.', 403)
+        raise PicoException("That is not the correct password to join that team.", 403)
 
     # Update the team's eligibilities
-    if desired_team_info['size'] == 0:
+    if desired_team_info["size"] == 0:
         updated_eligible_scoreboards = [
-            scoreboard for scoreboard in api.scoreboards.get_all_scoreboards()
+            scoreboard
+            for scoreboard in api.scoreboards.get_all_scoreboards()
             if api.scoreboards.is_eligible(user, scoreboard)
         ]
     else:
         currently_eligible_scoreboards = [
             api.scoreboards.get_scoreboard(sid)
-            for sid in desired_team_info['eligibilities']
+            for sid in desired_team_info["eligibilities"]
         ]
         updated_eligible_scoreboards = [
-            scoreboard for scoreboard in currently_eligible_scoreboards
+            scoreboard
+            for scoreboard in currently_eligible_scoreboards
             if api.scoreboards.is_eligible(user, scoreboard)
         ]
         lost_eligibilities = [
-            scoreboard for scoreboard in currently_eligible_scoreboards
+            scoreboard
+            for scoreboard in currently_eligible_scoreboards
             if scoreboard not in updated_eligible_scoreboards
         ]
-        if (len(lost_eligibilities) > 0 and
-                not desired_team_info.get('allow_ineligible_members', False)):
+        if len(lost_eligibilities) > 0 and not desired_team_info.get(
+            "allow_ineligible_members", False
+        ):
             raise PicoException(
-                'You cannot join this team as doing so would make it ' +
-                'ineligible for the {} scoreboard.'.format(
+                "You cannot join this team as doing so would make it "
+                + "ineligible for the {} scoreboard.".format(
                     lost_eligibilities[0]["name"]
-                ), 403
+                ),
+                403,
             )
 
     # Join the new team
     db = api.db.get_conn()
     user_team_update = db.users.find_and_modify(
-        query={
-            "uid": user["uid"],
-            "tid": current_team["tid"]
-        },
-        update={"$set": {
-            "tid": desired_team["tid"]
-        }},
-        new=True)
+        query={"uid": user["uid"], "tid": current_team["tid"]},
+        update={"$set": {"tid": desired_team["tid"]}},
+        new=True,
+    )
 
     if not user_team_update:
         raise PicoException("There was an issue switching your team!")
@@ -388,63 +393,55 @@ def join_team(team_name, password, user):
     # Update the eligiblities of the new team
     db.teams.find_one_and_update(
         {"tid": desired_team["tid"]},
-        {"$set": {
-            "eligibilities": [s['sid'] for s in updated_eligible_scoreboards]
-        }}
+        {"$set": {"eligibilities": [s["sid"] for s in updated_eligible_scoreboards]}},
     )
 
     # Update the sizes of the old and new teams
-    db.teams.find_one_and_update(
-        {"tid": desired_team["tid"]},
-        {"$inc": {
-            "size": 1
-        }})
+    db.teams.find_one_and_update({"tid": desired_team["tid"]}, {"$inc": {"size": 1}})
 
-    db.teams.find_one_and_update(
-        {"tid": current_team["tid"]},
-        {"$inc": {
-            "size": -1
-        }})
+    db.teams.find_one_and_update({"tid": current_team["tid"]}, {"$inc": {"size": -1}})
 
     # Remove old team from any groups and attempt to add new team
-    previous_groups = get_groups(current_team['tid'])
+    previous_groups = get_groups(current_team["tid"])
     for group in previous_groups:
         api.group.leave_group(gid=group["gid"], tid=current_team["tid"])
         # Rejoin with new tid if not already member, and classroom
         # email filter is not enabled.
-        if (desired_team['tid'] not in group['members'] and
-                desired_team['tid'] not in group['teachers']):
+        if (
+            desired_team["tid"] not in group["members"]
+            and desired_team["tid"] not in group["teachers"]
+        ):
             group_settings = api.group.get_group_settings(gid=group["gid"])
             if not group_settings["email_filter"]:
-                api.group.join_group(
-                    gid=group["gid"], tid=desired_team["tid"])
+                api.group.join_group(gid=group["gid"], tid=desired_team["tid"])
 
     # Immediately invalidate some caches
-    cache.invalidate(api.stats.get_score, desired_team['tid'])
-    cache.invalidate(api.stats.get_score, user['uid'])
-    cache.invalidate(api.problem.get_unlocked_pids, desired_team['tid'])
+    cache.invalidate(api.stats.get_score, desired_team["tid"])
+    cache.invalidate(api.stats.get_score, user["uid"])
+    cache.invalidate(api.problem.get_unlocked_pids, desired_team["tid"])
     cache.invalidate(
         api.problem.get_solved_problems,
-        tid=desired_team['tid'],
-        uid=user['uid'],
-        category=None)
-    cache.invalidate(
-        api.problem.get_solved_problems,
-        tid=desired_team['tid'],
-        uid=None,
-        category=None
+        tid=desired_team["tid"],
+        uid=user["uid"],
+        category=None,
     )
     cache.invalidate(
         api.problem.get_solved_problems,
-        tid=desired_team['tid'],
-        uid=user['uid'])
-    cache.invalidate(api.problem.get_solved_problems, tid=desired_team['tid'])
-    cache.invalidate(api.problem.get_solved_problems, uid=user['uid'])
+        tid=desired_team["tid"],
+        uid=None,
+        category=None,
+    )
     cache.invalidate(
-        api.stats.get_score_progression, tid=desired_team['tid'], category=None)
-    cache.invalidate(api.stats.get_score_progression, tid=desired_team['tid'])
+        api.problem.get_solved_problems, tid=desired_team["tid"], uid=user["uid"]
+    )
+    cache.invalidate(api.problem.get_solved_problems, tid=desired_team["tid"])
+    cache.invalidate(api.problem.get_solved_problems, uid=user["uid"])
+    cache.invalidate(
+        api.stats.get_score_progression, tid=desired_team["tid"], category=None
+    )
+    cache.invalidate(api.stats.get_score_progression, tid=desired_team["tid"])
 
-    return desired_team['tid']
+    return desired_team["tid"]
 
 
 @log_action
@@ -469,19 +466,20 @@ def update_password_request(params):
 
     db = api.db.get_conn()
     db.teams.update(
-        {'tid': user['tid']},
-        {'$set': {
-            'password': api.common.hash_password(
-                params["new-password"])
-        }})
+        {"tid": user["tid"]},
+        {"$set": {"password": api.common.hash_password(params["new-password"])}},
+    )
 
 
 def is_teacher_team(tid):
     """Check if team is a teacher's self-team."""
     team = get_team(tid=tid)
     members = get_team_members(tid=tid)
-    if (team["size"] == 1 and members[0]["username"] == team["team_name"] and
-            members[0]["teacher"]):
+    if (
+        team["size"] == 1
+        and members[0]["username"] == team["team_name"]
+        and members[0]["teacher"]
+    ):
         return True
     else:
         return False
@@ -495,7 +493,7 @@ def delete_team(tid):
     db.problem_feedback.delete_many({"tid": tid})
     db.teams.find_one_and_delete({"tid": tid})
     for group in get_groups(tid):
-        api.group.leave_group(group['gid'], tid)
+        api.group.leave_group(group["gid"], tid)
     api.cache.invalidate(api.team.get_groups, tid)
 
 
@@ -508,8 +506,8 @@ def remove_member(tid, uid):
     The member specified cannot have submitted any valid solutions.
     """
     team = get_team(tid)
-    curr_user_uid = api.user.get_user()['uid']
-    curr_user_is_creator = (curr_user_uid == team.get('creator'))
+    curr_user_uid = api.user.get_user()["uid"]
+    curr_user_is_creator = curr_user_uid == team.get("creator")
 
     if not curr_user_is_creator and uid != curr_user_uid:
         raise PicoException(
@@ -518,49 +516,39 @@ def remove_member(tid, uid):
 
     if uid not in get_team_uids(tid):
         raise PicoException(
-            "Specified user is not a member of this team.", status_code=404)
-
-    if api.user.get_user(uid=uid)['username'] == team['team_name']:
-        raise PicoException(
-            "Cannot remove self from default team", status_code=403
+            "Specified user is not a member of this team.", status_code=404
         )
+
+    if api.user.get_user(uid=uid)["username"] == team["team_name"]:
+        raise PicoException("Cannot remove self from default team", status_code=403)
 
     if not api.user.can_leave_team(uid):
         if curr_user_is_creator and curr_user_uid == uid:
             raise PicoException(
-                "Team captain must be the only remaining member in order " +
-                "to leave.", status_code=403
+                "Team captain must be the only remaining member in order "
+                + "to leave.",
+                status_code=403,
             )
         else:
             raise PicoException(
-                "This team member has submitted a flag and can no longer " +
-                "be removed.", status_code=403
+                "This team member has submitted a flag and can no longer "
+                + "be removed.",
+                status_code=403,
             )
 
-    self_team_tid = api.team.get_team(
-        name=api.user.get_user(uid=uid)['username'])['tid']
+    self_team_tid = api.team.get_team(name=api.user.get_user(uid=uid)["username"])[
+        "tid"
+    ]
 
     db = api.db.get_conn()
-    db.users.find_one_and_update({"uid": uid}, {
-        "$set": {
-            "tid": self_team_tid
-            }
-        })
+    db.users.find_one_and_update({"uid": uid}, {"$set": {"tid": self_team_tid}})
 
-    db.teams.find_one_and_update(
-        {"tid": self_team_tid},
-        {"$inc": {
-            "size": 1
-        }})
+    db.teams.find_one_and_update({"tid": self_team_tid}, {"$inc": {"size": 1}})
 
-    db.teams.find_one_and_update(
-        {"tid": tid},
-        {"$inc": {
-            "size": -1
-        }})
+    db.teams.find_one_and_update({"tid": tid}, {"$inc": {"size": -1}})
 
     # Delete the custom team if no members remain
-    remaining_team_size = db.teams.find_one({"tid": tid}, {"size": 1})['size']
+    remaining_team_size = db.teams.find_one({"tid": tid}, {"size": 1})["size"]
     if remaining_team_size < 1:
         delete_team(tid)
 

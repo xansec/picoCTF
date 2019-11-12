@@ -34,15 +34,16 @@ class File(object):
         self.group = group
 
     def __repr__(self):
-        return "{}({},{})".format(self.__class__.__name__, repr(self.path),
-                                  oct(self.permissions))
+        return "{}({},{})".format(
+            self.__class__.__name__, repr(self.path), oct(self.permissions)
+        )
 
     def to_dict(self):
         return {
             "path": self.path,
             "permissions": self.permissions,
             "user": self.user,
-            "group": self.group
+            "group": self.group,
         }
 
 
@@ -184,8 +185,7 @@ class Compiled(Challenge):
         if self.makefile is not None:
             execute(["make", "-f", self.makefile])
         elif len(self.compiler_sources) > 0:
-            compile_cmd = [self.compiler
-                          ] + self.compiler_flags + self.compiler_sources
+            compile_cmd = [self.compiler] + self.compiler_flags + self.compiler_sources
             compile_cmd += ["-o", self.program_name]
             execute(compile_cmd)
 
@@ -211,7 +211,7 @@ class Service(Challenge):
     def service_setup(self):
         if self.start_cmd is None:
             raise Exception("Must specify start_cmd for services.")
-        open("xinet_startup.sh", 'w').write(XINETD_SCRIPT % self.start_cmd)
+        open("xinet_startup.sh", "w").write(XINETD_SCRIPT % self.start_cmd)
         self.start_cmd = join(self.directory, "xinet_startup.sh")
         self.service_files.append(ExecutableFile("xinet_startup.sh"))
 
@@ -220,7 +220,7 @@ class Service(Challenge):
         """
         Provides port on-demand with caching
         """
-        if not hasattr(self, '_port'):
+        if not hasattr(self, "_port"):
             self._port = give_port()
         return self._port
 
@@ -249,7 +249,8 @@ class Remote(Service):
 
             self.program_name = self.make_no_aslr_wrapper(
                 join(self.directory, self.program_name),
-                output="{}_no_aslr".format(self.program_name))
+                output="{}_no_aslr".format(self.program_name),
+            )
         else:
             self.service_files = [ExecutableFile(self.program_name)]
 
@@ -262,10 +263,15 @@ class Remote(Service):
         """
 
         source_path = "no_aslr_wrapper.c"
-        execute([
-            "gcc", "-o", output, "-DBINARY_PATH=\"{}\"".format(exec_path),
-            join(EXTRA_ROOT, source_path)
-        ])
+        execute(
+            [
+                "gcc",
+                "-o",
+                output,
+                '-DBINARY_PATH="{}"'.format(exec_path),
+                join(EXTRA_ROOT, source_path),
+            ]
+        )
         self.files.append(ExecutableFile(output))
 
         return output
@@ -278,11 +284,10 @@ class Remote(Service):
 
 
 class WebService(Service):
-
     def service_setup(self):
         if self.start_cmd is None:
             raise Exception("Must specify start_cmd for services.")
-        open("xinet_startup.sh", 'w').write(XINETD_WEB_SCRIPT % self.start_cmd)
+        open("xinet_startup.sh", "w").write(XINETD_WEB_SCRIPT % self.start_cmd)
         self.start_cmd = join(self.directory, "xinet_startup.sh")
         self.service_files.append(ExecutableFile("xinet_startup.sh"))
 
@@ -301,7 +306,7 @@ class FlaskApp(WebService):
         """
         Provides flask_secret on-demand with caching
         """
-        if not hasattr(self, '_flask_secret'):
+        if not hasattr(self, "_flask_secret"):
             token = str(self.random.randint(1, 1e16))
             self._flask_secret = md5(token.encode("utf-8")).hexdigest()
 
@@ -324,7 +329,8 @@ class FlaskApp(WebService):
 
         self.service_files = [File(self.app_file)]
         self.start_cmd = "uwsgi --protocol=http --plugin python{} -p {} -w {} --logto /dev/null".format(
-            plugin_version, self.num_workers, self.app)
+            plugin_version, self.num_workers, self.app
+        )
 
 
 class PHPApp(WebService):
@@ -342,4 +348,5 @@ class PHPApp(WebService):
 
         web_root = join(self.directory, self.php_root)
         self.start_cmd = "uwsgi --protocol=http --plugin php -p {1} --force-cwd {0} --php-allowed-docroot {2} --http-socket-modifier1 14 --php-index index.html --php-index index.php --check-static {0} --static-skip-ext php --logto /dev/null".format(
-            web_root, self.num_workers, self.directory)
+            web_root, self.num_workers, self.directory
+        )

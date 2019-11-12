@@ -5,8 +5,7 @@ def process(api, data):
     else:
         earned = True
         for member in members:
-            if api.problem.count_submissions(
-                    uid=member["uid"], correctness=True) < 1:
+            if api.problem.count_submissions(uid=member["uid"], correctness=True) < 1:
                 earned = False
                 break
     return earned, {}

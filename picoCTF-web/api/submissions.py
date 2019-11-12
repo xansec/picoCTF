@@ -7,14 +7,19 @@ from api import cache, check, log_action, PicoException, validate
 from api.cache import memoize
 from voluptuous import Length, Required, Schema
 
-submission_schema = Schema({
-    Required("tid"):
-    check(("This does not look like a valid tid.", [str, Length(max=100)])),
-    Required("pid"):
-    check(("This does not look like a valid pid.", [str, Length(max=100)])),
-    Required("key"):
-    check(("This does not look like a valid key.", [str, Length(max=100)]))
-})
+submission_schema = Schema(
+    {
+        Required("tid"): check(
+            ("This does not look like a valid tid.", [str, Length(max=100)])
+        ),
+        Required("pid"): check(
+            ("This does not look like a valid pid.", [str, Length(max=100)])
+        ),
+        Required("key"): check(
+            ("This does not look like a valid key.", [str, Length(max=100)])
+        ),
+    }
+)
 
 DEBUG_KEY = None
 
@@ -40,14 +45,15 @@ def grade_problem(pid, key, tid=None):
     assigned_instance = api.problem.get_instance_data(pid, tid)
 
     suspicious = False
-    correct = assigned_instance['flag'] in key
+    correct = assigned_instance["flag"] in key
     if not correct and DEBUG_KEY is not None:
         correct = DEBUG_KEY in key
     if not correct:
         other_instance_flags = [
-            instance['flag']
-            for instance in problem['instances']
-            if instance['iid'] != assigned_instance['iid']]
+            instance["flag"]
+            for instance in problem["instances"]
+            if instance["iid"] != assigned_instance["iid"]
+        ]
         suspicious = any([flag in key for flag in other_instance_flags])
 
     return (correct, suspicious)
@@ -74,38 +80,36 @@ def submit_key(tid, pid, key, method, uid, ip=None):
 
     if pid not in api.problem.get_unlocked_pids(tid):
         raise PicoException(
-            "You can't submit flags to problems you haven't unlocked.", 422)
+            "You can't submit flags to problems you haven't unlocked.", 422
+        )
 
-    previously_solved_by_user = db.submissions.find_one(
-        filter={
-            'pid': pid,
-            'uid': uid,
-            'correct': True
-        }) is not None
+    previously_solved_by_user = (
+        db.submissions.find_one(filter={"pid": pid, "uid": uid, "correct": True})
+        is not None
+    )
 
-    previously_solved_by_team = db.submissions.find_one(
-        filter={
-            'pid': pid,
-            'tid': tid,
-            'correct': True
-        }) is not None
+    previously_solved_by_team = (
+        db.submissions.find_one(filter={"pid": pid, "tid": tid, "correct": True})
+        is not None
+    )
 
     correct, suspicious = grade_problem(pid, key, tid)
 
     if not previously_solved_by_user:
-        db.submissions.insert({
-            'uid': uid,
-            'tid': tid,
-            'timestamp': datetime.utcnow(),
-            'pid': pid,
-            'ip': ip,
-            'key': key,
-            'method': method,
-            'category': api.problem.get_problem(pid, {"category": 1})[
-                'category'],
-            'correct': correct,
-            'suspicious': suspicious
-        })
+        db.submissions.insert(
+            {
+                "uid": uid,
+                "tid": tid,
+                "timestamp": datetime.utcnow(),
+                "pid": pid,
+                "ip": ip,
+                "key": key,
+                "method": method,
+                "category": api.problem.get_problem(pid, {"category": 1})["category"],
+                "correct": correct,
+                "suspicious": suspicious,
+            }
+        )
 
     if correct and not previously_solved_by_team:
         # Immediately invalidate some caches
@@ -113,14 +117,15 @@ def submit_key(tid, pid, key, method, uid, ip=None):
         cache.invalidate(api.stats.get_score, uid)
         cache.invalidate(api.problem.get_unlocked_pids, tid)
         cache.invalidate(
-            api.problem.get_solved_problems, tid=tid, uid=uid, category=None)
+            api.problem.get_solved_problems, tid=tid, uid=uid, category=None
+        )
         cache.invalidate(
-            api.problem.get_solved_problems, tid=tid, uid=None, category=None)
+            api.problem.get_solved_problems, tid=tid, uid=None, category=None
+        )
         cache.invalidate(api.problem.get_solved_problems, tid=tid, uid=uid)
         cache.invalidate(api.problem.get_solved_problems, tid=tid)
         cache.invalidate(api.problem.get_solved_problems, uid=uid)
-        cache.invalidate(
-            api.stats.get_score_progression, tid=tid, category=None)
+        cache.invalidate(api.stats.get_score_progression, tid=tid, category=None)
         cache.invalidate(api.stats.get_score_progression, tid=tid)
 
     if suspicious:
@@ -129,13 +134,9 @@ def submit_key(tid, pid, key, method, uid, ip=None):
     return (correct, previously_solved_by_user, previously_solved_by_team)
 
 
-def get_submissions(pid=None,
-                    uid=None,
-                    tid=None,
-                    category=None,
-                    correctness=None,
-                    suspicious=None,
-                    ):
+def get_submissions(
+    pid=None, uid=None, tid=None, category=None, correctness=None, suspicious=None,
+):
     """
     Get the submissions from a team or user.
 
@@ -181,8 +182,7 @@ def get_suspicious_submissions(tid):
     """Get the suspicious submissions for a given team."""
     submissions = get_submissions(tid=tid, suspicious=True)
     for submission in submissions:
-        submission['problem_name'] = api.problem.get_problem(
-            submission['pid'])['name']
+        submission["problem_name"] = api.problem.get_problem(submission["pid"])["name"]
     return submissions
 
 

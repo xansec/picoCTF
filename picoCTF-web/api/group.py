@@ -5,14 +5,22 @@ from voluptuous import Required, Schema
 import api
 from api import cache, check, log_action, PicoException, validate
 
-group_settings_schema = Schema({
-    Required("email_filter"):
-    check(("Email filter must be a list of emails.",
-           [lambda emails: type(emails) == list])),
-    Required("hidden"):
-    check(("Hidden property of a group is a boolean.",
-           [lambda hidden: type(hidden) == bool]))
-})
+group_settings_schema = Schema(
+    {
+        Required("email_filter"): check(
+            (
+                "Email filter must be a list of emails.",
+                [lambda emails: type(emails) == list],
+            )
+        ),
+        Required("hidden"): check(
+            (
+                "Hidden property of a group is a boolean.",
+                [lambda hidden: type(hidden) == bool],
+            )
+        ),
+    }
+)
 
 
 def get_group(gid=None, name=None, owner_tid=None):
@@ -75,8 +83,7 @@ def get_member_information(gid):
     for tid in group["members"]:
         team = api.team.get_team(tid=tid)
         if team["size"] > 0:
-            member_information.append(
-                api.team.get_team_information(tid=team["tid"]))
+            member_information.append(api.team.get_team_information(tid=team["tid"]))
 
     return member_information
 
@@ -97,17 +104,16 @@ def create_group(tid, group_name):
 
     gid = api.common.token()
 
-    db.groups.insert({
-        "name": group_name,
-        "owner": tid,
-        "teachers": [],
-        "members": [],
-        "settings": {
-            "email_filter": [],
-            "hidden": False
-        },
-        "gid": gid
-    })
+    db.groups.insert(
+        {
+            "name": group_name,
+            "owner": tid,
+            "teachers": [],
+            "members": [],
+            "settings": {"email_filter": [], "hidden": False},
+            "gid": gid,
+        }
+    )
     cache.invalidate(api.team.get_groups, tid)
 
     return gid
@@ -119,10 +125,7 @@ def get_group_settings(gid):
 
     # Ensure it exists.
     group = api.group.get_group(gid=gid)
-    group_result = db.groups.find_one({"gid": group["gid"]}, {
-        "_id": 0,
-        "settings": 1
-    })
+    group_result = db.groups.find_one({"gid": group["gid"]}, {"_id": 0, "settings": 1})
 
     return group_result["settings"]
 
@@ -144,8 +147,9 @@ def change_group_settings(gid, settings):
 
     group = api.group.get_group(gid=gid)
     if group["settings"]["hidden"] and not settings["hidden"]:
-        raise PicoException('Cannot make a previously hidden group public',
-                            status_code=422)
+        raise PicoException(
+            "Cannot make a previously hidden group public", status_code=422
+        )
 
     db.groups.update({"gid": group["gid"]}, {"$set": {"settings": settings}})
 
@@ -169,7 +173,7 @@ def join_group(gid, tid, teacher=False):
         for uid in uids:
             db.users.update({"uid": uid}, {"$set": {"teacher": True}})
 
-    db.groups.update({'gid': gid}, {'$addToSet': {role_group: tid}})
+    db.groups.update({"gid": gid}, {"$addToSet": {role_group: tid}})
     cache.invalidate(api.team.get_groups, tid)
 
 
@@ -183,8 +187,8 @@ def leave_group(gid, tid):
         gid: the group id to leave
     """
     db = api.db.get_conn()
-    db.groups.update({'gid': gid}, {'$pull': {"teachers": tid}})
-    db.groups.update({'gid': gid}, {'$pull': {"members": tid}})
+    db.groups.update({"gid": gid}, {"$pull": {"teachers": tid}})
+    db.groups.update({"gid": gid}, {"$pull": {"members": tid}})
     cache.invalidate(api.team.get_groups, tid)
 
 
@@ -198,8 +202,8 @@ def elevate_team(gid, tid):
         gid: the group id to elevate to teacher status
     """
     db = api.db.get_conn()
-    db.groups.update({'gid': gid}, {'$pull': {"members": tid}})
-    db.groups.update({'gid': gid}, {'$addToSet': {"teachers": tid}})
+    db.groups.update({"gid": gid}, {"$pull": {"members": tid}})
+    db.groups.update({"gid": gid}, {"$addToSet": {"teachers": tid}})
     cache.invalidate(api.team.get_groups, tid)
 
 
@@ -212,7 +216,7 @@ def delete_group(gid):
         gid: the group id to delete
     """
     db = api.db.get_conn()
-    db.groups.remove({'gid': gid})
+    db.groups.remove({"gid": gid})
 
 
 def get_all_groups():
@@ -238,14 +242,13 @@ def batch_register(students, teacher, gid):
 
     """
     # Created accounts' usernames are: {teacher_username}.student{number}
-    teacher_metadata = api.token.find_key({
-        'uid': teacher['uid']
-    })
+    teacher_metadata = api.token.find_key({"uid": teacher["uid"]})
     if not teacher_metadata:
         curr_student_number = 0
     else:
         curr_student_number = teacher_metadata.get("tokens", {}).get(
-            'batch_registered_students', 0)
+            "batch_registered_students", 0
+        )
 
     created_users = []
     for i, student in enumerate(students):
@@ -254,43 +257,43 @@ def batch_register(students, teacher, gid):
         password = api.common.token()
         try:
             # Create a registration token to bypass verification & reCAPTCHA
-            rid = api.token.set_token({
-                'gid': gid,
-                'email': teacher['email'],
-                'teacher': False
-            }, 'registration_token')
-            uid = api.user.add_user({
-                'username': username,
-                'password': password,
-                'firstname': '',
-                'lastname': '',
-                'email': teacher['email'],
-                'country': teacher['country'],
-                'affiliation': api.group.get_group(gid=gid)['name'],
-                'usertype': 'student',
-                'demo': {
-                    'age': student['age'],
-                    'gender': student['gender'],
-                    'grade': student['current_year'],
-                    'parentemail': student['parent_email'],
-                    'residencecountry': teacher['country'],
-                    'schoolcountry': teacher.get('demo', {})
-                                            .get('schoolcountry', ''),
-                    'url': teacher.get('demo', {}).get('url', ''),
-                    'zipcode': teacher.get('demo', {}).get('zipcode', '')
+            rid = api.token.set_token(
+                {"gid": gid, "email": teacher["email"], "teacher": False},
+                "registration_token",
+            )
+            uid = api.user.add_user(
+                {
+                    "username": username,
+                    "password": password,
+                    "firstname": "",
+                    "lastname": "",
+                    "email": teacher["email"],
+                    "country": teacher["country"],
+                    "affiliation": api.group.get_group(gid=gid)["name"],
+                    "usertype": "student",
+                    "demo": {
+                        "age": student["age"],
+                        "gender": student["gender"],
+                        "grade": student["current_year"],
+                        "parentemail": student["parent_email"],
+                        "residencecountry": teacher["country"],
+                        "schoolcountry": teacher.get("demo", {}).get(
+                            "schoolcountry", ""
+                        ),
+                        "url": teacher.get("demo", {}).get("url", ""),
+                        "zipcode": teacher.get("demo", {}).get("zipcode", ""),
+                    },
+                    "gid": gid,
+                    "rid": rid,
                 },
-                'gid': gid,
-                'rid': rid
-            }, batch_registration=True)
+                batch_registration=True,
+            )
             api.token.set_token(
-                {'uid': teacher['uid']},
-                'batch_registered_students',
-                curr_student_number)
+                {"uid": teacher["uid"]},
+                "batch_registered_students",
+                curr_student_number,
+            )
         except PicoException:
             return created_users
-        created_users.append({
-            'uid': uid,
-            'username': username,
-            'password': password,
-        })
+        created_users.append({"uid": uid, "username": username, "password": password})
     return created_users

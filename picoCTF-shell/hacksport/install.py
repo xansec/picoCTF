@@ -22,7 +22,20 @@ import os
 import shutil
 import json
 from shell_manager.package import package_problem
-from shell_manager.util import get_problem, DEB_ROOT, FatalException, join, SHARED_ROOT, get_problem_root_hashed, get_bundle, PROBLEM_ROOT, BUNDLE_ROOT, sanitize_name, acquire_lock, release_lock
+from shell_manager.util import (
+    get_problem,
+    DEB_ROOT,
+    FatalException,
+    join,
+    SHARED_ROOT,
+    get_problem_root_hashed,
+    get_bundle,
+    PROBLEM_ROOT,
+    BUNDLE_ROOT,
+    sanitize_name,
+    acquire_lock,
+    release_lock,
+)
 from hacksport.deploy import generate_staging_directory
 
 logger = logging.getLogger(__name__)
@@ -36,27 +49,39 @@ def install_problem(problem_path, allow_reinstall=False):
         problem_path: path to the problem source directory
     """
     problem_obj = get_problem(problem_path)
-    if (os.path.isdir(get_problem_root_hashed(problem_obj, absolute=True)) and
-            not allow_reinstall):
-        logger.error(f"Problem {problem_obj['unique_name']} is already installed. You may specify --reinstall to reinstall an updated version from the specified directory.")
+    if (
+        os.path.isdir(get_problem_root_hashed(problem_obj, absolute=True))
+        and not allow_reinstall
+    ):
+        logger.error(
+            f"Problem {problem_obj['unique_name']} is already installed. You may specify --reinstall to reinstall an updated version from the specified directory."
+        )
         return
     logger.info(f"Installing problem {problem_obj['unique_name']}...")
 
     acquire_lock()
 
     staging_dir_path = generate_staging_directory(
-        problem_name=problem_obj['unique_name'])
-    logger.debug(f"{problem_obj['unique_name']}: created staging directory" +
-                 f" ({staging_dir_path})")
+        problem_name=problem_obj["unique_name"]
+    )
+    logger.debug(
+        f"{problem_obj['unique_name']}: created staging directory"
+        + f" ({staging_dir_path})"
+    )
 
     generated_deb_path = package_problem(
-        problem_path, staging_path=staging_dir_path, out_path=DEB_ROOT)
+        problem_path, staging_path=staging_dir_path, out_path=DEB_ROOT
+    )
     logger.debug(f"{problem_obj['unique_name']}: created debian package")
 
     try:
-        subprocess.run('DEBIAN_FRONTEND=noninteractive apt-get -y install ' +
-                       f'--reinstall {generated_deb_path}',
-                       shell=True, check=True, stdout=subprocess.PIPE)
+        subprocess.run(
+            "DEBIAN_FRONTEND=noninteractive apt-get -y install "
+            + f"--reinstall {generated_deb_path}",
+            shell=True,
+            check=True,
+            stdout=subprocess.PIPE,
+        )
     except subprocess.CalledProcessError:
         logger.error("An error occurred while installing problem packages.")
         raise FatalException
@@ -118,27 +143,26 @@ def uninstall_problem(problem_name):
 
     try:
         # Remove .deb package used to install dependencies on deployment
-        os.remove(join(DEB_ROOT, problem_name + '.deb'))
+        os.remove(join(DEB_ROOT, problem_name + ".deb"))
 
         # Remove problem source used for templating instances
         shutil.rmtree(join(PROBLEM_ROOT, problem_name))
 
         # Remove any ports assigned to this problem from the port map
-        port_map_path = join(SHARED_ROOT, 'port_map.json')
-        with open(port_map_path, 'r') as f:
+        port_map_path = join(SHARED_ROOT, "port_map.json")
+        with open(port_map_path, "r") as f:
             port_map = json.load(f)
             port_map = {literal_eval(k): v for k, v in port_map.items()}
 
         port_map = {k: v for k, v in port_map.items() if k[0] != problem_name}
 
-        with open(port_map_path, 'w') as f:
+        with open(port_map_path, "w") as f:
             stringified_port_map = {repr(k): v for k, v in port_map.items()}
             json.dump(stringified_port_map, f)
 
     except Exception as e:
-        logger.error(
-            f"An error occurred while uninstalling {problem_name}:")
-        logger.error(f'{str(e)}')
+        logger.error(f"An error occurred while uninstalling {problem_name}:")
+        logger.error(f"{str(e)}")
         raise FatalException
 
     logger.info(f"{problem_name} removed successfully")
@@ -176,24 +200,30 @@ def install_bundle(args):
     bundle_path = args.bundle_path
     bundle_obj = get_bundle(bundle_path)
 
-    if os.path.isdir(join(BUNDLE_ROOT, sanitize_name(bundle_obj['name']))):
-        logger.error(f"A bundle with name {bundle_obj['name']} is " +
-                     "already installed")
+    if os.path.isdir(join(BUNDLE_ROOT, sanitize_name(bundle_obj["name"]))):
+        logger.error(
+            f"A bundle with name {bundle_obj['name']} is " + "already installed"
+        )
         raise FatalException
 
-    for problem_name, info in bundle_obj['dependencies'].items():
+    for problem_name, info in bundle_obj["dependencies"].items():
         if not os.path.isdir(join(PROBLEM_ROOT, problem_name)):
-            logger.error(f"Problem {problem_name} must be installed " +
-                         "before installing bundle")
+            logger.error(
+                f"Problem {problem_name} must be installed "
+                + "before installing bundle"
+            )
             raise FatalException
-        for dependency_name in info['weightmap']:
+        for dependency_name in info["weightmap"]:
             if not os.path.isdir(join(PROBLEM_ROOT, dependency_name)):
-                logger.error(f"Problem {dependency_name} must be installed " +
-                             "before installing bundle")
+                logger.error(
+                    f"Problem {dependency_name} must be installed "
+                    + "before installing bundle"
+                )
                 raise FatalException
 
     bundle_destination = join(
-        BUNDLE_ROOT, sanitize_name(bundle_obj['name']), 'bundle.json')
+        BUNDLE_ROOT, sanitize_name(bundle_obj["name"]), "bundle.json"
+    )
     os.makedirs(os.path.dirname(bundle_destination), exist_ok=True)
     shutil.copy(bundle_path, bundle_destination)
     logger.info(f"Installed bundle {bundle_obj['name']}")

@@ -8,19 +8,21 @@ from copy import copy
 from hacksport.problem import Compiled, File, ProtectedFile, Remote
 
 
-def CompiledBinary(makefile=None,
-                   compiler="gcc",
-                   sources=None,
-                   binary_name=None,
-                   is_32_bit=True,
-                   executable_stack=True,
-                   no_stack_protector=True,
-                   aslr=False,
-                   compiler_flags=None,
-                   flag_file=None,
-                   static_flag=None,
-                   share_source=False,
-                   remote=False):
+def CompiledBinary(
+    makefile=None,
+    compiler="gcc",
+    sources=None,
+    binary_name=None,
+    is_32_bit=True,
+    executable_stack=True,
+    no_stack_protector=True,
+    aslr=False,
+    compiler_flags=None,
+    flag_file=None,
+    static_flag=None,
+    share_source=False,
+    remote=False,
+):
     """
     Creates a challenge for a compiled binary. User must specify either a makefile
     or compiler sources. If a makefile is specified, the binary name must also be
@@ -65,7 +67,9 @@ def CompiledBinary(makefile=None,
         assert False, "You must provide either a makefile or a sources list"
 
     if sources is None:
-        assert binary_name is not None, "You must provide the binary name if you use a makefile"
+        assert (
+            binary_name is not None
+        ), "You must provide the binary name if you use a makefile"
 
     if flag_file is None:
         flag_file = "flag.txt"

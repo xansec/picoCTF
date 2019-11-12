@@ -25,9 +25,9 @@ def main(name, host, user, password, port, proto):
                     username=user,
                     password=password,
                     protocol=proto,
-                    server_number=1
+                    server_number=1,
                 )
-                print(sid, end='')
+                print(sid, end="")
             except Exception as e:
                 print(e)
                 sys.exit("Failed to connect to shell server.")

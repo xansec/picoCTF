@@ -7,7 +7,6 @@ from hacksport.deploy import deploy_problem
 PATH = dirname(realpath(__file__))
 
 
-
 @pytest.mark.skip("Broken tests/not working")
 class TestProblems:
     """
@@ -19,7 +18,8 @@ class TestProblems:
 
     def test_remote_compiled_makefile_template(self):
         deploy_problem(
-            join(PATH, "problems/remote_compiled_makefile_template"), test=True)
+            join(PATH, "problems/remote_compiled_makefile_template"), test=True
+        )
 
     def test_remote_no_compile(self):
         deploy_problem(join(PATH, "problems/remote_no_compile"), test=True)

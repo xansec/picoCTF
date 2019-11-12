@@ -5,9 +5,13 @@ Utilities for dealing with configuration commands
 import json
 import logging
 
-from shell_manager.util import (FatalException,
-                                get_shared_config, get_local_config,
-                                set_shared_config, set_local_config)
+from shell_manager.util import (
+    FatalException,
+    get_shared_config,
+    get_local_config,
+    set_shared_config,
+    set_local_config,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +31,9 @@ def print_configuration(args):
     Entry point for config subcommand
     """
 
-    if args.config_type == 'shared':
+    if args.config_type == "shared":
         config = get_shared_config()
-    elif args.config_type == 'local':
+    elif args.config_type == "local":
         config = get_local_config()
 
     if args.json:
@@ -54,9 +58,9 @@ def set_configuration_option(args):
     Entry point for config set subcommand
     """
 
-    if args.config_type == 'shared':
+    if args.config_type == "shared":
         config = get_shared_config()
-    elif args.config_type == 'local':
+    elif args.config_type == "local":
         config = get_local_config()
 
     field = args.field
@@ -68,10 +72,17 @@ def set_configuration_option(args):
             logger.fatal("Couldn't parse value as JSON")
             raise FatalException
 
-    if field in config and type(
-            config[field]) != type(value) and not args.allow_type_change:
-        logger.fatal("Tried to change type of '%s' from '%s' to '%s'", field,
-                     type(config[field]), type(value))
+    if (
+        field in config
+        and type(config[field]) != type(value)
+        and not args.allow_type_change
+    ):
+        logger.fatal(
+            "Tried to change type of '%s' from '%s' to '%s'",
+            field,
+            type(config[field]),
+            type(value),
+        )
         logger.fatal("Try adding --json and supplying the value as json.")
         logger.fatal(
             "If changing the type is desired, add the --allow-type-change option"
@@ -80,9 +91,9 @@ def set_configuration_option(args):
 
     config[field] = value
 
-    if args.config_type == 'shared':
+    if args.config_type == "shared":
         set_shared_config(config)
-    elif args.config_type == 'local':
+    elif args.config_type == "local":
         set_local_config(config)
 
     logger.info("Set %s = %s", field, value)
