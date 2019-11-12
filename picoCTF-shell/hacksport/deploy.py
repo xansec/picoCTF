@@ -147,7 +147,8 @@ from time import sleep
 from hacksport.operations import create_user, execute
 from hacksport.problem import (Compiled, Directory, ExecutableFile, File,
                                FlaskApp, PHPApp, WebService, PreTemplatedFile,
-                               ProtectedFile, Remote, Service)
+                               ProtectedFile, GroupWriteDirectory, 
+                               Remote, Service)
 from hacksport.status import get_all_problem_instances, get_all_problems
 from jinja2 import Environment, FileSystemLoader, Template
 from shell_manager.package import package_problem
@@ -481,7 +482,8 @@ def deploy_files(staging_directory, instance_directory, file_list, username,
             shutil.copy2(file_source, output_path)
 
         # set the ownership based on the type of file
-        if isinstance(f, ProtectedFile) or isinstance(f, ExecutableFile):
+        if isinstance(f, ProtectedFile) or isinstance(f, ExecutableFile) or \
+           isinstance(f, GroupWriteDirectory):
             os.chown(output_path, default.pw_uid, user.pw_gid)
         else:
             uid = default.pw_uid if f.user is None else getpwnam(f.user).pw_uid
