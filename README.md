@@ -45,6 +45,19 @@ WIP is web IP address (default is 192.68.2.3)
 
 J=2 M=6 SIP=192.168.2.53 WIP=192.168.2.52 vagrant up shell && SIP=192.168.2.53 WIP=192.168.2.52 vagrant up web
 
+### Quick start on two existing machines (not Vagrant VMs)
+
+On each machine:
+1. `git clone https://github.com/picoCTF/picoCTF`
+2. `chmod og-rx picoCTF`
+3. `sudo ln -s picoCTF /picoCTF`
+4. `bash picoCTF/vagrant/provision_scripts/install_ansible.sh`
+5. `cd picoCTF/ansible`
+6. edit inventories/local_development to match your hostnames
+7. edit group_vars/local_development/vars.yml to have your username and password (instead of vagrant). If the usernames on your machines don't match, change shell_user also.
+8. SHELL ONLY: `ansible-playbook --ask-sudo-pass -e "web_address=http://WEB_HOSTNAME web_address_internal=http://WEB_HOSTNAME shell_hostname=SHELL_HOSTNAME shell_host=SHELL_HOSTNAME shell_port=22" -i inventories/local_development -v -l shell site.yml` (replace WEB_HOSTNAME and SHELL_HOSTNAME with yours)
+9. WEB ONLY: `ansible-playbook --ask-sudo-pass -e "web_address=http://WEB_HOSTNAME web_address_internal=http://WEB_HOSTNAME shell_hostname=SHELL_HOSTNAME shell_host=SHELL_HOSTNAME shell_port=22" -i inventories/local_development -v -l web,db site.yml` (replace WEB_HOSTNAME and SHELL_HOSTNAME with yours)
+
 
 ## Project Overview
 
