@@ -5,7 +5,7 @@ import logging
 import traceback
 
 from flask import Flask, jsonify, session
-from werkzeug.contrib.fixers import ProxyFix
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # these have to come first to avoid circular import issues
 from api.common import check, PicoException, validate  # noqa
