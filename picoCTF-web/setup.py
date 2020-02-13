@@ -77,6 +77,7 @@ setup(
         "spur==0.3.21",
         "voluptuous==0.11.7",
         "walrus==0.7.1",
+        "werkzeug<=0.16.1"
     ],
     extras_require={
         "dev": [
