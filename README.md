@@ -186,11 +186,6 @@ development. Our internal system is:
    else. Play testing makes sure the problem is coherent, self-contained, and
    fun.
 
-## Want your own contest, but are not a developer?
-
-[ForAllSecure](https://forallsecure.com) offers professionally-run original
-hacking contests as a service.
-
 ## Giving Back and Development
 
 The picoCTF platform is always under development.
