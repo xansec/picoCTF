@@ -5,6 +5,8 @@
   apt:
     update_cache: yes
     cache_valid_time: 3600
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 - name: Install base packages
   apt:
@@ -23,3 +25,5 @@
         'nethogs',
         'vnstat',
         ]
+  environment:
+    DEBIAN_FRONTEND: noninteractive

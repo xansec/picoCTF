@@ -5,6 +5,8 @@
   apt:
     update_cache: yes
     cache_valid_time: 3600
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 # Extracted from picoCTF-platform/scripts/web_setup.sh
 - name: Install picoCTF platform system dependencies
@@ -23,6 +25,8 @@
         'python3.7',
         ]
     state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 - name: Install pymongo in (new) virtualenv
   pip:

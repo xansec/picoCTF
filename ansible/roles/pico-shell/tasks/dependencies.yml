@@ -5,6 +5,8 @@
   apt:
     update_cache: yes
     cache_valid_time: 3600
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 # Add repositories for NodeJS and yarn
 - name: Add nodeJS and yarn repository/keys
@@ -45,6 +47,8 @@
       'software-properties-common',
       'xinetd',
       ]
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 # Needed by templated challenge types
 - name: Install uwsgi and plugins for shell server
@@ -57,6 +61,8 @@
         'uwsgi',
         ]
     state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 - name: Install pam dependencies
   apt:
@@ -65,6 +71,8 @@
         'python-setuptools',
         ]
     state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 - name: Install system python packages updates needed for pam_auth module and Ansible
   pip:
@@ -145,6 +153,8 @@
       'expect',
       'pandoc', # for `pip install pwntools`
       ]
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 #  Per https://bugs.launchpad.net/ubuntu/+source/gdb/+bug/1845494
 - name: Install specific version of gdb
@@ -152,6 +162,8 @@
     state: present
     force: yes
     name: 'gdb=8.1-0ubuntu3'
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 - name: Hold gdb
   dpkg_selections:
@@ -205,3 +217,5 @@
     ]
   when: enable_disk_quota | default(false) | bool
   register: quota_install
+  environment:
+    DEBIAN_FRONTEND: noninteractive

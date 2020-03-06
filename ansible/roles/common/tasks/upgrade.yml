@@ -4,7 +4,11 @@
   apt:
     update_cache: yes
     cache_valid_time: 3600
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 - name: Run apt-get dist-upgrade
-  apt: 
+  apt:
     upgrade: dist
+  environment:
+    DEBIAN_FRONTEND: noninteractive

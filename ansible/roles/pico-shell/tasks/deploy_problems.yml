@@ -25,3 +25,5 @@
   apt:
     upgrade: full
     force: yes
+  environment:
+    DEBIAN_FRONTEND: noninteractive

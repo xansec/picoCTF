@@ -25,6 +25,8 @@
 - name: Update apt cache
   apt:
     update_cache: yes
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 - name: Install nodejs and dependencies
   apt:
@@ -33,6 +35,8 @@
       'nodejs',
       ]
     state: latest
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 # Extracted from picoCTF-platform/scripts/web_setup.sh
 - name: Install nodejs packages (globally)
