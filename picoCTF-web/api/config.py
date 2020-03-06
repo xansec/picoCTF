@@ -14,8 +14,6 @@ These are the default settings that will be loaded
 into the database if no settings are already loaded.
 """
 default_settings = {
-    # Used for Mongo indexing purposes only
-    "settings_id": 1,
     "enable_feedback": True,
     # TIME WINDOW
     "start_time": datetime.datetime.utcnow(),
@@ -222,7 +220,7 @@ The {competition_name} Team""",  # noqa (79char)
 def get_settings():
     """Retrieve settings from the database."""
     db = api.db.get_conn()
-    settings = db.settings.find_one({"settings_id": 1}, {"_id": 0, "settings_id": 0})
+    settings = db.settings.find_one({}, {"_id": 0})
     if settings is None:
         db.settings.insert(default_settings)
         return default_settings
@@ -245,7 +243,7 @@ def merge_new_settings():
     db_settings = get_settings()
     merged = merge(default_settings, db_settings)
     db = api.db.get_conn()
-    db.settings.find_one_and_update({"settings_id": 1}, {"$set": merged})
+    db.settings.find_one_and_update({}, {"$set": merged})
 
 
 def change_settings(changes):
@@ -283,7 +281,7 @@ def change_settings(changes):
 
     check_keys(settings, changes)
     db = api.db.get_conn()
-    db.settings.find_one_and_update({"settings_id": 1}, {"$set": changes})
+    db.settings.find_one_and_update({}, {"$set": changes})
 
 
 def check_competition_active():

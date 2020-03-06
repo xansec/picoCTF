@@ -88,8 +88,6 @@ def get_conn():
             "sid", unique=True, name="unique scoreboard sid"
         )
 
-        __connection.settings.create_index("settings_id", unique=True)
-
         __connection.shell_servers.create_index(
             "sid", unique=True, name="unique shell sid"
         )
