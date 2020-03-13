@@ -66,7 +66,7 @@ setup(
         "Flask==1.1.1",
         "Jinja2==2.10.1",
         "openssh-wrapper==0.4",
-        "psutil==5.6.3",
+        "psutil==5.6.6",
         "pytest==3.6.1",
         "spur==0.3.21",
         "voluptuous==0.11.7",
