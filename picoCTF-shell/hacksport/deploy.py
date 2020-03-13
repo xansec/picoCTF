@@ -252,9 +252,15 @@ def update_problem_class(Class, problem_object, seed, user, instance_directory):
 def get_username(problem_name, instance_number):
     """
     Determine the username for a given problem instance.
+    Given limitation of 32char linux usernames with useradd, truncates generated
+    username to 28chars. This allows up to 1000 instances of problems with
+    usernames that do require truncation.
     """
-
-    return "{}_{}".format(sanitize_name(problem_name), instance_number)
+    username = "{}_{}".format(sanitize_name(problem_name)[0:28], instance_number)
+    if len(username) > 32:
+        raise Exception(
+            "Unable to create more than 1000 instances of this problem. Shorten problem name.")
+    return username
 
 
 def create_service_files(problem, instance_number, path):
