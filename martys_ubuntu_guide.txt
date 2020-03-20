@@ -17,14 +17,23 @@ sudo a2enmod proxy proxy_http
 
 sudo vi /etc/apache2/sites-available/reverse-proxy.conf
 
-# apache config
+# Use two hostnames that you can set DNS entries to point
+# to the Ubuntu server, one for the web and one for the shell
+# in the example below, hulkcybr1 is the front end and
+# csce465shell is the shell
 <VirtualHost *:80>
     ProxyPreserveHost On
-
+    ServerName hulkcybr1.dhl.tamu.edu
     ProxyPass / http://192.168.2.52/
     ProxyPassReverse / http://192.168.2.52/
 </VirtualHost>
-# end apache config
+
+<VirtualHost *:80>
+    ProxyPreserveHost On
+    ServerName csce465shell.martincarlisle.com
+    ProxyPass / http://192.168.2.53/
+    ProxyPassReverse / http://192.168.2.53/
+</VirtualHost>
 
 sudo service apache2 restart
 
@@ -51,3 +60,20 @@ COMMIT
 # Completed on Thu Mar 19 18:10:15 2020
 
 sudo iptables-restore < /etc/iptables/rules.v4
+
+## Note when you are generating web problems, you'll want to use the
+## DNS name from above for the shell, and the /problems/port/ interface
+## (e.g.)
+
+{
+  "name": "SQL Injection",
+  "category": "Web Exploitation",
+  "pkg_dependencies": ["php-sqlite3"],
+  "description": "There is a website running at <code>http://csce465shell.martincarlisle.com/problem/{{port}}/</code> (<a href=\"http://csce465shell.martincarlisle.com/problem/{{port}}/\">link</a>). Try to see if you can login!",
+  "score" : 8,
+  "hints": ["When you click on the source code link, right click and view source"],
+  "author": "Martin Carlisle",
+  "organization": "Carnegie Mellon",
+  "event" : "CSCE465"
+}
+
