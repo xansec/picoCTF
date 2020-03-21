@@ -726,7 +726,9 @@ def generate_instance(
     problem.description = template_string(
         problem.description, **get_attributes(problem)
     ).replace("\n", "<br>")
+    problem.hints = [template_string(hint, **get_attributes(problem)).replace("\n", "<br>") for hint in problem.hints]
     logger.debug("...Instance description: %s", problem.description)
+    logger.debug("...Instance hints: %s", problem.hints)
 
     return {
         "problem": problem,
@@ -891,6 +893,7 @@ def deploy_problem(
             else os.path.basename(instance["socket_file"]),
             "server": problem.server,
             "description": problem.description,
+            "hints": problem.hints,
             "flag": problem.flag,
             "flag_sha1": problem.flag_sha1,
             "instance_number": instance_number,
