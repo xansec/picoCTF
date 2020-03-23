@@ -23,7 +23,6 @@ problem_schema = Schema(
         Required("author"): check(("Author must be a string.", [str])),
         Required("category"): check(("Category must be a string.", [str])),
         Required("instances"): check(("The instances must be a list.", [list])),
-        Required("hints"): check(("Hints must be a list.", [list])),
         Required("organization"): check(("Organization must be string.", [str])),
         Required("event"): check(("Event must be string.", [str])),
         Required("unique_name"): check(
@@ -55,6 +54,7 @@ problem_schema = Schema(
 instance_schema = Schema(
     {
         Required("description"): check(("The description must be a string.", [str])),
+        Required("hints"): check(("Hints must be a list.", [list])),
         Required("flag"): check(("The flag must be a string.", [str])),
         "port": check(("The port must be an int", [int])),
         "server": check(("The server must be a string.", [str])),

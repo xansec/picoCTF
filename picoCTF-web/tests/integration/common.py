@@ -174,7 +174,6 @@ sample_shellserver_publish_output = r"""
       "name": "ECB 1",
       "category": "Cryptography",
       "description": "There is a crypto service running at {{server}}:{{port}}. We were able to recover the source code, which you can download at {{url_for(\"ecb.py\")}}.",
-      "hints": [],
       "walkthrough": "Let me google that for you.",
       "score": 70,
       "author": "Tim Becker",
@@ -193,6 +192,7 @@ sample_shellserver_publish_output = r"""
           "socket": null,
           "server": "192.168.2.3",
           "description": "There is a crypto service running at 192.168.2.3:46981. We were able to recover the source code, which you can download at <a href='//192.168.2.3/static/fd59acc6b8d2359d48bd939a08ecb8ab/ecb.py'>ecb.py</a>.",
+          "hints": [],
           "flag": "49e56ea9bf2e2b60ba9af034b5b2a5fd",
           "flag_sha1": "77cec418714d6eb0dc48afa6d6f38200402a83c0",
           "instance_number": 0,
@@ -232,6 +232,7 @@ sample_shellserver_publish_output = r"""
           "socket": null,
           "server": "192.168.2.3",
           "description": "There is a crypto service running at 192.168.2.3:21953. We were able to recover the source code, which you can download at <a href='//192.168.2.3/static/beb9874a05a1810fa8c9d79152ace1b3/ecb.py'>ecb.py</a>.",
+          "hints": [],
           "flag": "85a32ccd05fa30e0efd8da555c1a101a",
           "flag_sha1": "f28581a86561c885152f7622200057585787c063",
           "instance_number": 1,
@@ -271,6 +272,7 @@ sample_shellserver_publish_output = r"""
           "socket": null,
           "server": "192.168.2.3",
           "description": "There is a crypto service running at 192.168.2.3:17648. We were able to recover the source code, which you can download at <a href='//192.168.2.3/static/19e863cba0bf14ad676e4b4799eacc72/ecb.py'>ecb.py</a>.",
+          "hints": [],
           "flag": "f76d2f6b885255450ed2f7307d96e28e",
           "flag_sha1": "43cf6f1dab026cf2100e2f663509512416112219",
           "instance_number": 2,
@@ -314,7 +316,6 @@ sample_shellserver_publish_output = r"""
       ],
       "description": "There is a website running at http://{{server}}:{{port}}. Try to see if you can login!",
       "score": 40,
-      "hints": [],
       "author": "Tim Becker",
       "organization": "ForAllSecure",
       "event": "Sample",
@@ -327,6 +328,7 @@ sample_shellserver_publish_output = r"""
           "socket": null,
           "server": "192.168.2.3",
           "description": "There is a website running at http://192.168.2.3:46984. Try to see if you can login!",
+          "hints": [],
           "flag": "9ac0a74de6bced3cdce8e7fd466f32d0",
           "flag_sha1": "958416d52940e4948eca8d9fb1eca21e4cf7eda1",
           "instance_number": 0,
@@ -378,6 +380,7 @@ sample_shellserver_publish_output = r"""
           "socket": null,
           "server": "192.168.2.3",
           "description": "There is a website running at http://192.168.2.3:21955. Try to see if you can login!",
+          "hints": [],
           "flag": "28054fef0f362256c78025f82e6572c3",
           "flag_sha1": "f57fa5d3861c22a657eecafe30a43bd4ad7a4a2a",
           "instance_number": 1,
@@ -435,6 +438,7 @@ sample_shellserver_publish_output = r"""
           "socket": null,
           "server": "192.168.2.3",
           "description": "There is a website running at http://192.168.2.3:17649. Try to see if you can login!",
+          "hints": [],
           "flag": "6ed19af4c4540d444ae08735aa5664af",
           "flag_sha1": "19bbc88ca231ddfde8063acdda75a92b1e6fd993",
           "instance_number": 2,
@@ -499,9 +503,6 @@ sample_shellserver_publish_output = r"""
       "category": "Binary Exploitation",
       "description": "Exploit the {{url_for(\"vuln\", display=\"Buffer Overflow\")}} found here: {{directory}}.",
       "score": 50,
-      "hints": [
-        "This is a classic buffer overflow with no modern protections."
-      ],
       "walkthrough": "PROTIP: Find the correct answer to get the points.",
       "author": "Tim Becker",
       "organization": "ForAllSecure",
@@ -515,6 +516,9 @@ sample_shellserver_publish_output = r"""
           "socket": null,
           "server": "192.168.2.3",
           "description": "Exploit the <a href='//192.168.2.3/static/bd08ee41f495f8bff378c13157d0f511/vuln'>Buffer Overflow</a> found here: /problems/buffer-overflow-1_0_bab40cd8ebd7845e1c4c2951c6f82e1f.",
+          "hints": [
+            "This is a classic buffer overflow with no modern protections."
+          ],
           "flag": "638608c79eca2165e7b241ff365df05b",
           "flag_sha1": "4b97abef055a11ec19c14622eb31eb1168d98aca",
           "instance_number": 0,
@@ -541,6 +545,9 @@ sample_shellserver_publish_output = r"""
           "socket": null,
           "server": "192.168.2.3",
           "description": "Exploit the <a href='//192.168.2.3/static/c95410042007bb17f49b891a2a87afb2/vuln'>Buffer Overflow</a> found here: /problems/buffer-overflow-1_1_f49b6bd5da29513569bd87f98a934fa6.",
+          "hints": [
+            "This is a classic buffer overflow with no modern protections."
+          ],
           "flag": "35013564b97b80d4fd3f2be45e5836ff",
           "flag_sha1": "5675d2d5819084d4203c1ef314239527074938a9",
           "instance_number": 1,
@@ -567,6 +574,9 @@ sample_shellserver_publish_output = r"""
           "socket": null,
           "server": "192.168.2.3",
           "description": "Exploit the <a href='//192.168.2.3/static/dbeb4d34945e752ea988dcdb4454f57d/vuln'>Buffer Overflow</a> found here: /problems/buffer-overflow-1_2_6c4daed04928f80dd29290060827be61.",
+          "hints": [
+            "This is a classic buffer overflow with no modern protections."
+          ],
           "flag": "8dfabcb5c4a18d03ad5ecea19eef27a6",
           "flag_sha1": "aef4789685665a1bf4994d62ef10941dbce5647a",
           "instance_number": 2,
