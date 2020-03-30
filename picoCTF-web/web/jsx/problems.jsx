@@ -406,6 +406,69 @@ const ProblemSubmit = React.createClass({
      );
   },
 
+  dockerCreate (e) {
+    e.preventDefault();
+    $(e.target).html("Loading...")
+
+    const target = $(e.target);
+    const instanceDigest = target.data("value");
+    const doUpdate = this.props.updateProblemsList;
+    apiCall("POST", "/api/v1/docker/" + instanceDigest, {})
+      .done(function(data) {
+        apiNotify(data);
+        doUpdate();
+      })
+      .fail(jqXHR =>
+        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+      );
+  },
+
+  dockerStop (e) {
+    e.preventDefault();
+    const target = $(e.target);
+    const instanceDigest = target.data("digest");
+    const containerID = target.data("cid");
+    const doUpdate = this.props.updateProblemsList;
+    apiCall("DELETE", "/api/v1/docker/" + instanceDigest + "/" + containerID, {})
+      .done(function(data) {
+        apiNotify(data);
+        doUpdate();
+      })
+      .fail(jqXHR =>
+        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+      );
+  },
+
+  dockerReset (e) {
+    const target = $(e.target);
+    const instanceDigest = target.data("digest");
+    const containerID = target.data("cid");
+    const doUpdate = this.props.updateProblemsList;
+    apiCall("PUT", "/api/v1/docker/" + instanceDigest + "/" + containerID, {})
+      .done(function(data) {
+        apiNotify(data);
+        doUpdate();
+      })
+      .fail(jqXHR =>
+        apiNotify({ status: 0, message: jqXHR.responseJSON.message })
+      );
+  },
+
+  renderPorts() {
+      return (
+        <div class="row row-pad">
+        {
+        this.props.container['ports'].map((port, index) => {
+         return (
+            <div class="col-md-4">
+              <p><strong>{port.desc}</strong>:</p> <p dangerouslySetInnerHTML={ {__html: port.msg}}></p>
+            </div>
+           )
+      })
+        }
+      </div>)
+   },
+
   render() {
     const submitButton = (<Button className="btn-primary" type="submit">Submit!</Button>);
     const upButton = (
@@ -428,9 +491,60 @@ const ProblemSubmit = React.createClass({
         onClick={addProblemReview}
       />
     );
+
+    const createContainer = (
+      <Button
+        id={this.props.pid + "-docker-create"}
+        data-value={this.props.instance_digest}
+        className="btn btn-success btn-sm"
+        onClick={(e) => this.dockerCreate(e)}
+      >
+      Start Challenge
+      </Button>
+    );
+
+    var docker = (
+        <span className="input-group-btn">
+          {createContainer}
+        </span>
+    )
+
+    if (this.props.container ){
+      docker  = (
+      <div class="col-md-2 align-middle">
+        <div class="btn-toolbar input-group-sm" role="toolbar">
+          <div>
+            <Button
+              id={this.props.pid + "-docker-reset"}
+              data-digest={this.props.instance_digest}
+              data-cid={this.props.container['cid']}
+              className="btn btn-warning btn-sm"
+              onClick={(e) => this.dockerReset(e)}
+            >
+            Reset
+            </Button>
+          </div>
+          <div>
+            <Button
+              id={this.props.pid + "-docker-stop"}
+              data-digest={this.props.instance_digest}
+              data-cid={this.props.container['cid']}
+              className="btn btn-danger btn-sm"
+              onClick={(e) => this.dockerStop(e)}
+            >
+            Stop
+            </Button>
+          </div>
+        </div>
+      </div>
+      )
+    }
+
     return (
       <Col>
         <p className="problem-description" dangerouslySetInnerHTML={ {__html: this.props.description} }></p>
+        {this.props.container && this.renderPorts()}
+        {this.props.docker_challenge && docker}
         <form className="problem-submit" onSubmit={this.submitProblem}>
           <Row>
             <Input
