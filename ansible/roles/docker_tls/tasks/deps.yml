@@ -4,6 +4,6 @@
   apt:
     name: python-pip
 
-- name: Install pyOpenSSL
+- name: Install cryptography (requirement for openssl_csr_module)
   pip:
-    name: pyOpenSSL
+    name: cryptography

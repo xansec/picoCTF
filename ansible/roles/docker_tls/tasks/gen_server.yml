@@ -16,7 +16,7 @@
     path: "{{ca_csr}}"
     privatekey_path: "{{ca_key}}"
     common_name: "local docker CA"
-    basic_constraints: "CA:true"
+    basic_constraints: "CA:TRUE"
     basic_constraints_critical: yes
     key_usage:
       - keyCertSign
