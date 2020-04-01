@@ -77,3 +77,5 @@ sudo iptables-restore < /etc/iptables/rules.v4
   "event" : "CSCE465"
 }
 
+Also, you'll need to modify the nginx.conf on the shell server to 
+replace 192.168.2.53 (or whatever) with the hostname being used (e.g. csce465shell.martincarlisle.com)
