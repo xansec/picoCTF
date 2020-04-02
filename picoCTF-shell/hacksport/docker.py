@@ -3,6 +3,10 @@ Challenge template to deploy instances in on-demand containers
 """
 
 import logging
+import os
+import tarfile
+import tempfile
+import sys
 
 import docker
 
@@ -28,6 +32,7 @@ class DockerChallenge(Challenge):
                 client_cert=(self.docker_client_cert, self.docker_client_key))
 
             self.client = docker.DockerClient(base_url=self.docker_host, tls=tls_config)
+            self.api_client = docker.APIClient(base_url=self.docker_host, tls=tls_config)
             logger.debug("Connecting to docker daemon with config")
 
         # Docker options not set in configuration so use the environment to
@@ -89,6 +94,37 @@ class DockerChallenge(Challenge):
             return None
 
         return img
+
+    def copy_from_image(self, src):
+        """
+        Copy a file/folder from within a build image to the local filesystem.
+        Can only be run after the challenge image is created with
+        `initialize_docker`.
+        Args:
+            src : path of file or folder within the challenge image
+        """
+
+        cwd = os.getcwd()
+        logger.debug("Copy: {} from container to {}".format(src, cwd))
+        try:
+            cid = self.api_client.create_container(self.image_name)
+            c = self.client.containers.get(cid)
+            strm, stat = c.get_archive(src)
+
+            with tempfile.NamedTemporaryFile('wb+',suffix=".tar") as tf:
+                for chunk in strm:
+                    tf.write(chunk)
+                tf.flush()
+                tf.seek(0)
+
+                with tarfile.open(fileobj=tf) as tar:
+                    res = tar.extractall()
+
+            self.api_client.remove_container(cid)
+        except Exception:
+            logger.error("Fatal error in copy_from_image", exc_info=True)
+            raise
+
 
 
 # Utility classes to handle templating of ports. Will get formated twice in the
