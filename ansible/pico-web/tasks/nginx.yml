@@ -28,6 +28,16 @@
   notify :
     - nginx restart
 
+# Must occur before picoCTF configuration is added to ensure the
+# referenced keys exist.
+- name: Request certificate (certbot)
+  vars:
+    certbot_domain: "{{nginx_server_name}}"
+  include_role:
+    name: certbot
+    tasks_from: request_certificates
+  when: enable_certbot | bool
+
 - name: Add picoCTF site configuration to nginx
   template: 
     src: ctf.nginx.j2
@@ -37,6 +47,8 @@
     group: root
     mode: 0644
   no_log: True
+  notify :
+    - nginx reload
 
 # HTTP Basic Auth used to secure remote testing competition sites
 - name: Setup HTTP basic auth

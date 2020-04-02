@@ -55,6 +55,7 @@ htpasswd_accounts: []
 
 # SSL requires cert and vault-encrypted key
 enable_web_ssl: False
+enable_certbot: False
 
 # mongodb connect settings
 mongodb_replica_enabled: false

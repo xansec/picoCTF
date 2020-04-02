@@ -12,6 +12,13 @@ server {
         ssl_certificate_key /etc/ssl/private/ssl-pico.key;
         ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
         ssl_ciphers         HIGH:!aNULL:!MD5;
+        {% elif enable_certbot | bool -%}
+        listen 443 ssl; # managed by Certbot
+
+        ssl_certificate /etc/letsencrypt/live/{{nginx_server_name}}/fullchain.pem; # managed by Certbot
+        ssl_certificate_key /etc/letsencrypt/live/{{nginx_server_name}}/privkey.pem; # managed by Certbot
+        include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+        ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
         {% else %}
         listen       80;
         {% endif %}
@@ -107,7 +114,7 @@ server {
         }
 }
 
-{% if enable_web_ssl | bool -%}
+{% if (enable_web_ssl | bool) or (enable_certbot |bool ) -%}
 server {
         listen 80 default_server;
         listen [::]:80 default_server;
