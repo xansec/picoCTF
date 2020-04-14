@@ -65,7 +65,7 @@ server {
 {% endif %}
 }
 
-{% if (enable_web_ssl | bool) or (enable_certbot |bool ) -%}
+{% if (enable_shell_ssl | bool) or (enable_certbot |bool ) -%}
 server {
         listen 80 default_server;
         listen [::]:80 default_server;
