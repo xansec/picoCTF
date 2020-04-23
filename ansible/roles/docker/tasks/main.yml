@@ -11,6 +11,7 @@
   service:
     name: docker
     state: started
+    enabled: yes
 
 - name: Make docker group
   group:
