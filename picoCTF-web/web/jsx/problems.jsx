@@ -504,9 +504,11 @@ const ProblemSubmit = React.createClass({
     );
 
     var docker = (
-        <span className="input-group-btn">
-          {createContainer}
-        </span>
+      <Row className="form-group">
+        <Col className="text-center">
+            {createContainer}
+          </Col>
+      </Row>
     )
 
     if (this.props.container ){
