@@ -1,4 +1,4 @@
-const { Badge, Button, ButtonGroup, Glyphicon, Col, Input, ListGroup,
+const { Badge, Button, ButtonGroup, ButtonToolbar, Glyphicon, Col, Input, ListGroup,
         ListGroupItem, NavItem, Panel, PanelGroup, ProgressBar, Row, Tab,
         Table, Tabs } = ReactBootstrap;
 const { update } = React.addons;
@@ -503,19 +503,22 @@ const ProblemSubmit = React.createClass({
       </Button>
     );
 
+
     var docker = (
       <Row className="form-group">
         <Col className="text-center">
             {createContainer}
-          </Col>
+        </Col>
       </Row>
-    )
+    );
+
+    var style={justifyContent:"center", display: "flex"};
 
     if (this.props.container ){
       docker  = (
-      <div class="col-md-2 align-middle">
-        <div class="btn-toolbar input-group-sm" role="toolbar">
-          <div>
+      <Row className="form-group">
+        <ButtonToolbar style={style}>
+        <ButtonGroup>
             <Button
               id={this.props.pid + "-docker-reset"}
               data-digest={this.props.instance_digest}
@@ -525,8 +528,8 @@ const ProblemSubmit = React.createClass({
             >
             Reset
             </Button>
-          </div>
-          <div>
+        </ButtonGroup>
+        <ButtonGroup>
             <Button
               id={this.props.pid + "-docker-stop"}
               data-digest={this.props.instance_digest}
@@ -536,11 +539,11 @@ const ProblemSubmit = React.createClass({
             >
             Stop
             </Button>
-          </div>
-        </div>
-      </div>
+        </ButtonGroup>
+        </ButtonToolbar>
+      </Row>
       )
-    }
+    };
 
     return (
       <Col>
