@@ -456,13 +456,11 @@ const ProblemSubmit = React.createClass({
 
   renderPorts() {
       return (
-        <div class="row row-pad">
+      <div>
         {
         this.props.container['ports'].map((port, index) => {
          return (
-            <div class="col-md-4">
-              <p><strong>{port.desc}</strong>:</p> <p dangerouslySetInnerHTML={ {__html: port.msg}}></p>
-            </div>
+              <p className="problem-description"><strong>{port.desc}</strong>: <span dangerouslySetInnerHTML={ {__html: port.msg}}></span></p>
            )
       })
         }
