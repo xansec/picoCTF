@@ -82,7 +82,7 @@ server {
             proxy_redirect off;
         }
 
-        location ~ ^/(problems|profile|scoreboard|account|shell|faq|contact)$ {
+        location ~ ^/(problems|profile|scoreboard|account|shell|faq|contact)(\.html)?$ {
             auth_request /api/v1/user/authorize/user;
             expires -1;
             default_type text/html;
@@ -94,13 +94,13 @@ server {
             alias {{ pico_http_dir }}/$1.html;
         }
 
-        location ~ ^/(classroom)$ {
+        location ~ ^/(classroom)(\.html)?$ {
             auth_request /api/v1/user/authorize/teacher;
             default_type text/html;
             alias {{ pico_http_dir }}/$1.html;
         }
 
-        location ~ ^/(management)$ {
+        location ~ ^/(management)(\.html)?$ {
             auth_request /api/v1/user/authorize/admin;
             default_type text/html;
             alias {{ pico_http_dir }}/$1.html;
