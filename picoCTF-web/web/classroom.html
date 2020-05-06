@@ -193,16 +193,16 @@ startup_functions:
             <div class="row">
               <div class="col-md-12">
                   <div class="problem panel panel-default">
-                    <div class="panel-heading team-visualization-enabler" expanded data-tid="<%= team.tid %>" data-toggle="collapse" data-target="#<%= (groupName+team.tid).hashCode() %>">
+                    <div class="panel-heading team-visualization-enabler" expanded data-tid="<%= team.tid %>" data-gid="<%= gid %>" data-toggle="collapse" data-target="#<%= (groupName+team.tid).hashCode() %>">
                         <%- team.team_name %> [<%- members %>] <div class="pull-right"><%- team.score %></div>
                     </div>
                     <div class="panel-collapse collapse" id="<%= (groupName+team.tid).hashCode() %>">
                       <div class="panel-body">
                           <div class="col-md-8">
                               <h4>Category Performance</h4>
-                               <div id="radar-visualizer-<%- team.tid %>" class="radar-visualizer"/>
+                               <div id="radar-visualizer-<%- gid + '-' + team.tid %>" class="radar-visualizer"/>
                                <h4>Overall Progression</h4>
-                               <div id="visualizer-<%- team.tid %>" class="team-visualizer"></div>
+                               <div id="visualizer-<%- gid + '-' + team.tid %>" class="team-visualizer"></div>
                           <% if(team.flagged_submissions.length > 0) { %>
                           <div class="panel panel-warning">
                               <div class="panel-heading">Suspicious Submissions</div>

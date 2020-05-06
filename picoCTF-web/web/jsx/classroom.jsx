@@ -113,12 +113,13 @@ const loadGroupOverview = function(groups, showFirstTab, callback) {
           }
         }
         $(".team-visualization-enabler").on("click", function(e) {
+          const gid = $(e.target).data("gid");
           const tid = $(e.target).data("tid");
           const result = [];
           for (let team of data.members) {
             if (tid === team.tid) {
               window.renderTeamProgressionGraph(
-                `#visualizer-${tid}`,
+                `#visualizer-${gid}-${tid}`,
                  team.progression
               );
               //hack
@@ -126,7 +127,7 @@ const loadGroupOverview = function(groups, showFirstTab, callback) {
                 _.delay(
                   window.renderTeamRadarGraph,
                   150,
-                  `#radar-visualizer-${tid}`,
+                  `#radar-visualizer-${gid}-${tid}`,
                   tid
                 )
               );
