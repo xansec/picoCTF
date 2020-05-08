@@ -222,7 +222,7 @@ def get_settings():
     db = api.db.get_conn()
     settings = db.settings.find_one({}, {"_id": 0})
     if settings is None:
-        db.settings.insert(default_settings)
+        db.settings.insert(default_settings.copy())
         return default_settings
     return settings
 
