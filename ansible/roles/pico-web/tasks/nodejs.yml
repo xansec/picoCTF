@@ -8,9 +8,9 @@
     path: /etc/apt/sources.list.d/nodesource.list
   register: nodejs
 
-- name: Download nodejs 4.x setup script (LTS)
+- name: Download nodejs 10.x setup script (LTS)
   get_url:
-    url: "https://deb.nodesource.com/setup_8.x"
+    url: "https://deb.nodesource.com/setup_10.x"
     dest: "/tmp/node_setup.sh"
     mode: 0700
 
