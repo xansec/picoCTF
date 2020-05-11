@@ -158,7 +158,7 @@ def _validate_captcha(data):
     return parsed_response["success"] is True
 
 
-@log_action
+@log_action(dont_log=["password"])
 def add_user(params, batch_registration=False):
     """
     Register a new user and creates a team for them automatically.
@@ -344,7 +344,7 @@ def verify_user(uid, token_value):
         return False
 
 
-@log_action
+@log_action(dont_log=["params"])
 def update_password_request(params, uid=None, check_current=False):
     """
     Update account password.
@@ -376,7 +376,7 @@ def update_password_request(params, uid=None, check_current=False):
     )
 
 
-@log_action
+@log_action()
 def disable_account(uid, disable_reason=None):
     """
     Note: The original disable account has now been updated to perform delete account instead.
@@ -497,7 +497,7 @@ def confirm_password(attempt, password_hash):
     return bcrypt.hashpw(attempt.encode("utf-8"), password_hash) == password_hash
 
 
-@log_action
+@log_action(dont_log=["password"])
 def login(username, password):
     """Authenticate a user."""
     user = get_user(name=username, include_pw_hash=True)
@@ -523,7 +523,7 @@ def login(username, password):
         raise PicoException("Incorrect password", 401)
 
 
-@log_action
+@log_action()
 def logout():
     """Clear the session."""
     session.clear()

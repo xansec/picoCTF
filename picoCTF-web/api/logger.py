@@ -1,5 +1,5 @@
 """Manage loggers for the API."""
-
+import inspect
 import logging
 import logging.handlers
 import traceback
@@ -39,7 +39,6 @@ class FunctionLoggingHandler(logging.StreamHandler):
                 {
                     "event": result["name"],
                     "args": result["args"],
-                    "kwargs": result["kwargs"],
                     "time": datetime.now(),
                 }
             )
@@ -141,28 +140,33 @@ def setup_logs(args):
     log.root.addHandler(stats_log)
 
 
-def log_action(f):
+def log_action(dont_log=[]):
     """Log a function invocation and its result."""
+    def outer_wrapper(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            """Provide contextual information to the logger."""
 
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        """Provide contextual information to the logger."""
-        log_information = {
-            "name": "{}.{}".format(f.__module__, f.__name__),
-            "args": args,
-            "kwargs": kwargs,
-            "result": None,
-        }
-        try:
-            log_information["result"] = f(*args, **kwargs)
-        except Exception as error:
-            log_information["exception"] = error
-            raise error
-        finally:
-            log.info(log_information)
-        return log_information["result"]
+            func_args = inspect.getcallargs(f, *args, **kwargs)
+            for param in dont_log:
+                if param in func_args:
+                    del func_args[param]
+            log_information = {
+                "name": "{}.{}".format(f.__module__, f.__name__),
+                "args": func_args,
+                "result": None,
+            }
+            try:
+                log_information["result"] = f(*args, **kwargs)
+            except Exception as error:
+                log_information["exception"] = error
+                raise error
+            finally:
+                log.info(log_information)
+            return log_information["result"]
 
-    return wrapper
+        return wrapper
+    return outer_wrapper
 
 
 def get_api_exceptions(result_limit=50):

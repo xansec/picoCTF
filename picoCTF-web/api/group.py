@@ -88,7 +88,7 @@ def get_member_information(gid):
     return member_information
 
 
-@log_action
+@log_action()
 def create_group(tid, group_name):
     """
     Insert group into the db. Assumes everything is validated.
@@ -154,7 +154,7 @@ def change_group_settings(gid, settings):
     db.groups.update({"gid": group["gid"]}, {"$set": {"settings": settings}})
 
 
-@log_action
+@log_action()
 def join_group(gid, tid, teacher=False):
     """
     Add a team to a group. Assumes everything is valid.
@@ -177,7 +177,7 @@ def join_group(gid, tid, teacher=False):
     cache.invalidate(api.team.get_groups, tid)
 
 
-@log_action
+@log_action()
 def leave_group(gid, tid):
     """
     Remove a team from a group.
@@ -192,7 +192,7 @@ def leave_group(gid, tid):
     cache.invalidate(api.team.get_groups, tid)
 
 
-@log_action
+@log_action()
 def elevate_team(gid, tid):
     """
     Elevate a team within a group.
@@ -207,7 +207,7 @@ def elevate_team(gid, tid):
     cache.invalidate(api.team.get_groups, tid)
 
 
-@log_action
+@log_action()
 def delete_group(gid):
     """
     Delete a group.
