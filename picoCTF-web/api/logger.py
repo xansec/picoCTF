@@ -139,6 +139,19 @@ def setup_logs(args):
     stats_log.setLevel(logging.INFO)
     log.root.addHandler(stats_log)
 
+def _remove_parameter(arg_dict, param_path):
+    """Recurses through a dictionary of dictionaries and removes the given param"""
+    if param_path[0] not in arg_dict:
+        return arg_dict
+
+
+    new_dict = arg_dict.copy() # Needed to avoid aliasing effects
+    if len(param_path) == 1:
+        new_dict[param_path[0]] = "REDACTED"
+        return new_dict
+
+    new_dict[param_path[0]] = _remove_parameter(arg_dict[param_path[0]], param_path[1:])
+    return new_dict
 
 def log_action(dont_log=[]):
     """Log a function invocation and its result."""
@@ -149,8 +162,8 @@ def log_action(dont_log=[]):
 
             func_args = inspect.getcallargs(f, *args, **kwargs)
             for param in dont_log:
-                if param in func_args:
-                    del func_args[param]
+                param_path = param.split(".")
+                func_args = _remove_parameter(func_args, param_path)
             log_information = {
                 "name": "{}.{}".format(f.__module__, f.__name__),
                 "args": func_args,
