@@ -15,15 +15,15 @@ import api
 from api import cache, log_action, PicoException
 
 
-def check_blacklisted_usernames(username):
+def is_blacklisted_username(username):
     """
-    Verify that the username isn't present in the username blacklist.
+    Whether the username is blacklisted.
 
     Args:
         username: the username to check
     """
     settings = api.config.get_settings()
-    return username not in settings.get(
+    return username in settings.get(
         "username_blacklist", api.config.default_settings["username_blacklist"]
     )
 
@@ -182,7 +182,7 @@ def add_user(params, batch_registration=False):
     """
     # Make sure the username is unique
     db = api.db.get_conn()
-    if db.users.find_one(
+    if is_blacklisted_username(params["username"]) or db.users.find_one(
         {"username": params["username"]},
         collation=Collation(locale="en", strength=CollationStrength.PRIMARY),
     ):
