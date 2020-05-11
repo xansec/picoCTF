@@ -44,7 +44,7 @@ def verify_email_in_whitelist(email, whitelist=None):
         return True
 
     for email_domain in whitelist:
-        if re.match(r".*?@{}$".format(email_domain), email) is not None:
+        if re.match(r"^[^@]+@{}$".format(email_domain), email) is not None:
             return True
 
     return False
