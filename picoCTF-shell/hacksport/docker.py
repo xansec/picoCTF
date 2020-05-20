@@ -11,20 +11,18 @@ import sys
 import docker
 
 from hacksport.problem import Challenge
+from shell_manager.util import sanitize_name
 
 logger = logging.getLogger(__name__)
 
 class DockerChallenge(Challenge):
-    """Challenge based on a docker container.
-
-    Class variables that must be defined:
-    * problem_name - name that will show up in Docker UI for this problem
-    """
-    problem_name = None         # XXX: should be able to derive
+    """Challenge based on a docker container."""
     ports = {}
 
     def __init__(self):
         """ Connnects to the docker daemon"""
+        # will be used as the tag on the docker image
+        self.problem_name = sanitize_name(self.name)
         # use an explicit remote docker daemon per the configuration
         try:
             tls_config = docker.tls.TLSConfig(
@@ -43,6 +41,9 @@ class DockerChallenge(Challenge):
 
         # throws an exception if the server returns an error: docker.errors.APIError
         self.client.ping()
+
+    def setup(self):
+        pass
 
     def initialize_docker(self, build_args, timeout=600):
 

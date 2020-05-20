@@ -20,7 +20,6 @@
     - import_tasks: "tasks/docker_deploy_client_certs.yml"
   roles:
     - {role: common     , tags: ["common"]}
-    - {role: docker     , tags: ["docker"]}
     - {role: pico-shell , tags: ["shell"]}
 
 - hosts: db
