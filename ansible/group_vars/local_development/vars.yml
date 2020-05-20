@@ -53,9 +53,11 @@ redis_conf_auth: False
 ##
 # Docker challenge options
 ##
-docker_public_host: "{{ lookup('env','SIP') or '192.168.2.3' }}"
-docker_internal_host: "tcp://{{ lookup('env','SIP') or '192.168.2.3' }}:2376"
-docker_ca: "/home/{{ansible_user}}/.docker/ca.pem"
-docker_client: "/home/{{ansible_user}}/.docker/cert.pem"
-docker_key: "/home/{{ansible_user}}/.docker/key.pem"
+docker_public_host   : "{{ lookup('env','SIP') or '192.168.2.3' }}"
+docker_internal_host : "tcp://{{ docker_public_host }}:2376"
+docker_server_SAN    : "DNS:localhost,IP:{{docker_public_host}},IP:127.0.0.1"
+docker_dir           : "/home/{{ ansible_user }}/.docker"
+docker_ca            : "{{ docker_dir }}/ca.pem"
+docker_client        : "{{ docker_dir }}/cert.pem"
+docker_key           : "{{ docker_dir }}/key.pem"
 docker_containers_per_team: 3
