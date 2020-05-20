@@ -116,7 +116,7 @@ def upsert_problem(problem, sid):
     # XXX: also track port information and TTL
     digests = []
     for i in problem["instances"]:
-        if i["docker_challenge"]:
+        if "docker_challenge" in i and i["docker_challenge"]:
             digests.append(i["instance_digest"])
 
             try:
