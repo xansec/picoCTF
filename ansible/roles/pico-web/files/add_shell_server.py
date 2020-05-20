@@ -12,25 +12,26 @@ import api
 
 
 def main(name, host, user, password, port, proto):
-    with api.create_app().app_context():
+    # If a server by this name exists no action necessary
+    servers = api.shell_servers.get_all_servers()
+    if any([s["name"] == name for s in servers]):
+        print("shell server already exists with name: {}".format(name))
+        return
+    else:
         try:
-            # If a server by this name exists no action necessary
-            api.shell_servers.get_server(name=name)
-        except:
-            try:
-                sid = api.shell_servers.add_server(
-                    name=name,
-                    host=host,
-                    port=port,
-                    username=user,
-                    password=password,
-                    protocol=proto,
-                    server_number=1,
-                )
-                print(sid, end="")
-            except Exception as e:
-                print(e)
-                sys.exit("Failed to connect to shell server.")
+            sid = api.shell_servers.add_server(
+                name=name,
+                host=host,
+                port=port,
+                username=user,
+                password=password,
+                protocol=proto,
+                server_number=1,
+            )
+            print(sid, end="")
+        except Exception as e:
+            print(e)
+            sys.exit("Failed to connect to shell server.")
 
 
 if __name__ == "__main__":
@@ -41,4 +42,5 @@ if __name__ == "__main__":
         sys.exit("Bad args")
     else:
         _, name, host, user, password, port, proto = sys.argv
-        main(name, host, user, password, port, proto)
+        with api.create_app().app_context():
+            main(name, host, user, password, port, proto)
