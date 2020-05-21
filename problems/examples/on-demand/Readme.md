@@ -6,11 +6,11 @@ creation of isolated, per-user containers.
 
 ## Examples
 
-- *Docker World* (`minimal`), demonstrates the most simple use of the
+- *Docker World* ([minimal](./minimal)), demonstrates the most simple use of the
   `DockerChallenge` class.
 
-- *Buffer Overflow 2* (`artifact`), demonstrates the ability to provide artifacts
+- *Buffer Overflow 2* ([artifact](./artifact)), demonstrates the ability to provide artifacts
   from a `DockerChallenge` style challenge.
 
-- *Key Delivery Service* (`multi-port`), demonstrates the ability to create more
+- *Key Delivery Service* ([multi-port](./multi-port)), demonstrates the ability to create more
   complex multi-port challenges with the `DockerChallenge` class.
