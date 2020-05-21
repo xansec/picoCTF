@@ -17,7 +17,6 @@ __client = None
 # low-level Docker API Client: https://docker-py.readthedocs.io/en/stable/api.html?#
 __api_client = None
 
-
 def get_clients():
     """
     Get a high level and a low level docker client connection,
@@ -25,10 +24,6 @@ def get_clients():
     Ensures that only one global docker client exists per thread. If the client
     does not exist a new one is created and returned.
     """
-
-    # using self signed certificates
-    # https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings
-    urllib3.disable_warnings()
 
     global __client, __api_client
     if not __client or not __api_client:
@@ -41,7 +36,7 @@ def get_clients():
                 host, ca, client, key = [conf[o] for o in opts]
 
                 log.debug("Connecting to docker daemon with config")
-                tls_config = docker.tls.TLSConfig(ca_cert=ca, client_cert=(client, key))
+                tls_config = docker.tls.TLSConfig(ca_cert=ca, client_cert=(client, key), verify=True)
                 __api_client = docker.APIClient(base_url=host, tls=tls_config)
                 __client = docker.DockerClient(base_url=host, tls=tls_config)
 
@@ -79,7 +74,6 @@ def ensure_consistency(tid):
     for container in actual:
         try:
             tracked_cids.pop(container.id)
-            # XXX: add check for expiration
         except KeyError:
             # container exists but is not in database so delete
             log.debug("untracked: ", container.id)
@@ -131,7 +125,8 @@ def create(tid, image_name):
 
     client, api_client = get_clients()
     # XXX: manage container longevity and deletion
-    labels = {"owner": str(tid), "created_at": str(int(time.time()))}
+    created_at = int(time.time())
+    labels = {"owner": str(tid), "created_at": str(created_at)}
     try:
         container = client.containers.run(
             image=image_name,
@@ -160,11 +155,12 @@ def create(tid, image_name):
     data = {"cid": container.id,
             "ports": display_ports,
             "tid": tid,
-            "pid": pid}
+            "pid": pid,
+            "created_at": created_at,
+            "expire_at": created_at + int(conf["DOCKER_TTL"])}
 
     db.containers.insert(data)
 
-    # XXX: Get metadata about the running container into the container itself
     return {"success": True, "message": "Challenge started"}
 
 def delete(cid):

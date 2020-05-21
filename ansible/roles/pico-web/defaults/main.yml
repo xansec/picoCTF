@@ -66,4 +66,5 @@ docker_internal_host: ""
 docker_ca: ""
 docker_client: ""
 docker_key: ""
+docker_ttl : 3600  # 1 hour = 60 * 60 = 3600
 docker_containers_per_team: 3
