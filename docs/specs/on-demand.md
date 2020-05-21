@@ -1,24 +1,24 @@
 # On-Demand Challenges
 
-*On-demand* challenges allow isolated, per-competitor, copies of a challenge
+**On-demand** challenges allow isolated, per-competitor, copies of a challenge
 instance. This functionality is supported by the `DockerChallenge` class.
 
 ## Advantages
 
-*Challenge isolation*. Every user gets a clean slate and their actions or
+**Challenge isolation**. Every user gets a clean slate and their actions or
 modifications will not impact other users. This enables stateful challenges
 where a user can make modifications. It also allows more stable performance
 characteristics as any given "on-demand" service only has a single user.
 Importantly it prevents challenges from having unintentional lateral solutions.
 
-*More complex constructions*. Since they are isolated per user the
+**More complex constructions**. Since they are isolated per user the
 `DockerChallenge` class allows arbitrarily complex challenge design, including
 challenges with multiple related services.
 
-*Greater Development Felxibility*. Anything that can be done in a container
+**Greater development felxibility**. Anything that can be done in a container
 a challenge authors can do without worrying about system wide conflicts.
 
-*Challenge reset*. Every user can reset their on-demand challenges to a fresh
+**Challenge reset**. Every user can reset their on-demand challenges to a fresh
 state. This can ease administration.
 
 ## Examples
@@ -28,7 +28,7 @@ provided [examples](../../problems/examples/on-demand/Readme.md)
 
 ## Architecture
 
-The `DockerChallenge` class relies on access to a running docker `daemon`.  In
+The `DockerChallenge` class relies on access to a running `docker` daemon.  In
 the development `Vagrantfile` this is configured to run on the shell server.
 However in a production environment it can also be isolated to a separate
 "docker server" with the daemon listening on a [TLS protected socket][dtls].
@@ -50,12 +50,14 @@ following diagrams show the "docker server" as a separate entity.
 6. API presents the "client" with the running port information
 7. "client" interacts with the challenge on the "docker server"
 
-Steps 1-3 are one time actions during challenge deployment similar to other
+**Steps 1-3** are one time actions during challenge deployment similar to other
 hacksport problem types. The only significant difference is that the
 `DockerChallenge` class does not result in any service actually being started.
 
-Steps 4-7. are the "on-demand" functionality and can be repeated multiple times,
+**Steps 4-7** are the "on-demand" functionality and can be repeated multiple times,
 as a user desires.
+
+The following screenshots show the user facing interaface for on-demand challenges.
 
 #### Initial View (4)
 
