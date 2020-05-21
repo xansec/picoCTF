@@ -43,7 +43,9 @@ class DockerChallenge(Challenge):
         self.client.ping()
 
     def setup(self):
-        pass
+        # Challenge author should override setup to do additional setup takes
+        # or pass arguments to the build process.
+        self.initialize_docker({})
 
     def initialize_docker(self, build_args, timeout=600):
 
