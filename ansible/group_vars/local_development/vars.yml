@@ -60,4 +60,5 @@ docker_dir           : "/home/{{ ansible_user }}/.docker"
 docker_ca            : "{{ docker_dir }}/ca.pem"
 docker_client        : "{{ docker_dir }}/cert.pem"
 docker_key           : "{{ docker_dir }}/key.pem"
+docker_ttl           : 3600  # 1 hour = 60 * 60 = 3600
 docker_containers_per_team: 3

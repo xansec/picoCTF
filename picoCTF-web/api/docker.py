@@ -131,7 +131,7 @@ def create(tid, image_name):
 
     client, api_client = get_clients()
     # XXX: manage container longevity and deletion
-    labels = {"owner": str(tid), "delete_at": str(int(time.time()) + 20 * 60)}
+    labels = {"owner": str(tid), "created_at": str(int(time.time()))}
     try:
         container = client.containers.run(
             image=image_name,
