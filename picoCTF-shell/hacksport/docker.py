@@ -27,7 +27,8 @@ class DockerChallenge(Challenge):
         try:
             tls_config = docker.tls.TLSConfig(
                 ca_cert=self.docker_ca_cert,
-                client_cert=(self.docker_client_cert, self.docker_client_key))
+                client_cert=(self.docker_client_cert, self.docker_client_key),
+                verify=True)
 
             self.client = docker.DockerClient(base_url=self.docker_host, tls=tls_config)
             self.api_client = docker.APIClient(base_url=self.docker_host, tls=tls_config)
