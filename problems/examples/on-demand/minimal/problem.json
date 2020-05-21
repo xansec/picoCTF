@@ -1,5 +1,5 @@
 {
-  "name": "Minimal Docker",
+  "name": "Docker World",
   "category": "Miscellaneous",
   "description": "We heard containers were the future so we put your classic hello world flag service in a container. Have at it.",
   "score" : 5,

@@ -1,4 +1,4 @@
-# Minimal Docker
+# Docker World
 
 This challenge demonstrates the most simple use of the `DockerChallenge` class.
 
