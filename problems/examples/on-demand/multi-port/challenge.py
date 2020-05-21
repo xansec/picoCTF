@@ -13,7 +13,7 @@ class Problem(DockerChallenge):
         # host/port combination.
         self.ports = {
                 5555: Netcat("key delivery service"),
-                22: Custom("ssh challenge@{host} -p {{port}}", "SSH")
+                22: Custom("<code>ssh challenge@{host} -p {{port}}</code>", "SSH")
                 }
 
         # The initialize_docker function builds an instance specific docker

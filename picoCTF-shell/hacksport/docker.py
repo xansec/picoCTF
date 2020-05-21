@@ -141,9 +141,9 @@ class HTTP():
     def dict(self):
         url = "http://{host}:{{port}}" + self.path
         if self.link_text == "":
-            link = "<a href='{}'>{}</a>".format(url, url)
+            link = "<a href='{}' target='_blank'>{}</a>".format(url, url)
         else:
-            link = "<a href='{}'>{}</a>".format(url, self.link_text)
+            link = "<a href='{}' target='_blank'>{}</a>".format(url, self.link_text)
         return {"fmt": link, "desc": self.desc}
 
 class Netcat():
@@ -151,14 +151,14 @@ class Netcat():
         self.desc = desc
 
     def dict(self):
-        return {"fmt": "nc {host} {{port}}", "desc": self.desc}
+        return {"fmt": "<code>nc {host} {{port}}</code>", "desc": self.desc}
 
 class Plain():
     def __init__(self, desc):
         self.desc = desc
 
     def dict(self):
-        return {"fmt": "{host}:{{port}}", "desc": self.desc}
+        return {"fmt": "<code>{host}:{{port}}</code>", "desc": self.desc}
 
 class Custom():
     def __init__(self, fmt, desc):
