@@ -15,15 +15,15 @@ import api
 from api import cache, log_action, PicoException
 
 
-def check_blacklisted_usernames(username):
+def is_blacklisted_username(username):
     """
-    Verify that the username isn't present in the username blacklist.
+    Whether the username is blacklisted.
 
     Args:
         username: the username to check
     """
     settings = api.config.get_settings()
-    return username not in settings.get(
+    return username in settings.get(
         "username_blacklist", api.config.default_settings["username_blacklist"]
     )
 
@@ -44,7 +44,7 @@ def verify_email_in_whitelist(email, whitelist=None):
         return True
 
     for email_domain in whitelist:
-        if re.match(r".*?@{}$".format(email_domain), email) is not None:
+        if re.match(r"^[^@]+@{}$".format(email_domain), email) is not None:
             return True
 
     return False
@@ -76,21 +76,22 @@ def get_user(name=None, uid=None, include_pw_hash=False):
     """
     db = api.db.get_conn()
 
-    match = {}
     projection = {"_id": 0}
     if not include_pw_hash:
         projection["password_hash"] = 0
 
     if uid is not None:
-        match.update({"uid": uid})
+        return db.users.find_one({"uid": uid}, projection)
     elif name is not None:
-        match.update({"username": name})
+        return db.users.find_one(
+            {"username": name},
+            projection,
+            collation=Collation(locale="en", strength=CollationStrength.PRIMARY),
+        )
     elif api.user.is_logged_in():
-        match.update({"uid": session["uid"]})
+        return db.users.find_one({"uid": session["uid"]}, projection)
     else:
         raise PicoException("Could not retrieve user - not logged in", 401)
-
-    return db.users.find_one(match, projection)
 
 
 def get_users(email=None, parentemail=None, username=None, include_pw_hash=False):
@@ -182,7 +183,7 @@ def add_user(params, batch_registration=False):
     """
     # Make sure the username is unique
     db = api.db.get_conn()
-    if db.users.find_one(
+    if is_blacklisted_username(params["username"]) or db.users.find_one(
         {"username": params["username"]},
         collation=Collation(locale="en", strength=CollationStrength.PRIMARY),
     ):
