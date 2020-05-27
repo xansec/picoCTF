@@ -379,7 +379,7 @@ def update_password_request(params, uid=None, check_current=False):
     )
 
 
-@log_action()
+@log_action
 def disable_account(uid, disable_reason=None):
     """
     Note: The original disable account has now been updated to perform delete account instead.
@@ -526,7 +526,7 @@ def login(username, password):
         raise PicoException("Incorrect password", 401)
 
 
-@log_action()
+@log_action
 def logout():
     """Clear the session."""
     session.clear()

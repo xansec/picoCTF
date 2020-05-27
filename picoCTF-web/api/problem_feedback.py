@@ -57,7 +57,7 @@ def get_problem_feedback(pid=None, tid=None, uid=None, count_only=False):
         return list(db.problem_feedback.find(match, {"_id": 0}))
 
 
-@log_action()
+@log_action
 def upsert_feedback(pid, feedback):
     """
     Add or update problem feedback in the database.

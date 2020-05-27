@@ -153,7 +153,7 @@ def _remove_parameter(arg_dict, param_path):
     new_dict[param_path[0]] = _remove_parameter(arg_dict[param_path[0]], param_path[1:])
     return new_dict
 
-def log_action(dont_log=[]):
+def log_action(_f=None, dont_log=[]):
     """Log a function invocation and its result."""
     def outer_wrapper(f):
         @wraps(f)
@@ -180,7 +180,11 @@ def log_action(dont_log=[]):
             return log_information["result"]
 
         return wrapper
-    return outer_wrapper
+
+    if _f is None:
+        return outer_wrapper
+    else:
+        return outer_wrapper(_f)
 
 
 def get_api_exceptions(result_limit=50):

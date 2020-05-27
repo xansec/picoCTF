@@ -59,7 +59,7 @@ def grade_problem(pid, key, tid=None):
     return (correct, suspicious)
 
 
-@log_action()
+@log_action
 def submit_key(tid, pid, key, method, uid, ip=None):
     """
     User problem submission.

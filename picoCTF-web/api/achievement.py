@@ -111,7 +111,7 @@ def get_processor(aid):
         raise PicoException("Achievement processor is offline.")
 
 
-@log_action()
+@log_action
 def process_achievement(aid, data):
     """
     Determine whether or not an achievement has been earned.
