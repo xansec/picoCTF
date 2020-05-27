@@ -161,7 +161,7 @@ def log_action(_f=None, dont_log=[]):
             """Provide contextual information to the logger."""
 
             func_sig = inspect.signature(f)
-            func_args = dict(f.bind_partial(*args, **kwargs).arguments)
+            func_args = dict(func_sig.bind_partial(*args, **kwargs).arguments)
             for param in dont_log:
                 param_path = param.split(".")
                 func_args = _remove_parameter(func_args, param_path)
