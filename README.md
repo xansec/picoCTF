@@ -20,7 +20,8 @@ covered in our documentation: https://discord.gg/WQGdYaB
 
 The following steps will use [Vagrant](https://www.vagrantup.com/) to get you
 quickly up and running with the picoCTF platform by deploying the code base to
-two local virtual machines.
+two local virtual machines. You can read more about using `vagrant` in our
+[documentation](./docs/vagrant.md)
 
 1. `git clone https://github.com/picoCTF/picoCTF.git`
 2. `cd picoCTF`

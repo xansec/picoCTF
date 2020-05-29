@@ -23,7 +23,7 @@ Vagrant.configure("2") do |config|
                            owner: "vagrant", group: "vagrant",
                            mount_options: ["dmode=775", "fmode=775"]
 
-    shell.vm.provision "shell", path: "vagrant/provision_scripts/install_ansible.sh"
+    shell.vm.provision "shell", path: "ansible/scripts/install_ansible.sh"
     shell.vm.provision :ansible_local do |ansible|
       ansible.compatibility_mode = "2.0"
       ansible.playbook = "site.yml"
@@ -62,7 +62,7 @@ Vagrant.configure("2") do |config|
                          owner: "vagrant", group: "vagrant",
                          mount_options: ["dmode=775", "fmode=775"]
 
-    web.vm.provision "shell", path: "vagrant/provision_scripts/install_ansible.sh"
+    web.vm.provision "shell", path: "ansible/scripts/install_ansible.sh"
     web.vm.provision :ansible_local do |ansible|
       ansible.compatibility_mode = "2.0"
       ansible.playbook = "site.yml"
