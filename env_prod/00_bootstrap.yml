@@ -1,0 +1,21 @@
+---
+
+- hosts: all
+  become: yes
+  become_method: sudo
+  gather_facts: no
+
+  pre_tasks:
+    - import_tasks: "../ansible/tasks/util_ssh_keyscan.yml"
+    - import_tasks: "../ansible/tasks/bootstrap.yml"
+
+  tasks:
+    - import_tasks: "../ansible/tasks/util_admin_user.yml"
+      vars:
+        new_user: "{{ ansible_user }}"
+        keys: []
+
+
+# roll right into provisioning
+- name: Platform Provision
+  import_playbook: "10_platform_provision.yml"

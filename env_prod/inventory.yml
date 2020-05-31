@@ -1,0 +1,84 @@
+---
+# configuration for use with the local development Vagrantfile
+
+all:
+
+  hosts:
+
+    shell:
+      # Replace with either IP address or domain name of host
+      ansible_host                : "XXX"
+      hostname                    : "picoCTF-shell-PROD"
+
+
+    web:
+      # Replace with either IP address or domain name of host
+      ansible_host                : "XXX"
+      hostname                    : "picoCTF-web-PROD"
+
+  vars:
+      # ubuntu is the default user for the AWS Ubuntu AMI
+      ansible_user                : "ubuntu"
+
+      # this is the default key specified in terraform/variables.tf
+      # that was automatically added to the machines when launched
+      ansible_ssh_private_key_file: "~/.ssh/picoCTF_production_rsa"
+
+      # source settings
+      sync_mode                   : "source"
+      pico_src_dir                : "{{ playbook_dir }}/../"
+      pico_base_dir               : "/picoCTF"
+      virtualenv_dir              : "/picoCTF-env"
+
+      ## web settings
+      web_hostname                : "{{ hostvars['web']['ansible_host'] }}"
+      web_address                 : "{{ web_hostname }}"
+      web_address_internal        : "{{ 'http://' + web_fqdn }}"
+      web_address_internal_https  : "{{ 'https://' + web_fqdn }}"
+      web_fqdn                    : "{{ web_hostname }}"
+      flask_app_server_name       : "{{ web_fqdn }}"
+      nginx_server_name           : "{{ web_fqdn }}"
+
+      # shell settings
+      shell_hostname              : "{{ hostvars['shell']['ansible_host'] }}"
+      shell_name                  : "shell"
+      shell_ip                    : "10.0.1.20"
+      shell_user                  : "{{ ansible_user }}"
+      shell_manager_deploy_secret : "XXX_Update_Insecure-Secret_XXX"
+
+      # TODO: remove
+      shell_pass                  : "XXX_fake_uses_a_key_XXX"
+      shell_admin_password_crypt  : ""
+
+      # optional web automation
+      enable_basic_auth           : False
+      auto_add_shell              : True
+      auto_load_problems          : False
+      auto_start_competition      : False
+
+      ##
+      # Database settings (env specific)
+      ##
+      on_aws                      : True
+      db_private_ip               : "127.0.0.1"
+      mongodb_conf_auth           : False
+      mongodb_replica_enabled     : False
+
+      redis_private_ip            : "127.0.0.1"
+      aws_elasticache             : False
+      redis_db_number             : 0
+      redis_conf_auth             : False
+      redis_db_password           : None
+
+      ##
+      # DockerChallenge options
+      ##
+      docker_public_host          : "{{ shell_hostname }}"
+      docker_internal_host        : "tcp://{{ shell_ip }}:2376"
+      docker_ca                   : "/home/{{ ansible_user }}/.docker/ca.pem"
+      docker_client               : "/home/{{ ansible_user }}/.docker/cert.pem"
+      docker_key                  : "/home/{{ ansible_user }}/.docker/key.pem"
+      docker_containers_per_team  : 3
+      docker_ttl                  : 3600  # 1 hour = 60 * 60 = 3600
+      docker_clients              : ["{{ web_hostname }}"]
+      server_SAN                  : "DNS:localhost,IP:{{ shell_ip }},IP:127.0.0.1"

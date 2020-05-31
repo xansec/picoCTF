@@ -1,0 +1,13 @@
+
+# Runs ssh-keyscan to add a host to SSH known host if if does not exist.
+# This is nessecary the first time after creating a new machine.
+
+# reference: https://gist.github.com/shirou/6928012
+- name: Ensure ssh host key known
+  become: false
+  local_action:
+    module: lineinfile
+    dest: ~/.ssh/known_hosts
+    create: yes
+    state: present
+    line: "{{ lookup('pipe', 'ssh-keyscan -trsa ' + ansible_host ) }}"

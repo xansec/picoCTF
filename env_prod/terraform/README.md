@@ -76,7 +76,7 @@ that you are using. This specifies the resources available (and the price).
 
 ```
 terraform init
-terrafrom plan
+terraform plan
 terraform apply
 ```
 
@@ -90,9 +90,14 @@ Following these steps will automatically create the following resources on AWS:
 
 If that completed successfully, you now have two servers (`web` and `shell`)
 running on AWS ready to host your competition. The IP addresses should have been
-provided at the completion of `terraform apply`.  In order to actually start
-a competition you need to provision the servers with
-[Ansible](../ansible/README.md). 
+provided at the completion of `terraform apply`. This is the bare-bones virtual
+"hardware" necessary to run picoCTF remotely on AWS. However these instances
+have none of the required software installed. At this point go back up to the
+[env_prod/Readme.md][prod] in order to continue configuring your production
+picoCTF deployment.
+
+[prod]:../Readme.md
+
 
 **NOTE:** You might not see these resources in your [AWS EC2 Dashboard][dash] if
 your region does not match the region in which you created your terraform
@@ -120,78 +125,73 @@ destroy the servers and resources that where created run:
 terraform destroy
 ```
 
-**Note:** `terraform destroy` will hang due to the ebs as noted in https://github.com/picoCTF/picoCTF/issues/33 which references https://github.com/hashicorp/terraform/issues/2957 . It is good practice to manually shutdown the instances prior to destroying them to make this process go faster.
-
-Please consider reading along for a more in depth explanation of how our Terraform configuration is structured. Also this will discuss how you can modify the configuration to meet your needs.
-
-## Follow-on Steps
-
-After following above, you will have the bare-boned hardware neccesary to run Pico remotely (on AWS), but these instances have none of the required software installed. Other sections cover the below steps in more detail but here is a quick summary of the basic next steps to get the competition up and running:
-
-1. Deploy (copy) your picoCTF repository to `/picoCTF` on the newly created instances. The below list of steps is the simplest method for demonstration purpose, but [mkdeploy.sh](../mkdeploy.sh) was developed to deploy your own custom repo. Read this script to learn how to use it.
-    
-    - `sudo git clone https://github.com/picoCTF/picoCTF.git /picoCTF`
-    - `sudo chown -R ubuntu:ubuntu /picoCTF`
-
-2. Install ansible on terraformed instances
-
-    - `chmod +x /picoCTF/vagrant/provision_scripts/*`
-    - `/picoCTF/vagrant/provision_scripts/install_ansible.sh`
-
-3. Update the appropriate ansible inventory (see [remote_aws_single_tier_example](../ansible/inventories/remote_aws_single_tier_example) for a very simple example of a single tier AWS inventory).
-
-4. Update the appropriate ansible vault. You must update the passwords in your group_vars [vault.yml](../ansible/group_vars/remote_aws/vault.yml). Pico developed [rekey.py](../deploy/rekey.py) to assist in this process. You can also manually update these values simply by running the command `ansible-vault edit vault.yml` with the password of **pico**. The most important piece is that the `vault_shell_admin_password_crypt` must be the correctly formated hash of the `vault_shell_pass`. You can generate this hash on your own simply by running `perl -e 'print crypt("<vault_shell_pass>","\$6\$saltsalt\$") . "\n"'` in addition to the method suggested in the current _vault.yml_. You should also change your vault password with `ansible-vault rekey vault.yml`.
-
-5. Run ansible playbook on your terraformed instances. See the [ansible README](../ansible/README.md) for more information but you can simply run `ansible-playbook --vault-id @prompt -i /picoCTF/ansible/inventories/remote_aws --limit="shell"  "$@" site.yml` for shell or `ansible-playbook --vault-id @prompt -i /picoCTF/ansible/inventories/remote_aws --limit="db,web"  "$@" site.yml` for the web/db from `\picoCTF\ansible`. When prompted, the default vault password is `pico` (you should have changed that however in the above step).
-
-At this point, your ctf should be up and running. You can browse to your web elastic IP address and register (the first account will be your admin). You will still need to deploy problems on your shell server as well as to add them your shell server to your web management. You can also simply update *auto_add_shell*, *auto_load_problems*, and *auto_start_competition* in [vars.yml](../ansible/groups_vars/remote_aws/vars.yml) to **True** and re-run your ansible playbook on shell first and then web to automate this process. Good luck.
+Please consider reading along for a more in depth explanation of how our
+Terraform configuration is structured. Also this will discuss how you can modify
+the configuration to meet your needs.
 
 ## Overview of Files
 
-The Terraform configuration is broken down into two primary parts:
+The Terraform configuration is broken down into three primary parts:
 
-1. [Modules](./modules) which contains the building blocks for the picoCTF infrastructure.
-2. Environmental configurations such as [production](./production) which compose the basic modules into a specific configuration.
+1. Configurable options.
+2. Resources which specify the "hardware" for the picoCTF infrastructure.
+3. State
 
-### Modules
-Each module represents a specific set of resources that need to be created on AWS. These are functionally broken out into common reusable components and are parameterized to accommodate many possible configurations. At the top of each module file it defines the interface for using the module with `Inputs` and `Outputs`.  Input variable must be passed in when instantiated from configurations such as [production/main.tf](./production/main.tf). Outputs are variables that are then made available to the calling root module for further composition.
+### 1. Configurable Options (`variables.tf`)
 
-Modules do not create resources directly, they are only instantiated through [Environmental Configurations](#environmental-configurations). In general the existing modules should not need modification, you can change how they are composed in an environmental configuration, but certainly you can add any other resources that might be appropriate for your scenario.
+We have organized our `terraform` setup so that any change you might need to
+make are isolated to this single file. This is where you would specify which SSH
+key to add, or things like the machine type.
 
-On their own each modules only creates a part of the infrastructure necessary to run a competition, however they can also be nested to create a full environment. An example of this is the [single_tier_aws](./modules/single_tier_aws/single_tier_aws.tf) module which forms the baseline deployment configuration for picoCTF.  The `single_tier_aws` module brings together all the other modules necessary and defines sane default configurations.  This single module can then be instantiated in the various environmental configurations.
+### 2. Terraform Resources (`main.tf` and `security_groups.tf`)
 
-### Environmental Configurations
-Environmental configuration specify how to configure a copy of the picoCTF infrastructure. They provide specific configuration values to instantiate the modules in a manner that is appropriate for the environment. For example your `testing` instances likely do not need to be as large as your `production` instances. Other examples of common configurations that you might changes per environment are ssh keys, tags, and perhaps AWS region.
+These are the main files which specify the resources which will be created. For
+a simple setup there should be no need to edit these files. However, if for some
+reason you wanted a more complex deployment you could add a server here.
 
-In the simplest scenario you might only want to deploy the picoCTF platform to production for a live competition. In that case you can focus only on the [production](./production) directory. However it can also be useful to have a testing infrastructure to play test on prior to a competition. These infrastructures might have different resource requirements and be hosting different data, but for consistency sake you want them to be configured the same way.  Terraform makes this easy by allowing you to compose the same building block (modules) into multiple different configurations.
+These resourced are created when you run `terraform apply`. If you make any
+changes you will need to run that command again in order for them to be
+created/updates.
 
-Each environmental configuration will create a separate set of infrastructure, so you if do a `terraform apply` in both `production` and `testing` you will have 4 different servers running (production web and shell, testing web and shell). If you then run `terraform destroy` in the `testing` directory it will remove all those resources, but won't effect your `production` servers.  Each environment will require provisioning and administration, but fortunately [ansible](../ansible) handles most of that complexity for you.
+### Terraform State (`terraform.tfstate`)
 
-Each environmental configuration is specified in a single file `main.tf`.
+This tracks your currently created resources (virtual "hardware"). This file is
+created after you have run `terrafrom apply`.
 
-#### Terraform Configuration (`main.tf`)
-This is the primary file you will want to make changes to if you are using the default configurations.  This configuration creates a running instance of your infrastructure when you run `terraform apply` from an environmental configuration directory. All it does is pass your environmental configuration variables to the appropriate modules (building blocks).
+[State][state] is a particularly important part of using Terraform . By default
+this is stored in this directory as `terraform.tfstate`. This is how Terraform
+knows what resources have been created and what their status. If you don't have
+this file Terraform will no longer be able to manage your resources and you may
+have to go into the [AWS Management Console][console] and manually modify/remove
+orphaned elements.
 
-### Terraform State
-One particularly important part of using Terraform is keeping track of the [state](https://www.terraform.io/docs/state/). By default this is stored in your environmental configuration directory as `terraform.tfstate`. This is how Terraform knows what resources have been created and what their status. If you don't have this file Terraform will no longer be able to manage your resources and you may have to go into the AWS  [Management Console](https://console.aws.amazon.com) and manually modify/remove orphaned elements.
+[console]:https://console.aws.amazon.com
+[state]:https://www.terraform.io/docs/state/
 
-This repository defaults to ignore `terraform.tfstate` from version control. This is the simplest and works well when there is a single person responsible for deploying your infrastructure.  If a second member of the team wants to modify the current infrastructure they will need to manually copy the `terraform.tfstate` file out of band.
+This repository defaults to ignore `terraform.tfstate` from version control.
+This is the simplest and works well when there is a single person responsible
+for deploying your infrastructure.  If a second member of the team wants to
+modify the current infrastructure they will need to manually copy the
+`terraform.tfstate` file out of band.
 
-Another method is to commit `terraform.tfstate` into version control. This works well for when you are developing and deploying from a private copy of the repository. Then on every change the `terraform.tfstate` file would be committed and tracked so all users could deploy. 
-
-Alternatively Terraform provides a number of more complex options for [remote state](https://www.terraform.io/docs/state/remote/index.html) that might better suit your needs.
+Another method is to commit `terraform.tfstate` into version control. This works
+well for when you are developing and deploying from a private copy of the
+repository. Then on every change the `terraform.tfstate` file would be committed
+and tracked so all users could deploy. To add the `.tfstate` files you can
+either edit the default `.gitignore` file or use `git add -f *.tfstate`.
 
 ## Common Tasks
 
 ### Basic Workflow
+
 1. Make edits to the appropriate configuration file
 2. Check what changes it will have
     - `terraform plan`
     - look for things like improperly templated/applied variables
-    - `terraform init`
 3. Apply the changes
     - `terraform apply` 
-4. If you are tracking `terraform.tfstate` in private source control commit the newly modified `terraform.tfstate`
+4. If you are tracking `terraform.tfstate` in private source control commit the
+   newly modified `terraform.tfstate`
 
 ### Rebuild a single server
 
@@ -203,18 +203,21 @@ Alternatively Terraform provides a number of more complex options for [remote st
     - this will only mark the server for recreation
 3. Capture the plan
     - `terraform plan`
-    - this should show only the deletion of the instance and perhaps the modification of attached resources (eg: Elastic IP (eip), Elastic Block Storage (ebs)) that rely on the instance id
+    - this should show only the deletion of the instance and perhaps the
+    modification of attached resources (eg: Elastic IP (eip), Elastic Block
+    Storage (ebs)) that rely on the instance id
 4. Apply the plan
     - `terraform apply`
     - this is the step that actually destroys the server and creates a new instance
-5. Commit the results (only if you are tracking `terraform.tfstate` in private source control)
+5. Commit the results (only if you are tracking `terraform.tfstate` in private
+   source control)
     - `git add terraform.tfstate*`
     - `git commit -m "[APPLY] - success rebuilding server aws_instance.web"`
-8. Remove stale host key
-    - `ssh-keygen -f "~/.ssh/known_hosts" -R 203.0.113.254`
-6. Test ssh
-    - `ssh -i ~/.ssh/picoCTF_production_rsa admin@203.0.113.254`
-9. Re-provision/Configure
+6. Remove stale host key
+    - `ssh-keygen -f "~/.ssh/known_hosts" -R OLD_IP_ADDRESS`
+7. Test ssh
+    - `ssh -i ~/.ssh/picoCTF_production_rsa admin@NEW_IP_ADDRESS`
+8. Re-provision/Configure
     - run the relevant ansible playbooks
 
 ### Other Notes

@@ -1,0 +1,6 @@
+# task list to bootstrap a host from only an ssh user.
+# should be called from a playbook with `gather_facts: no`
+
+- name: Install python
+  raw: apt update; apt install -y python python-simplejson
+

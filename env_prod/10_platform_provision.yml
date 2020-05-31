@@ -1,0 +1,31 @@
+---
+# Playbook to deploy the entire picoCTF environment
+
+- hosts: shell
+  become: yes
+  become_method: sudo
+  pre_tasks:
+    # allow the web to SSH to the shell server to load deployment
+    # key created and fetched in 00_bootstrap.yml
+    - import_tasks: "../ansible/tasks/util_admin_user.yml"
+      vars:
+        new_user: "{{ ansible_user }}"
+        keys: ["./keys/web_id_rsa.pub"]
+  roles:
+    - {role: common     , tags: ["common"]}
+    - {role: pico-docker, tags: ["docker"]}
+    - {role: pico-shell , tags: ["shell"]}
+
+- hosts: web
+  become: yes
+  become_method: sudo
+  pre_tasks:
+    - import_role:
+        name: pico-docker
+        tasks_from: config_user
+      vars:
+        client: "{{web_hostname}}"
+  roles:
+    - {role: common     , tags: ["common"]}
+    - {role: mongodb    , tags: ["db"]}
+    - {role: pico-web   , tags: ["web"]}
