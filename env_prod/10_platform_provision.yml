@@ -14,6 +14,7 @@
   roles:
     - {role: common     , tags: ["common"]}
     - {role: pico-docker, tags: ["docker"]}
+    - {role: certbot    , tags: ["certbot"]}
     - {role: pico-shell , tags: ["shell"]}
 
 - hosts: web
@@ -28,4 +29,5 @@
   roles:
     - {role: common     , tags: ["common"]}
     - {role: mongodb    , tags: ["db"]}
+    - {role: certbot    , tags: ["certbot"]}
     - {role: pico-web   , tags: ["web"]}

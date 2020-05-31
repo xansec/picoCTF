@@ -37,7 +37,15 @@ all:
       web_address_internal_https  : "{{ 'https://' + web_fqdn }}"
       web_fqdn                    : "{{ web_hostname }}"
       flask_app_server_name       : "{{ web_fqdn }}"
-      nginx_server_name           : "{{ web_fqdn }}"
+      nginx_server_name           : "{{ ansible_host }}"
+
+      ## HTTPS
+      # You can automatically obtain free SSL/TLS certificates from Let's
+      # Encrypt by using certbot. In order for this functionality to work
+      # you must have a domain registered and pointing at your hosts. The
+      # `ansible_host` for both `web` and `shell` should be domain names.
+      enable_certbot              : false
+      certbot_email               : "XXX"
 
       # shell settings
       shell_hostname              : "{{ hostvars['shell']['ansible_host'] }}"
