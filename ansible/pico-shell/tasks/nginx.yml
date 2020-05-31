@@ -1,6 +1,16 @@
 ---
 # Playbook that configures nginx on picoCTF-shell
 
+# Must occur before picoCTF configuration is added to ensure the
+# referenced keys exist.
+- name: Request certificate (certbot)
+  vars:
+    certbot_domain: "{{nginx_server_name}}"
+  include_role:
+    name: certbot
+    tasks_from: request_certificates
+  when: enable_certbot | bool
+
 - name: Add picoCTF site configuration to nginx
   template:
     src: shell.nginx.j2
@@ -9,6 +19,8 @@
     owner: root
     group: root
     mode: 0644
+  notify:
+    - nginx reload
 
 - name: Enable picoCTF-shell site configuration
   file:
@@ -24,6 +36,8 @@
   file:
     path: "/etc/nginx/sites-enabled/default"
     state: absent
+  notify:
+    - nginx reload
 
 # Install SSL cert and key for nginx
 - name: Copy SSL cert
