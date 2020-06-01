@@ -6,10 +6,6 @@ all:
   vars:
       ansible_user                : "vagrant"
 
-      # source settings
-      pico_base_dir               : "/picoCTF"
-      virtualenv_dir              : "/picoCTF-env"
-
       ## web settings
       web_hostname                : "{{ lookup('env','WIP') or '192.168.2.2' }}"
       web_address                 : "http://{{web_hostname}}"

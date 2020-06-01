@@ -1,6 +1,13 @@
 ---
-# Playbook that configures nginx for picoCTF-web
-# This is the base picoCTF web nginx configuration
+# Playbook that installs and configures nginx
+
+- name: Install nginx
+  apt:
+    name: [
+        'nginx',
+        'nginx-extras',
+        ]
+    state: present
 
 - name: Configure nginx
   copy:
@@ -38,15 +45,15 @@
     tasks_from: request_certificates
   when: enable_certbot | bool
 
-- name: Add picoCTF site configuration to nginx
+- name: "Add site configuration to nginx ({{ site_config_name }})"
   template: 
-    src: ctf.nginx.j2
-    dest: "/etc/nginx/sites-available/{{ pico_site_config_name }}"
+    src: "{{ site_config_name }}.nginx.j2"
+    dest: "/etc/nginx/sites-available/{{ site_config_name }}"
     backup: yes
     owner: root
     group: root
     mode: 0644
-  no_log: True
+  #no_log: True
   notify :
     - nginx reload
 
@@ -66,26 +73,26 @@
 # Install SSL cert and key for nginx
 - name: Copy SSL cert
   copy:
-    src: ssl-pico.chained.crt
-    dest: /etc/ssl/certs/ssl-pico.chained.crt
+    src: "{{ ssl_crt }}"
+    dest: "/etc/ssl/certs/{{ ssl_crt }}"
     owner: root
     group: root
     mode: 0644
-  when: enable_web_ssl | bool
+  when: enable_ssl | bool
 
 - name: Copy SSL key
   copy:
-    src: ssl-pico.key.vault_encrypted
-    dest: /etc/ssl/private/ssl-pico.key
+    src: "{{ ssl_key_vault }}"
+    dest: "/etc/ssl/private/{{ ssl_key }}"
     owner: root
     group: root
     mode: 0644
-  when: enable_web_ssl | bool
+  when: enable_ssl | bool
 
-- name: Enable picoCTF site configuration
+- name: "Enable site configuration ({{ site_config_name }})"
   file:
-    src: "/etc/nginx/sites-available/{{ pico_site_config_name }}"
-    dest: "/etc/nginx/sites-enabled/{{ pico_site_config_name }}"
+    src: "/etc/nginx/sites-available/{{ site_config_name }}"
+    dest: "/etc/nginx/sites-enabled/{{ site_config_name }}"
     owner: root
     group: root
     state: link
@@ -96,3 +103,18 @@
   file:
     path: "/etc/nginx/sites-enabled/default"
     state: absent
+
+# create the static folder directory if it does not already exist
+- name: Create static web folder directory if it does not exist
+  file:
+    path: /usr/share/nginx/html/static
+    state: directory
+    mode: 0751
+    owner: root
+    group: root
+
+- name: Ensure nginx is running
+  service:
+    name: nginx
+    state: started
+    enabled: yes

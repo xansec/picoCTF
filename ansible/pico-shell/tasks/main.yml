@@ -9,25 +9,17 @@
   no_log: True
 
 - include: dependencies.yml
-  tags:
-    - network
-    - dependency
 
 - include: shell_manager.yml
 
-- include: nginx.yml
+- include_role:
+    name: nginx
 
 - include: pam_and_services.yml
 
 - include: deploy_problems.yml
 
 - include: permissions.yml
-
-- name: Ensure nginx is running
-  service:
-    name: nginx
-    state: started
-    enabled: yes
 
 - name: Hidepid
   command: mount -o remount,hidepid=2 /proc
@@ -48,12 +40,6 @@
     path: /etc/profile
     line: mesg n
 
-# Missing
-# journald
-# services
-#   sudo systemctl add-wants default.target shell_manager.target
-# hardening
-
 - name: Remove /var/log/wtmp
   file:
     path: /var/log/wtmp
@@ -63,4 +49,3 @@
   file:
     path: /var/run/utmp
     mode: go-r
-

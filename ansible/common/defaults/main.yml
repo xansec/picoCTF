@@ -6,3 +6,5 @@ private_repo: False
 
 # Method for synchronizing the picoCTF source to the remote machine
 sync_mode: "none"   # [none, git, git_private, source]
+
+pico_base_dir: "/picoCTF"

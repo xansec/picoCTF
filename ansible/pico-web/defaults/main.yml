@@ -2,18 +2,19 @@
 # Defaults for the picoCTF-web role. These are the lowest priority variables
 # and can easily be overridden in group_vars, host_vars, or command line
 
-# pico_base_dir set in common.yml
-web_code_dir: "{{pico_base_dir}}/picoCTF-web"
+pico_base_dir  : "/picoCTF"
+web_code_dir   : "{{pico_base_dir}}/picoCTF-web"
+virtualenv_dir : "/picoCTF-env"
 
 ###
 # picoCTF-web and API configuration
 ###
-web_build_dir:        "/picoCTF-web-build"
-web_config_dir:       "/picoCTF-web-config"
-pico_web_api_dir:     "{{ web_code_dir }}"
-pico_web_js_out_path: "{{ pico_web_api_dir}}/web/js/"
-pico_web_jsx_in_path: "{{ pico_web_api_dir}}/web/jsx/"
-pico_web_backup_dir:  "/backup"
+web_build_dir        : "/picoCTF-web-build"
+web_config_dir       : "/picoCTF-web-config"
+pico_web_api_dir     : "{{ web_code_dir }}"
+pico_web_js_out_path : "{{ pico_web_api_dir}}/web/js/"
+pico_web_jsx_in_path : "{{ pico_web_api_dir}}/web/jsx/"
+pico_web_backup_dir  : "/backup"
 
 ###
 # Gunicorn configuration
@@ -30,7 +31,7 @@ num_workers: "{{ ansible_processor_vcpus * 2 + 1 | default(2) }}"
 pico_server_name: "{{ web_fqdn }}"
 pico_http_dir: "/srv/http/ctf"
 pico_api_proxy_pass: "http://{{ gunicorn_listen_on }}"
-pico_site_config_name: "ctf"
+site_config_name: "ctf"
 
 # http access and remote specific
 pico_internal_allow: "10.0.1.0/24"
@@ -53,9 +54,15 @@ shell_proto: "HTTP"
 enable_basic_auth: false
 htpasswd_accounts: []
 
-# SSL requires cert and vault-encrypted key
-enable_web_ssl: False
+# SSL with Let's Encrypt
 enable_certbot: False
+
+# SSL with out-of-band cert and vault-encrypted key
+enable_web_ssl : False
+enable_ssl     : "{{ enable_web_ssl }}"
+ssl_crt        : "ssl-pico.chained.crt"
+ssl_key        : "ssl-pico.key"
+ssl_key_vault  : "{{ ssl_key }}.vault_encrypted"
 
 # mongodb connect settings
 mongodb_replica_enabled: false

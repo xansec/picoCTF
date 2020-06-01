@@ -16,8 +16,6 @@
         'jekyll',
         'libffi-dev',
         'libssl-dev',
-        'nginx',
-        'nginx-extras',
         'python-virtualenv',
         'python3-pip',
         'python3.7-dev',

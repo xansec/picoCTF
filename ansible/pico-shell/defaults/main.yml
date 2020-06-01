@@ -2,8 +2,9 @@
 # Defaults for the picoCTF-web role. These are the lowest priority variables
 # and can easily be overridden in group_vars, host_vars, or the command line.
 
-# pico_base_dir set in common.yml
-shell_manager_dir:  "{{pico_base_dir}}/picoCTF-shell"
+pico_base_dir     : "/picoCTF"
+shell_manager_dir :  "{{pico_base_dir}}/picoCTF-shell"
+virtualenv_dir    : "/picoCTF-env"
 
 ###
 # wetty configuration
@@ -11,7 +12,7 @@ shell_manager_dir:  "{{pico_base_dir}}/picoCTF-shell"
 wetty_js_path: "/opt/wetty/node_modules/wetty.js"
 
 # configure nginx
-shell_site_config_name: "shell"
+site_config_name: "shell"
 wetty_port: "4242"
 wetty_server_path: "http://127.0.0.1:{{ wetty_port }}/"
 
@@ -34,8 +35,14 @@ bundles:
   - "{{ pico_base_dir }}/problems/bundles/challenge-sampler.json"
   - "{{ pico_base_dir }}/problems/bundles/on-demand.json"
 
-# SSL requires cert and vault-encrypted key
-enable_shell_ssl: False
+# SSL with Let's Encrypt
 enable_certbot  : False
+
+# SSL with out-of-band cert and vault-encrypted key
+enable_shell_ssl : False
+enable_ssl       : "{{ enable_shell_ssl }}"
+ssl_crt          : "ssl-pico.chained.crt"
+ssl_key          : "ssl-pico.key"
+ssl_key_vault    : "{{ ssl_key }}.vault_encrypted"
 
 enable_shell_proxy: True

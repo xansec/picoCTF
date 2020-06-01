@@ -1,5 +1,5 @@
 ---
-# configuration for use with the local development Vagrantfile
+# Example configuration for use in a production environment.
 
 all:
 
@@ -27,8 +27,6 @@ all:
       # source settings
       sync_mode                   : "source"
       pico_src_dir                : "{{ playbook_dir }}/../"
-      pico_base_dir               : "/picoCTF"
-      virtualenv_dir              : "/picoCTF-env"
 
       ## web settings
       web_hostname                : "{{ hostvars['web']['ansible_host'] }}"
