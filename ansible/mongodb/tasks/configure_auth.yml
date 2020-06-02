@@ -9,12 +9,15 @@
     name: "{{ mongodb_daemon_name }}"
     state: restarted
 
-# pymongo is required by the following tasks to create users
-#- name: install pymongo for use by ansible
-#  package:
-#    name: python-pymongo
-#    state: present
+- name: Install dependencies for ansible pip module
+  package:
+    name:
+      - python-setuptools
+      - python-pip
+      - python-virtualenv
+    state: present
 
+# pymongo is required by the following tasks to create users
 - name: Install pymongo > 3.7.2 (needed for updated mongo user creation)
   pip:
     name: pymongo
