@@ -9,7 +9,7 @@
     # key created and fetched in 00_bootstrap.yml
     - import_tasks: "../ansible/tasks/util_admin_user.yml"
       vars:
-        new_user: "{{ ansible_user }}"
+        admin: "{{ ansible_user }}"
         keys: ["./keys/web_id_rsa.pub"]
   roles:
     - {role: common     , tags: ["common"]}

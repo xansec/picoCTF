@@ -12,9 +12,8 @@
   tasks:
     - import_tasks: "../ansible/tasks/util_admin_user.yml"
       vars:
-        new_user: "{{ ansible_user }}"
+        admin: "{{ ansible_user }}"
         keys: []
-
 
 # roll right into provisioning
 - name: Platform Provision

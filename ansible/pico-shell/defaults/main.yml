@@ -9,16 +9,20 @@ virtualenv_dir    : "/picoCTF-env"
 ###
 # wetty configuration
 ###
-wetty_js_path: "/opt/wetty/node_modules/wetty.js"
+wetty_js_path     : "/opt/wetty/node_modules/wetty.js"
 
 # configure nginx
-site_config_name: "shell"
-wetty_port: "4242"
-wetty_server_path: "http://127.0.0.1:{{ wetty_port }}/"
+site_config_name  : "shell"
+wetty_port        : "4242"
+wetty_server_path : "http://127.0.0.1:{{ wetty_port }}/"
 
 # problem settings
-deb_dir:    "/picoCTF-debs"
-bundle_dir: "/picoCTF-bundles"
+deb_dir           : "/picoCTF-debs"
+bundle_dir        : "/picoCTF-bundles"
+
+# pam module settings
+web_address_internal       : "http://{{ hostvars['web']['ansible_host'] }}"
+web_address_internal_https : "https://{{ hostvars['web']['ansible_host'] }}"
 
 ##
 # Problem Settings
@@ -46,3 +50,10 @@ ssl_key          : "ssl-pico.key"
 ssl_key_vault    : "{{ ssl_key }}.vault_encrypted"
 
 enable_shell_proxy: True
+
+# Docker challenge support (disabled by default)
+enable_docker               : False
+docker_ca                   : "/home/{{ansible_user}}/.docker/ca.pem"
+docker_client               : "/home/{{ansible_user}}/.docker/cert.pem"
+docker_key                  : "/home/{{ansible_user}}/.docker/key.pem"
+docker_ttl                  : 3600  # 1 hour = 60 * 60 = 3600

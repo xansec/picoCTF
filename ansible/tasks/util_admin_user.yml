@@ -2,28 +2,28 @@
 # Basic user tasks for all machines
 
 # No password
-- name: Add user ({{ new_user }})
+- name: Ensure user exists with ssh key ({{ admin }})
   user:
-    name: "{{new_user}}"
+    name: "{{admin}}"
     shell: /bin/bash
     generate_ssh_key: yes
 
 - name: Set up authorized keys
   authorized_key:
-    user: "{{new_user}}"
+    user: "{{admin}}"
     state: present
     key: "{{ item }}"
   with_file: "{{keys}}"
 
 - name: Fetch newly created ssh key
   fetch:
-    src: "/home/{{new_user}}/.ssh/id_rsa.pub"
+    src: "/home/{{admin}}/.ssh/id_rsa.pub"
     dest: "keys/{{inventory_hostname}}_id_rsa.pub"
     flat: yes
 
 - name: Add user to sudoers (no password)
   lineinfile:
     dest: /etc/sudoers
-    regexp: "{{ new_user }} ALL"
-    line: "{{ new_user }} ALL=(ALL) NOPASSWD: ALL"
+    regexp: "{{ admin }} ALL"
+    line: "{{ admin }} ALL=(ALL) NOPASSWD: ALL"
     state: present

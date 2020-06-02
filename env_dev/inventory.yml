@@ -1,56 +1,49 @@
 ---
 # Configuration for use with the local development Vagrantfile
-#
+# 
+# You should not need to edit this file. It's primary purpose is to provide
+# connection details for the web and shell hosts. As you can see the other
+# required configuration is minimal.
+
 all:
 
   hosts:
     shell:
-      ansible_host                : "{{ shell_hostname }}"
+      ansible_host                : "{{ lookup('env','SIP') or '192.168.2.3' }}"        # from Vagrantfile
       hostname                    : "picoCTF-shell-dev"
       ansible_ssh_private_key_file: "../.vagrant/machines/shell/virtualbox/private_key" # vagrant created
     web:
-      ansible_host                : "{{ web_hostname }}"
+      ansible_host                : "{{ lookup('env','WIP') or '192.168.2.2' }}"        # from Vagrantfile
       hostname                    : "picoCTF-web-dev"
       ansible_ssh_private_key_file: "../.vagrant/machines/web/virtualbox/private_key"   # vagrant created
 
   vars:
       ansible_user                : "vagrant"
 
-      ## web settings
-      web_hostname                : "{{ lookup('env','WIP') or '192.168.2.2' }}"
-      web_address                 : "http://{{web_hostname}}"
-      web_address_internal        : "{{ web_address }}"
-      web_fqdn                    : "localhost"
-      flask_app_server_name       : "{{ web_fqdn }}"
-      nginx_server_name           : "_"
+      # Optional SSH admin keys
+      admin_keys: []
 
-      # shell settings
-      shell_hostname              : "{{ lookup('env','SIP') or '192.168.2.3' }}"
-      shell_name                  : "Local-Development-Shell"   # no spaces
-      shell_ip                    : "{{shell_hostname}}"
-      shell_user                  : "{{ ansible_user }}"
-      shell_pass                  : "vagrant"
-      shell_manager_deploy_secret : "**insecure-secret**"
-
-      # default insecure "vagrant" password (mkpasswd --method=SHA-512 vagrant)
-      shell_admin_password_crypt  : "$6$0GcSqMClzx$qEKEiL78VE/Xe0gzuGGuWyUqAlZMObkGnRYwHo4.vSUlvWt6aA7PBH1oGDsOQlykFNScEdEhrirD5oFLOHH011"
-
-      # optional web automation
-      enable_basic_auth           : False
+      # Optional web automation and features
       auto_add_shell              : True
       auto_load_problems          : True
       auto_start_competition      : True
 
-      # database settings
-      db_private_ip               : "127.0.0.1"
-      mongodb_conf_auth           : False
-      picoWeb_db_password         : "XXX_INSECURE_XXX"
+      # Docker challenge options
+      enable_docker               : True
+      docker_internal_host        : "tcp://{{ hostvars['shell']['ansible_host'] }}:2376"
 
-      # docker challenge options
-      docker_public_host          : "{{ shell_hostname }}"
-      docker_internal_host        : "tcp://{{shell_hostname}}:2376"
-      docker_clients              : ["{{web_hostname}}"]
-      server_SAN                  : "DNS:localhost,IP:{{shell_hostname}},IP:127.0.0.1"
+      # Set whether `ansible_host` is an IP address of a domain name (DNS)
+      host_type                   : "IP"  # valid options 'IP' or 'DNS'
 
-
-
+      ###
+      # *** INSECURE development settings ***
+      # The following are known insecure options that are only suitable for a
+      # development environment. We call them out here so that you will know to
+      # change them if you ever intend to use this configuration for any other
+      # purpose.
+      ####
+      mongodb_conf_auth               : False
+      redis_conf_auth                 : False
+      flask_app_secret_key            : "INSECURE_DEFAULT_CHANGE_ME"
+      flask_app_rate_limit_bypass_key : "INSECURE_DEFAULT_CHANGE_ME"
+      shell_manager_deploy_secret     : "INSECURE_DEFAULT_CHANGE_ME"

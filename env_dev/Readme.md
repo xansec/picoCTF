@@ -18,7 +18,7 @@ interested in additional configuration parameters, please consult the
 
 ## Usage
 
-1. Build the virtual machines and install the picoCTF platform. 
+1. Build the virtual machines and install the picoCTF platform.
 ```
 vagrant up
 ```

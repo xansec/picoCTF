@@ -26,29 +26,41 @@ gunicorn_listen_on: "127.0.0.1:8000"
 num_workers: "{{ ansible_processor_vcpus * 2 + 1 | default(2) }}"
 
 ###
+# flask configuration
+###
+
+flask_app_cookie_domain         : None
+flask_app_cookie_path           : "/"
+flask_app_cookie_name           : "flask"
+flask_server_name               : "{% if host_type == 'IP' %}localhost{% else %}{{ ansible_host }}{% endif %}"
+# commented out so they must be explicitly provided
+# flask_app_secret_key            : "INSECURE_DEFAULT_CHANGE_ME"
+# flask_app_rate_limit_bypass_key : "INSECURE_DEFAULT_CHANGE_ME"
+
+###
 # Nginx configuration
 ###
-pico_server_name: "{{ web_fqdn }}"
-pico_http_dir: "/srv/http/ctf"
-pico_api_proxy_pass: "http://{{ gunicorn_listen_on }}"
-site_config_name: "ctf"
+pico_http_dir       : "/srv/http/ctf"
+pico_api_proxy_pass : "http://{{ gunicorn_listen_on }}"
+site_config_name    : "ctf"
 
 # http access and remote specific
-pico_internal_allow: "10.0.1.0/24"
+pico_internal_allow : "10.0.1.0/24"
 
 # ctf daemon_manager
-daemon_src_dir: "{{ pico_web_api_dir}}/daemons"
+daemon_src_dir      : "{{ pico_web_api_dir}}/daemons"
+
 # Auto Configuration flags
-auto_add_shell: False
-auto_load_problems: False
+auto_add_shell      : False
+auto_load_problems  : False
 
 # Default Shell Server
-shell_name: ""
-shell_ip: ""
-shell_user: ""
-shell_pass: ""
-shell_port: "22"
-shell_proto: "HTTP"
+shell_name  : "shell"
+shell_host  : "{{ hostvars['shell']['ansible_host'] }}"
+shell_user  : "{{ ansible_user }}"
+shell_pass  : "vagrant"                                 # XXX: legacy remove
+shell_port  : "22"
+shell_proto : "HTTP"
 
 # HTTP Basic Auth
 enable_basic_auth: false
@@ -64,15 +76,25 @@ ssl_crt        : "ssl-pico.chained.crt"
 ssl_key        : "ssl-pico.key"
 ssl_key_vault  : "{{ ssl_key }}.vault_encrypted"
 
-# mongodb connect settings
-mongodb_replica_enabled: false
-mongodb_tls_enabled: false
+# mongodb connect settings (ensure defaults match mongodb role)
+db_name                 : "picoCTF"
+db_internal_ip          : "127.0.0.1"
+mongodb_conf_port       : 27017
+mongodb_replica_enabled : False
+mongodb_tls_enabled     : False
+mongodb_web_user        :
+
+redis_internal_ip       : "127.0.0.1"
+redis_conf_port         : 6379
+redis_db_number         : 0
 
 # Docker challenge support (disabled by default)
-docker_public_host: ""
-docker_internal_host: ""
-docker_ca: ""
-docker_client: ""
-docker_key: ""
-docker_ttl : 3600  # 1 hour = 60 * 60 = 3600
-docker_containers_per_team: 3
+enable_docker               : False
+docker_public_host          : "{{ hostvars['shell']['ansible_host'] }}"   # will be the templated value in challenges
+docker_containers_per_team  : 3
+docker_ttl                  : 3600  # 1 hour = 60 * 60 = 3600
+docker_ca                   : "/home/{{ansible_user}}/.docker/ca.pem"     # from pico-docker/tasks/config_user.yml
+docker_client               : "/home/{{ansible_user}}/.docker/cert.pem"   # genereted in gen_client.yml
+docker_key                  : "/home/{{ansible_user}}/.docker/key.pem"
+# commented out to ensure it is explicitly provided
+#docker_internal_host        : ""

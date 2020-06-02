@@ -1,13 +1,6 @@
 ---
 # Playbook that installs and configures picoCTF-shell servers
 
-# Needed so picoCTF-web can log in to get deployment information
-- name: Set password for admin user
-  user:
-    name: "{{ ansible_user }}"
-    password: "{{ shell_admin_password_crypt }}"
-  no_log: True
-
 - include: dependencies.yml
 
 - include: shell_manager.yml

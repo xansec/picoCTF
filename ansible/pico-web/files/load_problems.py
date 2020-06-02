@@ -28,7 +28,7 @@ def main(sid):
                 api.bundles.set_bundle_dependencies_enabled(b["bid"], True)
 
         except Exception as e:
-            print(e)
+            print(e.message, e.args)
             sys.exit("Failed to load problems.")
 
 
