@@ -1,5 +1,7 @@
 ---
-# Playbook to deploy the entire picoCTF environment
+# Playbook to deploy the entire picoCTF environment.
+#
+# You should not need to edit this file.
 
 - hosts: shell
   become: yes

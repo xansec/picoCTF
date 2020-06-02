@@ -85,7 +85,7 @@ bind {{ redis_conf_bind_ip }}
 # you are sure you want clients from other hosts to connect to Redis
 # even if no authentication is configured, nor a specific set of interfaces
 # are explicitly listed using the "bind" directive.
-protected-mode no
+protected-mode {{ redis_conf_protected }}
 
 # Accept connections on the specified port, default is 6379 (IANA #815344).
 # If port 0 is specified Redis will not listen on a TCP socket.
@@ -498,7 +498,7 @@ slave-priority 100
 # use a very strong password otherwise it will be very easy to break.
 #
 {% if redis_conf_auth | bool %}
-requirepass "{{ picoWeb_db_password | default('insecure') }}"
+requirepass "{{ redis_db_password | default(picoWeb_db_password) }}"
 {% endif %}
 
 # Command renaming.

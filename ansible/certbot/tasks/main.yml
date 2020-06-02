@@ -2,9 +2,9 @@
 # Install certbot via ppa
 # https://certbot.eff.org/lets-encrypt/ubuntubionic-nginx
 
-- name: Add ansible upstream repository
+- name: Add certbot upstream repository
   apt_repository:
-    repo: "ppa:ansible/ansible"
+    repo: "ppa:certbot/certbot"
     state: present
 
 - name: Update apt
@@ -16,5 +16,5 @@
     state: present
     pkg: [
       'certbot',
-      'python-certbot-nginx',
+      'python3-certbot-nginx',
       ]

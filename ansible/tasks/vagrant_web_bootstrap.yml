@@ -24,7 +24,7 @@
     admin_user: "{{ ansible_user }}"
 
 # 3. This configures a docker client certificate that was generated in the
-# pico-docker role run durring the provisioning of the shell server.
+# pico-docker role run during the provisioning of the shell server.
 - import_role:
     name: pico-docker
     tasks_from: config_user

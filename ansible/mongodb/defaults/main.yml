@@ -40,12 +40,13 @@ mongodb_conf_dbpath     : "{{ db_data_path }}"                            # Dire
 ###
 # Redis Configuration variables
 ###
-redis_daemon_name  : redis-server
-redis_conf_auth    : True                           # Run with security
-redis_conf_bind_ip : "{{ redis_internal_ip }}"      # IP addresses to listen on
-redis_conf_port    : 6379                           # Port number
-redis_db_number    : 0
-aws_elasticache    : False
+redis_daemon_name     : redis-server
+redis_conf_auth       : True                           # Run with security
+redis_conf_protected  : "yes"
+redis_conf_bind_ip    : "{{ redis_internal_ip }}"      # IP addresses to listen on
+redis_conf_port       : 6379                           # Port number
+redis_db_number       : 0
+aws_elasticache       : False
 
 ###
 # AWS specific mount points (defined in Terraform - static)

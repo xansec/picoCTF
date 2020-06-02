@@ -1,90 +1,109 @@
 ---
-# Example configuration for use in a production environment.
+# Configuration for use with a remote AWS production deployment.
+#
+# You WILL need to edit this file.
+#
+# The variable you are most likely to need to edit are marked UPDATE. Other are
+# commented so that you can customize the deployment behavior.
 
 all:
 
   hosts:
-
     shell:
-      # Replace with either IP address or domain name of host
-      ansible_host                : "XXX"
       hostname                    : "picoCTF-shell-PROD"
-
-
+      ansible_host                : "shell.example.com"   # UPDATE: with fully qualified domain name
     web:
-      # Replace with either IP address or domain name of host
-      ansible_host                : "XXX"
       hostname                    : "picoCTF-web-PROD"
+      ansible_host                : "ctf.example.com"     # UPDATE: with fully qualified domain name
 
   vars:
-      # ubuntu is the default user for the AWS Ubuntu AMI
-      ansible_user                : "ubuntu"
-
-      # this is the default key specified in terraform/variables.tf
+      # UPDATE: this is the default key specified in terraform/variables.tf
       # that was automatically added to the machines when launched
       ansible_ssh_private_key_file: "~/.ssh/picoCTF_production_rsa"
 
-      # source settings
+      # UPDATE: with an administrator's email to get SSL/TLS certificates
+      # or set `enable_certbot: False` in the HTTPS section
+      certbot_email               : "admin@example.com"
+
+      ###
+      # *** Reasonable defaults ***
+      #
+      # The following variables are likely reasonable defaults, especially for
+      # your first test deployment. There is no requirement to make any changes
+      # beyond this point. However, we recommend you read through the settings
+      # to gain an appreciation for additional options.
+      ###
+ 
+      # ubuntu is the default user for the AWS Ubuntu AMI
+      ansible_user                : "ubuntu"
+
+      ## Source Settings:
+      # This is how the picoCTF platform source code will be sent to the remote
+      # hosts. Since you already have a copy of the source code checked out
+      # this simply pushes your current copy to the remote host (preventing any
+      # complex interactions with private git repositories). See ansible/common/tasks
       sync_mode                   : "source"
       pico_src_dir                : "{{ playbook_dir }}/../"
 
-      ## web settings
-      web_hostname                : "{{ hostvars['web']['ansible_host'] }}"
-      web_address                 : "{{ web_hostname }}"
-      web_address_internal        : "{{ 'http://' + web_fqdn }}"
-      web_address_internal_https  : "{{ 'https://' + web_fqdn }}"
-      web_fqdn                    : "{{ web_hostname }}"
-      flask_app_server_name       : "{{ web_fqdn }}"
-      nginx_server_name           : "{{ ansible_host }}"
+      # SSH admin keys (Optional)
+      admin_keys                  : []
 
-      ## HTTPS
+      ## Web automation and Features (Optional):
+      # These are currently setup to fully configure and start an event. This
+      # is appropriate for testing purposes but if you are planning on running
+      # a live event you will likely want to disable some of these.
+      auto_add_shell              : True
+      auto_load_problems          : True
+      auto_start_competition      : True
+      enable_docker               : True
+
+      ## HTTPS:
       # You can automatically obtain free SSL/TLS certificates from Let's
       # Encrypt by using certbot. In order for this functionality to work
       # you must have a domain registered and pointing at your hosts. The
       # `ansible_host` for both `web` and `shell` should be domain names.
-      enable_certbot              : false
-      certbot_email               : "XXX"
+      enable_certbot              : True
 
-      # shell settings
-      shell_hostname              : "{{ hostvars['shell']['ansible_host'] }}"
-      shell_name                  : "shell"
-      shell_ip                    : "10.0.1.20"
-      shell_user                  : "{{ ansible_user }}"
-      shell_manager_deploy_secret : "XXX_Update_Insecure-Secret_XXX"
+      # Set whether `ansible_host` is an IP address or a domain name (DNS) In a
+      # production environment we recommend DNS so that you can easily use SSL/TLS
+      host_type                   : "DNS"  # valid options 'IP' or 'DNS'
 
-      # TODO: remove
-      shell_pass                  : "XXX_fake_uses_a_key_XXX"
-      shell_admin_password_crypt  : ""
-
-      # optional web automation
-      enable_basic_auth           : False
-      auto_add_shell              : True
-      auto_load_problems          : False
-      auto_start_competition      : False
-
-      ##
-      # Database settings (env specific)
-      ##
+      ## Database settings:
+      # Should not need to be changed.
       on_aws                      : True
-      db_private_ip               : "127.0.0.1"
-      mongodb_conf_auth           : False
-      mongodb_replica_enabled     : False
+      mongodb_web_user            : "picoWeb"
+      env_db_users:
+        - {
+          name      : "{{ mongodb_web_user }}",
+          password  : "{{ picoWeb_db_password }}",
+          database  : "{{ db_name }}",
+          roles     : readWrite
+          }
 
-      redis_private_ip            : "127.0.0.1"
-      aws_elasticache             : False
-      redis_db_number             : 0
-      redis_conf_auth             : False
-      redis_db_password           : None
+      ###
+      # *** SECURE production settings ***
+      #
+      # The following section captures security relevant settings that you
+      # should be aware of in a production environment (e.g. credentials).
+      #
+      # These sensitive variables are loaded from an ansible-vault encrypted file
+      # For more information: http://docs.ansible.com/ansible/playbooks_vault.html
+      #
+      # You should not need to edit this section simply run the gen_vault.py
+      # script to create an appropriate vault file.
 
-      ##
-      # DockerChallenge options
-      ##
-      docker_public_host          : "{{ shell_hostname }}"
-      docker_internal_host        : "tcp://{{ shell_ip }}:2376"
-      docker_ca                   : "/home/{{ ansible_user }}/.docker/ca.pem"
-      docker_client               : "/home/{{ ansible_user }}/.docker/cert.pem"
-      docker_key                  : "/home/{{ ansible_user }}/.docker/key.pem"
-      docker_containers_per_team  : 3
-      docker_ttl                  : 3600  # 1 hour = 60 * 60 = 3600
-      docker_clients              : ["{{ web_hostname }}"]
-      server_SAN                  : "DNS:localhost,IP:{{ shell_ip }},IP:127.0.0.1"
+      # web
+      flask_app_secret_key            : "{{ vault_flask_app_secret_key }}"
+      flask_app_rate_limit_bypass_key : "{{ vault_flask_app_rate_limit_bypass_key }}"
+
+      # shell
+      shell_manager_deploy_secret     : "{{ vault_shell_manager_deploy_secret }}"
+      net_outbound_limit              : "40mbit"  # Prevent script kiddies from using as DOS box
+
+      # db
+      mongodb_conf_auth               : True
+      picoAdmin_db_password           : "{{ vault_picoAdmin_db_password }}"
+      picoWeb_db_password             : "{{ vault_picoWeb_db_password }}"
+
+      redis_conf_auth                 : True
+      redis_db_password               : "{{ vault_redis_db_password }}"

@@ -60,7 +60,7 @@ shell_host  : "{{ hostvars['shell']['ansible_host'] }}"
 shell_user  : "{{ ansible_user }}"
 shell_pass  : "vagrant"                                 # XXX: legacy remove
 shell_port  : "22"
-shell_proto : "HTTP"
+shell_proto : {% if enable_certbot %} "HTTPS" {% else %} "HTTP" {% endif %}
 
 # HTTP Basic Auth
 enable_basic_auth: false
@@ -82,7 +82,7 @@ db_internal_ip          : "127.0.0.1"
 mongodb_conf_port       : 27017
 mongodb_replica_enabled : False
 mongodb_tls_enabled     : False
-mongodb_web_user        :
+mongodb_web_user        : "picoWeb"
 
 redis_internal_ip       : "127.0.0.1"
 redis_conf_port         : 6379
