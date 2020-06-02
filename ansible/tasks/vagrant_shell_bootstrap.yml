@@ -1,0 +1,32 @@
+---
+
+# A collection of tasks that are suitable to bootstrap a shell host in a
+# vagrant environment. Performs the following key functions (many of which are
+# nessecary for the web host's auto-load functionality ):
+#
+# 1. Generates and adds an SSH key that will be used by the web server
+# 2. Adds any user requested administrative keys
+
+- set_fact:
+    web_key: "{{ pico_base_dir}}/env_dev/keys/{{ hostvars['web']['ansible_host'] }}"
+- set_fact:
+    web_pub: "{{ web_key }}.pub"
+
+# 1a. Create a key to be synchronized via the local host over to the web server
+- name: "Generate an SSH key for the web user"
+  openssh_keypair:
+    path    : "{{ web_key }}"
+    type    : "ed25519"
+    comment : "{{ ansible_user }}@{{ hostvars['web']['ansible_host'] }}"
+
+# 1b. Add key as authorized on shell server
+- name: "Set web SSH key as authorized on shell"
+  authorized_key:
+    user: "{{ ansible_user }}"
+    state: present
+    key: "{{ lookup('file', web_pub) }}"
+
+# 2. Adds and keys specified in the admin_keys variable to the host.
+- import_tasks: "util_admin_ssh_keys.yml"
+  vars:
+    admin_user: "{{ ansible_user }}"

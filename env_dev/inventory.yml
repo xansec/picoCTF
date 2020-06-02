@@ -20,17 +20,14 @@ all:
   vars:
       ansible_user                : "vagrant"
 
-      # Optional SSH admin keys
-      admin_keys: []
+      # SSH admin keys (Optional)
+      admin_keys                  : []
 
-      # Optional web automation and features
+      # Web automation and Features (Optional)
       auto_add_shell              : True
       auto_load_problems          : True
       auto_start_competition      : True
-
-      # Docker challenge options
       enable_docker               : True
-      docker_internal_host        : "tcp://{{ hostvars['shell']['ansible_host'] }}:2376"
 
       # Set whether `ansible_host` is an IP address of a domain name (DNS)
       host_type                   : "IP"  # valid options 'IP' or 'DNS'

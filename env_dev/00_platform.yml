@@ -4,20 +4,8 @@
 - hosts: shell
   become: yes
   become_method: sudo
-  vars:
-    web_key: "{{ pico_base_dir}}/env_dev/keys/{{ hostvars['web']['ansible_host'] }}"
-    web_pub: "{{ web_key }}.pub"
   pre_tasks:
-    - name: "Generate an SSH key for the web user"
-      openssh_keypair:
-        path    : "{{ web_key }}"
-        type    : "ed25519"
-        comment : "{{ ansible_user }}@{{ hostvars['web']['ansible_host'] }}"
-    - name: "Set web SSH key as authorized on shell"
-      authorized_key:
-        user: "{{ ansible_user }}"
-        state: present
-        key: "{{ lookup('file', web_pub) }}"
+    - import_tasks: "../ansible/tasks/vagrant_shell_bootstrap.yml"
   roles:
     - {role: common     , tags: ["common"]}
     - {role: pico-docker, tags: ["pico-docker"]}
@@ -27,16 +15,7 @@
   become: yes
   become_method: sudo
   pre_tasks:
-    - name: Copy pre-generated SSH key for web user to home directory
-      copy:
-        src: "{{ pico_base_dir}}/env_dev/keys/{{ hostvars['web']['ansible_host'] }}"
-        dest: "/home/{{ ansible_user }}/.ssh/{{ hostvars['web']['ansible_host'] }}"
-        remote_src: yes
-    - import_role:
-        name: pico-docker
-        tasks_from: config_user
-      vars:
-        client: "{{ ansible_host }}"
+    - import_tasks: "../ansible/tasks/vagrant_web_bootstrap.yml"
   roles:
     - {role: common     , tags: ["common"]}
     - {role: mongodb    , tags: ["db"]}

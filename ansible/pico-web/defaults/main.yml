@@ -91,10 +91,9 @@ redis_db_number         : 0
 # Docker challenge support (disabled by default)
 enable_docker               : False
 docker_public_host          : "{{ hostvars['shell']['ansible_host'] }}"   # will be the templated value in challenges
+docker_internal_host        : "tcp://{{ hostvars['shell']['ansible_host'] }}:2376"
 docker_containers_per_team  : 3
 docker_ttl                  : 3600  # 1 hour = 60 * 60 = 3600
 docker_ca                   : "/home/{{ansible_user}}/.docker/ca.pem"     # from pico-docker/tasks/config_user.yml
 docker_client               : "/home/{{ansible_user}}/.docker/cert.pem"   # genereted in gen_client.yml
 docker_key                  : "/home/{{ansible_user}}/.docker/key.pem"
-# commented out to ensure it is explicitly provided
-#docker_internal_host        : ""
