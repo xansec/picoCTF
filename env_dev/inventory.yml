@@ -9,12 +9,12 @@ all:
 
   hosts:
     shell:
-      ansible_host                : "{{ lookup('env','SIP') or '192.168.2.3' }}"        # from Vagrantfile
       hostname                    : "picoCTF-shell-dev"
+      ansible_host                : "{{ lookup('env','SIP') or '192.168.2.3' }}"        # from Vagrantfile
       ansible_ssh_private_key_file: "../.vagrant/machines/shell/virtualbox/private_key" # vagrant created
     web:
-      ansible_host                : "{{ lookup('env','WIP') or '192.168.2.2' }}"        # from Vagrantfile
       hostname                    : "picoCTF-web-dev"
+      ansible_host                : "{{ lookup('env','WIP') or '192.168.2.2' }}"        # from Vagrantfile
       ansible_ssh_private_key_file: "../.vagrant/machines/web/virtualbox/private_key"   # vagrant created
 
   vars:
@@ -29,7 +29,8 @@ all:
       auto_start_competition      : True
       enable_docker               : True
 
-      # Set whether `ansible_host` is an IP address of a domain name (DNS)
+      # Set whether `ansible_host` is an IP address or a domain name (DNS)
+      # In this development environment it is an IP address.
       host_type                   : "IP"  # valid options 'IP' or 'DNS'
 
       ###

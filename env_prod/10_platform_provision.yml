@@ -13,7 +13,7 @@
         keys: ["./keys/web_id_rsa.pub"]
   roles:
     - {role: common     , tags: ["common"]}
-    - {role: pico-docker, tags: ["pico-docker"]}
+    - {role: pico-docker, tags: ["pico-docker"], when: enable_docker}
     - {role: certbot    , tags: ["certbot"]}
     - {role: pico-shell , tags: ["pico-shell"]}
 

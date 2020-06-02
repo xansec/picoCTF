@@ -2,9 +2,6 @@
 # Configure docker daemon to securely listen on https per:
 # https://docs.docker.com/engine/security/https/
 
-- meta: end_play
-  when: not enable_docker
-
 - import_tasks: docker_install.yml
 
 - import_tasks: deps.yml

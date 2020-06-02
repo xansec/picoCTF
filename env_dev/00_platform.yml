@@ -8,7 +8,7 @@
     - import_tasks: "../ansible/tasks/vagrant_shell_bootstrap.yml"
   roles:
     - {role: common     , tags: ["common"]}
-    - {role: pico-docker, tags: ["pico-docker"]}
+    - {role: pico-docker, tags: ["pico-docker"], when: enable_docker}
     - {role: pico-shell , tags: ["pico-shell"]}
 
 - hosts: web
