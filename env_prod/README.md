@@ -24,33 +24,24 @@ This guide assumes the following:
 - have AWS credentials
 - have shared ssh keys
 
-## Ansbile and Terraform
-
-Tested using `ansible 2.9.6` from [provider][a].
-
-[a]:https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-ubuntu
-
-Using `Terraform v0.12.24` from [provider][t]
-
-[t]:https://www.terraform.io/downloads.html
-
-
 ##  Quick Start
 
 From your local machine (make sure the assumptions above are met).
 
 1. In the [terraform directory][td] edit `variables.tf` and `terraform apply`.
-  a. Read through the [terraform/README.md][tr] for more details.
-  b. This creates the virtual machines on AWS
+    - This creates the virtual machines on AWS
+    - Read through the [terraform/README.md][tr] for more details.
 
+[tr]:./terraform/README.md
 [td]:./terraform
 
 2. In this directory edit `inventory.yml`.
-  a. The minimal thing you will need to edit are the `ansible_host` for both
-  `shell` and `web`. These can be the IP addresses as provided by `terraform` or
-  they can be domain names.
-  b. Using domain names is recommended, but you will have you configure those
-  records manually with your DNS registrar.
+    - The minimal thing you will need to edit are the `ansible_host` for both
+    `shell` and `web`.
+    - These can be domain names or IP addresses. We recommend domain names so
+    you can use the automated HTTPS support.
+    - Manually configure your DNS records using the IP addresses provided in the
+    `terraform` output.
 
 3. Generate secure secrets and credentials to be stored in an `ansible-vault`.
 
@@ -66,6 +57,17 @@ ansible-playbook 00_bootstrap.yml
 
 Once that successfully completes your CTF should be up and running. You can browse to
 your web elastic IP address and register (the first account will be your admin).
+
+## Ansbile and Terraform
+
+Tested using `ansible 2.9.9` from [provider][ap].
+
+[ap]:https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-ubuntu
+
+Using `Terraform v0.12.24` from [provider][t]
+
+[t]:https://www.terraform.io/downloads.html
+
 
 ## Secure Secrets (ansible-vault)
 
@@ -89,7 +91,7 @@ a plain text file (`vault_pass.txt`) which is then loaded by default in the
 `ansible.cfg`. You should not commit this file (it is `.gitignore`'d by
 default). If you do not like this behavior you can remove the file and edit
 `ansible.cfg` to instead prompt you or use one of the other mechanisms for
-providing a `vault-pass`
+providing a `vault-pass`.
 
 ### View your secrets
 

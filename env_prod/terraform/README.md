@@ -92,11 +92,10 @@ running on AWS ready to host your competition. The IP addresses should have been
 provided at the completion of `terraform apply`. This is the bare-bones virtual
 "hardware" necessary to run picoCTF remotely on AWS. However these instances
 have none of the required software installed. At this point go back up to the
-[env_prod/Readme.md][prod] in order to continue configuring your production
+[env_prod/README.md][prod] in order to continue configuring your production
 picoCTF deployment.
 
-[prod]:../Readme.md
-
+[prod]:../README.md
 
 **NOTE:** You might not see these resources in your [AWS EC2 Dashboard][dash] if
 your region does not match the region in which you created your terraform
