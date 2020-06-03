@@ -60,7 +60,7 @@ shell_host  : "{{ hostvars['shell']['ansible_host'] }}"
 shell_user  : "{{ ansible_user }}"
 shell_pass  : "vagrant"                                 # XXX: legacy remove
 shell_port  : "22"
-shell_proto : {% if enable_certbot %} "HTTPS" {% else %} "HTTP" {% endif %}
+shell_proto : "{% if enable_certbot %}HTTPS{% else %}HTTP{% endif %}"
 
 # HTTP Basic Auth
 enable_basic_auth: false
