@@ -44,16 +44,14 @@ From your local machine (make sure the assumptions above are met).
     `terraform` output.
 
 3. Generate secure secrets and credentials to be stored in an `ansible-vault`.
-
-```
-./gen_vault.py
-```
+    ```
+    ./gen_vault.py
+    ```
 
 4. Provision the infrastructure.
-
-```
-ansible-playbook 00_bootstrap.yml
-```
+    ```
+    ansible-playbook 00_bootstrap.yml
+    ```
 
 Once that successfully completes your CTF should be up and running. You can browse to
 your web elastic IP address and register (the first account will be your admin).
