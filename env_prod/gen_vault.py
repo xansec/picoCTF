@@ -58,7 +58,8 @@ re-run this command."""
 
 def gen_random_string(n=24):
     """Returns a random n-length string, suitable for a password or random secret"""
-    char_set = string.ascii_letters +  string.digits + "!#$%&()*+,-./:;<=>?@[\]^_{|}~."
+    # RFC 3986 section 2.3. unreserved characters (no special escapes required)
+    char_set = string.ascii_letters +  string.digits + "-._~"
     return "".join(random.choices(char_set, k=n))
 
 def gen_random_config():

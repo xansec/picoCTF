@@ -39,7 +39,8 @@
 # referenced keys exist.
 - name: Request certificate (certbot)
   vars:
-    certbot_domain: "{{nginx_server_name}}"
+    certbot_domain : "{{ nginx_server_name }}"
+    certbot_email  : "{{ admin_email }}"
   include_role:
     name: certbot
     tasks_from: request_certificates

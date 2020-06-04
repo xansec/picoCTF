@@ -16,3 +16,6 @@ taint-shell:
 
 taint-machines: taint-web taint-shell
 	terraform apply
+
+taint-db-ebs:
+	terraform taint aws_ebs_volume.db_data_journal

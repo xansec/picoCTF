@@ -1,4 +1,4 @@
-# Varaibles used to configure a production deployment
+# Variables used to configure a production deployment
 
 ###
 # Input Variables:
@@ -12,8 +12,9 @@ locals {
   ctf = "picoCTF"
 
   # AWS Settings: choose best for where your CTF is
-  region  = "us-east-1"
-  profile = "picoCTF" 
+  region                  = "us-east-1"
+  profile                 = "picoCTF"
+  shared_credentials_file = "~/.aws/credentials"
 
   # SSH Settings: local path to key that will be authorized on the machines
   public_key_path = "~/.ssh/picoCTF_production_rsa.pub"
@@ -30,13 +31,13 @@ locals {
 
 locals {
   # Name for AWS to track SSH key by.
-  key_name        = local.ctf
+  key_name = local.ctf
 
-  # selected automatically from availible zones
+  # selected automatically from available zones
   az = "${data.aws_availability_zones.available.names[0]}"
 
   # Network settings for Virtual Private Cloud
-  vpc_cidr            = "10.0.0.0/16"
+  vpc_cidr           = "10.0.0.0/16"
   public_subnet_cidr = "10.0.1.0/24"
 
   # Internal IP address for the servers
@@ -44,7 +45,7 @@ locals {
   shell_private_ip = "10.0.1.20"
 
   # EBS Volumes: NOTE changing the instance type may require changing the device_name
-  db_ebs_data_size = "10"
+  db_ebs_data_size        = "10"
   db_ebs_data_device_name = "/dev/xvdf"
 
   # Tags that allow visibility via AWS Consolse
@@ -54,12 +55,16 @@ locals {
     Event       = local.ctf
   }
 
+  # Additional name tags which will be added to relevant resources
+  web_name   = "picoCTF-web"
+  shell_name = "picoCTF-shell"
+  db_name    = "picoCTF-db"
 
 }
 
 ###
 # Data Sources:
-# These are automatic data soruces which will pull valid values directly from
+# These are automatic data sources which will pull valid values directly from
 # AWS with no additional configuration required.
 ###
 

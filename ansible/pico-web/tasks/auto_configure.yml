@@ -8,6 +8,7 @@
     web_pw    : "{{ web_admin_pw }}"
     web_email : "{{ admin_email }}"
   when: auto_add_web_admin
+  tags: ["XXX"]
 
 - name: Autoload Shell Server into web interface
   script: >

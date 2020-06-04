@@ -50,10 +50,9 @@ applicable. At a high level it is as simple as:
 
 ### 1. Configuration
 
-Add your AWS credentials for a `picoCTF` profile (or whatever profile you set in
-`variables.tf`)
+Add your AWS credentials for a `picoCTF` profile (or update in `variables.tf`)
 
-`~/.aws.credentials`
+`~/.aws/credentials`
 ```
 [picoCTF]
 aws_access_key_id=XXX_KEY_ID_______XXX

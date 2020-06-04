@@ -14,11 +14,12 @@ terraform {
 }
 
 # AWS Specific config (single region)
-# Configured to get access_key and secret_key from  environment variables
+# Configured to get access_key and secret_key from a shared credentials file
 # For additional methods: https://www.terraform.io/docs/providers/aws/
 provider "aws" {
   region  = local.region
   profile = local.profile
+  shared_credentials_file = local.shared_credentials_file
 }
 
 
@@ -38,7 +39,7 @@ resource "aws_key_pair" "auth" {
 ###
 # Network configuration:
 # This is a simple network configuration where all machines are on a virtual network
-# that is attached via an gateway to the internet. All machines placed in this  subnet
+# that is attached via an gateway to the internet. All machines placed in this subnet
 # receive a public IP address
 ###
 
@@ -62,7 +63,7 @@ resource "aws_route" "internet_access" {
 }
 
 # Create a public facing subnet to launch our instances into
-# Maps public ip automatically so every instance gets a public ip
+# Maps public IP automatically so every instance gets a public IP
 # Security Groups are then used to restrict access
 resource "aws_subnet" "public" {
     vpc_id                  = aws_vpc.network.id
@@ -93,7 +94,7 @@ resource "aws_instance" "web" {
   
     # metadata
     key_name = aws_key_pair.auth.id
-    tags     = merge(local.default_tags, map("Name", "picoCTF-web"))
+    tags     = merge(local.default_tags, map("Name", local.web_name))
 }
 
 resource "aws_instance" "shell" {
@@ -110,28 +111,28 @@ resource "aws_instance" "shell" {
 
     # metadata
     key_name = aws_key_pair.auth.id
-    tags     = merge(local.default_tags, map("Name", "picoCTF-shell"))
+    tags     = merge(local.default_tags, map("Name", local.shell_name))
 }
 
 
 ###
 # Elastic IP:
 # This simplifies configuration and administration by allowing us to rebuild
-# and recreate the servers while maintaining the same public ip.
+# and recreate the servers while maintaining the same public IP.
 ###
 
 # Create Elastic IP for web server
 resource "aws_eip" "web" {
     instance = aws_instance.web.id
     vpc      = true
-    tags     = merge(local.default_tags, map("Name", "picoCTF-web"))
+    tags     = merge(local.default_tags, map("Name", local.web_name))
 }
 
 # Create Elastic IP for shell server
 resource "aws_eip" "shell" {
     instance = aws_instance.shell.id
     vpc      = true
-    tags     = merge(local.default_tags, map("Name", "picoCTF-shell"))
+    tags     = merge(local.default_tags, map("Name", local.shell_name))
 }
 
 
@@ -147,7 +148,7 @@ resource "aws_eip" "shell" {
 resource "aws_ebs_volume" "db_data_journal" {
     availability_zone = local.az
     size              = local.db_ebs_data_size
-    tags              = merge(local.default_tags, map("Name", "picoCTF-db-ebs"))
+    tags              = merge(local.default_tags, map("Name", local.db_name))
 }
 
 # Attach data and journal volume to the instance running the database
