@@ -1,0 +1,9 @@
+---
+# Task list to add a user to the web site
+
+- name: "Run add-web-user.py to create user ({{ web_user }})"
+  command: >
+    {{scripts_dir}}/run_py_in_venv.sh {{virtualenv_dir}}
+    {{scripts_dir}}/add-web-user.py
+    -u {{ web_user }} -p {{ web_pw }} -e {{ web_email }}
+

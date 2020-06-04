@@ -21,6 +21,9 @@ import subprocess
 # Contents of the vault. All sensitive variables should be reflected here.
 VAULT_TEMPLATE = """
 # web
+vault_web_admin_pw                    : "{web_pw}"
+
+# web API
 vault_flask_app_secret_key            : "{flask_secret}"
 vault_flask_app_rate_limit_bypass_key : "{bypass_key}"
 
@@ -34,14 +37,8 @@ vault_redis_db_password               : "{redis_pw}"
 """
 
 # keys must match the above template
-VAULT_VALUES = {
-        "flask_secret": "",
-        "bypass_key": "",
-        "deploy_secret": "",
-        "admin_pw": "",
-        "redis_pw": "",
-        "db_pw": ""
-        }
+VAULT_KEYS = ["web_pw", "flask_secret", "bypass_key", "deploy_secret",
+        "admin_pw", "redis_pw", "db_pw"]
 
 VAULT_PATH = "vault.yml"
 VAULT_PASS_PATH = "vault_pass.txt"
@@ -66,9 +63,10 @@ def gen_random_string(n=24):
 
 def gen_random_config():
     """Generates random values for all keys in the config"""
-    for k in VAULT_VALUES:
-        VAULT_VALUES[k] = gen_random_string()
-    return VAULT_TEMPLATE.format(**VAULT_VALUES)
+    config = {}
+    for k in VAULT_KEYS:
+        config[k] = gen_random_string()
+    return VAULT_TEMPLATE.format(**config)
 
 def write_file(fname, string):
     with open(fname, 'wb') as out:

@@ -4,6 +4,7 @@
 
 pico_base_dir  : "/picoCTF"
 web_code_dir   : "{{pico_base_dir}}/picoCTF-web"
+scripts_dir    : "{{pico_base_dir}}/scripts"
 virtualenv_dir : "/picoCTF-env"
 
 ###
@@ -51,16 +52,23 @@ pico_internal_allow : "10.0.1.0/24"
 daemon_src_dir      : "{{ pico_web_api_dir}}/daemons"
 
 # Auto Configuration flags
-auto_add_shell      : False
-auto_load_problems  : False
+
+# Default Web Admin
+auto_add_web_admin  : False
+web_admin           : "ctfadmin"
+# commented out so they must be explicitly provided
+#web_admin_pw       : "dev"
+#admin_email        : "admin@example.com"
 
 # Default Shell Server
-shell_name  : "shell"
-shell_host  : "{{ hostvars['shell']['ansible_host'] }}"
-shell_user  : "{{ ansible_user }}"
-shell_pass  : "vagrant"                                 # XXX: legacy remove
-shell_port  : "22"
-shell_proto : "{% if enable_certbot %}HTTPS{% else %}HTTP{% endif %}"
+auto_add_shell      : False
+auto_load_problems  : False
+shell_name          : "shell"
+shell_host          : "{{ hostvars['shell']['ansible_host'] }}"
+shell_user          : "{{ ansible_user }}"
+shell_pass          : "vagrant"                                 # XXX: legacy remove
+shell_port          : "22"
+shell_proto         : "{% if enable_certbot %}HTTPS{% else %}HTTP{% endif %}"
 
 # HTTP Basic Auth
 enable_basic_auth: false

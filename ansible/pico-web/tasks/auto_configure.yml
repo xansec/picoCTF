@@ -2,6 +2,12 @@
 # Playbook to handle convenience preconfigurations so an admin is not
 # required to set things up in the web ui by hand.
 
+- include: auto_add_web_user.yml
+  vars:
+    web_user  : "{{ web_admin }}"
+    web_pw    : "{{ web_admin_pw }}"
+    web_email : "{{ admin_email }}"
+  when: auto_add_web_admin
 
 - name: Autoload Shell Server into web interface
   script: >
@@ -37,4 +43,3 @@
   args:
     executable: "{{ virtualenv_dir }}/bin/python"
   when: auto_start_competition
-

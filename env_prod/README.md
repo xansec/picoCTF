@@ -53,8 +53,14 @@ From your local machine (make sure the assumptions above are met).
     ansible-playbook 00_bootstrap.yml
     ```
 
-Once that successfully completes your CTF should be up and running. You can browse to
-your web elastic IP address and register (the first account will be your admin).
+Once that successfully completes your CTF should be up and running.
+
+5. Browse to your web address and login with the automatically created
+   administrator account: `ctfadmin`. Get the password from your newly created
+   vault. It is the `vault_web_admin_pw` value.
+    ```
+    ansible-vault view vault.yml
+    ```
 
 ## Ansbile and Terraform
 

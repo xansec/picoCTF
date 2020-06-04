@@ -38,14 +38,16 @@ vagrant up
 
 These commands perform the following:
 
-1. Get the source code at the most recent release (`git`)
+1. Get the source code at the most recent development state (`git`)
 2. Change into the source code directory (`cd`)
 3. Create a local development environment (`vagrant`)
 
 Now that your local copy of picoCTF has been deployed:
 
-4. Navigate to http://192.168.2.2/
-5. Register an account (this user will be the site administrator)
+4. Browse to http://192.168.2.2/
+5. Login with the automatically created administrator account
+    - user: `ctfadmin`
+    - password: `dev`
 
 [comment]:https://github.com/picoCTF/picoCTF/issues/68#issuecomment-346736808
 

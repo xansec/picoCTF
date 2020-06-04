@@ -1,6 +1,6 @@
 ---
 
-- name: Request a certificate  (nginx)
+- name: Request a certificate (nginx)
   command: >
     certbot certonly --nginx
     --no-eff-email
