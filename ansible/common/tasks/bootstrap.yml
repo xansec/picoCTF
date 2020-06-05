@@ -1,4 +1,4 @@
-# In order to ansible modules to run on a remote host, it requires pythong to
+# In order to ansible modules to run on a remote host, it requires python to
 # be installed.  This task list to bootstraps a host from only an SSH user.
 #
 # Note: should be called from a playbook with `gather_facts: no`, becuase the

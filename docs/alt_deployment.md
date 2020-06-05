@@ -1,9 +1,12 @@
 # Alternative Deployments
 
-This repository provides an example of both a local deployment (`env_dev`) and
-a remote deployment (`env_prod`).  We strongly recommend you familiarize
-yourself with these options before considering an alternative deployment as they
-will provide a good set of examples you can build from.
+This repository provides an example of both a [local][.il] and a [remote][ir]
+infrastructures.  We strongly recommend you familiarize yourself with these
+options before considering an alternative deployment as they will provide a good
+set of examples you can build from.
+
+[il]:../infra_local
+[ir]:../infra_remote
 
 While these are the only two explicitly supported options it is entirely
 possible that neither of these suite your needs and you will want to make some
@@ -11,7 +14,17 @@ changes (we certainly do when we deploy the platform for large scale events).
 The good news is that since much of the deployment is automated and configurable
 you should have to make relatively few changes to get started.
 
-This documentation is intended to guide you in an alternative deployment.
+As an example, for a live event you may want to have:
+- A [local][il] Vagrant based _development environment_
+- A [remote][ir] Terraform based _testing environment_ with restricted access (e.g.
+network security restrictions, or HTTP basic authentication)
+- A [remote][ir] Terraform based _production environment_ with multiple tiers
+
+To achieve this you can use the provided [local][li] and [remote][ir]
+infrastructure examples as a starting point, make a copy, and then make your
+modifications. Alternatively you can roll your own infrastructure and the rest
+of this documentation provides you notes on successfully integrating the picoCTF
+platform.
 
 There are two keys components to a deployment. The **hardware** (or virtual
 hardware) and the **software** configuration. This documentation will talk
@@ -19,15 +32,15 @@ through both.
 
 ## Hardware
 
-In the provided example environments (`env_dev` and `env_prod`) the picoCTF
-platform is deployed in a two virtual machine configuration. In both cases the
-creation of these virtual machines is automated, with `vagrant` and `terraform`
-respectively. While the examples target `Virtualbox` locally, and `AWS` remotely
-there is nothing special about these providers. You can certainly deploy picoCTF
-to alternative platforms (e.g. `vsphere`)  or providers (e.g. `gcp` or Digital
-Ocean), you will just need to create the corresponding configuration or manually
-provision those resources. The picoCTF platform can also be deployed to existing
-machines or bare-metal physical hardware if you desire.
+In the example infrastructures provided the picoCTF platform is deployed in
+a two virtual machine configuration. In both cases the creation of these virtual
+machines is automated, with `vagrant` and `terraform` respectively. While the
+examples target `Virtualbox` locally, and `AWS` remotely there is nothing
+special about these providers. You can certainly deploy picoCTF to alternative
+platforms (e.g. `vsphere`)  or providers (e.g. `gcp` or Digital Ocean), you will
+just need to create the corresponding configuration or manually provision those
+resources. The picoCTF platform can also be deployed to existing machines or
+bare-metal physical hardware if you desire.
 
 ### Architecture
 
@@ -42,17 +55,17 @@ servers. For example having a stand alone database server or docker server.
 ### Alternatives
 
 If you are looking to run an event locally (e.g. from your computer), consider
-making a copy of the `env_dev` directory and modifying the `Vagrantfile` as
+making a copy of the `infra_local` directory and modifying the `Vagrantfile` as
 necessary. Since the provided configuration is setup for development purposes
 you will want to make sure to lock down this configuration (e.g. set passwords)
 by editing the `inventory.yml`.
 
 If you are looking to run an event remotely (e.g. from on AWS) consider making
-a copy of the `env_prod` directory and modifying the terraform configuration to
-suite your needs (e.g. scale).
+a copy of the `infa_remote` directory and modifying the terraform configuration
+to suite your needs (e.g. scale).
 
 If you are looking to manually configure existing machines (e.g. using neither
-`vagrant` or `terraform`) then you should start with the `env_prod`
+`vagrant` or `terraform`) then you should start with the `infra_remote`
 configuration and just skip the `terraform` parts.
 
 ### Requirements
@@ -86,7 +99,7 @@ pieces are properly configured in an automated and repeatable fashion.
 
 Regardless of how you generate your hardware we strongly encourage you to
 utilize the provided automation. Fortunately this is as simple as making a copy
-of the provided configuration (`env_prod` directory) and updating the
+of the provided configuration (`infa_remote` directory) and updating the
 configuration to point it towards your hosts (e.g. hostnames and keys).
 
 In the simplest setup you can run `ansible` from your local machine to configure

@@ -3,7 +3,7 @@
 #
 # You should not need to edit this file.
 #
-# Notice that there are very few changes from env_dev/site.yml. Simply:
+# Notice that there are very few changes from infra_local/site.yml. Simply:
 # 1. The inclusion of the vault.yml vars_file for sensitive variables.
 # 2. Different AWS specific bootstrap tasks.
 # 3. The addition of a certbot role for automatically obtaining SSL/TLS
@@ -15,7 +15,7 @@
   vars_files:
     - "vault.yml"
   pre_tasks:
-    - import_tasks: "../ansible/tasks/aws_shell_bootstrap.yml"
+    - import_tasks: "./tasks/aws_shell_bootstrap.yml"
   roles:
     - {role: common     , tags: ["common"]}
     - {role: pico-docker, tags: ["docker"]  , when: enable_docker}
@@ -28,7 +28,7 @@
   vars_files:
     - "vault.yml"
   pre_tasks:
-    - import_tasks: "../ansible/tasks/aws_web_bootstrap.yml"
+    - import_tasks: "./tasks/aws_web_bootstrap.yml"
   roles:
     - {role: common     , tags: ["common"]}
     - {role: mongodb    , tags: ["db"]}

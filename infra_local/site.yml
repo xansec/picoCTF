@@ -7,7 +7,7 @@
   become: yes
   become_method: sudo
   pre_tasks:
-    - import_tasks: "../ansible/tasks/vagrant_shell_bootstrap.yml"
+    - import_tasks: "./tasks/vagrant_shell_bootstrap.yml"
   roles:
     - {role: common     , tags: ["common"]}
     - {role: pico-docker, tags: ["docker"], when: enable_docker}
@@ -17,7 +17,7 @@
   become: yes
   become_method: sudo
   pre_tasks:
-    - import_tasks: "../ansible/tasks/vagrant_web_bootstrap.yml"
+    - import_tasks: "./tasks/vagrant_web_bootstrap.yml"
   roles:
     - {role: common     , tags: ["common"]}
     - {role: mongodb    , tags: ["db"]}

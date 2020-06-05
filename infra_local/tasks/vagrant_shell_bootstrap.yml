@@ -8,7 +8,7 @@
 # 2. Adds any user requested administrative keys
 
 - set_fact:
-    web_key: "{{ pico_base_dir}}/env_dev/fetched/keys/{{ hostvars['web']['ansible_host'] }}"
+    web_key: "{{ pico_base_dir}}/{{ playbook_dir | basename }}/fetched/keys/{{ hostvars['web']['ansible_host'] }}"
 - set_fact:
     web_pub: "{{ web_key }}.pub"
 
@@ -27,6 +27,9 @@
     key: "{{ lookup('file', web_pub) }}"
 
 # 2. Adds and keys specified in the admin_keys variable to the host.
-- import_tasks: "util_admin_ssh_keys.yml"
+- import_role:
+    name: common
+    tasks_from: util_admin_ssh_keys
   vars:
     admin_user: "{{ ansible_user }}"
+

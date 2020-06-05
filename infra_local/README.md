@@ -1,44 +1,55 @@
-# Development Environment
+# Local Infrastructure
 
-This is the configuration and `ansible` inventory that are used by the default
-`Vagrantfile`. This is customized for a simple, yet representative, development
-environment.
+This configuration shows how you can deploy the picoCTF platform in local
+virtual machines with `vagrant`. Specifically this is the configuration and
+`ansible` inventory that are used by the default `Vagrantfile`.
 
 If you are using this as a development environment, either to work on the
 picoCTF platform or develop challenges, you should not need to modify any files
 in this directory.
 
 If you are looking to use the local Vagrant VMs for some other purpose, such as
-a local event, you will want to make a copy of this `env_dev` directory and
+a local event, you will want to make a copy of this `infra_local` directory and
 modify the configurations accordingly (e.g. setting passwords). If you are
-interested in additional configuration parameters, please consult the
-[env_prod][e] directory.
+interested in additional configuration parameters, please consult the example in
+the [infra_remote][ir] directory.
 
-[e]:../env_prod
+[ir]:../infra_remote
 
 ## Usage
 
-1. Build the virtual machines and install the picoCTF platform.
+**1. Build the virtual machines and install the picoCTF platform.**
+
 ```
 vagrant up
 ```
 
-For more information on using vagrant consult the [documentation][vd] and
-commands such as `vagrant ssh shell` which will provide you a terminal on the
-`shell` server where you can use `shell_manager` to manually deploy challenges
-or `vagrant reload --provision` which will ensure the platform is properly
+Once this completes you can interact with the virtual machines using the
+following `vagrant` commands. For example, to get a terminal on the `shell`
+server.
+
+```
+vagrant ssh shell
+```
+
+To reload the virtual machines and ensure the picoCTF platform is properly
 installed and configured.
 
+```
+vagrant reload --provision
+```
+
+For more information on using `vagrant` consult the [documentation][vd]. 
 [vd]:../docs/vagrant.md
 
-2. Use `ansible` to apply changes.
+**2. Use `ansible` to apply changes.**
 
 This is the preferred way of interacting with the machines once they are created
 (as opposed to using `vagrant` or `ssh`). By using the provided playbooks you
 ensure that all of your changes are replicable and will work just as well in
 a remote production environment.
 
-This does require you to have `ansible` installed on your local machine.
+This requires you to have `ansible` installed on your local machine.
 
 ```
 ansible-playbook  site.yml
@@ -59,6 +70,20 @@ This will speed up the process.
 
 ```
 ansible-playbook site.yml --limit web --tags pico-web
+```
+
+### Modifying the local infrastructure virtual machines
+
+There are now quick ways to change the memory, number of CPUs and IP addresses
+and run multiple instances. Start by running a command like the following.
+
+- `J` is the number of CPUs
+- `M` is the amount of memory in GB
+- `SIP` is shell IP address (default is 192.168.2.2)
+- `WIP` is web IP address (default is 192.68.2.3)
+
+```
+J=2 M=6 SIP=192.168.2.53 WIP=192.168.2.52 vagrant up shell && SIP=192.168.2.53 WIP=192.168.2.52 vagrant up web
 ```
 
 ## Organization

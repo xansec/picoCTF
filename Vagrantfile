@@ -30,7 +30,7 @@ Vagrant.configure("2") do |config|
       ansible.install_mode = "default"
       ansible.compatibility_mode = "2.0"
       ansible.playbook = "site.yml"
-      ansible.provisioning_path = "/picoCTF/env_dev/"
+      ansible.provisioning_path = "/picoCTF/infra_local/"
       ansible.inventory_path = "inventory.yml"
       ansible.extra_vars = {ansible_connection:"local"}
       ansible.verbose = ENV['V']
@@ -65,7 +65,7 @@ Vagrant.configure("2") do |config|
       ansible.install_mode = "default"
       ansible.compatibility_mode = "2.0"
       ansible.playbook = "site.yml"
-      ansible.provisioning_path = "/picoCTF/env_dev/"
+      ansible.provisioning_path = "/picoCTF/infra_local/"
       ansible.inventory_path = "inventory.yml"
       ansible.extra_vars = {ansible_connection:"local"}
       ansible.verbose = ENV['V']

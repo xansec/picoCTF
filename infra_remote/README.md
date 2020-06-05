@@ -1,18 +1,23 @@
-# Production Environment
+# Remote Infrastructure
 
 This directory contains an automated way of deploying the picoCTF platform to
-Amazon Web Services (AWS) for a public event. Before attempting to use this
-configuration we strongly recommend you familiarize yourself with the provided
-[Development Environment][dev] and supporting local development
-[Vagrantfile][v].
+a remote cloud provider. Before attempting to use this configuration we strongly
+recommend you familiarize yourself with the provided [local infrastructure][il].
 
-This production environment provisions and configures the same two machine
-(`web` and `shell`), but instead of using `Vagrant` uses `terraform` to create
-the necessary "hardware" on AWS. Aside from this change in how the machines are
-created all of the [ansible][a] automation remains the same. 
+This remote infrastructure provisions and configures the same two machine (`web`
+and `shell`), but uses `terraform`, not `vagrant`, to create the necessary
+"hardware" on AWS. Aside from this change in how the machines are created all of
+the [ansible][a] automation remains the same. 
 
-[dev]:../env_dev
-[v]:../Vagrantfile
+This configuration is intended to serve as a demonstration of a simple remote
+deployment. Similar to the local infrastructure it automates account creation,
+challenge loading, and starting an event. To this it adds automated SSL/TLS
+certificates and shows how you can securely integrate secret storage with our
+automation. Minor modification would make it suitable for running a remote
+testing or production environment for a public event. Additionally you could
+update the terraform configuration to switch to an alternate cloud provider.
+
+[il]:../infra_local
 [a]:../ansible
 
 ## Assumptions

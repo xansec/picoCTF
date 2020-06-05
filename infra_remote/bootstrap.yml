@@ -1,6 +1,6 @@
 ---
 
-# In a remote environment such as AWS there often more steps required to
+# In a remote environment such as AWS there are often more steps required to
 # bootstrap a system from scratch. For this reason we split the setup into two
 # separate playbooks. The tasks in this playbook should only need to be run
 # once in order to get all hosts to a common level (e.g. core dependencies
@@ -13,13 +13,19 @@
   gather_facts: no
   tasks:
     # 1. Scan for remote SSH key and trust (local)
-    - import_tasks: "../ansible/tasks/util_ssh_keyscan.yml"
+    - import_role:
+        name: common
+        tasks_from: util_ssh_keyscan
 
     # 2. Configure host to support ansible
-    - import_tasks: "../ansible/tasks/bootstrap.yml"
+    - import_role:
+        name: common
+        tasks_from: bootstrap
 
     # 3. Ensure remote user has appropriate keys and is configured
-    - import_tasks: "../ansible/tasks/util_admin_user.yml"
+    - import_role:
+        name: common
+        tasks_from: util_admin_user
       vars:
         admin: "{{ ansible_user }}"
         keys: "{{ admin_keys }}"

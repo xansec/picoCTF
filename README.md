@@ -40,7 +40,7 @@ These commands perform the following:
 
 1. Get the source code at the most recent development state (`git`)
 2. Change into the source code directory (`cd`)
-3. Create a local development environment (`vagrant`)
+3. Bring up a local copy of the picoCTF platform (`vagrant`)
     - This will take approximately 30-45 minutes based on your network speed as
     vagrant downloads a base virtual machine and all the components to install
     the platform. This is a one-time, upfront cost. Obligitory [xkcd][].
@@ -60,41 +60,24 @@ navigation bar:
 6. Edit `picoCTF-web/web/_includes/header.html`
 7. Run `vagrant reload --provision web`
 
-Then check out [env_dev](./env_dev) for more information on using the local
-development environment in a more efficient manner.
-
-### Modifying the Devlopment Environment machines
-
-There are now quick ways to change the memory, number of CPUs and IP addresses
-and run multiple instances.
-
-After you do the git clone, rename picoCTF to picoCTF_XXX (fill in XXX with something unique for each)
-Start by running a command like the below.
-- `J` is the number of CPUs
-- `M` is the amount of memory in GB
-- `SIP` is shell IP address (default is 192.168.2.2)
-- `WIP` is web IP address (default is 192.68.2.3)
-
-```
-J=2 M=6 SIP=192.168.2.53 WIP=192.168.2.52 vagrant up shell && SIP=192.168.2.53 WIP=192.168.2.52 vagrant up web
-```
+Then check out the [infra_local](./infra_local) directory for more information
+on using the local development environment in a more efficient manner.
 
 ### Next Steps
 
-Interested in development? Check out the Development Environment notes in
-[env_dev](./env_dev).
+Interested in development? Check out the notes in [infra_local][il].
 
-Interested in running a public event? Check out the Production Environment notes
-in [env_prod](./env_prod) and the notes on [Running Your Own Competition][r]
-
-[r](./README.md#running-your-own-competition)
+Interested in running a public event? Check out the notes in [infra_remote][ir]
+and the [Running Your Own Competition][r] section of this document.
 
 The documentation has more information on [Alternative Deployments][ad].
 
-[ad]:./docs/alt_deployment.md
-
 Continue reading for more information on the picoCTF project.
 
+[il]:./infra_local
+[ir]:./infra_remote
+[r]:/README.md#running-your-own-competition
+[ad]:./docs/alt_deployment.md
 
 ## Project Overview
 
@@ -106,9 +89,9 @@ the following:
 2. [picoCTF-shell](./picoCTF-shell). Where users go to solve challenges.
 3. [problems](./problems). CTF problem source code.
 4. [ansible](./ansible). Used for configuring machines.
-5. Deployment Environments. Different ways to deploy the picoCTF platform
-  - [env_dev](./env_dev). Local (Vagrant) development environment
-  - [env_dev](./env_dev). Remote (AWS) production environment
+5. Infrastructure Examples. Different ways to deploy the picoCTF platform
+  - [infra_local][il]. Local infrastructure (Vagrant)
+  - [infra_remote][ir]. Remote infrastructure (Terraform)
 
 ### Walkthrough
 
@@ -196,10 +179,10 @@ platform is configured, this is the place to start.
 ## Running Your Own Competition
 
 If you are looking to run your own CTF competition, you should:
-1. Make sure you can bring up the local development environment (`Vagrantfile`
-   and `env_dev`)
+1. Make sure you can bring up the local infrastructure (`Vagrantfile`
+   and [infra_local][il])
 1. Make sure you understand how to deploy the infrastructure via `terraform` and
-   `ansible` (`env_prod`).
+   `ansible` ([infra_remote][ir]).
 2. You can reskin the look and feel of the site by editing the
    [picoCTF-web/web](picoCTF-web/web) javascript and HTML code.
 3. To enable password reset emails, log in using the site administrator
@@ -217,6 +200,13 @@ development. Our internal system is:
    intellectual leap built-in that's obvious to the creator but to no one
    else. Play testing makes sure the problem is coherent, self-contained, and
    fun.
+
+For more on running events see:
+- [The Many Maxims of Maximally Effective CTFs][maxims]
+- [PPP's Suggestions For Running a CTF][ppp]
+
+[maxims]:https://captf.com/maxims.html
+[ppp]:https://github.com/pwning/docs/blob/master/suggestions-for-running-a-ctf.markdown
 
 ## Giving Back and Development
 
