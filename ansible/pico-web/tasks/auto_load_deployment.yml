@@ -7,3 +7,5 @@
       . {{virtualenv_dir}}/bin/activate;
       {{ scripts_dir }}/load-deployment.py
       -n {{ shell_name }}
+      --enable
+      --lock

@@ -32,6 +32,23 @@ def main(args):
         output = api.shell_servers.get_publish_output(sid)
         output["sid"] = sid
         api.problem.load_published(output)
+        print("Deployment loaded")
+
+        # Enable problems
+        if args.enable:
+            for p in api.problem.get_all_problems(show_disabled=True):
+                api.problem.set_problem_availability(p["pid"], disabled=False)
+            print("Problems enabled")
+
+        # Enable locking on bundles
+        if args.lock:
+            for b in api.bundles.get_all_bundles():
+                bid = api.bundles.set_bundle_dependencies_enabled(b["bid"], enabled=True)
+                if bid is None:
+                    print("ERROR: locking bundle", file=sys.stderr)
+                    sys.exit(1)
+
+            print("Bundles locking")
 
     except Exception as e:
         print("ERROR: failed to load problems", file=sys.stderr)
@@ -43,6 +60,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Load Deployment from Shell")
     parser.add_argument("-n", "--name", required=True)
+    parser.add_argument("-e", "--enable", action="store_true")
+    parser.add_argument("-l", "--lock", action="store_true")
     args = parser.parse_args()
 
     # set default picoCTF settings
