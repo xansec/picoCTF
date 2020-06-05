@@ -9,9 +9,16 @@ The picoCTF platform is the infrastructure which is used to run
 The platform is designed to be easily adapted to other CTF or programming
 competitions.
 
-If using the platform to host a custom competition, we recommend using the most recent tagged [release](https://github.com/picoCTF/picoCTF/releases). The `master` branch represents active development and may not be stable. Additionally, we cannot guarantee the stability or security of any outdated releases.
+If using the platform to host a custom competition, we recommend using the most
+recent tagged [release](https://github.com/picoCTF/picoCTF/releases). The
+`master` branch represents active development and may not be stable.
+Additionally, we cannot guarantee the stability or security of any outdated
+releases.
 
-Additional documentation can be found at [docs.picoctf.com](https://docs.picoctf.com) or within the [`/docs` directory](./docs/README.md).
+Additional documentation can be found at [docs.picoctf.com][docs] or within the
+[`/docs` directory](./docs/README.md).
+
+[docs]:https://docs.picoctf.com
 
 Please visit our Discord server for other platform deployment questions not
 covered in our documentation: https://discord.gg/WQGdYaB
@@ -23,15 +30,39 @@ quickly up and running with the picoCTF platform by deploying the code base to
 two local virtual machines. You can read more about using `vagrant` in our
 [documentation](./docs/vagrant.md)
 
-1. `git clone https://github.com/picoCTF/picoCTF.git`
-2. `cd picoCTF`
-3. `vagrant up`
+```
+git clone https://github.com/picoCTF/picoCTF.git
+cd picoCTF
+vagrant up
+```
+
+These commands perform the following:
+
+1. Get the source code at the most recent release (`git`)
+  - see [this link][comment] for an explanation of the git command line
+2. Change into the source code directory (`cd`)
+3. Create a local development environment (`vagrant`)
+
+Now that your local copy of picoCTF has been deployed:
+
 4. Navigate to http://192.168.2.2/
 5. Register an account (this user will be the site administrator)
 
-If you want to change CTF Placeholder, edit `picoCTF-web/web/_includes/header.html`
+[comment]:https://github.com/picoCTF/picoCTF/issues/68#issuecomment-346736808
 
-There are now quick ways to change the memory, number of CPUs and IP addresses and run multiple instances.
+To make your first change, for example to change "CTF Placeholder" in the
+navigation bar:
+
+6. Edit `picoCTF-web/web/_includes/header.html`
+7. Run `vagrant reload --provision web`
+
+Then check out [env_dev](./env_dev) for more information on using the local
+development environment in a more efficient manner.
+
+### Modifying the Devlopment Environment machines
+
+There are now quick ways to change the memory, number of CPUs and IP addresses
+and run multiple instances.
 
 After you do the git clone, rename picoCTF to picoCTF_XXX (fill in XXX with something unique for each)
 Start by running a command like the below.
@@ -44,21 +75,21 @@ Start by running a command like the below.
 J=2 M=6 SIP=192.168.2.53 WIP=192.168.2.52 vagrant up shell && SIP=192.168.2.53 WIP=192.168.2.52 vagrant up web
 ```
 
-### Quick start on two existing machines (not Vagrant VMs)
+### Next Steps
 
-XXX: update to match `env_dev` style
+Interested in development? Check out the Development Environment notes in
+[env_dev](./env_dev).
 
-On each machine:
-1. `git clone https://github.com/picoCTF/picoCTF`
-2. SHELL ONLY: sudo visudo and add NOPASSWD for your user for at least /picoCTF-env/bin/shell_manager. (Don't remove your ability to do other sudos with a password!)
-3. `chmod og-rx picoCTF`
-4. `sudo ln -s picoCTF /picoCTF`
-5. `bash picoCTF/vagrant/provision_scripts/install_ansible.sh`
-6. `cd picoCTF/ansible`
-7. edit inventories/local_development to match your hostnames
-8. edit group_vars/local_development/vars.yml to have your username and password (instead of vagrant). If the usernames on your machines don't match, change shell_user also.
-9. SHELL ONLY: `ansible-playbook --ask-sudo-pass -e "web_address=http://WEB_HOSTNAME web_address_internal=http://WEB_HOSTNAME shell_hostname=SHELL_HOSTNAME shell_host=SHELL_HOSTNAME shell_port=22" -i inventories/local_development -v -l shell site.yml` (replace WEB_HOSTNAME and SHELL_HOSTNAME with yours)
-10. WEB ONLY: `ansible-playbook --ask-sudo-pass -e "web_address=http://WEB_HOSTNAME web_address_internal=http://WEB_HOSTNAME shell_hostname=SHELL_HOSTNAME shell_host=SHELL_HOSTNAME shell_port=22" -i inventories/local_development -v -l web,db site.yml` (replace WEB_HOSTNAME and SHELL_HOSTNAME with yours)
+Interested in running a public event? Check out the Production Environment notes
+in [env_prod](./env_prod) and the notes on [Running Your Own Competition][r]
+
+[r](./README.md#running-your-own-competition)
+
+The documentation has more information on [Alternative Deployments][ad].
+
+[ad]:./docs/alt_deployment.md
+
+Continue reading for more information on the picoCTF project.
 
 
 ## Project Overview
@@ -67,12 +98,13 @@ This project is broken down into a few discrete components that compose to build
 a robust and full featured CTF platform. Specifically the project is consists of
 the following:
 
-1. [picoCTF-web](./picoCTF-web). This is the website and all APIs.
-2. [picoCTF-shell](./picoCTF-shell). This is where users go to solve challenges.
-3. [problems](./problems). This is the CTF problems source code.
-4. [ansible](./ansible). This is used for configuring machines.
-5. [terraform](./terraform). This is used for deployment.
-5. [vagrant examples](./vagrant). This hosts various vagrant VM examples.
+1. [picoCTF-web](./picoCTF-web). The website and all APIs.
+2. [picoCTF-shell](./picoCTF-shell). Where users go to solve challenges.
+3. [problems](./problems). CTF problem source code.
+4. [ansible](./ansible). Used for configuring machines.
+5. Deployment Environments. Different ways to deploy the picoCTF platform
+  - [env_dev](./env_dev). Local (Vagrant) development environment
+  - [env_dev](./env_dev). Remote (AWS) production environment
 
 ### Walkthrough
 
@@ -128,7 +160,7 @@ Some important terminology:
 ### picoCTF-web
 
 The competitor facing web site, the API for running a CTF, and the management
-functionality for CTF organizers. The development [Vagrantfile](./Vagrantfile))
+functionality for CTF organizers. The development [Vagrantfile](./Vagrantfile)
 deploys picoCTF-web to a virtual machine (web) at http://192.168.2.2/. If you
 want to modify the look and feel of the website, this is the place to start.
 
@@ -157,18 +189,13 @@ flexible, parameterized, automated playbooks and roles that apply across
 development, staging, and production environments. If you want to modify way the
 platform is configured, this is the place to start.
 
-### Terraform for automated AWS deployment
-
-The tool we use to codify our infrastructure as code is
-[Terraform](https://www.terraform.io/). This allows a simple process for
-creating, destroying, and managing a public deployment of the platform. If you
-want to run a live competition on AWS, this is the place to start.
-
 ## Running Your Own Competition
 
 If you are looking to run your own CTF competition, you should:
-1. Make sure you understand how to deploy the infrastructure via terraform and
-   ansible.
+1. Make sure you can bring up the local development environment (`Vagrantfile`
+   and `env_dev`)
+1. Make sure you understand how to deploy the infrastructure via `terraform` and
+   `ansible` (`env_prod`).
 2. You can reskin the look and feel of the site by editing the
    [picoCTF-web/web](picoCTF-web/web) javascript and HTML code.
 3. To enable password reset emails, log in using the site administrator

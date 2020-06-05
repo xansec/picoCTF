@@ -13,9 +13,9 @@
         keys: ["./keys/web_id_rsa.pub"]
   roles:
     - {role: common     , tags: ["common"]}
-    - {role: pico-docker, tags: ["docker"]}
+    - {role: pico-docker, tags: ["pico-docker"]}
     - {role: certbot    , tags: ["certbot"]}
-    - {role: pico-shell , tags: ["shell"]}
+    - {role: pico-shell , tags: ["pico-shell"]}
 
 - hosts: web
   become: yes
@@ -30,4 +30,4 @@
     - {role: common     , tags: ["common"]}
     - {role: mongodb    , tags: ["db"]}
     - {role: certbot    , tags: ["certbot"]}
-    - {role: pico-web   , tags: ["web"]}
+    - {role: pico-web   , tags: ["pico-web"]}

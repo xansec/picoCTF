@@ -1,7 +1,17 @@
 ---
-# configuration for use with the local development Vagrantfile
-
+# Configuration for use with the local development Vagrantfile
+#
 all:
+
+  hosts:
+    shell:
+      ansible_host                : "{{ shell_hostname }}"
+      hostname                    : "picoCTF-shell-dev"
+      ansible_ssh_private_key_file: "../.vagrant/machines/shell/virtualbox/private_key" # vagrant created
+    web:
+      ansible_host                : "{{ web_hostname }}"
+      hostname                    : "picoCTF-web-dev"
+      ansible_ssh_private_key_file: "../.vagrant/machines/web/virtualbox/private_key"   # vagrant created
 
   vars:
       ansible_user                : "vagrant"
@@ -39,24 +49,8 @@ all:
       # docker challenge options
       docker_public_host          : "{{ shell_hostname }}"
       docker_internal_host        : "tcp://{{shell_hostname}}:2376"
-      docker_ca                   : "/home/{{ansible_user}}/.docker/ca.pem"
-      docker_client               : "/home/{{ansible_user}}/.docker/cert.pem"
-      docker_key                  : "/home/{{ansible_user}}/.docker/key.pem"
-      docker_containers_per_team  : 3
-      docker_ttl                  : 3600  # 1 hour = 60 * 60 = 3600
       docker_clients              : ["{{web_hostname}}"]
       server_SAN                  : "DNS:localhost,IP:{{shell_hostname}},IP:127.0.0.1"
 
-  hosts:
 
-    shell:
-      ansible_host                : "{{ shell_hostname }}"
-      hostname                    : "picoCTF-shell-dev"
-      # vagrant created
-      ansible_ssh_private_key_file: "../.vagrant/machines/shell/virtualbox/private_key"
 
-    web:
-      ansible_host                : "{{ web_hostname }}"
-      hostname                    : "picoCTF-web-dev"
-      # vagrant created
-      ansible_ssh_private_key_file: "../.vagrant/machines/web/virtualbox/private_key"

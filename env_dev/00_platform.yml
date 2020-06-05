@@ -6,8 +6,8 @@
   become_method: sudo
   roles:
     - {role: common     , tags: ["common"]}
-    - {role: pico-docker, tags: ["docker"]}
-    - {role: pico-shell , tags: ["shell"]}
+    - {role: pico-docker, tags: ["pico-docker"]}
+    - {role: pico-shell , tags: ["pico-shell"]}
 
 - hosts: web
   become: yes
@@ -21,4 +21,4 @@
   roles:
     - {role: common     , tags: ["common"]}
     - {role: mongodb    , tags: ["db"]}
-    - {role: pico-web   , tags: ["web"]}
+    - {role: pico-web   , tags: ["pico-web"]}
