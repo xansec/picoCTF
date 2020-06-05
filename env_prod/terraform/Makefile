@@ -1,5 +1,5 @@
 
-.PHONY: show build taint-machines
+.PHONY: show build taint-web taint-shell taint-machines taint-db-ebs
 
 show:
 	terraform show

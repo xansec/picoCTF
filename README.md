@@ -41,6 +41,11 @@ These commands perform the following:
 1. Get the source code at the most recent development state (`git`)
 2. Change into the source code directory (`cd`)
 3. Create a local development environment (`vagrant`)
+    - This will take approximately 30-45 minutes based on your network speed as
+    vagrant downloads a base virtual machine and all the components to install
+    the platform. This is a one-time, upfront cost. Obligitory [xkcd][].
+
+[xkcd]:https://xkcd.com/303/
 
 Now that your local copy of picoCTF has been deployed:
 
@@ -49,9 +54,7 @@ Now that your local copy of picoCTF has been deployed:
     - user: `ctfadmin`
     - password: `dev`
 
-[comment]:https://github.com/picoCTF/picoCTF/issues/68#issuecomment-346736808
-
-To make your first change, for example to change "CTF Placeholder" in the
+Make your first change. For example to change "CTF Placeholder" in the
 navigation bar:
 
 6. Edit `picoCTF-web/web/_includes/header.html`

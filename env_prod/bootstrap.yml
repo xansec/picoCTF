@@ -5,7 +5,7 @@
 # separate playbooks. The tasks in this playbook should only need to be run
 # once in order to get all hosts to a common level (e.g. core dependencies
 # installed, accounts normalized, etc). The standard platform configuration
-# then occurs in the 01_platform.yml playbook.
+# then occurs in the site.yml playbook.
 
 - hosts: all
   become: yes
@@ -27,4 +27,4 @@
 # Now that the remote environment is prepared. Run the standard picoCTF
 # platform installation.
 - name: Platform Provision
-  import_playbook: "01_platform.yml"
+  import_playbook: "site.yml"

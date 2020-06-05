@@ -41,7 +41,7 @@ a remote production environment.
 This does require you to have `ansible` installed on your local machine.
 
 ```
-ansible-playbook  00_platform.yml
+ansible-playbook  site.yml
 ```
 
 Will run all the platform provisioning steps on both `web` and `shell`. This
@@ -51,21 +51,21 @@ will take some time and is essentially what is performed the first time you run
 You can limit the tasks to just a single host:
 
 ```
-ansible-playbook 00_platform.yml --limit web
+ansible-playbook site.yml --limit web
 ```
 
 As well as run just a portion of the playbook (e.g. just the `pico-web` tasks).
 This will speed up the process.
 
 ```
-ansible-playbook 00_platform.yml --limit web --tags pico-web
+ansible-playbook site.yml --limit web --tags pico-web
 ```
 
 ## Organization
 
 - `ansible.cfg`: points to the relevant roles from both core `picoCTF` as well
 - `inventory.yml`: sets all the configurable variables for platform deployment
-- `00_platform.yml`: main playbook used to configure the picoCTF platform
+- `site.yml`: main playbook used to configure the picoCTF platform
 
 ### inventory.yml
 
@@ -90,7 +90,7 @@ is deployed. Again in the local development environment these are tailored for
 convenience (e.g. automatically add a shell server and challenges) as well as
 simplicity (e.g. no passwords) and should not need to be changed.
 
-### 00_platform.yml
+### site.yml
 
 This is an `ansible` "playbook". A playbook  matches hosts from the inventory to
 the "roles" which should be run on them.

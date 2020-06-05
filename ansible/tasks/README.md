@@ -8,7 +8,7 @@ rather than as full `ansible` roles.
 These tasks can be imported in a playbooks with `import_tasks`, where they are
 assigned to run on specific hosts.
 
-This is demonstrated in the `env_dev/00_platform.yml` playbook:
+This is demonstrated in the `env_dev/site.yml` playbook:
 
 ```
 - hosts: shell

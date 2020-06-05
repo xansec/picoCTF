@@ -23,13 +23,7 @@ admin_keys: ["./admin_keys/user.pub"]
 3. Re-run the provisioning steps
 
 ```
-vagrant reload --provision
-```
-
-or
-
-```
-ansible-playbook 00_platform.yml
+ansible-playbook site.yml
 ```
 
 ## WARNING

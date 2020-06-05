@@ -50,7 +50,7 @@ From your local machine (make sure the assumptions above are met).
 
 4. Provision the infrastructure.
     ```
-    ansible-playbook 00_bootstrap.yml
+    ansible-playbook bootstrap.yml
     ```
 
 Once that successfully completes your CTF should be up and running.

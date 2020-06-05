@@ -3,10 +3,10 @@
 #
 # You should not need to edit this file.
 #
-# Notice that there are very few changes from env_dev/00_platform.yml. Simply:
+# Notice that there are very few changes from env_dev/site.yml. Simply:
 # 1. The inclusion of the vault.yml vars_file for sensitive variables.
 # 2. Different AWS specific bootstrap tasks.
-# 3. The addition of certbot role for automatically obtaining SSL/TLS
+# 3. The addition of a certbot role for automatically obtaining SSL/TLS
 # certificates from Let's Encrypt if your configuration is using domain names.
 
 - hosts: shell
@@ -18,9 +18,9 @@
     - import_tasks: "../ansible/tasks/aws_shell_bootstrap.yml"
   roles:
     - {role: common     , tags: ["common"]}
-    - {role: pico-docker, tags: ["pico-docker"] , when: enable_docker}
-    - {role: certbot    , tags: ["certbot"]     , when: enable_certbot}
-    - {role: pico-shell , tags: ["pico-shell"]}
+    - {role: pico-docker, tags: ["docker"]  , when: enable_docker}
+    - {role: certbot    , tags: ["certbot"] , when: enable_certbot}
+    - {role: pico-shell , tags: ["shell"]}
 
 - hosts: web
   become: yes
@@ -33,4 +33,4 @@
     - {role: common     , tags: ["common"]}
     - {role: mongodb    , tags: ["db"]}
     - {role: certbot    , tags: ["certbot"], when: enable_certbot}
-    - {role: pico-web   , tags: ["pico-web"]}
+    - {role: pico-web   , tags: ["web"]}

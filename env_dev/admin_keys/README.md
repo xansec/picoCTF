@@ -29,7 +29,7 @@ vagrant reload --provision
 or
 
 ```
-ansible-playbook 00_platform.yml
+ansible-playbook site.yml
 ```
 
 ## WARNING
