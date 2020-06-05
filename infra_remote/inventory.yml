@@ -70,7 +70,7 @@ all:
       # rate limit. Switching from live/staging requires some manual administration.
       # https://letsencrypt.org/docs/rate-limits/
       # https://letsencrypt.org/docs/staging-environment/
-      certbot_staging: True
+      certbot_staging: False
 
       # Set whether `ansible_host` is an IP address or a domain name (DNS) In a
       # production environment we recommend DNS so that you can easily use SSL/TLS
