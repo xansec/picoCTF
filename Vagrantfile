@@ -14,6 +14,7 @@ def compute_auto_name_suffix(prefix = "picoCTF")
 end
 
 Vagrant.configure("2") do |config|
+
   config.vm.define "shell", primary: true do |shell|
     shell.vm.box = "ubuntu/bionic64"
     shell.vm.network "private_network", ip: (ENV['SIP'] || '192.168.2.3'), nic_type: "virtio"
@@ -23,19 +24,15 @@ Vagrant.configure("2") do |config|
                            owner: "vagrant", group: "vagrant",
                            mount_options: ["dmode=775", "fmode=775"]
 
-    shell.vm.provision "shell", path: "ansible/scripts/install_ansible.sh"
+    # uses ansible_local so that a user does not need to have ansible installed
     shell.vm.provision :ansible_local do |ansible|
+      ansible.install = "yes"
+      ansible.install_mode = "default"
       ansible.compatibility_mode = "2.0"
-      ansible.playbook = "site.yml"
-      ansible.limit = "shell"
-      ansible.provisioning_path = "/picoCTF/ansible/"
-      ansible.inventory_path = "/picoCTF/ansible/inventories/local_development"
-      ansible.extra_vars = {
-         web_address:"http://"+(ENV['WIP'] || '192.168.2.2'),
-         web_address_internal:"http://"+(ENV['WIP'] || '192.168.2.2'),
-         shell_hostname:(ENV['SIP'] || '192.168.2.3'),
-         shell_host:(ENV['SIP'] || '192.168.2.3')
-      }
+      ansible.playbook = "00_platform.yml"
+      ansible.provisioning_path = "/picoCTF/env_dev/"
+      ansible.inventory_path = "inventory.yml"
+      ansible.extra_vars = {ansible_connection:"local"}
       ansible.verbose = ENV['V']
     end
 
@@ -62,19 +59,15 @@ Vagrant.configure("2") do |config|
                          owner: "vagrant", group: "vagrant",
                          mount_options: ["dmode=775", "fmode=775"]
 
-    web.vm.provision "shell", path: "ansible/scripts/install_ansible.sh"
+    # uses ansible_local so that a user does not need to have ansible installed
     web.vm.provision :ansible_local do |ansible|
+      ansible.install = "yes"
+      ansible.install_mode = "default"
       ansible.compatibility_mode = "2.0"
-      ansible.playbook = "site.yml"
-      ansible.limit = ["db", "web"]
-      ansible.provisioning_path = "/picoCTF/ansible/"
-      ansible.inventory_path = "/picoCTF/ansible/inventories/local_development"
-      ansible.extra_vars = {
-         web_address:"http://"+(ENV['WIP'] || '192.168.2.2'),
-         web_address_internal:"http://"+(ENV['WIP'] || '192.168.2.2'),
-         shell_hostname:(ENV['SIP'] || '192.168.2.3'),
-         shell_host:(ENV['SIP'] || '192.168.2.3')
-      }
+      ansible.playbook = "00_platform.yml"
+      ansible.provisioning_path = "/picoCTF/env_dev/"
+      ansible.inventory_path = "inventory.yml"
+      ansible.extra_vars = {ansible_connection:"local"}
       ansible.verbose = ENV['V']
     end
 

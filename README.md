@@ -29,21 +29,24 @@ two local virtual machines. You can read more about using `vagrant` in our
 4. Navigate to http://192.168.2.2/
 5. Register an account (this user will be the site administrator)
 
-If you want to change CTF Placeholder, edit
-picoCTF-web/web/_includes/header.html
+If you want to change CTF Placeholder, edit `picoCTF-web/web/_includes/header.html`
 
 There are now quick ways to change the memory, number of CPUs and IP addresses and run multiple instances.
 
 After you do the git clone, rename picoCTF to picoCTF_XXX (fill in XXX with something unique for each)
 Start by running a command like the below.
-J is the number of CPUs
-M is the amount of memory in GB
-SIP is shell IP address (default is 192.168.2.2)
-WIP is web IP address (default is 192.68.2.3)
+- `J` is the number of CPUs
+- `M` is the amount of memory in GB
+- `SIP` is shell IP address (default is 192.168.2.2)
+- `WIP` is web IP address (default is 192.68.2.3)
 
+```
 J=2 M=6 SIP=192.168.2.53 WIP=192.168.2.52 vagrant up shell && SIP=192.168.2.53 WIP=192.168.2.52 vagrant up web
+```
 
 ### Quick start on two existing machines (not Vagrant VMs)
+
+XXX: update to match `env_dev` style
 
 On each machine:
 1. `git clone https://github.com/picoCTF/picoCTF`

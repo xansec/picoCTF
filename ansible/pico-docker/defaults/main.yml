@@ -16,5 +16,4 @@ srv_crt: "{{key_dir}}/server.pem"
 server_CN: "docker.local"
 server_SAN: []
 
-client: local
 user: "{{ansible_user}}"

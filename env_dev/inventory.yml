@@ -1,0 +1,66 @@
+---
+# configuration for use with the local development Vagrantfile
+
+all:
+
+  vars:
+      ansible_user                : "vagrant"
+
+      # source settings
+      pico_base_dir               : "/picoCTF"
+      virtualenv_dir              : "/picoCTF-env"
+
+      ## web settings
+      web_hostname                : "{{ lookup('env','WIP') or '192.168.2.2' }}"
+      web_address                 : "http://{{web_hostname}}"
+      web_address_internal        : "{{ web_address }}"
+      web_fqdn                    : "localhost"
+      flask_app_server_name       : "{{ web_fqdn }}"
+      nginx_server_name           : "_"
+
+      # shell settings
+      shell_hostname              : "{{ lookup('env','SIP') or '192.168.2.3' }}"
+      shell_name                  : "Local-Development-Shell"   # no spaces
+      shell_ip                    : "{{shell_hostname}}"
+      shell_user                  : "{{ ansible_user }}"
+      shell_pass                  : "vagrant"
+      shell_manager_deploy_secret : "**insecure-secret**"
+
+      # default insecure "vagrant" password (mkpasswd --method=SHA-512 vagrant)
+      shell_admin_password_crypt  : "$6$0GcSqMClzx$qEKEiL78VE/Xe0gzuGGuWyUqAlZMObkGnRYwHo4.vSUlvWt6aA7PBH1oGDsOQlykFNScEdEhrirD5oFLOHH011"
+
+      # optional web automation
+      enable_basic_auth           : False
+      auto_add_shell              : True
+      auto_load_problems          : True
+      auto_start_competition      : True
+
+      # database settings
+      db_private_ip               : "127.0.0.1"
+      mongodb_conf_auth           : False
+      picoWeb_db_password         : "XXX_INSECURE_XXX"
+
+      # docker challenge options
+      docker_public_host          : "{{ shell_hostname }}"
+      docker_internal_host        : "tcp://{{shell_hostname}}:2376"
+      docker_ca                   : "/home/{{ansible_user}}/.docker/ca.pem"
+      docker_client               : "/home/{{ansible_user}}/.docker/cert.pem"
+      docker_key                  : "/home/{{ansible_user}}/.docker/key.pem"
+      docker_containers_per_team  : 3
+      docker_ttl                  : 3600  # 1 hour = 60 * 60 = 3600
+      docker_clients              : ["{{web_hostname}}"]
+      server_SAN                  : "DNS:localhost,IP:{{shell_hostname}},IP:127.0.0.1"
+
+  hosts:
+
+    shell:
+      ansible_host                : "{{ shell_hostname }}"
+      hostname                    : "picoCTF-shell-dev"
+      # vagrant created
+      ansible_ssh_private_key_file: "../.vagrant/machines/shell/virtualbox/private_key"
+
+    web:
+      ansible_host                : "{{ web_hostname }}"
+      hostname                    : "picoCTF-web-dev"
+      # vagrant created
+      ansible_ssh_private_key_file: "../.vagrant/machines/web/virtualbox/private_key"

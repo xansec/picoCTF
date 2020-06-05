@@ -5,7 +5,7 @@
 - set_fact:
     home_conf: "/home/{{user}}/.docker"
 
-- name: Create .docker dir for user ({{user}})
+- name: "Create .docker dir for user ({{user}})"
   file:
     path: "{{home_conf}}"
     state: directory
@@ -14,7 +14,7 @@
     mode: "0700"
 
 # keys/certificates were generated and fetched in gen_client
-- name: Copy keys and certificates for user
+- name: "Copy keys and certificates for client ({{client}}"
   copy:
     src: "{{item.src}}"
     dest: "{{item.dest}}"

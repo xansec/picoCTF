@@ -1,4 +1,20 @@
-# Docker TLS
+# Docker
+
+This role configures a backend host to support `DockerChallenge` style
+challenges for the picoCTF platform.
+
+It serves 3 primary purposes:
+
+1. Install `docker` daemon and necessary dependencies.
+2. Configure the `docker` daemon to listen securely on the network.
+3. Utility scripts to generate client certificates and prune containers.
+
+## 1. Docker Install
+
+This role installs `docker.io` and `docker-compose` from the default Ubuntu
+repositories.
+
+## 2. Docker TLS Configuration
 
 This role configures a docker daemon to also listen securely on the network by
 utilizing a custom Certificate Authority and validating clients over TLS per the
@@ -9,12 +25,8 @@ Alternative Name (SAN) for the server. These must be appropriately set and match
 the host's information. For example:
 
 ```
-- name: Configure docker TLS
-  include_role:
-    name: docker_tls
-  vars:
-    server_CN: "docker.example.com"
-    server_SAN: "DNS:docker.example.com,DNS:localhost,IP:10.0.0.30,IP:127.0.0.1"
+server_CN: "docker.example.com"
+server_SAN: "DNS:docker.example.com,DNS:localhost,IP:10.0.0.30,IP:127.0.0.1"
 ```
 
 By default this configures the server to listen on all interfaces on port `2376`
@@ -38,10 +50,11 @@ export DOCKER_HOST=tcp://$HOST:2376 DOCKER_TLS_VERIFY=1
 docker ps
 ```
 
-## Clients
+### 3. Clients and Utilities
 
 This role also includes a playbook to generate additional client certificates as
-well as to configure a specific user.
+well as to configure a specific user. Also it creates a picoCTF specific cron
+job to manage the lifetime of expired containers.
 
 The `gen_client` tasks will create the key and a certificate signed by the
 custom CA. It will then fetch the necessary files back to the control machine.
@@ -55,7 +68,7 @@ An example of how these can be used is as follows.
 ```
 - name: Generate docker client certs
   import_role:
-    name: docker_tls
+    name: pico-docker
     tasks_from: gen_client
   vars:
     client: challenge.example.com
@@ -63,9 +76,11 @@ An example of how these can be used is as follows.
 
 - name: Deploy docker client certs
   import_role:
-    name: docker_tls
+    name: pico-docker
     tasks_from: config_user
   vars:
     user : "{{ansible_user}}"
     client: challenge.example.com
 ```
+
+All of this is performed automatically in the provided example environments.

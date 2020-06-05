@@ -4,7 +4,7 @@ This project uses [Vagrant](https://www.vagrantup.com/) to configure
 a reproducible development environment.
 
 The `Vagrantfile` in the top level of this repository will launch a minimal two
-machine setup (`web` and `challenge`) configured for easy local development.
+machine setup (`web` and `shell`) configured for easy local development.
 This will most likely be the primary setup you are interested in.
 
 These virtual machines are  automatically be provisioned using the provided
@@ -23,7 +23,7 @@ When run from the directory containing a `Vagrantfile`
   - Ensures networking is properly configured and synced directories are up to
   date.
 
-- `vagrant ssh web` or `vagrant ssh challenge`
+- `vagrant ssh web` or `vagrant ssh shell`
   - Will provide you a shell within the relevant virtual machine.
 
 - `vagrant reload`
