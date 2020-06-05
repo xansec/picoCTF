@@ -7,6 +7,7 @@
     --agree-tos 
     -m {{certbot_email}}
     -d {{certbot_domain}}
+    {% if certbot_staging %} --staging {% endif %}
   register: certonly
   args:
     creates: "/etc/letsencrypt/live/{{certbot_domain}}/fullchain.pem"

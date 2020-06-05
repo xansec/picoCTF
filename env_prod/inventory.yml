@@ -65,6 +65,13 @@ all:
       # `ansible_host` for both `web` and `shell` should be domain names.
       enable_certbot : True
 
+      # NOTE: if you plan on creating/destroying your infrastructure many times
+      # you might want to consider running in staging mode to prevent hitting a
+      # rate limit. Switching from live/staging requires some manual administration.
+      #  https://letsencrypt.org/docs/rate-limits/
+      # https://letsencrypt.org/docs/staging-environment/
+      certbot_staging: True
+
       # Set whether `ansible_host` is an IP address or a domain name (DNS) In a
       # production environment we recommend DNS so that you can easily use SSL/TLS
       host_type : "DNS"  # valid options 'IP' or 'DNS'

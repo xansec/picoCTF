@@ -77,7 +77,8 @@ enable_basic_auth: false
 htpasswd_accounts: []
 
 # SSL with Let's Encrypt
-enable_certbot: False
+enable_certbot  : False
+certbot_staging : False
 
 # SSL with out-of-band cert and vault-encrypted key
 enable_web_ssl : False
