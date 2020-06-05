@@ -8,4 +8,4 @@
   authorized_key:
     user: "{{ ansible_user }}"
     state: present
-    key: "{{ lookup('file', './keys/web_id_rsa.pub') }}"
+    key: "{{ lookup('file', './fetched/keys/web_id_rsa.pub') }}"
