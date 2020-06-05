@@ -68,7 +68,7 @@ all:
       # NOTE: if you plan on creating/destroying your infrastructure many times
       # you might want to consider running in staging mode to prevent hitting a
       # rate limit. Switching from live/staging requires some manual administration.
-      #  https://letsencrypt.org/docs/rate-limits/
+      # https://letsencrypt.org/docs/rate-limits/
       # https://letsencrypt.org/docs/staging-environment/
       certbot_staging: True
 

@@ -85,10 +85,16 @@ is run. For more information please consult the [documentation][ad]
 
 In order to make this process smooth, we have provided a script
 (`./gen_vault.py`) which chooses random values for all necessary secrets and
-passwords and properly encrypts them to produce `vault.yml`. Since it is
-encrypted you can (and should) commit `vault.yml` into git.
+passwords and properly encrypts them to produce `vault.yml`.
 
-### Password
+Similar to the terraform state, this file is ignored from git by default.
+However, if you are working with others you almost certainly want to commit it
+to the repository either with `git add -f vault.yml` or editing the
+`/.gitignore` file. So long as you used a secure password, it is safe to commit
+this file since it is encrypted. At the very least you likely want to backup or
+save the credentials from this file.
+
+### Vault Password
 
 The current setup balances convenience with security and writes your password to
 a plain text file (`vault_pass.txt`) which is then loaded by default in the
