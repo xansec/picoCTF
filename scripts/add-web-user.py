@@ -37,7 +37,8 @@ def main(args):
         print(uid)
     except api.PicoException as e:
         print("ERROR: failed to add user", file=sys.stderr)
-        exit(1)
+        print(e.message, file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == '__main__':
 
@@ -57,6 +58,6 @@ if __name__ == '__main__':
 
     # set default picoCTF settings
     if 'APP_SETTINGS_FILE' not in os.environ:
-            os.environ['APP_SETTINGS_FILE'] = '/picoCTF-web-config/deploy_settings.py'
+        os.environ['APP_SETTINGS_FILE'] = '/picoCTF-web-config/deploy_settings.py'
     with api.create_app().app_context():
-            main(args)
+        main(args)

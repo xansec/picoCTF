@@ -51,11 +51,14 @@ pico_internal_allow : "10.0.1.0/24"
 # ctf daemon_manager
 daemon_src_dir      : "{{ pico_web_api_dir}}/daemons"
 
-# Auto Configuration flags
+# Auto Configure event
+auto_start_ctf      : True
+global_scoreboard   : "Global"
 
 # Default Web Admin
 auto_add_web_admin  : False
 web_admin           : "ctfadmin"
+web_ssh_key         : "/home/{{ ansible_user}}/.ssh/id_rsa"
 # commented out so they must be explicitly provided
 #web_admin_pw       : "dev"
 #admin_email        : "admin@example.com"
@@ -66,8 +69,7 @@ auto_load_problems  : False
 shell_name          : "shell"
 shell_host          : "{{ hostvars['shell']['ansible_host'] }}"
 shell_user          : "{{ ansible_user }}"
-shell_pass          : "vagrant"                                 # XXX: legacy remove
-shell_port          : "22"
+shell_keypath       : "{{ web_ssh_key }}"
 shell_proto         : "{% if enable_certbot %}HTTPS{% else %}HTTP{% endif %}"
 
 # HTTP Basic Auth

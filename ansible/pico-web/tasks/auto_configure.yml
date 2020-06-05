@@ -1,6 +1,11 @@
 ---
-# Playbook to handle convenience preconfigurations so an admin is not
-# required to set things up in the web ui by hand.
+# Playbook to handle convenience pre-configurations so an admin is not required
+# to set things up in the web UI by hand. Does not attempt to configure all
+# aspects, simply those required to get a no-interaction development
+# environment.
+
+# Run before adding any users so we don't have to recalculate eligibility
+- include: auto_init_ctf.yml
 
 - include: auto_add_web_user.yml
   vars:
@@ -8,39 +13,9 @@
     web_pw    : "{{ web_admin_pw }}"
     web_email : "{{ admin_email }}"
   when: auto_add_web_admin
-  tags: ["XXX"]
 
-- name: Autoload Shell Server into web interface
-  script: >
-    add_shell_server.py
-    {{ shell_name }}
-    {{ shell_host }}
-    {{ shell_user }}
-    {{ shell_pass }}
-    {{ shell_port }}
-    {{ shell_proto }}
-  register: add_shell_server_output
-  environment:
-    APP_SETTINGS_FILE: "{{ web_config_dir }}/deploy_settings.py"
-    PATH: "{{ virtualenv_dir }}/bin/"
-  args:
-    executable: "{{ virtualenv_dir }}/bin/python"
+- include: auto_add_shell.yml
   when: auto_add_shell
 
-- name: Autoload Problems into web interface
-  script: load_problems.py {{ add_shell_server_output.stdout }}
-  environment:
-    APP_SETTINGS_FILE: "{{ web_config_dir }}/deploy_settings.py"
-    PATH: "{{ virtualenv_dir }}/bin/"
-  args:
-    executable: "{{ virtualenv_dir }}/bin/python"
+- include: auto_load_deployment.yml
   when: auto_load_problems
-
-- name: Auto Start competition
-  script: start_competition.py
-  environment:
-    APP_SETTINGS_FILE: "{{ web_config_dir }}/deploy_settings.py"
-    PATH: "{{ virtualenv_dir }}/bin/"
-  args:
-    executable: "{{ virtualenv_dir }}/bin/python"
-  when: auto_start_competition

@@ -55,7 +55,7 @@ all:
       auto_add_web_admin     : True
       auto_add_shell         : True
       auto_load_problems     : True
-      auto_start_competition : True
+      auto_start_ctf         : True
       enable_docker          : True
 
       ## HTTPS:

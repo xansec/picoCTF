@@ -74,11 +74,3 @@
     group: root
     mode: 0644
   when: mongodb_tls_enabled | bool
-
-- name: Copy rebuild script to home directory
-  copy:
-    src: rebuild_web.sh
-    dest: "/home/{{ ansible_user }}"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: 0700

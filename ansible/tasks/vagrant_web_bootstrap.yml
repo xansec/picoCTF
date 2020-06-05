@@ -15,7 +15,7 @@
 - name: Copy pre-generated SSH key for web user to home directory
   copy:
     src: "{{ pico_base_dir}}/env_dev/keys/{{ ansible_host }}"
-    dest: "/home/{{ ansible_user }}/.ssh/{{ ansible_host }}"
+    dest: "{{ web_ssh_key }}"
     remote_src: yes
 
 # 2. Adds and keys specified in the admin_keys variable to the host.
