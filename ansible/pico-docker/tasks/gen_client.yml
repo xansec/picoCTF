@@ -50,7 +50,7 @@
 - name: Fetch client keys
   fetch:
     src: "{{item.src}}"
-    dest: "certs/{{item.name}}"
+    dest: "fetched/certs/{{item.name}}"
     flat: yes
   with_items:
     - {src: "{{key}}", name: "{{client}}-key.pem"}

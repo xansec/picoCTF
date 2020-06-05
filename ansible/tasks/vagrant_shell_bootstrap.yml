@@ -8,7 +8,7 @@
 # 2. Adds any user requested administrative keys
 
 - set_fact:
-    web_key: "{{ pico_base_dir}}/env_dev/keys/{{ hostvars['web']['ansible_host'] }}"
+    web_key: "{{ pico_base_dir}}/env_dev/fetched/keys/{{ hostvars['web']['ansible_host'] }}"
 - set_fact:
     web_pub: "{{ web_key }}.pub"
 

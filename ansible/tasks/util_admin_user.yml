@@ -18,7 +18,7 @@
 - name: Fetch newly created ssh key
   fetch:
     src: "/home/{{admin}}/.ssh/id_rsa.pub"
-    dest: "keys/{{inventory_hostname}}_id_rsa.pub"
+    dest: "fetched/keys/{{inventory_hostname}}_id_rsa.pub"
     flat: yes
 
 - name: Add user to sudoers (no password)

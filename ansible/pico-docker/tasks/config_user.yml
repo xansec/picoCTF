@@ -3,7 +3,8 @@
 # expects: client, user (defaults to ansible_user)
 
 - set_fact:
-    home_conf: "/home/{{user}}/.docker"
+    home_conf   : "/home/{{user}}/.docker"
+    local_certs : "fetched/certs"
 
 - name: "Create .docker dir for user ({{user}})"
   file:
@@ -22,7 +23,7 @@
     group: "{{user}}"
     mode: "0400"
   with_items:
-    - {src: "certs/{{client}}-key.pem", dest: "{{home_conf}}/key.pem"}
-    - {src: "certs/{{client}}.pem", dest: "{{home_conf}}/cert.pem"}
-    - {src: "certs/ca.pem", dest: "{{home_conf}}/ca.pem"}
+    - {src: "{{local_certs}}/{{client}}-key.pem", dest: "{{home_conf}}/key.pem"}
+    - {src: "{{local_certs}}/{{client}}.pem", dest: "{{home_conf}}/cert.pem"}
+    - {src: "{{local_certs}}/ca.pem", dest: "{{home_conf}}/ca.pem"}
 

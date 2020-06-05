@@ -92,5 +92,5 @@
 - name: Fetch docker CA certificate
   fetch:
     src: "{{ca_crt}}"
-    dest: "certs/ca.pem"
+    dest: "fetched/certs/ca.pem"
     flat: yes

@@ -14,7 +14,7 @@
 # "load deployment" and fetch the deployed challenges.
 - name: Copy pre-generated SSH key for web user to home directory
   copy:
-    src: "{{ pico_base_dir}}/env_dev/keys/{{ ansible_host }}"
+    src: "{{ pico_base_dir}}/env_dev/fetched/keys/{{ ansible_host }}"
     dest: "{{ web_ssh_key }}"
     remote_src: yes
 
