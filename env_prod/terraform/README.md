@@ -76,7 +76,6 @@ that you are using. This specifies the resources available (and the price).
 
 ```
 terraform init
-terraform plan
 terraform apply
 ```
 

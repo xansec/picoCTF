@@ -39,7 +39,6 @@ vagrant up
 These commands perform the following:
 
 1. Get the source code at the most recent release (`git`)
-  - see [this link][comment] for an explanation of the git command line
 2. Change into the source code directory (`cd`)
 3. Create a local development environment (`vagrant`)
 
