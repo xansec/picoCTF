@@ -99,6 +99,13 @@ Update `shell_manger`/`hacksport`
 ansible-playbook site.yml --limit shell --tags shell-api
 ```
 
+You can also run one-off, ad-hoc, commands with ansible (without having to
+manually ssh to a machine):
+
+```
+ansible -become -a 'shell_manager status' shell
+```
+
 [web]:../picoCTF-web/web/
 [api]:../picoCTF-web/api/
 
@@ -158,8 +165,8 @@ For example:
   become_method: sudo
   roles:
     - {role: common     , tags: ["common"]}
-    - {role: pico-docker, tags: ["pico-docker"]}
-    - {role: pico-shell , tags: ["pico-shell"]}
+    - {role: pico-docker, tags: ["docker"]}
+    - {role: pico-shell , tags: ["shell"]}
 ```
 
 This causes the tasks from the `common`, `pico-docker`, and `pico-shell` roles

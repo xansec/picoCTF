@@ -18,3 +18,4 @@
     - web-static
     - shell-api
     - deploy-all
+    - redeploy-one

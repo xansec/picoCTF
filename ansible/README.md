@@ -27,3 +27,24 @@ Some common tags:
   - `shell-api`: minimal update of just `shell_manager`/`hacksport`
   - `deploy-all`: install and deploy all configured challenges
 - `nginx`: update the nginx configuration including HTTPS state
+
+## Tags + Playbooks
+
+A more complex example of using a tag is `redeploy-one` as found in
+`pico-shell/tasks` and triggering `redeploy_single_challenge.yml`. These tasks
+require additional variables be passed (`slug` and `problem_dir`). A full
+invocation would look like:
+
+```
+export SLUG=docker-world-867a1ac
+export PD=/picoCTF/problems/examples/on-demand/minimal/
+ansible-playbook site.yml --tags redeploy-one -e slug=$SLUG -e problem_dir=$PD
+```
+
+Note once you have exported the variables once, you can simply keep re-running
+the final line as you develop your challenge.
+
+## Next Steps
+
+As you perform administrative tasks consider writing and integrating some
+ansible tasks/playbooks to make your setup more automated.

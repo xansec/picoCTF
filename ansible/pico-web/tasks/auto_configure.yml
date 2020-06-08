@@ -17,5 +17,8 @@
 - include: auto_add_shell.yml
   when: auto_add_shell
 
+# allow triggering after a dev challenge redeploy
 - include: auto_load_deployment.yml
-  when: auto_load_problems
+  when: auto_load_problems or (slug is defined and problem_dir is defined)
+  tags:
+    - redeploy-one

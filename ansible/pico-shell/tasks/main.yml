@@ -22,6 +22,11 @@
 
 - include: deploy_problems.yml
   tags:
-    deploy-all
+    - deploy-all
+
+- include: redeploy_single_challenge.yml
+  tags:
+    - redeploy-one
+  when: slug is defined and problem_dir is defined
 
 - include: permissions.yml
