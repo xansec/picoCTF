@@ -18,12 +18,12 @@ a wide variety of configurations with minor configuration changes.
 Tags are a convenient way of only running some tasks from the overall playbook.
 Some common tags:
 
-
 - `dependency`: runs dependencies
-- `sync`: syncs source code
-- `web`
-  - `web-api`
-  - `web-static`
-- `shell`
-  - `shell-api`
-  - `deploy-all`
+- `sync`: syncs source code (also triggered on relevant sub tasks)
+- `web`: full installation and configuration of the picoCTF-web stack
+  - `web-api`: minimal update of just the API
+  - `web-static`: minimal update of just the static web resources
+- `shell`: full installation and configuration of the picoCTF-web stack
+  - `shell-api`: minimal update of just `shell_manager`/`hacksport`
+  - `deploy-all`: install and deploy all configured challenges
+- `nginx`: update the nginx configuration including HTTPS state

@@ -13,6 +13,10 @@
 
 - include_role:
     name: nginx
+    apply:
+      tags:
+        - nginx
+  tags: nginx
 
 - include: pam_and_services.yml
 

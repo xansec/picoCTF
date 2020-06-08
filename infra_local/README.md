@@ -49,7 +49,8 @@ This is the preferred way of interacting with the machines once they are created
 ensure that all of your changes are replicable and will work just as well in
 a remote production environment.
 
-This requires you to have `ansible` installed on your local machine.
+This requires you either have `ansible` installed on your local machine, or that
+you run these commands from within the vagrant VMs. 
 
 ```
 ansible-playbook  site.yml
@@ -69,8 +70,37 @@ As well as run just a portion of the playbook (e.g. just the `pico-web` tasks).
 This will speed up the process.
 
 ```
-ansible-playbook site.yml --limit web --tags pico-web
+ansible-playbook site.yml --limit web --tags web
 ```
+
+### Common Dev tasks with ansible
+
+The following examples show how you can use the convenient `ansible` tags to run
+only the relevant steps you want to speed up the development process. Please see
+the [Ansible Readme][../ansible/README.md] for more tag information.
+
+Update the static web files, for example after editing the HTML/CSS/JSX under
+[picoCTF-web/web][web].
+
+```
+ansible-playbook site.yml --limit web --tags web-static
+```
+
+Update the web API, for example after editing the python under
+[picoCTF-web/api][api]
+
+```
+ansible-playbook site.yml --limit web --tags web-api
+```
+
+Update `shell_manger`/`hacksport`
+
+```
+ansible-playbook site.yml --limit shell --tags shell-api
+```
+
+[web]:../picoCTF-web/web/
+[api]:../picoCTF-web/api/
 
 ### Modifying the local infrastructure virtual machines
 

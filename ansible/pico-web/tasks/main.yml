@@ -6,6 +6,10 @@
 
 - include_role:
     name: nginx
+    apply:
+      tags:
+        - nginx
+  tags: nginx
 
 - include: picoCTF-config.yml
 
