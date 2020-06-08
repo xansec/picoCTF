@@ -59,22 +59,18 @@ navigation bar:
 
 6. Edit `picoCTF-web/web/_includes/header.html`
 7. Update the running site.
-
-7a. If you have `ansible` installed locally on your machine it is as
-
-```
-cd infra_local
-ansible-playbook site.yml --limit web --tags web-static
-```
-
-7b. If you do not, then you can run the same command from within the virtual
-machine:
-
-```
-vagrant ssh web
-cd /picoCTF/infra_local
-ansible-playbook site.yml --limit web --tags web-static
-```
+    - If you have `ansible` installed locally on your machine it is as
+    ```
+    cd infra_local
+    ansible-playbook site.yml --limit web --tags web-static
+    ```
+    - If you do not, then you can run the same command from within the virtual
+    machine:
+    ```
+    vagrant ssh web
+    cd /picoCTF/infra_local
+    ansible-playbook site.yml --limit web --tags web-static
+    ```
 
 Then check out the [infra_local](./infra_local) directory for more information
 on using the local development environment in a more efficient manner.
