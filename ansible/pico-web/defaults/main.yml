@@ -16,7 +16,6 @@ pico_web_api_dir     : "{{ web_code_dir }}"
 pico_web_js_out_path : "{{ pico_web_api_dir}}/web/js/"
 pico_web_jsx_in_path : "{{ pico_web_api_dir}}/web/jsx/"
 pico_web_backup_dir  : "/backup"
-jekyll_env           : "development"    # "development" or "production"
 
 ###
 # Gunicorn configuration

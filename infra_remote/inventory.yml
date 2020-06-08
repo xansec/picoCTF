@@ -119,5 +119,4 @@ all:
       redis_db_password               : "{{ vault_redis_db_password }}"
 
       # Additional non-credential settings
-      jekyll_env                      : "production"
       net_outbound_limit              : "40mbit"      # Prevent script kiddies from using as DOS box
