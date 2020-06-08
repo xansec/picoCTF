@@ -1,4 +1,4 @@
-FROM python:buster
+FROM python:3.8-slim-buster
 
 WORKDIR /challenge
 
