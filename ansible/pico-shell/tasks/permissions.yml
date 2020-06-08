@@ -58,3 +58,32 @@
     path: /usr/share/nginx/html/static
     mode: 0751
     recurse: no
+
+- name: Hidepid
+  command: mount -o remount,hidepid=2 /proc
+
+- name: Hidepid persistence
+  command: echo "proc   /proc   proc  defaults,hidepid=2  0   0"  >> /etc/fstab
+
+- name: Copy over 99-motd
+  copy:
+    src: 99-motd
+    dest: /etc/update-motd.d/99-motd
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Disable inter-user messages by default
+  lineinfile:
+    path: /etc/profile
+    line: mesg n
+
+- name: Remove /var/log/wtmp
+  file:
+    path: /var/log/wtmp
+    state: absent
+
+- name: Restrict /var/run/utmp
+  file:
+    path: /var/run/utmp
+    mode: go-r

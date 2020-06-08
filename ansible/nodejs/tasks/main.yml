@@ -8,25 +8,22 @@
     path: /etc/apt/sources.list.d/nodesource.list
   register: nodejs
 
-- name: Download nodejs 10.x setup script (LTS)
+# LTS until 2023-04-30
+# https://nodejs.org/en/about/releases/
+- name: Download nodejs 14.x setup script (LTS)
   get_url:
-    url: "https://deb.nodesource.com/setup_10.x"
+    url: "https://deb.nodesource.com/setup_14.x"
     dest: "/tmp/node_setup.sh"
     mode: 0700
+  when: nodejs.stat.exists == False
 
 # Since shell commands are not idempotent we manually
 # check above if already have the nodejs repo (implying
-# all nodejs steps where previously successful)
+# all nodejs steps were previously successful)
 - name: Setup nodejs repositories
   shell: "/tmp/node_setup.sh"
   become: yes
   when: nodejs.stat.exists == False
-
-- name: Update apt cache
-  apt:
-    update_cache: yes
-  environment:
-    DEBIAN_FRONTEND: noninteractive
 
 - name: Install nodejs and dependencies
   apt:
@@ -35,16 +32,6 @@
       'nodejs',
       ]
     state: latest
+    update_cache: yes
   environment:
     DEBIAN_FRONTEND: noninteractive
-
-# Extracted from picoCTF-platform/scripts/web_setup.sh
-- name: Install nodejs packages (globally)
-  npm:
-    name: "{{ item }}"
-    global: yes
-  with_items:
-    - "@babel/core@^7.0.0"
-    - "@babel/cli@^7.0.0"
-    - "@babel/preset-env@^7.0.0"
-    - "@babel/preset-react@^7.0.0"

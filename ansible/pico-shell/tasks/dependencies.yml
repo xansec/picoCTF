@@ -1,26 +1,26 @@
 ---
 # Playbook that installs the dependencies for the picoCTF-shell server
 
-- name: Update apt
-  apt:
-    update_cache: yes
-    cache_valid_time: 3600
-  environment:
-    DEBIAN_FRONTEND: noninteractive
+# static website frontend build dependencies
+- include_role:
+    name: nodejs
 
-# Add repositories for NodeJS and yarn
-- name: Add nodeJS and yarn repository/keys
-  shell: |
-    curl -sL https://deb.nodesource.com/setup_11.x | sudo -E bash -
-    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-    echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-  args:
-    warn: False
+- name: Add an apt signing key for yarn
+  apt_key:
+    url: https://dl.yarnpkg.com/debian/pubkey.gpg
+    state: present
+
+- name: Add yarn ppa
+  lineinfile:
+    path: /etc/apt/sources.list.d/yarn.list
+    line: "deb https://dl.yarnpkg.com/debian/ stable main"
+    create: yes
 
 # Extracted from picoCTF-platform/scripts/shell_setup.sh
 - name: Install picoCTF-shell system dependencies
   apt:
     state: present
+    update_cache: yes
     name: [
       'dpkg-dev',
       'dpkg',
@@ -180,16 +180,14 @@
         'ptpython',
         'pwntools',
         ]
+# pwntools is not ready for python3; skipping to avoid confusion
 
-- name: Install common pip3 packages for CTF shell servers
+# Fix "Invalid environment marker: platform_python_implementation != 'PyPy'"
+- name: Upgrade setuptools
   pip:
-    name: [
-        'ipython',
-        'ptpython',
-        'pwntools',
-        ]
-    executable: pip3
-  when: False # pwntools is not ready for python3; skipping to avoid confusion
+    name: "setuptools"
+    virtualenv: "{{ virtualenv_dir }}"
+    extra_args: "--upgrade"
 
 - name: Ensure wetty directory exists
   file:
@@ -198,12 +196,12 @@
     owner: root
     group: root
 
-- name: Install wetty.js
+- name: Install wetty
   npm:
+    name: wetty
     executable: /usr/bin/npm --unsafe-perm=true
-    name: wetty.js
-    global: no
     production: yes
+    global: no
     path: /opt/wetty
 
 - name: Install quota

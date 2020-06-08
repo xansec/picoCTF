@@ -23,15 +23,11 @@
     dest: "/etc/tmpfiles.d/gunicorn.conf"
     owner: root
     group: root
+  notify:
+    - restart gunicorn
 
 - name: Get systemd-tmpfiles to create /run/gunicorn
   command: systemd-tmpfiles --create
 
-- name: Get systemd to pickup gunicorn.service
-  command: systemctl daemon-reload
-
-- name: Ensure gunicorn is enabled and restart
-  service:
-    name: gunicorn.service
-    state: restarted
-    enabled: yes
+# ensure gunicorn is in a good state
+- meta: flush_handlers

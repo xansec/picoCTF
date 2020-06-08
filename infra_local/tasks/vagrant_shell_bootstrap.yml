@@ -9,8 +9,7 @@
 
 - set_fact:
     web_key: "{{ pico_base_dir}}/{{ playbook_dir | basename }}/fetched/keys/{{ hostvars['web']['ansible_host'] }}"
-- set_fact:
-    web_pub: "{{ web_key }}.pub"
+    web_pub: "{% if ansible_connection=='local' %}{{ pico_base_dir}}/{{ playbook_dir | basename }}{% else %}.{% endif %}/fetched/keys/{{ hostvars['web']['ansible_host'] }}.pub"
 
 # 1a. Create a key to be synchronized via the local host over to the web server
 - name: "Generate an SSH key for the web user"

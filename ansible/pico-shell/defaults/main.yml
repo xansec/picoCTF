@@ -9,7 +9,7 @@ virtualenv_dir    : "/picoCTF-env"
 ###
 # wetty configuration
 ###
-wetty_js_path     : "/opt/wetty/node_modules/wetty.js"
+wetty_js_path     : "/opt/wetty/node_modules/wetty"
 
 # configure nginx
 site_config_name  : "shell"
@@ -19,6 +19,7 @@ wetty_server_path : "http://127.0.0.1:{{ wetty_port }}/"
 # problem settings
 deb_dir           : "/picoCTF-debs"
 bundle_dir        : "/picoCTF-bundles"
+deploy_number     : 2
 
 # pam module settings
 web_address_internal       : "http://{{ hostvars['web']['ansible_host'] }}"

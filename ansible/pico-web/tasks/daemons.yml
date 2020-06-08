@@ -15,12 +15,9 @@
     owner: root
     group: root
 
-- name: Get systemd to pickup new configs
-  command: systemctl daemon-reload
-
 - name: Ensure ctf-stats timer is enabled
   systemd:
     name: ctf-stats.timer
     state: started
     enabled: yes
-
+    daemon_reload: yes

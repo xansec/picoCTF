@@ -89,7 +89,7 @@ all:
           }
 
       ###
-      # *** SECURE production settings ***
+      # *** SECURE settings ***
       #
       # The following section captures security relevant settings that you
       # should be aware of in a production environment (e.g. credentials).
@@ -107,7 +107,6 @@ all:
 
       # shell
       shell_manager_deploy_secret     : "{{ vault_shell_manager_deploy_secret }}"
-      net_outbound_limit              : "40mbit"  # Prevent script kiddies from using as DOS box
 
       # db
       mongodb_conf_auth               : True
@@ -116,3 +115,7 @@ all:
 
       redis_conf_auth                 : True
       redis_db_password               : "{{ vault_redis_db_password }}"
+
+      # Additional non-credential settings
+      jekyll_env                      : "production"
+      net_outbound_limit              : "40mbit"      # Prevent script kiddies from using as DOS box

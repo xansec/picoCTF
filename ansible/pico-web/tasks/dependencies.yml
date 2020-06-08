@@ -1,13 +1,6 @@
 ---
 # Playbook that installs the dependencies for the picoCTF-web server
 
-- name: Update apt
-  apt:
-    update_cache: yes
-    cache_valid_time: 3600
-  environment:
-    DEBIAN_FRONTEND: noninteractive
-
 # Extracted from picoCTF-platform/scripts/web_setup.sh
 - name: Install picoCTF platform system dependencies
   apt:
@@ -23,6 +16,7 @@
         'python3.7',
         ]
     state: present
+    update_cache: yes
   environment:
     DEBIAN_FRONTEND: noninteractive
 
@@ -32,12 +26,35 @@
     virtualenv: "{{ virtualenv_dir }}"
     virtualenv_python: python3.7
 
-- name: Install python packaging
+- name: Install python packages in virtualenv
   pip:
-    name: packaging
+    name: [
+      'packaging',
+      'appdirs',
+      ]
     virtualenv: "{{ virtualenv_dir }}"
 
-- name: Install python appdirs
+# Fix "Invalid environment marker: platform_python_implementation != 'PyPy'"
+- name: Upgrade setuptools
   pip:
-    name: appdirs
+    name: "setuptools"
     virtualenv: "{{ virtualenv_dir }}"
+    extra_args: "--upgrade"
+
+# static website frontend build dependencies
+- include_role:
+    name: nodejs
+
+# Extracted from picoCTF-platform/scripts/web_setup.sh
+- name: Install bable npm packages (globally)
+  npm:
+    name: "{{ item }}"
+    global: yes
+    production: yes
+    state: present
+    version: "^7.0.0"
+  with_items:
+    - "@babel/core"
+    - "@babel/cli"
+    - "@babel/preset-env"
+    - "@babel/preset-react"
