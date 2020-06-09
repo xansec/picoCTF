@@ -58,7 +58,7 @@ class ConfigDict(dict):
 default_shared_config = ConfigDict(
     {
         # secret used for deterministic deployment
-        "deploy_secret": "qwertyuiop",
+        "deploy_secret": "INSECURE_DEFAULT_CHANGE_ME",
         # the default username for files to be owned by
         "default_user": "hacksports",
         # the root of the web server running to serve static files
@@ -81,6 +81,8 @@ default_local_config = ConfigDict(
         "hostname": "127.0.0.1",
         # the url of the web server
         "web_server": "http://127.0.0.1",
+        # used to bypass web API rate limiting for auth calls in pam_auth.py
+        "rate_limit_bypass_key": "INSECURE_DEFAULT_CHANGE_ME"
     }
 )
 
