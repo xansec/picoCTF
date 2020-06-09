@@ -63,6 +63,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         "coloredlogs==10.0",
+        "cryptography==2.9.2",
         "docker[tls]==4.2.0",
         "Flask==1.1.1",
         "Jinja2==2.10.1",
