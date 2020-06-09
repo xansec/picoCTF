@@ -20,8 +20,11 @@ if "bdist_wheel" in sys.argv:
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the relevant file
-with open(path.join(here, "README.md"), encoding="utf-8") as f:
-    long_description = f.read()
+try:
+    with open(path.join(here, "README.md"), encoding="utf-8") as f:
+        long_description = f.read()
+except FileNotFoundError:
+    long_description = "picoCTF shell_manager and hacksport"
 
 setup(
     name="ctf-shell-manager",
