@@ -15,6 +15,9 @@
       - python-setuptools
       - python-pip
       - python-virtualenv
+      - python3-pip
+      - python3-virtualenv
+      - python3-setuptools
     state: present
 
 # pymongo is required by the following tasks to create users
