@@ -39,19 +39,6 @@
     group: root
     mode: 0600
 
-# From shell_manager  setup.py data_files
-- name: Ensure extra directory exists
-  file:
-    path: /opt/hacksports/shared/extra
-    state: directory
-    owner: root
-    group: root
-
-- name: Copy no_aslr_wrapper.c to deployed location
-  copy:
-    src:  "no_aslr_wrapper.c"
-    dest: "/opt/hacksports/shared/extra/"
-
 - name: Ensure config directory exists
   file:
     path: /opt/hacksports/shared/config

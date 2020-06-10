@@ -38,7 +38,6 @@ SHARED_ROOT = "/opt/hacksports/shared/"
 LOCAL_ROOT = "/opt/hacksports/local/"
 
 PROBLEM_ROOT = join(SHARED_ROOT, "sources")
-EXTRA_ROOT = join(SHARED_ROOT, "extra")
 STAGING_ROOT = join(SHARED_ROOT, "staging")
 BUNDLE_ROOT = join(SHARED_ROOT, "bundles")
 DEB_ROOT = join(SHARED_ROOT, "debs")

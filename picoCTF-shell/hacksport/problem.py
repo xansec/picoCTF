@@ -10,7 +10,6 @@ from shutil import copy2
 
 from hacksport.deploy import give_port
 from hacksport.operations import execute
-from shell_manager.util import EXTRA_ROOT
 
 XINETD_SCRIPT = """#!/bin/bash
 cd $(dirname $0)
@@ -262,14 +261,14 @@ class Remote(Service):
         Returns the name of the file generated
         """
 
-        source_path = "no_aslr_wrapper.c"
+        src_path = os.path.join(os.path.dirname(__file__),"static", "no_aslr_wrapper.c")
         execute(
             [
                 "gcc",
                 "-o",
                 output,
                 '-DBINARY_PATH="{}"'.format(exec_path),
-                join(EXTRA_ROOT, source_path),
+                src_path,
             ]
         )
         self.files.append(ExecutableFile(output))
