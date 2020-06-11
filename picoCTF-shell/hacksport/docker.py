@@ -22,7 +22,10 @@ class DockerChallenge(Challenge):
     def __init__(self):
         """ Connnects to the docker daemon"""
         # will be used as the tag on the docker image
-        self.problem_name = sanitize_name(self.name)
+        if hasattr(self, "name"):
+            self.problem_name = sanitize_name(self.name)
+        else:
+            self.problem_name = "problem"
         # use an explicit remote docker daemon per the configuration
         try:
             tls_config = docker.tls.TLSConfig(
@@ -53,7 +56,9 @@ class DockerChallenge(Challenge):
         self.image_name = 'challenges:{}'.format(self.problem_name)
 
         logger.debug("Building docker image: {}".format(self.image_name))
-        img = self._build_docker_image(build_args, timeout)
+
+        labels= {'problem': self.problem_name}
+        img = self._build_docker_image(build_args, timeout, labels)
         if img is None:
             raise Exception('Unable to build docker image')
 
@@ -72,7 +77,7 @@ class DockerChallenge(Challenge):
 
         logger.debug("Built image, digest: {}".format(self.image_digest))
 
-    def _build_docker_image(self, build_args, timeout):
+    def _build_docker_image(self, build_args, timeout, labels={}, dockerfile="Dockerfile", context="."):
         """
         Run a docker build
         Args:
@@ -82,16 +87,23 @@ class DockerChallenge(Challenge):
         Returns: boolean success
         """
 
+        logger.debug(f"Building: {self.image_name} from context: {context}")
         try:
             img, logs = self.client.images.build(
-                path='.',
+                dockerfile=dockerfile,
+                path=context,
                 tag=self.image_name,
                 buildargs=build_args,
-                labels={'problem': self.problem_name},
+                labels=labels,
                 timeout=timeout)
         except docker.errors.BuildError as e:
             logger.error("Docker Build Error: " + e.msg)
-            logger.debug(e.build_log)
+            for entry in e.build_log:
+                if 'stream' in entry:
+                    line = entry['stream'].strip()
+                else:
+                    line = entry
+                logger.debug(line)
             return None
         except docker.errors.APIError as e:
             logger.error("Docker API Error: " + e.explanation)
