@@ -31,8 +31,13 @@ RUN apt-get update && apt-get install -y \
     python3.7-venv \
     python3.7 \
     python3 \
+    python-flask \
     socat \
     software-properties-common \
+    uwsgi \
+    uwsgi-plugin-php \
+    uwsgi-plugin-python \
+    uwsgi-plugin-python3 \
     xinetd
 
 # additional expected dependencies identified
