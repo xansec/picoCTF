@@ -14,9 +14,6 @@ from os import path
 # Always prefer setuptools over distutils
 from setuptools import find_packages, setup
 
-if "bdist_wheel" in sys.argv:
-    raise RuntimeError("This setup.py does not support wheels")
-
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the relevant file

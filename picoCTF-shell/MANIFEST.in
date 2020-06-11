@@ -1,1 +1,1 @@
-include hacksport/static/*
+recursive-include hacksport/static *
