@@ -1,12 +1,10 @@
 FROM shellmanager/shellmanager
 
-WORKDIR /src
 COPY . /src
 
 # TODO: ease exfil of artifacts and config
 RUN shell_manager install /src \
-    && shell_manager deploy all \
-    && rm -rf /src
+    && shell_manager deploy all
 
 # TODO: default need to make explicit in standalone
 EXPOSE 24399

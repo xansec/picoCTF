@@ -10,8 +10,9 @@ COPY . /picoCTF-env
 
 # setup the environment shell_manager requires
 RUN ln -s /picoCTF-env/bin/shell_manager /usr/local/bin/shell_manager \
-    && mkdir -p /opt/hacksports/shared \
     && mkdir -p /opt/hacksports/shared/debs \
     && mkdir -p /opt/hacksports/local \
+    && mkdir -p /usr/share/nginx/html/static \
+    && chmod 751 /usr/share/nginx/html/static \
     && groupadd problems \
     && useradd hacksports
