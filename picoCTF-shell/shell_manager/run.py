@@ -15,6 +15,7 @@ from hacksport.install import (
 )
 from hacksport.deploy import deploy_problems, undeploy_problems
 from hacksport.status import clean, publish, status
+from hacksport.containerize import containerize_problems
 from shell_manager.config import print_configuration, set_configuration_option
 from shell_manager.util import FatalException
 
@@ -222,6 +223,16 @@ def main():
         help="allow the supplied field to change types if already specified",
     )
     config_set_parser.set_defaults(func=set_configuration_option)
+
+    ###
+    # Containerize
+    ###
+    containerize_parser = subparsers.add_parser("containerize",
+            help="problem instance containerization")
+    containerize_parser.add_argument(
+        "problem_names", nargs="*", type=str, help="installed problem names"
+    )
+    containerize_parser.set_defaults(func=containerize_problems)
 
     args = parser.parse_args()
 

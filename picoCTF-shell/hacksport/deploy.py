@@ -195,6 +195,7 @@ from shell_manager.util import (
 )
 from spur import RunProcessError
 
+PORT_MAP_PATH = join(SHARED_ROOT, "port_map.json")
 
 def challenge_meta(attributes):
     """
@@ -939,13 +940,36 @@ def deploy_problem(
     )
     return need_restart_xinetd
 
+def deploy_init():
+    global shared_config, local_config, port_map
+    shared_config = get_shared_config()
+    local_config = get_local_config()
+
+    # Attempt to load the port_map from file
+    try:
+        with open(PORT_MAP_PATH, "r") as f:
+            port_map = json.load(f)
+            port_map = {literal_eval(k): v for k, v in port_map.items()}
+    except FileNotFoundError:
+        # If it does not exist, create it
+        for path, problem in get_all_problems().items():
+            for instance in get_all_problem_instances(path):
+                port_map[
+                    (problem["unique_name"], instance["instance_number"])
+                ] = instance.get("port", None)
+        with open(PORT_MAP_PATH, "w") as f:
+            stringified_port_map = {repr(k): v for k, v in port_map.items()}
+            json.dump(stringified_port_map, f)
+    except IOError:
+        logger.error(f"Error loading port map from {PORT_MAP_PATH}")
+        raise
+
+    return shared_config, local_config, port_map
 
 def deploy_problems(args):
     """ Main entrypoint for problem deployment """
 
-    global shared_config, local_config, port_map
-    shared_config = get_shared_config()
-    local_config = get_local_config()
+    shared_config, local_config, port_map = deploy_init()
 
     need_restart_xinetd = False
 
@@ -963,26 +987,6 @@ def deploy_problems(args):
     if len(problem_names) == 1 and problem_names[0] == "all":
         # Shortcut to deploy n instances of all problems
         problem_names = [v["unique_name"] for k, v in get_all_problems().items()]
-
-    # Attempt to load the port_map from file
-    try:
-        port_map_path = join(SHARED_ROOT, "port_map.json")
-        with open(port_map_path, "r") as f:
-            port_map = json.load(f)
-            port_map = {literal_eval(k): v for k, v in port_map.items()}
-    except FileNotFoundError:
-        # If it does not exist, create it
-        for path, problem in get_all_problems().items():
-            for instance in get_all_problem_instances(path):
-                port_map[
-                    (problem["unique_name"], instance["instance_number"])
-                ] = instance.get("port", None)
-        with open(port_map_path, "w") as f:
-            stringified_port_map = {repr(k): v for k, v in port_map.items()}
-            json.dump(stringified_port_map, f)
-    except IOError:
-        logger.error(f"Error loading port map from {port_map_path}")
-        raise
 
     acquire_lock()
 
@@ -1031,7 +1035,7 @@ def deploy_problems(args):
             execute(["service", "xinetd", "restart"], timeout=60)
 
         # Write out updated port map
-        with open(port_map_path, "w") as f:
+        with open(PORT_MAP_PATH, "w") as f:
             stringified_port_map = {repr(k): v for k, v in port_map.items()}
             json.dump(stringified_port_map, f)
 
