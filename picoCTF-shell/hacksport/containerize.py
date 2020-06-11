@@ -11,17 +11,23 @@ it.
 """
 
 import glob
+import json
 import logging
 import os
+import pathlib
 import shutil
 
-from shell_manager.util import get_problem, get_problem_root, sanitize_name
 from hacksport.docker import DockerChallenge
 from hacksport.deploy import (
         deploy_init,
         generate_staging_directory,
         update_problem_class,
         STATIC_FILE_ROOT)
+from shell_manager.util import (
+        get_problem,
+        get_problem_root,
+        sanitize_name,
+        DEPLOYED_ROOT)
 
 REPO_NAME = "shellmanager"
 
@@ -55,7 +61,6 @@ def containerize_problems(args):
         os.chdir(dst)
 
         # build the image
-        print(metadata)
         containerize(metadata)
 
         # return to the orginal directory
@@ -99,9 +104,44 @@ def containerize(metadata):
         if os.path.isdir(dst):
             logger.warn(f"removing stale static directory: {dst}")
             shutil.rmtree(dst)
-        logger.info(f"moving {src} to {html_static}")
+        logger.debug(f"moving {src} to {html_static}")
         shutil.move(src, html_static)
 
+    # fetch instance json from image
+    builder.copy_from_image(DEPLOYED_ROOT)
+    local = os.path.join(os.path.basename(DEPLOYED_ROOT),"**","*.json")
+    deployed = glob.glob(local, recursive=True)
+    if len(deployed) != 1:
+        logger.error("Error challenge failed to deploy in a container")
+        return None
+
+    # load instance to allow patching
+    instance = None
+    with open(deployed[0]) as instance_json:
+        instance = json.load(instance_json)
+
+    # add DockerChallenge style fields
+    instance["docker_challenge"] = True
+    instance["instance_digest"] = builder.image_digest
+    instance["port_info"] = {n: p.dict() for n, p in builder.ports.items()}
+
+    # remove invalid fields
+    instance["service"] = None
+    instance["server"] = None   # shell only knows internal docker host
+    if "socket" in instance:
+        del instance["socket"]
+    if "port" in instance:
+        del instance["port"]
+
+    # hint to front end
+    instance["containerize"] = True
+
+    # write patched instance json to "register" it with shell_manager
+    json_dst = os.path.join(*pathlib.Path(deployed[0]).parts[1:])
+    dst = os.path.join(DEPLOYED_ROOT, json_dst)
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    with open(dst,'w') as out:
+        json.dump(instance, out)
 
 
 # TODO: add check if images exist
