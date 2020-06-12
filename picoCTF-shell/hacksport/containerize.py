@@ -18,6 +18,7 @@ import pathlib
 import shutil
 
 from hacksport.docker import DockerChallenge
+from hacksport.status import get_all_problem_instances
 from hacksport.deploy import (
         deploy_init,
         generate_staging_directory,
@@ -36,9 +37,14 @@ logger = logging.getLogger(__name__)
 def containerize_problems(args):
     """ Main entrypoint for problem containerization """
 
+    # determine what we are deploying
     problem_names = args.problem_names
+    if args.instances:
+        instance_list = args.instances
+    else:
+        instance_list = list(range(0, args.num_instances))
 
-    logger.debug(f"Containerizing {problem_names}")
+    logger.debug(f"Containerizing: {problem_names} {instance_list}")
 
     # build base images required
     ensure_base_images()
@@ -49,24 +55,35 @@ def containerize_problems(args):
         if not os.path.isdir(get_problem_root(name, absolute=True)):
             logger.error(f"'{name}' is not an installed problem")
             continue
+
+        logger.debug(f"Problem  : {name}")
         src = get_problem_root(name, absolute=True)
         metadata = get_problem(src)
 
+        cur_instances = [i["instance_number"] for i in get_all_problem_instances(name)]
+        logger.debug(f"Existing : {cur_instances}")
+
         origwd = os.getcwd()
+        for instance in instance_list:
+            if instance in cur_instances:
+                logger.warn(f"Instance already deployed: {instance}")
+                continue
 
-        # copy source files to a staging directory and switch to it
-        staging = generate_staging_directory(problem_name=metadata["name"], instance_number=1)
-        dst = os.path.join(staging,"_containerize")
-        shutil.copytree(src, dst)
-        os.chdir(dst)
+            logger.debug(f"Instance : {instance}")
 
-        # build the image
-        containerize(metadata)
+            # copy source files to a staging directory and switch to it
+            staging = generate_staging_directory(problem_name=name, instance_number=instance)
+            dst = os.path.join(staging,"_containerize")
+            shutil.copytree(src, dst)
+            os.chdir(dst)
+
+            # build the image
+            containerize(metadata, instance)
 
         # return to the orginal directory
         os.chdir(origwd)
 
-def containerize(metadata):
+def containerize(metadata, seed):
     logger.info(f"containerize: {metadata['name']}")
 
     if os.path.isfile("Dockerfile"):
@@ -88,7 +105,7 @@ def containerize(metadata):
 
     # standard DockerChallenge build sequence
     builder.initialize()
-    builder.setup()
+    builder.initialize_docker({"SEED": str(seed)})
 
     # fetch static downloads from image
     html_static = os.path.join(builder.web_root, STATIC_FILE_ROOT)

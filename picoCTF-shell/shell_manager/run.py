@@ -232,6 +232,20 @@ def main():
     containerize_parser.add_argument(
         "problem_names", nargs="*", type=str, help="installed problem names"
     )
+    containerize_parser.add_argument(
+        "-n",
+        "--num-instances",
+        type=int,
+        default=1,
+        help="number of instances to deploy (numbers 0 through n-1).",
+    )
+    containerize_parser.add_argument(
+        "-i",
+        "--instances",
+        action="append",
+        type=int,
+        help="particular instance(s) to deploy.",
+    )
     containerize_parser.set_defaults(func=containerize_problems)
 
     args = parser.parse_args()

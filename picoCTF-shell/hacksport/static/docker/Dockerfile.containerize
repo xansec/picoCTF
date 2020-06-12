@@ -2,9 +2,11 @@ FROM shellmanager/shellmanager
 
 COPY . /src
 
+ARG SEED
+
 # TODO: ease exfil of artifacts and config
 RUN shell_manager install /src \
-    && shell_manager deploy all
+    && shell_manager deploy all -i ${SEED}
 
 # TODO: default need to make explicit in standalone
 EXPOSE 24399
