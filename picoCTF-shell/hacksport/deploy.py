@@ -1041,6 +1041,48 @@ def deploy_problems(args):
 
         release_lock()
 
+def remove_instance_state(instance):
+    """ Removes state for an instance that is deployed to a host.
+    Includes: service files, deployment directory, users
+    """
+    # Remove the xinetd service definition
+    service = instance["service"]
+    if service:
+        logger.debug("...Removing xinetd service '%s'.", service)
+        try:
+            os.remove(join(XINETD_SERVICE_PATH, service))
+        except FileNotFoundError:
+            logger.error("xinetd service definition missing, skipping")
+
+    # Remove the deployed instance directory
+    directory = instance["deployment_directory"]
+    logger.debug("...Removing deployment directory '%s'.", directory)
+    try:
+        shutil.rmtree(directory)
+    except FileNotFoundError:
+        logger.error("deployment directory missing, skipping")
+
+    # Kill any active problem processes
+    if instance.get("port", None):
+        port = instance["port"]
+        logger.debug(f"...Killing any processes running on port {port}")
+        try:
+            execute(["fuser", "-k", "-TERM", "-n", "tcp", str(port)])
+        except RunProcessError as e:
+            logger.error(
+                "error killing processes, skipping - {}".format(str(e))
+            )
+
+    # Remove the problem user
+    user = instance["user"]
+    logger.debug("...Removing problem user '%s'.", user)
+    try:
+        execute(["userdel", user])
+    except RunProcessError as e:
+        logger.error(
+            "error removing problem user, skipping - {}".format(str(e))
+        )
+
 
 def remove_instances(problem_name, instances_to_remove):
     """Remove all files and metadata for a given list of instances."""
@@ -1051,44 +1093,10 @@ def remove_instances(problem_name, instances_to_remove):
         instance_number = instance["instance_number"]
         if instance["instance_number"] in instances_to_remove:
             logger.debug(f"Removing instance {instance_number} of {problem_name}")
+            containerize = 'containerize' in instance and instance['containerize']
 
-            # Remove the xinetd service definition
-            service = instance["service"]
-            if service:
-                logger.debug("...Removing xinetd service '%s'.", service)
-                try:
-                    os.remove(join(XINETD_SERVICE_PATH, service))
-                except FileNotFoundError:
-                    logger.error("xinetd service definition missing, skipping")
-
-            # Remove the deployed instance directory
-            directory = instance["deployment_directory"]
-            logger.debug("...Removing deployment directory '%s'.", directory)
-            try:
-                shutil.rmtree(directory)
-            except FileNotFoundError:
-                logger.error("deployment directory missing, skipping")
-
-            # Kill any active problem processes
-            if instance.get("port", None):
-                port = instance["port"]
-                logger.debug(f"...Killing any processes running on port {port}")
-                try:
-                    execute(["fuser", "-k", "-TERM", "-n", "tcp", str(port)])
-                except RunProcessError as e:
-                    logger.error(
-                        "error killing processes, skipping - {}".format(str(e))
-                    )
-
-            # Remove the problem user
-            user = instance["user"]
-            logger.debug("...Removing problem user '%s'.", user)
-            try:
-                execute(["userdel", user])
-            except RunProcessError as e:
-                logger.error(
-                    "error removing problem user, skipping - {}".format(str(e))
-                )
+            if not containerize:
+                remove_instance_state(instance)
 
             # Remove the internal instance metadata
             deployment_json_path = join(
