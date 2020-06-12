@@ -2,7 +2,6 @@
 # vi: set ft=ruby :
 
 # TODO:
-# - mount_options looks really fishy
 # - use double quote correctly
 
 require 'etc'
@@ -14,28 +13,23 @@ def compute_auto_name_suffix(prefix = "picoCTF")
 end
 
 Vagrant.configure("2") do |config|
+
   config.vm.define "shell", primary: true do |shell|
     shell.vm.box = "ubuntu/bionic64"
     shell.vm.network "private_network", ip: (ENV['SIP'] || '192.168.2.3'), nic_type: "virtio"
 
     shell.vm.synced_folder ".", "/vagrant", disabled: true
-    shell.vm.synced_folder ".", "/picoCTF",
-                           owner: "vagrant", group: "vagrant",
-                           mount_options: ["dmode=775", "fmode=775"]
+    shell.vm.synced_folder ".", "/picoCTF", owner: "vagrant", group: "vagrant"
 
-    shell.vm.provision "shell", path: "vagrant/provision_scripts/install_ansible.sh"
+    # uses ansible_local so that a user does not need to have ansible installed
     shell.vm.provision :ansible_local do |ansible|
+      ansible.install = "yes"
+      ansible.install_mode = "default"
       ansible.compatibility_mode = "2.0"
       ansible.playbook = "site.yml"
-      ansible.limit = "shell"
-      ansible.provisioning_path = "/picoCTF/ansible/"
-      ansible.inventory_path = "/picoCTF/ansible/inventories/local_development"
-      ansible.extra_vars = {
-         web_address:"http://"+(ENV['WIP'] || '192.168.2.2'),
-         web_address_internal:"http://"+(ENV['WIP'] || '192.168.2.2'),
-         shell_hostname:(ENV['SIP'] || '192.168.2.3'),
-         shell_host:(ENV['SIP'] || '192.168.2.3')
-      }
+      ansible.provisioning_path = "/picoCTF/infra_local/"
+      ansible.inventory_path = "inventory.yml"
+      ansible.extra_vars = {ansible_connection:"local"}
       ansible.verbose = ENV['V']
     end
 
@@ -58,28 +52,19 @@ Vagrant.configure("2") do |config|
     web.vm.network "private_network", ip: (ENV['WIP'] || '192.168.2.2'), nic_type: "virtio"
 
     web.vm.synced_folder ".", "/vagrant", disabled: true
-    web.vm.synced_folder ".", "/picoCTF",
-                         owner: "vagrant", group: "vagrant",
-                         mount_options: ["dmode=775", "fmode=775"]
+    web.vm.synced_folder ".", "/picoCTF", owner: "vagrant", group: "vagrant"
 
-    web.vm.provision "shell", path: "vagrant/provision_scripts/install_ansible.sh"
+    # uses ansible_local so that a user does not need to have ansible installed
     web.vm.provision :ansible_local do |ansible|
+      ansible.install = "yes"
+      ansible.install_mode = "default"
       ansible.compatibility_mode = "2.0"
       ansible.playbook = "site.yml"
-      ansible.limit = ["db", "web"]
-      ansible.provisioning_path = "/picoCTF/ansible/"
-      ansible.inventory_path = "/picoCTF/ansible/inventories/local_development"
-      ansible.extra_vars = {
-         web_address:"http://"+(ENV['WIP'] || '192.168.2.2'),
-         web_address_internal:"http://"+(ENV['WIP'] || '192.168.2.2'),
-         shell_hostname:(ENV['SIP'] || '192.168.2.3'),
-         shell_host:(ENV['SIP'] || '192.168.2.3')
-      }
+      ansible.provisioning_path = "/picoCTF/infra_local/"
+      ansible.inventory_path = "inventory.yml"
+      ansible.extra_vars = {ansible_connection:"local"}
       ansible.verbose = ENV['V']
     end
-
-    web.vm.provision "shell", run: "always", inline: "systemctl restart gunicorn.service"
-    # web.vm.provision "shell", run: "always", inline: "systemctl restart ctf-daemon.service"
 
     web.vm.provider "virtualbox" do |vb|
       vb.name = "picoCTF-web-dev" + compute_auto_name_suffix()

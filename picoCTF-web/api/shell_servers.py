@@ -40,25 +40,37 @@ def get_connection(sid):
     server = get_server(sid)
 
     try:
-        shell = spur.SshShell(
-            hostname=server["host"],
-            username=server["username"],
-            password=server["password"],
-            port=server["port"],
-            missing_host_key=spur.ssh.MissingHostKey.accept,
-            connect_timeout=2,
-        )
+        shell = None
+        # default to keypath if provided
+        if server["keypath"] != "":
+            shell = spur.SshShell(
+                hostname=server["host"],
+                username=server["username"],
+                private_key_file=server["keypath"],
+                port=server["port"],
+                missing_host_key=spur.ssh.MissingHostKey.accept,
+                connect_timeout=2,
+            )
+        else:
+            shell = spur.SshShell(
+                hostname=server["host"],
+                username=server["username"],
+                password=server["password"],
+                port=server["port"],
+                missing_host_key=spur.ssh.MissingHostKey.accept,
+                connect_timeout=2,
+            )
         shell.run(["echo", "connected"])
-    except spur.ssh.ConnectionError:
+    except spur.ssh.ConnectionError as e :
         raise PicoException(
-            "Cannot connect to {}@{}:{} with the specified password".format(
-                server["username"], server["host"], server["port"]
+            "Cannot connect to {}@{}:{}\n{}".format(
+                server["username"], server["host"], server["port"], e
             )
         )
     return shell
 
 
-def add_server(*ignore, name, host, port, username, password, protocol, server_number):
+def add_server(*ignore, name, host, port, username, password="", protocol, server_number, keypath=""):
     """
     Add a shell server to the pool of servers.
 
@@ -97,6 +109,7 @@ def add_server(*ignore, name, host, port, username, password, protocol, server_n
             "port": port,
             "username": username,
             "password": password,
+            "keypath": keypath,
             "protocol": protocol,
             "server_number": server_number,
         }
