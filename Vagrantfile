@@ -21,6 +21,12 @@ Vagrant.configure("2") do |config|
     shell.vm.synced_folder ".", "/vagrant", disabled: true
     shell.vm.synced_folder ".", "/picoCTF", owner: "vagrant", group: "vagrant"
 
+    # ensures that SIP/WIP are passed to ansible_local provisioner can use lookup('env',...)
+    shell.vm.provision "shell" do |s|
+      s.path = "./scripts/vagrant-env.sh"
+      s.env  = {SIP: (ENV['SIP'] || '192.168.2.3'), WIP: (ENV['WIP'] || '192.168.2.2')}
+    end
+
     # uses ansible_local so that a user does not need to have ansible installed
     shell.vm.provision :ansible_local do |ansible|
       ansible.install = "yes"
@@ -53,6 +59,12 @@ Vagrant.configure("2") do |config|
 
     web.vm.synced_folder ".", "/vagrant", disabled: true
     web.vm.synced_folder ".", "/picoCTF", owner: "vagrant", group: "vagrant"
+
+    # ensures that SIP/WIP are passed to ansible_local provisioner can use lookup('env',...)
+    web.vm.provision "shell" do |s|
+      s.path = "./scripts/vagrant-env.sh"
+      s.env  = {SIP: (ENV['SIP'] || '192.168.2.3'), WIP: (ENV['WIP'] || '192.168.2.2')}
+    end
 
     # uses ansible_local so that a user does not need to have ansible installed
     web.vm.provision :ansible_local do |ansible|

@@ -123,6 +123,9 @@ and run multiple instances. Start by running a command like the following.
 J=2 M=6 SIP=192.168.2.53 WIP=192.168.2.52 vagrant up shell && SIP=192.168.2.53 WIP=192.168.2.52 vagrant up web
 ```
 
+*Warning*: If you utilize `WIP` or `SIP` you will need to always set those
+environment variables whenever running any `vagrant` or `ansible` commands.
+
 ## Organization
 
 - `ansible.cfg`: points to the relevant roles from both core `picoCTF` as well
