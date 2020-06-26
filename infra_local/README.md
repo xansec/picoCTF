@@ -39,7 +39,8 @@ installed and configured.
 vagrant reload --provision
 ```
 
-For more information on using `vagrant` consult the [documentation][vd]. 
+For more information on using `vagrant` consult the [documentation][vd].
+
 [vd]:../docs/vagrant.md
 
 **2. Use `ansible` to apply changes.**
@@ -77,7 +78,7 @@ ansible-playbook site.yml --limit web --tags web
 
 The following examples show how you can use the convenient `ansible` tags to run
 only the relevant steps you want to speed up the development process. Please see
-the [Ansible Readme][../ansible/README.md] for more tag information.
+the [Ansible Readme](../ansible/README.md) for more tag information.
 
 Update the static web files, for example after editing the HTML/CSS/JSX under
 [picoCTF-web/web][web].
