@@ -93,6 +93,12 @@ def main():
         help="do not restart xinetd after deployment.",
     )
     deploy_parser.add_argument(
+        "-c",
+        "--containerize",
+        action="store_true",
+        help="deployment is occuring in a container e.g. with containerize or cmgr",
+    )
+    deploy_parser.add_argument(
         "problem_names", nargs="*", type=str, help="installed problem names"
     )
     deploy_parser.set_defaults(func=deploy_problems)

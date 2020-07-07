@@ -49,7 +49,7 @@ def containerize_problems(args):
     # build base images required
     ensure_base_images()
 
-    deploy_init()
+    deploy_init(contain=True)
 
     for name in problem_names:
         if not os.path.isdir(get_problem_root(name, absolute=True)):

@@ -19,6 +19,7 @@ shell server.
 
 HIGHEST_PORT = 65535
 LOWEST_PORT = 1025
+CONTAINER_PORT = 5000
 LOCALHOST = "127.0.0.1"
 
 PROBLEM_FILES_DIR = "problem_files"
@@ -32,6 +33,7 @@ local_config = None
 port_map = {}
 current_problem = None
 current_instance = None
+containerize = False
 
 logger = logging.getLogger(__name__)
 
@@ -72,9 +74,15 @@ def check_if_port_in_use(port):
 
 def give_port():
     """
-    Returns a random port and registers it.
+    Returns a random port and registers it, unless running in a container which
+    always sets the port to a constant CONTAINER_PORT.
     """
     global port_random
+    if containerize:
+        logger.debug(
+                f"Running in a container. Assigning fixed port: {CONTAINER_PORT}"
+        )
+        return CONTAINER_PORT
 
     context = get_deploy_context()
     # default behavior
@@ -752,6 +760,7 @@ def deploy_problem(
     deployment_directory=None,
     debug=False,
     restart_xinetd=True,
+    containerize=False,
 ):
     """
     Deploys the problem specified in problem_directory.
@@ -767,7 +776,9 @@ def deploy_problem(
                         of instances for a problem. Defaults True as used by
                         tests, but typically is used with False from
                         deploy_problems, which takes in multiple problems.
-
+        containerize: Deployment is occuring in a container. This flag is used
+                      by containerize and external tools like cmgr that deploy
+                      challenges in an isolated environment.
     """
 
     if instances is None:
@@ -940,8 +951,9 @@ def deploy_problem(
     )
     return need_restart_xinetd
 
-def deploy_init():
-    global shared_config, local_config, port_map
+def deploy_init(contain):
+    global shared_config, local_config, port_map, containerize
+    containerize = contain
     shared_config = get_shared_config()
     local_config = get_local_config()
 
@@ -969,7 +981,7 @@ def deploy_init():
 def deploy_problems(args):
     """ Main entrypoint for problem deployment """
 
-    shared_config, local_config, port_map = deploy_init()
+    shared_config, local_config, port_map = deploy_init(args.containerize)
 
     need_restart_xinetd = False
 
@@ -988,13 +1000,17 @@ def deploy_problems(args):
         # Shortcut to deploy n instances of all problems
         problem_names = [v["unique_name"] for k, v in get_all_problems().items()]
 
-    acquire_lock()
 
     if args.instances:
         instance_list = args.instances
     else:
         instance_list = list(range(0, args.num_instances))
 
+    if args.containerize and (len(problem_names) > 1 or len(instance_list) > 1):
+        logger.error("can only deploy a single instance per container")
+        return
+
+    acquire_lock()
     try:
         for problem_name in problem_names:
             if not isdir(get_problem_root(problem_name, absolute=True)):
@@ -1023,6 +1039,7 @@ def deploy_problems(args):
                     test=args.dry,
                     debug=args.debug,
                     restart_xinetd=False,
+                    containerize=args.containerize
                 )
             else:
                 logger.info(
