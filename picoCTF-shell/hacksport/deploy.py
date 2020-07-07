@@ -1,4 +1,5 @@
 import logging
+import tarfile
 
 """
 Handles deployment of an installed problem.
@@ -746,6 +747,26 @@ def generate_instance(
     problem.hints = [template_string(hint, **get_attributes(problem)).replace("\n", "<br>") for hint in problem.hints]
     logger.debug("...Instance description: %s", problem.description)
     logger.debug("...Instance hints: %s", problem.hints)
+
+    # Steps to meet cmgr interface
+    if containerize:
+        # Create /challenge directory
+        try:
+            os.mkdir("/challenge", 0o700)
+        except FileExistsError:
+            logger.warn("/challenge already exists in container")
+
+        # Write flag into /challenge/metadata.json
+        with open("/challenge/metadata.json", "w") as out:
+            metadata = {"flag": problem.flag}
+            json.dump(metadata, out)
+
+        # Collect web_accessible_files into /challenge/artifacts.tar.gz
+        if len(web_accessible_files) >= 1:
+            logger.debug(f"Collecting web accessible files to artifacts.tar.gz")
+            with tarfile.open("/challenge/artifacts.tar.gz", "w:gz") as tar:
+                for _, f in web_accessible_files:
+                    tar.add(f, arcname=os.path.basename(f))
 
     return {
         "problem": problem,
