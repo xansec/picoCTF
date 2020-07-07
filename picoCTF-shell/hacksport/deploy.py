@@ -27,6 +27,8 @@ STATIC_FILE_ROOT = "static"
 XINETD_SERVICE_PATH = "/etc/xinetd.d/"
 TEMP_DEB_DIR = "/tmp/picoctf_debs/"
 
+FLAG_FMT = "flag{%.8s}"
+
 # will be set to the configuration module during deployment
 shared_config = None
 local_config = None
@@ -71,6 +73,9 @@ def check_if_port_in_use(port):
     s.close()
     return False
 
+def flag_fmt():
+    """Used to shim the command line passed flag format into the challenge class"""
+    return FLAG_FMT
 
 def give_port():
     """
@@ -980,6 +985,11 @@ def deploy_init(contain):
 
 def deploy_problems(args):
     """ Main entrypoint for problem deployment """
+
+    global FLAG_FMT
+    if args.flag_format:
+        FLAG_FMT = args.flag_format
+        logger.info(f"Deploying with custom flag format: {FLAG_FMT}")
 
     shared_config, local_config, port_map = deploy_init(args.containerize)
 

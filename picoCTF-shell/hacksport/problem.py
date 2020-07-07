@@ -8,7 +8,7 @@ from hashlib import md5
 from os.path import join
 from shutil import copy2
 
-from hacksport.deploy import give_port
+from hacksport.deploy import give_port, flag_fmt
 from hacksport.operations import execute
 
 XINETD_SCRIPT = """#!/bin/bash
@@ -128,7 +128,7 @@ class Challenge(metaclass=ABCMeta):
         token = str(random.randint(1, 1e12))
         hash_token = md5(token.encode("utf-8")).hexdigest()
 
-        return hash_token
+        return flag_fmt() % hash_token
 
     def initialize(self):
         """

@@ -99,6 +99,11 @@ def main():
         help="deployment is occuring in a container e.g. with containerize or cmgr",
     )
     deploy_parser.add_argument(
+        "-f",
+        "--flag-format",
+        help="format string for default flag",
+    )
+    deploy_parser.add_argument(
         "problem_names", nargs="*", type=str, help="installed problem names"
     )
     deploy_parser.set_defaults(func=deploy_problems)
