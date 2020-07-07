@@ -257,6 +257,11 @@ def main():
         type=int,
         help="particular instance(s) to deploy.",
     )
+    containerize_parser.add_argument(
+        "-f",
+        "--flag-format",
+        help="format string for default flag",
+    )
     containerize_parser.set_defaults(func=containerize_problems)
 
     args = parser.parse_args()

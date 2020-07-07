@@ -23,7 +23,8 @@ from hacksport.deploy import (
         deploy_init,
         generate_staging_directory,
         update_problem_class,
-        STATIC_FILE_ROOT)
+        STATIC_FILE_ROOT,
+        FLAG_FMT)
 from shell_manager.util import (
         get_problem,
         get_problem_root,
@@ -50,6 +51,7 @@ def containerize_problems(args):
     ensure_base_images()
 
     deploy_init(contain=True)
+    flag_fmt = args.flag_format if args.flag_format else FLAG_FMT
 
     for name in problem_names:
         if not os.path.isdir(get_problem_root(name, absolute=True)):
@@ -78,12 +80,12 @@ def containerize_problems(args):
             os.chdir(dst)
 
             # build the image
-            containerize(metadata, instance)
+            containerize(metadata, instance, flag_fmt)
 
         # return to the orginal directory
         os.chdir(origwd)
 
-def containerize(metadata, seed):
+def containerize(metadata, seed, flag_fmt):
     logger.info(f"containerize: {metadata['name']}")
 
     if os.path.isfile("Dockerfile"):
@@ -105,7 +107,7 @@ def containerize(metadata, seed):
 
     # standard DockerChallenge build sequence
     builder.initialize()
-    builder.initialize_docker({"SEED": str(seed)})
+    builder.initialize_docker({"SEED": str(seed), "FORMAT": flag_fmt})
 
     # fetch static downloads from image
     html_static = os.path.join(builder.web_root, STATIC_FILE_ROOT)
