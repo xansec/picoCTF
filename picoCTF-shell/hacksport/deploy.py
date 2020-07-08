@@ -28,7 +28,7 @@ STATIC_FILE_ROOT = "static"
 XINETD_SERVICE_PATH = "/etc/xinetd.d/"
 TEMP_DEB_DIR = "/tmp/picoctf_debs/"
 
-FLAG_FMT = "flag{%.8s}"
+FLAG_FMT = "%s"
 
 # will be set to the configuration module during deployment
 shared_config = None
