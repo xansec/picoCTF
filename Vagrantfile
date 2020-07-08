@@ -19,7 +19,13 @@ Vagrant.configure("2") do |config|
     shell.vm.network "private_network", ip: (ENV['SIP'] || '192.168.2.3'), nic_type: "virtio"
 
     shell.vm.synced_folder ".", "/vagrant", disabled: true
-    shell.vm.synced_folder ".", "/picoCTF", owner: "vagrant", group: "vagrant"
+    if Vagrant::Util::Platform.windows? then
+        shell.vm.synced_folder ".", "/picoCTF",
+          owner: "vagrant", group: "vagrant",
+          mount_options: ["dmode=775", "fmode=775"]
+    else
+        shell.vm.synced_folder ".", "/picoCTF", owner: "vagrant", group: "vagrant"
+    end
 
     # ensures that SIP/WIP are passed to ansible_local provisioner can use lookup('env',...)
     shell.vm.provision "shell" do |s|
@@ -58,7 +64,13 @@ Vagrant.configure("2") do |config|
     web.vm.network "private_network", ip: (ENV['WIP'] || '192.168.2.2'), nic_type: "virtio"
 
     web.vm.synced_folder ".", "/vagrant", disabled: true
-    web.vm.synced_folder ".", "/picoCTF", owner: "vagrant", group: "vagrant"
+    if Vagrant::Util::Platform.windows? then
+        web.vm.synced_folder ".", "/picoCTF",
+          owner: "vagrant", group: "vagrant",
+          mount_options: ["dmode=775", "fmode=775"]
+    else
+        web.vm.synced_folder ".", "/picoCTF", owner: "vagrant", group: "vagrant"
+    end
 
     # ensures that SIP/WIP are passed to ansible_local provisioner can use lookup('env',...)
     web.vm.provision "shell" do |s|
