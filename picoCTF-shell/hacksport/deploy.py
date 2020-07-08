@@ -765,7 +765,7 @@ def generate_instance(
         if len(web_accessible_files) >= 1:
             logger.debug(f"Collecting web accessible files to artifacts.tar.gz")
             with tarfile.open("/challenge/artifacts.tar.gz", "w:gz") as tar:
-                for _, f in web_accessible_files:
+                for f, _ in web_accessible_files:
                     tar.add(f, arcname=os.path.basename(f))
 
     return {
