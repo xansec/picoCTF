@@ -239,7 +239,7 @@ def main():
     # Containerize
     ###
     containerize_parser = subparsers.add_parser("containerize",
-            help="problem instance containerization")
+            help="[EXPERIMENTAL] problem instance containerization")
     containerize_parser.add_argument(
         "problem_names", nargs="*", type=str, help="installed problem names"
     )

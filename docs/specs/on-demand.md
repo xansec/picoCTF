@@ -90,3 +90,40 @@ docker_containers_per_team  | number of concurrent on-demand instances
 
 These are then templated into the API `deploy_settings.py` by the `pico-web`
 role and `local_config.json` for `shell_manager` by the `pico-shell` role.
+
+## Experimental: Containerized hacksport
+
+The `DockerChallenge` infrastructure can also be leveraged to "lift" legacy
+hacksport challenges into isolated, on-demand, containers.
+
+This experimental functionality is provide by `shell_manager containerize` which
+is intended as a drop in replacement for `shell_manager deploy`. The end result
+is that instead of having the instance installed locally on the system it is
+entirely contained within a docker container.
+
+This functionality is primarily intended to test, evaluate, and preserve support
+for legacy content. While many challenges will work without any modification,
+challenge developer testing is critical to ensure that things operate as
+expected.
+
+## Limitations
+
+- Commands that cannot be run during `docker build` such as `mount` will not
+work.
+- Description templating may not work as intended as the challenge is converted
+to an on-demand style and the host/port are not accessible.
+- Challenges that required local access (e.g. ssh into the shell server), will
+not work as by default a user does not have access to the launched container
+like they would on the shell server.
+
+## Future
+
+This experiment is intended to validate the feasibility of preserving support
+for existing hacksport style challenges and challenge management architectures
+such as [cmgr][].
+
+This functionality is not recommended for production use unless you have
+experience developing challenges with the `DockerChallenge` class, and are
+comfortable troubleshooting a challenge port.
+
+[cmgr]:https://github.com/ArmyCyberInstitute/cmgr
