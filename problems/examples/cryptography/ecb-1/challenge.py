@@ -1,6 +1,8 @@
+import secrets
 import string
 
 from hacksport.problem import ProtectedFile, Remote
+from hacksport.deploy import flag_fmt
 
 
 class Problem(Remote):
@@ -16,3 +18,11 @@ class Problem(Remote):
         self.welcome_message = "Welcome to Secure Encryption Service version 1.{}".format(
             self.random.randint(0, 10)
         )
+
+    # flag length must be a multiple of 16
+    def generate_flag(self, random):
+        flag = (flag_fmt() % secrets.token_hex(32))[:32]
+        if "{" in flag:
+            flag = flag[:31] + "}"
+        assert len(flag) % 16 == 0
+        return flag
