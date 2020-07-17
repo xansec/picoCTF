@@ -8,9 +8,8 @@ from hashlib import md5
 from os.path import join
 from shutil import copy2
 
-from hacksport.deploy import give_port
+from hacksport.deploy import give_port, flag_fmt
 from hacksport.operations import execute
-from shell_manager.util import EXTRA_ROOT
 
 XINETD_SCRIPT = """#!/bin/bash
 cd $(dirname $0)
@@ -129,7 +128,7 @@ class Challenge(metaclass=ABCMeta):
         token = str(random.randint(1, 1e12))
         hash_token = md5(token.encode("utf-8")).hexdigest()
 
-        return hash_token
+        return flag_fmt() % hash_token
 
     def initialize(self):
         """
@@ -262,14 +261,14 @@ class Remote(Service):
         Returns the name of the file generated
         """
 
-        source_path = "no_aslr_wrapper.c"
+        src_path = os.path.join(os.path.dirname(__file__),"static", "no_aslr_wrapper.c")
         execute(
             [
                 "gcc",
                 "-o",
                 output,
                 '-DBINARY_PATH="{}"'.format(exec_path),
-                join(EXTRA_ROOT, source_path),
+                src_path,
             ]
         )
         self.files.append(ExecutableFile(output))

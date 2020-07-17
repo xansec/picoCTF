@@ -15,6 +15,7 @@ from hacksport.install import (
 )
 from hacksport.deploy import deploy_problems, undeploy_problems
 from hacksport.status import clean, publish, status
+from hacksport.containerize import containerize_problems
 from shell_manager.config import print_configuration, set_configuration_option
 from shell_manager.util import FatalException
 
@@ -90,6 +91,17 @@ def main():
         "--no-restart",
         action="store_true",
         help="do not restart xinetd after deployment.",
+    )
+    deploy_parser.add_argument(
+        "-c",
+        "--containerize",
+        action="store_true",
+        help="deployment is occuring in a container e.g. with containerize or cmgr",
+    )
+    deploy_parser.add_argument(
+        "-f",
+        "--flag-format",
+        help="format string for default flag",
     )
     deploy_parser.add_argument(
         "problem_names", nargs="*", type=str, help="installed problem names"
@@ -222,6 +234,35 @@ def main():
         help="allow the supplied field to change types if already specified",
     )
     config_set_parser.set_defaults(func=set_configuration_option)
+
+    ###
+    # Containerize
+    ###
+    containerize_parser = subparsers.add_parser("containerize",
+            help="[EXPERIMENTAL] problem instance containerization")
+    containerize_parser.add_argument(
+        "problem_names", nargs="*", type=str, help="installed problem names"
+    )
+    containerize_parser.add_argument(
+        "-n",
+        "--num-instances",
+        type=int,
+        default=1,
+        help="number of instances to deploy (numbers 0 through n-1).",
+    )
+    containerize_parser.add_argument(
+        "-i",
+        "--instances",
+        action="append",
+        type=int,
+        help="particular instance(s) to deploy.",
+    )
+    containerize_parser.add_argument(
+        "-f",
+        "--flag-format",
+        help="format string for default flag",
+    )
+    containerize_parser.set_defaults(func=containerize_problems)
 
     args = parser.parse_args()
 

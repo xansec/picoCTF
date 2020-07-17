@@ -122,12 +122,15 @@ def status(args):
 
         status["connection"] = False
         if "port" in instance:
+            port = instance["port"]
             try:
+                # XXX: assumes that the challenge is hosted locally
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect(("localhost", instance["port"]))
+                s.connect(("localhost", port))
                 s.close()
                 status["connection"] = True
             except ConnectionRefusedError as e:
+                logger.debug(f"instance: {instance['instance_number']} has port: {port} but can't connect")
                 pass
         if instance["service"]:
             result = execute(
@@ -256,4 +259,5 @@ def status(args):
                 print_problem_status(problem_status, prefix="  ")
 
         if return_code != 0:
+            print("WARNING: Some instances offline. Run with -e to see failing instances")
             exit(return_code)

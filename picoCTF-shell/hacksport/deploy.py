@@ -1,4 +1,5 @@
 import logging
+import tarfile
 
 """
 Handles deployment of an installed problem.
@@ -19,6 +20,7 @@ shell server.
 
 HIGHEST_PORT = 65535
 LOWEST_PORT = 1025
+CONTAINER_PORT = 5000
 LOCALHOST = "127.0.0.1"
 
 PROBLEM_FILES_DIR = "problem_files"
@@ -26,12 +28,15 @@ STATIC_FILE_ROOT = "static"
 XINETD_SERVICE_PATH = "/etc/xinetd.d/"
 TEMP_DEB_DIR = "/tmp/picoctf_debs/"
 
+FLAG_FMT = "%s"
+
 # will be set to the configuration module during deployment
 shared_config = None
 local_config = None
 port_map = {}
 current_problem = None
 current_instance = None
+containerize = False
 
 logger = logging.getLogger(__name__)
 
@@ -69,12 +74,21 @@ def check_if_port_in_use(port):
     s.close()
     return False
 
+def flag_fmt():
+    """Used to shim the command line passed flag format into the challenge class"""
+    return FLAG_FMT
 
 def give_port():
     """
-    Returns a random port and registers it.
+    Returns a random port and registers it, unless running in a container which
+    always sets the port to a constant CONTAINER_PORT.
     """
     global port_random
+    if containerize:
+        logger.debug(
+                f"Running in a container. Assigning fixed port: {CONTAINER_PORT}"
+        )
+        return CONTAINER_PORT
 
     context = get_deploy_context()
     # default behavior
@@ -195,6 +209,7 @@ from shell_manager.util import (
 )
 from spur import RunProcessError
 
+PORT_MAP_PATH = join(SHARED_ROOT, "port_map.json")
 
 def challenge_meta(attributes):
     """
@@ -733,6 +748,26 @@ def generate_instance(
     logger.debug("...Instance description: %s", problem.description)
     logger.debug("...Instance hints: %s", problem.hints)
 
+    # Steps to meet cmgr interface
+    if containerize:
+        # Create /challenge directory
+        try:
+            os.mkdir("/challenge", 0o700)
+        except FileExistsError:
+            logger.warn("/challenge already exists in container")
+
+        # Write flag into /challenge/metadata.json
+        with open("/challenge/metadata.json", "w") as out:
+            metadata = {"flag": problem.flag}
+            json.dump(metadata, out)
+
+        # Collect web_accessible_files into /challenge/artifacts.tar.gz
+        if len(web_accessible_files) >= 1:
+            logger.debug(f"Collecting web accessible files to artifacts.tar.gz")
+            with tarfile.open("/challenge/artifacts.tar.gz", "w:gz") as tar:
+                for f, _ in web_accessible_files:
+                    tar.add(f, arcname=os.path.basename(f))
+
     return {
         "problem": problem,
         "staging_directory": staging_directory,
@@ -751,6 +786,7 @@ def deploy_problem(
     deployment_directory=None,
     debug=False,
     restart_xinetd=True,
+    containerize=False,
 ):
     """
     Deploys the problem specified in problem_directory.
@@ -766,7 +802,9 @@ def deploy_problem(
                         of instances for a problem. Defaults True as used by
                         tests, but typically is used with False from
                         deploy_problems, which takes in multiple problems.
-
+        containerize: Deployment is occuring in a container. This flag is used
+                      by containerize and external tools like cmgr that deploy
+                      challenges in an isolated environment.
     """
 
     if instances is None:
@@ -939,13 +977,42 @@ def deploy_problem(
     )
     return need_restart_xinetd
 
+def deploy_init(contain):
+    global shared_config, local_config, port_map, containerize
+    containerize = contain
+    shared_config = get_shared_config()
+    local_config = get_local_config()
+
+    # Attempt to load the port_map from file
+    try:
+        with open(PORT_MAP_PATH, "r") as f:
+            port_map = json.load(f)
+            port_map = {literal_eval(k): v for k, v in port_map.items()}
+    except FileNotFoundError:
+        # If it does not exist, create it
+        for path, problem in get_all_problems().items():
+            for instance in get_all_problem_instances(path):
+                port_map[
+                    (problem["unique_name"], instance["instance_number"])
+                ] = instance.get("port", None)
+        with open(PORT_MAP_PATH, "w") as f:
+            stringified_port_map = {repr(k): v for k, v in port_map.items()}
+            json.dump(stringified_port_map, f)
+    except IOError:
+        logger.error(f"Error loading port map from {PORT_MAP_PATH}")
+        raise
+
+    return shared_config, local_config, port_map
 
 def deploy_problems(args):
     """ Main entrypoint for problem deployment """
 
-    global shared_config, local_config, port_map
-    shared_config = get_shared_config()
-    local_config = get_local_config()
+    global FLAG_FMT
+    if args.flag_format:
+        FLAG_FMT = args.flag_format
+        logger.info(f"Deploying with custom flag format: {FLAG_FMT}")
+
+    shared_config, local_config, port_map = deploy_init(args.containerize)
 
     need_restart_xinetd = False
 
@@ -964,33 +1031,17 @@ def deploy_problems(args):
         # Shortcut to deploy n instances of all problems
         problem_names = [v["unique_name"] for k, v in get_all_problems().items()]
 
-    # Attempt to load the port_map from file
-    try:
-        port_map_path = join(SHARED_ROOT, "port_map.json")
-        with open(port_map_path, "r") as f:
-            port_map = json.load(f)
-            port_map = {literal_eval(k): v for k, v in port_map.items()}
-    except FileNotFoundError:
-        # If it does not exist, create it
-        for path, problem in get_all_problems().items():
-            for instance in get_all_problem_instances(path):
-                port_map[
-                    (problem["unique_name"], instance["instance_number"])
-                ] = instance.get("port", None)
-        with open(port_map_path, "w") as f:
-            stringified_port_map = {repr(k): v for k, v in port_map.items()}
-            json.dump(stringified_port_map, f)
-    except IOError:
-        logger.error(f"Error loading port map from {port_map_path}")
-        raise
-
-    acquire_lock()
 
     if args.instances:
         instance_list = args.instances
     else:
         instance_list = list(range(0, args.num_instances))
 
+    if args.containerize and (len(problem_names) > 1 or len(instance_list) > 1):
+        logger.error("can only deploy a single instance per container")
+        return
+
+    acquire_lock()
     try:
         for problem_name in problem_names:
             if not isdir(get_problem_root(problem_name, absolute=True)):
@@ -1019,6 +1070,7 @@ def deploy_problems(args):
                     test=args.dry,
                     debug=args.debug,
                     restart_xinetd=False,
+                    containerize=args.containerize
                 )
             else:
                 logger.info(
@@ -1031,11 +1083,53 @@ def deploy_problems(args):
             execute(["service", "xinetd", "restart"], timeout=60)
 
         # Write out updated port map
-        with open(port_map_path, "w") as f:
+        with open(PORT_MAP_PATH, "w") as f:
             stringified_port_map = {repr(k): v for k, v in port_map.items()}
             json.dump(stringified_port_map, f)
 
         release_lock()
+
+def remove_instance_state(instance):
+    """ Removes state for an instance that is deployed to a host.
+    Includes: service files, deployment directory, users
+    """
+    # Remove the xinetd service definition
+    service = instance["service"]
+    if service:
+        logger.debug("...Removing xinetd service '%s'.", service)
+        try:
+            os.remove(join(XINETD_SERVICE_PATH, service))
+        except FileNotFoundError:
+            logger.error("xinetd service definition missing, skipping")
+
+    # Remove the deployed instance directory
+    directory = instance["deployment_directory"]
+    logger.debug("...Removing deployment directory '%s'.", directory)
+    try:
+        shutil.rmtree(directory)
+    except FileNotFoundError:
+        logger.error("deployment directory missing, skipping")
+
+    # Kill any active problem processes
+    if instance.get("port", None):
+        port = instance["port"]
+        logger.debug(f"...Killing any processes running on port {port}")
+        try:
+            execute(["fuser", "-k", "-TERM", "-n", "tcp", str(port)])
+        except RunProcessError as e:
+            logger.error(
+                "error killing processes, skipping - {}".format(str(e))
+            )
+
+    # Remove the problem user
+    user = instance["user"]
+    logger.debug("...Removing problem user '%s'.", user)
+    try:
+        execute(["userdel", user])
+    except RunProcessError as e:
+        logger.error(
+            "error removing problem user, skipping - {}".format(str(e))
+        )
 
 
 def remove_instances(problem_name, instances_to_remove):
@@ -1047,44 +1141,10 @@ def remove_instances(problem_name, instances_to_remove):
         instance_number = instance["instance_number"]
         if instance["instance_number"] in instances_to_remove:
             logger.debug(f"Removing instance {instance_number} of {problem_name}")
+            containerize = 'containerize' in instance and instance['containerize']
 
-            # Remove the xinetd service definition
-            service = instance["service"]
-            if service:
-                logger.debug("...Removing xinetd service '%s'.", service)
-                try:
-                    os.remove(join(XINETD_SERVICE_PATH, service))
-                except FileNotFoundError:
-                    logger.error("xinetd service definition missing, skipping")
-
-            # Remove the deployed instance directory
-            directory = instance["deployment_directory"]
-            logger.debug("...Removing deployment directory '%s'.", directory)
-            try:
-                shutil.rmtree(directory)
-            except FileNotFoundError:
-                logger.error("deployment directory missing, skipping")
-
-            # Kill any active problem processes
-            if instance.get("port", None):
-                port = instance["port"]
-                logger.debug(f"...Killing any processes running on port {port}")
-                try:
-                    execute(["fuser", "-k", "-TERM", "-n", "tcp", str(port)])
-                except RunProcessError as e:
-                    logger.error(
-                        "error killing processes, skipping - {}".format(str(e))
-                    )
-
-            # Remove the problem user
-            user = instance["user"]
-            logger.debug("...Removing problem user '%s'.", user)
-            try:
-                execute(["userdel", user])
-            except RunProcessError as e:
-                logger.error(
-                    "error removing problem user, skipping - {}".format(str(e))
-                )
+            if not containerize:
+                remove_instance_state(instance)
 
             # Remove the internal instance metadata
             deployment_json_path = join(

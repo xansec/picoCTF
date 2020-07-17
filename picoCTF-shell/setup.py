@@ -14,14 +14,14 @@ from os import path
 # Always prefer setuptools over distutils
 from setuptools import find_packages, setup
 
-if "bdist_wheel" in sys.argv:
-    raise RuntimeError("This setup.py does not support wheels")
-
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the relevant file
-with open(path.join(here, "README.md"), encoding="utf-8") as f:
-    long_description = f.read()
+try:
+    with open(path.join(here, "README.md"), encoding="utf-8") as f:
+        long_description = f.read()
+except FileNotFoundError:
+    long_description = "picoCTF shell_manager and hacksport"
 
 setup(
     name="ctf-shell-manager",
@@ -63,6 +63,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         "coloredlogs==10.0",
+        "cryptography==2.9.2",
         "docker[tls]==4.2.0",
         "Flask==1.1.1",
         "Jinja2==2.10.1",
@@ -78,4 +79,6 @@ setup(
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
     entry_points={"console_scripts": ["shell_manager=shell_manager.run:main"]},
+    # Include static files listed in Manifest.in
+    include_package_data=True,
 )
