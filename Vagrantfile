@@ -17,6 +17,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "shell", primary: true do |shell|
     shell.vm.box = "ubuntu/bionic64"
     shell.vm.network "private_network", ip: (ENV['SIP'] || '192.168.2.3'), nic_type: "virtio"
+    shell.vm.network "forwarded_port", guest: 2376, host: 2223, auto_correct: true
 
     shell.vm.synced_folder ".", "/vagrant", disabled: true
     if Vagrant::Util::Platform.windows? then
