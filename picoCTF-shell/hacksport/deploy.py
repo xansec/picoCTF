@@ -322,6 +322,8 @@ service %s
     is_web = isinstance(problem, WebService)
     if not is_service and not is_web:
         return (None, None)
+    if getattr(problem, "skip_service_file_creation", False):
+        return (None, None)
 
     problem_service_info = problem.service()
     service_content = xinetd_template % (
