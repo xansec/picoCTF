@@ -35,9 +35,10 @@ Vagrant.configure("2") do |config|
     end
 
     # uses ansible_local so that a user does not need to have ansible installed
-    shell.vm.provision :ansible_local do |ansible|
+    shell.vm.provision "ansible_local" do |ansible|
       ansible.install = "yes"
-      ansible.install_mode = "default"
+      ansible.install_mode = "pip"
+      ansible.version = "2.9.11"
       ansible.compatibility_mode = "2.0"
       ansible.playbook = "site.yml"
       ansible.provisioning_path = "/picoCTF/infra_local/"
@@ -80,9 +81,10 @@ Vagrant.configure("2") do |config|
     end
 
     # uses ansible_local so that a user does not need to have ansible installed
-    web.vm.provision :ansible_local do |ansible|
+    web.vm.provision "ansible_local" do |ansible|
       ansible.install = "yes"
-      ansible.install_mode = "default"
+      ansible.install_mode = "pip"
+      ansible.version = "2.9.11"
       ansible.compatibility_mode = "2.0"
       ansible.playbook = "site.yml"
       ansible.provisioning_path = "/picoCTF/infra_local/"
