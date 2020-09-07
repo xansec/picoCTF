@@ -22,6 +22,7 @@ def CompiledBinary(
     static_flag=None,
     share_source=False,
     remote=False,
+    no_pie=True
 ):
     """
     Creates a challenge for a compiled binary. User must specify either a makefile
@@ -49,6 +50,7 @@ def CompiledBinary(
         flag_file: The name of the flag file. If it does not exist, it will be created. Defaults to flag.txt
         static_flag: A string containing the static flag. If specified, the flag generation will always return this. Defaults to None.
         remote: Specifies if the challenge should be remote or not. Defaults to False.
+        no_pie: Specifies if the binary should opt out of being compiled as a Position Independent Executable. Defaults to True.
     """
 
     if compiler_flags is None:
@@ -62,7 +64,9 @@ def CompiledBinary(
         compiler_flags.append("-fno-stack-protector")
     if no_stack_protector and "-D_FORTIFY_SOURCE=0" not in compiler_flags:
         compiler_flags.append("-D_FORTIFY_SOURCE=0")
-
+    if no_pie and "-no-pie" not in compiler_flags:
+        compiler_flags.append("-no-pie")
+        
     if makefile is None and sources is None:
         assert False, "You must provide either a makefile or a sources list"
 
