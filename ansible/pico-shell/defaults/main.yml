@@ -9,7 +9,7 @@ virtualenv_dir    : "/picoCTF-env"
 ###
 # wetty configuration
 ###
-wetty_js_path     : "/opt/wetty/node_modules/wetty"
+wetty_js_path     : "/opt/wetty/node_modules/wetty/build/main.js"
 
 # configure nginx
 site_config_name  : "shell"
