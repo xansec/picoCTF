@@ -1,4 +1,5 @@
 import logging
+from subprocess import CalledProcessError
 import tarfile
 
 """
@@ -1112,16 +1113,14 @@ def remove_instance_state(instance):
     except FileNotFoundError:
         logger.error("deployment directory missing, skipping")
 
-    # Kill any active problem processes
-    if instance.get("port", None):
-        port = instance["port"]
-        logger.debug(f"...Killing any processes running on port {port}")
-        try:
-            execute(["fuser", "-k", "-TERM", "-n", "tcp", str(port)])
-        except RunProcessError as e:
-            logger.error(
-                "error killing processes, skipping - {}".format(str(e))
-            )
+    # Kill any active instance processes
+    logger.debug(f"...Killing any instance processes")
+    try:
+        subprocess.check_output(f"pgrep {instance['user']} | xargs -r kill -15", shell=True)
+    except CalledProcessError as e:
+        logger.error(
+            "error killing processes, skipping - {}".format(str(e))
+        )
 
     # Remove the problem user
     user = instance["user"]
