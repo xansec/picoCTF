@@ -61,5 +61,5 @@ def create_user(username):
         username: the username to create
 
     """
-
+    execute(["groupadd", "-f", PROBLEMS_GROUP])
     execute(["useradd", "-G", PROBLEMS_GROUP, "-s", "/bin/bash", username])
