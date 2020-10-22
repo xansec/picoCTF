@@ -112,10 +112,11 @@ def give_port():
     # if this instance already has a port, reuse it
     if (context["problem"], context["instance"]) in context["port_map"]:
         assigned_port = context["port_map"][(context["problem"], context["instance"])]
-        logger.debug(
-            f"This problem instance ({context['problem']}: {str(context['instance'])}) already has an assigned port: {str(assigned_port)}"
-        )
-        return assigned_port
+        if assigned_port is not None:
+            logger.debug(
+                f"This problem instance ({context['problem']}: {str(context['instance'])}) already has an assigned port: {str(assigned_port)}"
+            )
+            return assigned_port
 
     used_ports = [port for port in context["port_map"].values() if port is not None]
     if (
