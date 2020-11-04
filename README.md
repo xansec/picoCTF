@@ -43,7 +43,7 @@ These commands perform the following:
 3. Bring up a local copy of the picoCTF platform (`vagrant`)
     - This will take approximately 30-45 minutes based on your network speed as
     vagrant downloads a base virtual machine and all the components to install
-    the platform. This is a one-time, upfront cost. Obligitory [xkcd][].
+    the platform. This is a one-time, upfront cost. Obligatory [xkcd][].
 
 [xkcd]:https://xkcd.com/303/
 
@@ -94,7 +94,7 @@ Continue reading for more information on the picoCTF project.
 ## Project Overview
 
 This project is broken down into a few discrete components that compose to build
-a robust and full featured CTF platform. Specifically the project is consists of
+a robust and full featured CTF platform. Specifically the project consists of
 the following:
 
 1. [picoCTF-web](./picoCTF-web). The website and all APIs.
@@ -152,7 +152,7 @@ Some important terminology:
     assigned `inst_1` but submits `flag_2`, then whomever has `inst_2` shared
     their flag. There may be legitimate reasons for flag sharing, but in many
     competitions it is indicative of cheating.
-  + Instances are generated from _template_. Think of it like templating in a
+  + Instances are generated from a _template_. Think of it like templating in a
     web framework. For example, a buffer overflow problem may template the
     specific buffer size so a solution for `inst_i` will not work for `inst_j`.
 
@@ -248,7 +248,7 @@ web server.
 
 Both CMU and ForAllSecure have agreed to release all code under the [MIT
 LICENSE](./LICENSE) . We do encourage attribution as that helps us secure
-funding and interest to run picoctf year after year, but it is not
+funding and interest to run picoCTF year after year, but it is not
 necessary. Also, if you do end up running a contest, do feel free to drop David
 Brumley a line.
 
