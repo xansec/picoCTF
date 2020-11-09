@@ -1061,7 +1061,7 @@ def deploy_problems(args):
                 instances_to_deploy = [0]
 
             # Avoid redeploying already-deployed instances
-            if not args.redeploy or is_static_flag:
+            if not args.redeploy:
                 already_deployed = set()
                 for instance in get_all_problem_instances(problem_name):
                     already_deployed.add(instance["instance_number"])
