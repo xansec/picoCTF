@@ -1117,7 +1117,7 @@ def remove_instance_state(instance):
     # Kill any active instance processes
     logger.debug(f"...Killing any instance processes")
     try:
-        subprocess.check_output(f"pgrep {instance['user']} | xargs -r kill -15", shell=True)
+        subprocess.check_output(f"pgrep -u {instance['user']} | xargs -r kill -15", shell=True)
     except CalledProcessError as e:
         logger.error(
             "error killing processes, skipping - {}".format(str(e))
