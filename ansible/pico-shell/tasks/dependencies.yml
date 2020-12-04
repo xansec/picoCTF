@@ -75,8 +75,7 @@
 - name: Install system python packages updates needed for pam_auth module and Ansible
   pip:
     name:
-      - pyOpenSSL==19.0.0
-      - cryptography==2.7
+      - cryptography==3.2
       - requests==2.22.0
 
 - name: Install python packaging in (new) virtualenv
