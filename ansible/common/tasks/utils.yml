@@ -20,3 +20,10 @@
         ]
   environment:
     DEBIAN_FRONTEND: noninteractive
+
+- name: Disable unattended upgrades
+  apt:
+    state: absent
+    name: unattended-upgrades
+    purge: True
+  when: disable_unattended_upgrades | default(false) | bool
