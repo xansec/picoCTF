@@ -20,6 +20,8 @@ all:
   vars:
       # SSH admin keys (Optional)
       admin_keys                  : []
+      # Disable Unattended Upgrades
+      disable_unattended_upgrades : False
 
       # Web automation and Features (Optional)
       auto_add_web_admin          : True
