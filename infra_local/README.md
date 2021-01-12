@@ -122,7 +122,7 @@ and run multiple instances. Start by running a command like the following.
 - `SHELL_DISK_SIZE` specifies the size for the `/` partition for the shell server. Defaults to 10GB
 
 ```
-J=2 M=6 SIP=192.168.2.53 WIP=192.168.2.52 DISK_SIZE=20GB vagrant up shell && SIP=192.168.2.53 WIP=192.168.2.52 vagrant up web
+J=2 M=6 SIP=192.168.2.53 WIP=192.168.2.52 SHELL_DISK_SIZE=20GB vagrant up shell && SIP=192.168.2.53 WIP=192.168.2.52 vagrant up web
 ```
 
 *Warning*: If you utilize `WIP` or `SIP` you will need to always set those
