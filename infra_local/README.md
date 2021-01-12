@@ -112,16 +112,17 @@ ansible -become -a 'shell_manager status' shell
 
 ### Modifying the local infrastructure virtual machines
 
-There are now quick ways to change the memory, number of CPUs and IP addresses
+There are now quick ways to change the storage, memory, number of CPUs and IP addresses
 and run multiple instances. Start by running a command like the following.
 
 - `J` is the number of CPUs
 - `M` is the amount of memory in GB
 - `SIP` is shell IP address (default is 192.168.2.2)
 - `WIP` is web IP address (default is 192.68.2.3)
+- `SHELL_DISK_SIZE` specifies the size for the `/` partition for the shell server. Defaults to 10GB
 
 ```
-J=2 M=6 SIP=192.168.2.53 WIP=192.168.2.52 vagrant up shell && SIP=192.168.2.53 WIP=192.168.2.52 vagrant up web
+J=2 M=6 SIP=192.168.2.53 WIP=192.168.2.52 DISK_SIZE=20GB vagrant up shell && SIP=192.168.2.53 WIP=192.168.2.52 vagrant up web
 ```
 
 *Warning*: If you utilize `WIP` or `SIP` you will need to always set those
