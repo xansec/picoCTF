@@ -202,6 +202,7 @@
     production: yes
     global: no
     path: /opt/wetty
+    version: "2.0.2"
 
 - name: Install quota
   apt:
