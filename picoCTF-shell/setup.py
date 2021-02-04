@@ -65,6 +65,7 @@ setup(
         "coloredlogs==10.0",
         "docker[tls]==4.2.0",
         "Flask==1.1.1",
+        "idna<3",
         "Jinja2==2.10.1",
         "openssh-wrapper==0.4",
         "psutil==5.6.6",
