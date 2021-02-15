@@ -20,7 +20,7 @@ class TimeoutError(Exception):
     pass
 
 
-def execute(cmd, timeout=60, **kwargs):
+def execute(cmd, timeout=600, **kwargs):
     """
     Executes the given shell command
 
