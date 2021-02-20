@@ -15,7 +15,7 @@ Importantly it prevents challenges from having unintentional lateral solutions.
 `DockerChallenge` class allows arbitrarily complex challenge design, including
 challenges with multiple related services.
 
-**Greater development felxibility**. Anything that can be done in a container
+**Greater development flexibility**. Anything that can be done in a container
 a challenge authors can do without worrying about system wide conflicts.
 
 **Challenge reset**. Every user can reset their on-demand challenges to a fresh
