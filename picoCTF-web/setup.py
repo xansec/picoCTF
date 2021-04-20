@@ -73,7 +73,7 @@ setup(
         "flask-restplus==0.13.0",
         "gunicorn==19.9.0",
         "marshmallow==3.0.1",
-        "py==1.8.0",
+        "py==1.10.0",
         "pymongo==3.9.0",
         "spur==0.3.21",
         "voluptuous==0.11.7",
