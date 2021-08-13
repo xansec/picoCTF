@@ -3,6 +3,18 @@
 [![Build Status](https://travis-ci.com/picoCTF/picoCTF.svg?branch=master)](https://travis-ci.com/picoCTF/picoCTF)
 [![codecov](https://codecov.io/gh/picoCTF/picoCTF/branch/master/graph/badge.svg)](https://codecov.io/gh/picoCTF/picoCTF)
 
+## Notice
+
+This repository contains an older, standalone version of the platform used to run
+the picoCTF 2019 competition. Our development efforts are currently focused on our
+new web platform at [play.picoctf.org](http://play.picoctf.org), and this repo is
+not actively maintained.
+
+If you are looking to host your own CTF, we recommend a modern tool such as
+[CTFd](https://github.com/CTFd/CTFd), [rCTF](https://github.com/redpwn/rctf), or [kCTF](https://github.com/google/kctf).
+
+## Introduction
+
 The picoCTF platform is the infrastructure which is used to run
 [picoCTF](https://picoctf.com/).
 
