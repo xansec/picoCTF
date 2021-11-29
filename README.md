@@ -11,7 +11,7 @@ new web platform at [play.picoctf.org](http://play.picoctf.org), and this repo i
 not actively maintained.
 
 If you are looking to host your own CTF, we recommend a modern tool such as
-[CTFd](https://github.com/CTFd/CTFd), [rCTF](https://github.com/redpwn/rctf), or [kCTF](https://github.com/google/kctf).
+[CTFd](https://github.com/CTFd/CTFd) or [kCTF](https://github.com/google/kctf).
 
 ## Introduction
 
