@@ -5,10 +5,10 @@
 
 ## Notice
 
-This repository contains an older, standalone version of the platform used to run
+This repository contains an older, deprecated version of the picoCTF platform which was used to run
 the picoCTF 2019 competition. Our development efforts are currently focused on our
 new web platform at [play.picoctf.org](http://play.picoctf.org), and this repo is
-not actively maintained.
+no longer maintained.
 
 If you are looking to host your own CTF, we recommend a modern tool such as
 [CTFd](https://github.com/CTFd/CTFd) or [kCTF](https://github.com/google/kctf).
