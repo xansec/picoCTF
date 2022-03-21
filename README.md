@@ -1,8 +1,5 @@
 # picoCTF
 
-[![Build Status](https://travis-ci.com/picoCTF/picoCTF.svg?branch=master)](https://travis-ci.com/picoCTF/picoCTF)
-[![codecov](https://codecov.io/gh/picoCTF/picoCTF/branch/master/graph/badge.svg)](https://codecov.io/gh/picoCTF/picoCTF)
-
 ## Notice
 
 This repository contains an older, deprecated version of the picoCTF platform which was used to run
