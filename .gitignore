@@ -6,6 +6,7 @@
 site.retry
 node_modules/
 package-lock.json
+*.box
 
 # Fetched contents from hosts
 certs

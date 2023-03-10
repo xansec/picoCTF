@@ -9,7 +9,7 @@ from os.path import join
 # Workaround for https://github.com/picoCTF/picoCTF/issues/478
 # (see https://bugs.launchpad.net/ubuntu/+source/python2.7/+bug/1869115)
 import sys
-sys.path += ["/usr/local/lib/python2.7/dist-packages", "/usr/lib/python2.7/dist-packages"]
+#sys.path += ["/usr/local/lib/python2.7/dist-packages", "/usr/lib/python2.7/dist-packages"]
 
 import requests
 

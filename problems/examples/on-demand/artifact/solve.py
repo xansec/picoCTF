@@ -1,5 +1,3 @@
-#!/usr/bin/env python2.7
-
 import argparse
 
 from pwn import *
@@ -22,7 +20,7 @@ def main(args):
 
     conn.send(payload)
     conn.readline() # discard echo
-    print("flag: {}".format(conn.readline().strip()))
+    print(("flag: {}".format(conn.readline().strip())))
 
 if __name__ == '__main__':
 

@@ -1,5 +1,10 @@
 # picoCTF
 
+### manual jinja2 fix on vagrant up
+
+You have to import soft_str as soft_unicode. See here:
+https://github.com/pallets/jinja/issues/1585#issuecomment-1055669312
+
 ## Notice
 
 This repository contains an older, deprecated version of the picoCTF platform which was used to run
